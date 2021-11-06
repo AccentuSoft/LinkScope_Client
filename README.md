@@ -43,6 +43,7 @@ Some dependencies need to be installed in order for the software to work properl
 	- Download chromedriver and add it to your PATH: https://chromedriver.chromium.org/
 
 Helpful link for those unfamiliar with adding binaries to their PATH: https://zwbetz.com/how-to-add-a-binary-to-your-path-on-macos-linux-windows/
+
 Releases (most recent one on the top): https://github.com/AccentuSoft/Nexus_Client/releases
 
 The software comes packaged in a 7zip archive. Uncompress the archive, and double-click the executable to start the software. On Windows, the executable should be named 'Nexus.exe'. On Linux, it should be named 'Nexus'.
