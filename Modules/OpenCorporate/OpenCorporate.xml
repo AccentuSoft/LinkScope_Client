@@ -1,0 +1,10 @@
+<Collectives>
+    <Open_Corporate_Company>
+        <Attributes>
+            Company Name,Company Number,Jurisdiction Code,Current Status,Incorporation Date,Dissolution Date,Company Type,Registry URL,Entity Type
+        </Attributes>
+        <Icon>
+            Domain.png
+        </Icon>
+    </Open_Corporate_Company>
+</Collectives>

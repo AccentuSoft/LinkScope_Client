@@ -1,0 +1,18 @@
+<Reddit>
+  <Reddit_Subreddit>
+    <Attributes>
+      Subreddit
+    </Attributes>
+    <Icon>
+      Default.svg
+    </Icon>
+  </Reddit_Subreddit>
+  <Reddit_Comment>
+    <Attributes>
+      Comment
+    </Attributes>
+    <Icon>
+      Default.svg
+    </Icon>
+  </Reddit_Comment>
+</Reddit>

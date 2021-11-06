@@ -1,0 +1,5 @@
+social-analyzer
+requests_futures
+selenium
+urllib3
+requests
