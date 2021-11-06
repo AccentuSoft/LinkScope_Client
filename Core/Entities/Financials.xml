@@ -1,0 +1,18 @@
+<Financials>
+    <Bank_Account>
+        <Attributes>
+            Account Number,Bank Name,Branch Number
+        </Attributes>
+        <Icon>
+            Bank_Account.svg
+        </Icon>
+    </Bank_Account>
+    <Currency>
+        <Attributes>
+            Amount,Currency Type
+        </Attributes>
+        <Icon>
+            Currency.svg
+        </Icon>
+    </Currency>
+</Financials>

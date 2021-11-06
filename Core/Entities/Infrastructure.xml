@@ -1,0 +1,87 @@
+<Infrastructure>
+  <Operating_System>
+    <Attributes>
+      OS Name
+    </Attributes>
+    <Icon>
+      OperatingSystem.svg
+    </Icon>
+  </Operating_System>
+  <Network>
+    <Attributes>
+      IP Address,Range
+    </Attributes>
+    <Icon>
+      Network.svg
+    </Icon>
+  </Network>
+  <Website>
+    <Attributes>
+      URL
+    </Attributes>
+    <Icon>
+      Website.svg
+    </Icon>
+  </Website>
+  <Domain>
+    <Attributes>
+      Domain Name
+    </Attributes>
+    <Icon>
+      Domain.svg
+    </Icon>
+  </Domain>
+  <IP_Address>
+    <Attributes>
+      IP Address
+    </Attributes>
+    <Icon>
+      IP_Address.svg
+    </Icon>
+  </IP_Address>
+  <IPv6_Address>
+    <Attributes>
+      IPv6 Address
+    </Attributes>
+    <Icon>
+      IPv6_Address.svg
+    </Icon>
+</IPv6_Address>
+<Autonomous_System>
+    <Attributes>
+      AS Number,ASN Cidr
+    </Attributes>
+    <Icon>
+      AutonomousSystem.svg
+    </Icon>
+  </Autonomous_System>
+  <Port>
+    <Attributes>
+      Port
+    </Attributes>
+    <Icon>
+      Port.svg
+    </Icon>
+  </Port>
+  <MAC_Address>
+    <Attributes>
+      MAC Address
+    </Attributes>
+    <Icon>
+      MAC_Address.svg
+    </Icon>
+  </MAC_Address>
+  <Network>
+    <Attributes>
+      IP Address,Range
+    </Attributes>
+  </Network>
+  <Website_Infrastructure>
+    <Attributes>
+      Infrastructure
+    </Attributes>
+    <Icon>
+      WebInfrastructure.svg
+    </Icon>
+  </Website_Infrastructure>
+</Infrastructure>

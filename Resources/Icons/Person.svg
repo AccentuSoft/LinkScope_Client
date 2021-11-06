@@ -1,0 +1,29 @@
+<svg width="40" height="40" id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #ffae00;
+      }
+
+      .cls-2,
+      .cls-3 {
+        fill: none;
+        stroke: #fff;
+        stroke-linecap: round;
+        stroke-width: 16px;
+      }
+
+      .cls-2 {
+        stroke-linejoin: round;
+      }
+
+      .cls-3 {
+        stroke-miterlimit: 10;
+      }
+    </style>
+  </defs>
+  <title>person</title>
+  <path class="cls-1" d="M500,250A250,250,0,1,1,0,250C0,111.93,111.93,0,250,0S500,111.93,500,250Z" />
+  <path class="cls-2" d="M249.33,266.72c31.64,0,50.44-22.89,50.44-22.89s47.36-3,51.3,62S331,368.1,314.22,369.33c-43.07,3.15-61.85,2.63-61.85,2.63s-21.21.56-66.59-2.63c-16.79-1.18-40.8,1.58-36.86-63.46s51.3-62,51.3-62,18.81,22.89,50.44,22.89Z" />
+  <circle class="cls-3" cx="250" cy="179.92" r="51.92" />
+</svg>

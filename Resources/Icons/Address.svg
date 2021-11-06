@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   xmlns:dc="http://purl.org/dc/elements/1.1/"
+   xmlns:cc="http://creativecommons.org/ns#"
+   xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+   xmlns:svg="http://www.w3.org/2000/svg"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   width="40"
+   height="40"
+   viewBox="0 0 100 100"
+   version="1.1"
+   id="svg12"
+   sodipodi:docname="Address.svg"
+   inkscape:version="0.92.5 (2060ec1f9f, 2020-04-08)">
+  <metadata
+     id="metadata18">
+    <rdf:RDF>
+      <cc:Work
+         rdf:about="">
+        <dc:format>image/svg+xml</dc:format>
+        <dc:type
+           rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
+        <dc:title></dc:title>
+      </cc:Work>
+    </rdf:RDF>
+  </metadata>
+  <defs
+     id="defs16" />
+  <sodipodi:namedview
+     pagecolor="#ffffff"
+     bordercolor="#666666"
+     borderopacity="1"
+     objecttolerance="10"
+     gridtolerance="10"
+     guidetolerance="10"
+     inkscape:pageopacity="0"
+     inkscape:pageshadow="2"
+     inkscape:window-width="640"
+     inkscape:window-height="480"
+     id="namedview14"
+     showgrid="false"
+     inkscape:zoom="5.9"
+     inkscape:cx="20.338983"
+     inkscape:cy="19.152542"
+     inkscape:window-x="0"
+     inkscape:window-y="0"
+     inkscape:window-maximized="0"
+     inkscape:current-layer="svg12" />
+  <circle
+     stroke="none"
+     fill="#f4a9d0"
+     r="48%"
+     cx="50%"
+     cy="50%"
+     id="circle2" />
+  <g
+     transform="translate(50 50) scale(0.69 0.69) rotate(0) translate(-50 -50)"
+     style="fill:#ffffff"
+     id="g10">
+      <path
+         d="M95.15,21.25l-14-9.88A2,2,0,0,0,80,11H52V6.5a2,2,0,0,0-4,0V11H30a12,12,0,0,0,0,24H48v8H20a2,2,0,0,0-1.15.37l-14,9.88a2,2,0,0,0,0,3.25l14,10.12A2,2,0,0,0,20,67H48V93.5a2,2,0,0,0,4,0V67H70a12,12,0,1,0,0-24H52V35H80a2,2,0,0,0,1.17-.38l14-10.12a2,2,0,0,0,0-3.25ZM78,55a8,8,0,0,1-8,8H20.65L9.44,54.9,20.63,47H70A8,8,0,0,1,78,55Zm1.35-24H30a8,8,0,0,1,0-16H79.37l11.19,7.9Z"
+         id="path6" />
+  </g>
+</svg>

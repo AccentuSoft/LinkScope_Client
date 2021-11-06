@@ -1,0 +1,33 @@
+<svg width="40" height="40" id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
+  <defs>
+    <style>
+      .cls-1,
+      .cls-4 {
+        fill: #305988;
+      }
+
+      .cls-2 {
+        fill: #fff;
+      }
+
+      .cls-3 {
+        fill: none;
+      }
+
+      .cls-3,
+      .cls-4 {
+        stroke: #fff;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 16px;
+      }
+    </style>
+  </defs>
+  <title>ip-address</title>
+  <path class="cls-1" d="M500,250A250,250,0,1,1,0,250C0,111.93,111.93,0,250,0S500,111.93,500,250Z" />
+  <path class="cls-2" d="M216.64,226.75V160h17.62v66.72Z" />
+  <path class="cls-2" d="M246.25,160H278q11.43,0,17.71,5.48T302,180.36q0,9.28-6.37,14.81T278,200.69H263.87v26.05H246.25Zm29.43,27.55q9.93,0,9.93-7a6.36,6.36,0,0,0-2.39-5.39q-2.39-1.83-7.54-1.83H263.87v14.24Z" />
+  <path class="cls-3" d="M327.88,178.21c0,43-77.88,131.12-77.88,131.12s-77.88-88.11-77.88-131.12a77.88,77.88,0,0,1,155.76,0Z" />
+  <line class="cls-3" x1="133.54" y1="376.61" x2="366.46" y2="376.61" />
+  <rect class="cls-4" x="222.87" y="346.5" width="54.26" height="54.26" rx="8.85" ry="8.85" />
+</svg>

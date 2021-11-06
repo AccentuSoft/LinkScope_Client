@@ -1,0 +1,42 @@
+<Materials>
+  <Document>
+    <Attributes>
+      Document Name,File Path
+    </Attributes>
+    <Icon>
+      Document.svg
+    </Icon>
+  </Document>
+  <Image>
+    <Attributes>
+      Image Name,File Path
+    </Attributes>
+    <Icon>
+      Image.svg
+    </Icon>
+  </Image>
+  <Video>
+    <Attributes>
+      Video Name,File Path
+    </Attributes>
+    <Icon>
+      Video.svg
+    </Icon>
+  </Video>
+  <Archive>
+    <Attributes>
+      Archive Name,File Path
+    </Attributes>
+    <Icon>
+      Archive.svg
+    </Icon>
+  </Archive>
+  <Disk>
+    <Attributes>
+      Disk Name,File Path
+    </Attributes>
+    <Icon>
+      HardDisk.svg
+    </Icon>
+</Disk>
+</Materials>

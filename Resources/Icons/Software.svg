@@ -1,0 +1,32 @@
+<svg width="40" height="40" id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #5ba0d8;
+      }
+
+      .cls-2 {
+        fill: none;
+        stroke: #fff;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 16px;
+      }
+    </style>
+  </defs>
+  <title>software</title>
+  <path class="cls-1" d="M500,250A250,250,0,1,1,0,250C0,111.93,111.93,0,250,0S500,111.93,500,250Z" />
+  <rect class="cls-2" x="133.03" y="198.32" width="233.94" height="145.83" rx="11.39" ry="11.39" />
+  <path class="cls-2" d="M219.92,355.16s1.52,20.76-7.59,30.38" />
+  <path class="cls-2" d="M280,355.16s-1.52,20.76,7.59,30.38" />
+  <polygon class="cls-2" points="205.09 244.4 251.17 222.12 294.72 244.4 249.91 265.16 205.09 244.4" />
+  <polyline class="cls-2" points="205.09 244.4 205.09 301.62 249.91 323.9 294.72 301.62 294.72 244.4" />
+  <line class="cls-2" x1="249.91" y1="265.16" x2="249.91" y2="319.85" />
+  <circle class="cls-2" cx="182.65" cy="133.16" r="14.36" />
+  <circle class="cls-2" cx="250.34" cy="133.16" r="14.36" />
+  <circle class="cls-2" cx="317.86" cy="133.16" r="14.36" />
+  <polyline class="cls-2" points="220.79 234.27 220.79 162.75 183.82 162.75 183.82 151.61" />
+  <polyline class="cls-2" points="279.53 233.27 279.53 162.75 316.49 162.75 316.49 151.61" />
+  <line class="cls-2" x1="249.91" y1="153.13" x2="249.91" y2="218.83" />
+  <line class="cls-2" x1="183.51" y1="391.08" x2="316.49" y2="391.08" />
+</svg>

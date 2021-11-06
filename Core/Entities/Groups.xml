@@ -1,0 +1,42 @@
+<Collectives>
+    <Company>
+        <Attributes>
+            Company Name,Registration Number
+        </Attributes>
+        <Icon>
+            Company.svg
+        </Icon>
+    </Company>
+    <Organization>
+        <Attributes>
+            Organization Name,Registration Number
+        </Attributes>
+        <Icon>
+            Organization.svg
+        </Icon>
+    </Organization>
+    <Cult>
+        <Attributes>
+            Cult Name,Ideology
+        </Attributes>
+        <Icon>
+            Cult.svg
+        </Icon>
+    </Cult>
+    <Terrorist_Group>
+        <Attributes>
+            Group Name,Ideology
+        </Attributes>
+        <Icon>
+            Terrorists.svg
+        </Icon>
+    </Terrorist_Group>
+    <Family>
+        <Attributes>
+            Family Surname
+        </Attributes>
+        <Icon>
+            Family.svg
+        </Icon>
+    </Family>
+</Collectives>

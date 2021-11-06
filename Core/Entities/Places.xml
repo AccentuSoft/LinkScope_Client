@@ -1,0 +1,42 @@
+<Places>
+  <GeoCoordinates>
+    <Attributes>
+      Label,Latitude,Longitude
+    </Attributes>
+    <Icon>
+      Geolocation.svg
+    </Icon>
+  </GeoCoordinates>
+  <Address>
+    <Attributes>
+      Street Address,Locality,Postal Code,Country
+    </Attributes>
+    <Icon>
+      Address.svg
+    </Icon>
+  </Address>
+  <Country>
+    <Attributes>
+      Country Name
+    </Attributes>
+    <Icon>
+      Country.svg
+    </Icon>
+  </Country>
+  <City>
+    <Attributes>
+      City Name
+    </Attributes>
+    <Icon>
+      City.svg
+    </Icon>
+  </City>
+  <Circular_Area>
+    <Attributes>
+      Label,Latitude,Longitude,Radius
+    </Attributes>
+    <Icon>
+      GeoArea.svg
+    </Icon>
+  </Circular_Area>
+</Places>

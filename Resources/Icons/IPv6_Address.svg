@@ -1,0 +1,45 @@
+<svg width="40" height="40" id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
+  <defs>
+    <style>
+      .cls-1,
+      .cls-3 {
+        fill: #305988;
+      }
+
+      .cls-2 {
+        fill: none;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+        stroke-width: 16px;
+      }
+
+      .cls-2,
+      .cls-3 {
+        stroke: #fff;
+      }
+
+      .cls-3 {
+        stroke-miterlimit: 10;
+        stroke-width: 17px;
+      }
+    </style>
+  </defs>
+  <title>ip-address-2</title>
+  <path class="cls-1" d="M500,250A250,250,0,1,1,0,250C0,111.93,111.93,0,250,0S500,111.93,500,250Z" />
+  <path class="cls-2" d="M314.71,250.78c0,35.74-64.71,108.95-64.71,108.95s-64.71-73.21-64.71-108.95a64.71,64.71,0,0,1,129.42,0Z" />
+  <polyline class="cls-2" points="357.65 287.47 357.65 258.32 317.56 258.32" />
+  <circle class="cls-2" cx="357.65" cy="302.9" r="14.77" />
+  <polyline class="cls-2" points="142.35 287.47 142.35 258.32 182.44 258.32" />
+  <circle class="cls-2" cx="142.35" cy="302.9" r="14.77" />
+  <polyline class="cls-2" points="283.49 322.08 306.77 322.08 306.77 359.73 340 359.73" />
+  <circle class="cls-2" cx="358.28" cy="359.72" r="14.77" />
+  <polyline class="cls-2" points="216.51 322.08 193.23 322.08 193.23 359.73 160 359.73" />
+  <circle class="cls-2" cx="141.72" cy="359.72" r="14.77" />
+  <polyline class="cls-2" points="311.75 219.39 340.9 219.39 340.9 178.48" />
+  <circle class="cls-2" cx="340.9" cy="162.15" r="14.77" />
+  <polyline class="cls-2" points="188.25 219.39 159.1 219.39 159.1 178.48" />
+  <circle class="cls-2" cx="159.1" cy="162.15" r="14.77" />
+  <line class="cls-2" x1="250" y1="185.05" x2="250" y2="156.6" />
+  <circle class="cls-2" cx="250" cy="140.28" r="14.77" />
+  <circle class="cls-3" cx="250" cy="252.28" r="23.94" />
+</svg>

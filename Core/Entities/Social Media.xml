@@ -1,0 +1,18 @@
+<Social>
+    <Social_Media_Group>
+        <Attributes>
+            Group Name,Social Media Site
+        </Attributes>
+        <Icon>
+            Social_Media_Group.svg
+        </Icon>
+    </Social_Media_Group>
+    <Social_Media_Handle>
+        <Attributes>
+            User Name
+        </Attributes>
+        <Icon>
+            Social_Media_Account.svg
+        </Icon>
+    </Social_Media_Handle>
+</Social>

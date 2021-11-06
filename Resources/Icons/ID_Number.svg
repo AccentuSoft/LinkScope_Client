@@ -1,0 +1,25 @@
+<svg width="40" height="40" id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #2abc7a;
+      }
+
+      .cls-2 {
+        fill: none;
+        stroke: #fff;
+        stroke-linecap: round;
+        stroke-miterlimit: 10;
+        stroke-width: 16px;
+      }
+    </style>
+  </defs>
+  <title>social-media-profile </title>
+  <path class="cls-1" d="M500,250A250,250,0,1,1,0,250C0,111.93,111.93,0,250,0S500,111.93,500,250Z" />
+  <rect class="cls-2" x="257.16" y="230.93" width="102.16" height="41.26" rx="3.36" ry="3.36" />
+  <rect class="cls-2" x="106.44" y="150.31" width="287.12" height="199.38" rx="20.36" ry="20.36" />
+  <line class="cls-2" x1="106.44" y1="192.97" x2="393.56" y2="192.97" />
+  <circle class="cls-2" cx="188.85" cy="258.69" r="32.36" />
+  <path class="cls-2" d="M132.23,347.27a56.23,56.23,0,1,1,112.46,0" />
+  <line class="cls-2" x1="260.68" y1="305.67" x2="355.8" y2="305.67" />
+</svg>

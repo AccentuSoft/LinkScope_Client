@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="40" height="40" viewBox="0 0 100 100">
+  <circle stroke="none" fill="#c408d2" r="48%" cx="50%" cy="50%"></circle>
+  <g transform="translate(25 50) scale(0.08 0.08) rotate(0) translate(-50 -300)" style="fill:#ffffff">
+      <defs>
+        <style type="text/css">
+          .fil0 {
+            fill: #ffffff
+          }
+        </style>
+      </defs>
+      <g>
+        <path class="fil0" d="M763 45l0 21 -117 0 0 -21 58 -45 59 45zm0 40l0 16 -117 0 0 -16 117 0zm0 35l0 16 -117 0 0 -16 117 0zm0 36l0 16 -117 0 0 -16 117 0zm0 35l0 16 -117 0 0 -16 117 0zm0 36l0 16 -117 0 0 -16 117 0zm0 35l0 382 -117 0 0 -382 117 0z"></path>
+        <path class="fil0" d="M166 169l69 0 0 -95 67 0 0 325 27 0 0 -345 94 0 0 97 75 0 0 171 40 0 0 -171 94 0 0 493c-186,0 -373,0 -559,0l0 -590 93 0 0 115zm275 211l29 0 0 57 -29 0 0 -57zm0 -65l29 0 0 58 -29 0 0 -58zm0 -64l29 0 0 57 -29 0 0 -57zm-78 81l29 0 0 57 -29 0 0 -57zm0 -65l29 0 0 57 -29 0 0 -57zm0 -65l29 0 0 58 -29 0 0 -58zm0 -64l29 0 0 57 -29 0 0 -57zm-181 272l29 0 0 58 -29 0 0 -58zm0 -65l29 0 0 58 -29 0 0 -58zm0 -64l29 0 0 57 -29 0 0 -57zm0 -65l29 0 0 58 -29 0 0 -58zm-77 250l29 0 0 58 -29 0 0 -58zm0 -65l29 0 0 58 -29 0 0 -58zm0 -65l29 0 0 57 -29 0 0 -57zm0 -66l29 0 0 58 -29 0 0 -58zm0 -65l29 0 0 57 -29 0 0 -57zm0 -66l29 0 0 58 -29 0 0 -58zm0 -65l29 0 0 58 -29 0 0 -58zm467 301l28 0 0 57 -28 0 0 -57zm0 -65l28 0 0 58 -28 0 0 -58zm0 -65l28 0 0 58 -28 0 0 -58zm0 -64l28 0 0 57 -28 0 0 -57z"></path>
+        <rect class="fil0" y="80" width="57.8522" height="564.063"></rect>
+        <rect class="fil0" x="1" y="64" width="55.0766" height="10.8481"></rect>
+        <rect class="fil0" x="5" y="50" width="48.2095" height="9.04004"></rect>
+      </g>
+  </g>
+</svg>

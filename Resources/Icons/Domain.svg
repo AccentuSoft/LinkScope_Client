@@ -1,0 +1,39 @@
+<svg width="40" height="40" id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
+  <defs>
+    <style>
+      .cls-1,
+      .cls-3 {
+        fill: #7e09af;
+      }
+
+      .cls-2 {
+        fill: none;
+        stroke-linecap: round;
+      }
+
+      .cls-2,
+      .cls-3 {
+        stroke: #fff;
+        stroke-miterlimit: 10;
+        stroke-width: 16px;
+      }
+
+      .cls-4 {
+        fill: #fff;
+      }
+    </style>
+  </defs>
+  <title>domain</title>
+  <path class="cls-1" d="M500,250A250,250,0,1,1,0,250C0,111.93,111.93,0,250,0S500,111.93,500,250Z" />
+  <circle class="cls-2" cx="250" cy="250" r="145.43" />
+  <path class="cls-2" d="M228.3,109S112.76,235.9,222.88,391" />
+  <path class="cls-2" d="M274.44,391S390,264.1,279.87,109" />
+  <line class="cls-2" x1="130.11" y1="173.51" x2="368.8" y2="173.51" />
+  <line class="cls-2" x1="111.13" y1="247.83" x2="388.87" y2="247.83" />
+  <line class="cls-2" x1="130.11" y1="321.06" x2="368.8" y2="321.06" />
+  <line class="cls-2" x1="250" y1="104.57" x2="250" y2="395.43" />
+  <rect class="cls-3" x="80.94" y="238.18" width="338.12" height="98.61" rx="13.72" ry="13.72" />
+  <path class="cls-4" d="M190.29,266.69h10.06L185.94,307h-8.43L169.09,283,160.49,307h-8.42l-14.36-40.26h10.8l8.26,25.39,9-25.39H173l8.65,25.84Z" />
+  <path class="cls-4" d="M265.61,266.69h10.06L261.25,307h-8.43L244.4,283,235.81,307h-8.42L213,266.69h10.8l8.26,25.39,9-25.39h7.24L257,292.53Z" />
+  <path class="cls-4" d="M340.92,266.69H351L336.57,307h-8.43L319.72,283,311.12,307H302.7l-14.36-40.26h10.8l8.26,25.39,9-25.39h7.24l8.65,25.84Z" />
+</svg>

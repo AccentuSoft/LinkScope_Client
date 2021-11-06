@@ -1,0 +1,10 @@
+<Meta>
+  <EntityGroup>
+    <Attributes>
+      Group Name,Child UIDs
+    </Attributes>
+    <Icon>
+      GroupNode.svg
+    </Icon>
+  </EntityGroup>
+</Meta>

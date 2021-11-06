@@ -1,0 +1,26 @@
+<Devices>
+    <Mobile_Phone>
+        <Attributes>
+            Device UID,Brand
+        </Attributes>
+        <Icon>
+            Mobile_Device.svg
+        </Icon>
+    </Mobile_Phone>
+    <Computer>
+        <Attributes>
+            Hostname,Brand
+        </Attributes>
+        <Icon>
+            Computer.svg
+        </Icon>
+    </Computer>
+    <Camera>
+        <Attributes>
+            Device UID,Brand
+        </Attributes>
+        <Icon>
+            Camera.svg
+        </Icon>
+    </Camera>
+</Devices>

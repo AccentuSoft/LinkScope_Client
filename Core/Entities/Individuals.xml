@@ -1,0 +1,58 @@
+<Individuals>
+  <Person>
+    <Attributes>
+      Full Name,Gender
+    </Attributes>
+    <Icon>
+      Person.svg
+    </Icon>
+  </Person>
+  <Politically_Exposed_Person>
+    <Attributes>
+      Full Name,Gender,Occupation,Date of Birth
+    </Attributes>
+    <Icon>
+      Person.svg
+    </Icon>
+  </Politically_Exposed_Person>
+  <Phrase>
+    <Attributes>
+      Phrase
+    </Attributes>
+    <Icon>
+      Phrase.svg
+    </Icon>
+  </Phrase>
+  <Sentiment>
+    <Attributes>
+      Sentiment
+    </Attributes>
+    <Icon>
+      Sentiment.svg
+    </Icon>
+  </Sentiment>
+  <Email_Address>
+    <Attributes>
+      Email Address
+    </Attributes>
+    <Icon>
+      Email.svg
+    </Icon>
+  </Email_Address>
+  <Phone_Number>
+    <Attributes>
+      Phone Number
+    </Attributes>
+    <Icon>
+      Phone_Number.svg
+    </Icon>
+  </Phone_Number>
+  <Date>
+    <Attributes>
+      Date
+    </Attributes>
+    <Icon>
+      Date.svg
+    </Icon>
+  </Date>
+</Individuals>

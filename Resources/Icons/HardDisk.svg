@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="40" height="40" viewBox="0 0 100 100">
+  <circle stroke="none" fill="#11328b" r="48%" cx="50%" cy="50%"></circle>
+  <g transform="translate(50 50) scale(1.6 1.6) rotate(0) translate(-23 -23)" style="fill:#ffffff">
+      <title>hardware-computer-electonic-HDD-sata-drive-storage-data</title>
+      <path d="M36,3H12A4,4,0,0,0,8,7V41a4,4,0,0,0,4,4H36a4,4,0,0,0,4-4V7A4,4,0,0,0,36,3Zm2,38a2,2,0,0,1-2,2H12a2,2,0,0,1-2-2V7a2,2,0,0,1,2-2H36a2,2,0,0,1,2,2Z"></path>
+      <path d="M21.45,10.25A13,13,0,0,0,16.79,33.8l-2.5,2.5A1,1,0,0,0,14,37v4a1,1,0,0,0,1,1h5a1,1,0,0,0,1-.71l1.65-5.37A12.87,12.87,0,0,0,24,36a13,13,0,1,0-2.54-25.75ZM19.26,40H16V37.41l5.86-5.86Zm6.9-6.21a11,11,0,0,1-2.95.19L25,28.29a1,1,0,0,0-1.66-1l-5.06,5.06a11,11,0,1,1,7.92,1.43Z"></path>
+      <path d="M24,20a3,3,0,1,0,3,3A3,3,0,0,0,24,20Zm0,4a1,1,0,1,1,1-1A1,1,0,0,1,24,24Z"></path>
+      <circle cx="12" cy="7" r="1"></circle>
+      <circle cx="12" cy="41" r="1"></circle>
+      <circle cx="36" cy="7" r="1"></circle>
+      <circle cx="36" cy="41" r="1"></circle>
+  </g>
+</svg>

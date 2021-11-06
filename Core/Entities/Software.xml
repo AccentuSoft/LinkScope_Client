@@ -1,0 +1,18 @@
+<Software>
+    <Application>
+        <Attributes>
+            Application Name
+        </Attributes>
+        <Icon>
+            Software.svg
+        </Icon>
+    </Application>
+    <Hash>
+        <Attributes>
+            Hash Value,Hash Algorithm
+        </Attributes>
+        <Icon>
+            Hash.svg
+        </Icon>
+    </Hash>
+</Software>

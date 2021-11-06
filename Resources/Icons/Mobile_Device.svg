@@ -1,0 +1,31 @@
+<svg width="40" height="40" id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #183a59;
+      }
+
+      .cls-2 {
+        fill: none;
+        stroke: #fff;
+        stroke-linecap: round;
+        stroke-miterlimit: 10;
+        stroke-width: 16px;
+      }
+    </style>
+  </defs>
+  <title>phone-number</title>
+  <path class="cls-1" d="M500,250A250,250,0,1,1,0,250C0,111.93,111.93,0,250,0S500,111.93,500,250Z" />
+  <rect class="cls-2" x="167.43" y="129.13" width="165.15" height="255.26" rx="10.61" ry="10.61" />
+  <path class="cls-2" d="M294.91,129.13v21.37c0,1.63-2.06,2.95-4.61,2.95H209.69c-2.54,0-4.61-1.32-4.61-2.95V129.13" />
+  <circle class="cls-2" cx="211" cy="214.39" r="6.59" />
+  <circle class="cls-2" cx="250" cy="214.39" r="6.59" />
+  <circle class="cls-2" cx="289" cy="214.39" r="6.59" />
+  <circle class="cls-2" cx="211" cy="257.06" r="6.59" />
+  <circle class="cls-2" cx="250" cy="257.06" r="6.59" />
+  <circle class="cls-2" cx="289" cy="257.06" r="6.59" />
+  <circle class="cls-2" cx="211" cy="299.73" r="6.59" />
+  <circle class="cls-2" cx="250" cy="299.73" r="6.59" />
+  <circle class="cls-2" cx="289" cy="299.73" r="6.59" />
+  <circle class="cls-2" cx="250" cy="341.46" r="6.59" />
+</svg>

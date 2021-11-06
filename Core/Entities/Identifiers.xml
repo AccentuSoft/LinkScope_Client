@@ -1,0 +1,34 @@
+<Identifiers>
+    <Identification_Number>
+        <Attributes>
+            ID Number
+        </Attributes>
+        <Icon>
+            ID_Number.svg
+        </Icon>
+    </Identification_Number>
+    <Passport_Number>
+        <Attributes>
+            Passport Number
+        </Attributes>
+        <Icon>
+            Passport.svg
+        </Icon>
+    </Passport_Number>
+    <Vehicle_Registration>
+        <Attributes>
+            Registration Number
+        </Attributes>
+        <Icon>
+            VehicleRegistration.svg
+        </Icon>
+    </Vehicle_Registration>
+    <Flight_Number>
+        <Attributes>
+            Flight Number,Airline
+        </Attributes>
+        <Icon>
+            Flight_Number.svg
+        </Icon>
+    </Flight_Number>
+</Identifiers>

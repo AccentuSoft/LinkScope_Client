@@ -1,0 +1,23 @@
+<svg width="40" height="40" id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 500 500">
+  <defs>
+    <style>
+      .cls-1 {
+        fill: #ad0753;
+      }
+
+      .cls-2 {
+        fill: none;
+        stroke: #fff;
+        stroke-linecap: round;
+        stroke-miterlimit: 10;
+        stroke-width: 16px;
+      }
+    </style>
+  </defs>
+  <title>geolocation</title>
+  <path class="cls-1" d="M500,250A250,250,0,1,1,0,250C0,111.93,111.93,0,250,0S500,111.93,500,250Z" />
+  <path class="cls-2" d="M322.56,189.23c0,18.4-15.26,43.77-31.8,65.87q-2.59,3.46-5.21,6.81a520.43,520.43,0,0,1-35.68,40.86s-72.69-73.39-72.69-113.54a72.69,72.69,0,0,1,145.38,0Z" />
+  <circle class="cls-2" cx="249.89" cy="189.9" r="23.29" />
+  <path class="cls-2" d="M285.56,261.91h37.25a4.61,4.61,0,0,1,4.23,3.72L351.87,359c.92,3.46-1.22,7-4.23,7H152.36c-3.07,0-5.21-3.67-4.18-7.16l27.63-93.38a4.57,4.57,0,0,1,4.18-3.55H214.2" />
+  <line class="cls-2" x1="224.83" y1="316.3" x2="274.52" y2="316.3" />
+</svg>
