@@ -20,7 +20,7 @@ Some notable features of Nexus include:
 ### Server
 - Collaborate with others live on projects
 - Extract sentiment, entities and relationships from files
-- Extract text from over 300 types of documents, and get summaries of the content for large files
+- Extract text from over 100 types of documents, and get summaries of the content for large files
 - Ask the Oracle a question about the data, and receive an answer with context
 
 ## Installation
