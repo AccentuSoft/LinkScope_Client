@@ -1,0 +1,82 @@
+<Edgar>
+    <Edgar_ID>
+        <Attributes>
+            CIK
+        </Attributes>
+    </Edgar_ID>
+    <Form_Field>
+        <Attributes>
+            Field Name,Account Number,Fiscal Year,Fiscal Period,Value,Unit,Taxonomy
+        </Attributes>
+    </Form_Field>
+    <Form13F>
+        <Attributes>
+            Name Of Issuer,Title Of Class,CUSIP,Value,Number Of Shares,Ssh Prnamt Type,Investment Discretion
+        </Attributes>
+    </Form13F>
+    <Form4>
+        <Attributes>
+            Security Title,Deemed Execution Date,Equity Swap Involved,Transaction Timeliness,Transaction Shares,Transaction Price Per Share,Shares Owned Following Transaction,Direct Or Indirect Ownership
+        </Attributes>
+    </Form4>
+    <Form3>
+        <Attributes>
+            Security Title,Shares Owned Following Transaction,Direct Or Indirect Ownership,Nature Of Ownership
+        </Attributes>
+    </Form3>
+    <FormD>
+        <Attributes>
+            Company Name,Industry Group Type,Investment Fund Type,Aggregate Net Asset Value Range,Duration Of Offering,Types Of Securities Offered,Business Combination Transaction,Minimum Investment Accepted,Total Offering Amount,Total Amount Sold,Total Amount Remaining,Has Non Accredited Investors,Total Number Already Invested,Sales Commissions,Finders Fees,Gross Proceeds Used
+        </Attributes>
+    </FormD>
+    <Tickers>
+        <Attributes>
+            Ticker Name
+        </Attributes>
+    </Tickers>
+    <Exchanges>
+        <Attributes>
+            Exchange Name
+        </Attributes>
+    </Exchanges>
+    <SIC>
+        <Attributes>
+            SIC,Description
+        </Attributes>
+    </SIC>
+    <EIN>
+        <Attributes>
+            EIN
+        </Attributes>
+    </EIN>
+    <CUSIP>
+        <Attributes>
+            CUSIP
+        </Attributes>
+    </CUSIP>
+    <LEIID>
+        <Attributes>
+            LEIID
+        </Attributes>
+    </LEIID>
+    <ISINID>
+        <Attributes>
+            ISINID
+        </Attributes>
+    </ISINID>
+    <Shares>
+        <Attributes>
+            Amount
+        </Attributes>
+    </Shares>
+    <FormNMFP2>
+        <Attributes>
+            Field Name,Friday 1,Friday 2,Friday 3,Friday 4,Friday 5
+        </Attributes>
+    </FormNMFP2>
+    <Collateral_Issuer>
+        <Attributes>
+            Name,Coupon or Yield,Principal Amount,Value of Collateral,Ctgry Investments Rprsnts Collateral
+        </Attributes>
+    </Collateral_Issuer>
+</Edgar>

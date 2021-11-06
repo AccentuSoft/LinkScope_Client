@@ -1,0 +1,42 @@
+<Nmap>
+    <Scan_Info>
+        <Attributes>
+            Type,Protocol,Number of Services
+        </Attributes>
+    </Scan_Info>
+    <Run_Stats>
+        <Attributes>
+            Nmap Scan,Hosts Up,Hosts Down,Total Hosts,Time Elapsed,Exit Code
+        </Attributes>
+    </Run_Stats>
+    <Port_Service>
+        <Attributes>
+            Service Product,Service Name,Method,Configuration
+        </Attributes>
+    </Port_Service>
+    <Port_State>
+        <Attributes>
+            Port State,Reason,Reason TTL
+        </Attributes>
+    </Port_State>
+    <Port_Script>
+        <Attributes>
+            Key,Output,ID
+        </Attributes>
+    </Port_Script>
+    <TCP_Sequence>
+        <Attributes>
+            Index,Difficulty,Values
+        </Attributes>
+    </TCP_Sequence>
+    <IP_ID_Sequence>
+        <Attributes>
+            Class,Values
+        </Attributes>
+    </IP_ID_Sequence>
+    <TCP_TS_Sequence>
+        <Attributes>
+            Class,Values
+        </Attributes>
+    </TCP_TS_Sequence>
+</Nmap>

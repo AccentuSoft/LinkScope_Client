@@ -1,0 +1,4 @@
+lxml 
+urllib3
+selenium
+requests

@@ -1,0 +1,37 @@
+<GitHub>
+    <Gist_URL>
+        <Attributes>
+            Gist URL
+        </Attributes>
+    </Gist_URL>
+    <GitHub_Repository>
+        <Attributes>
+            Repository Name
+        </Attributes>
+    </GitHub_Repository>
+    <GitHub_User>
+        <Attributes>
+            Username
+        </Attributes>
+    </GitHub_User>
+    <GitHub_Organisation>
+        <Attributes>
+            Organisation Name
+        </Attributes>
+    </GitHub_Organisation>
+    <GitHub_FilePath>
+        <Attributes>
+            Filepath
+        </Attributes>
+    </GitHub_FilePath>
+    <GitHub_Secret>
+        <Attributes>
+            Secret
+        </Attributes>
+    </GitHub_Secret>
+    <GitHub_Branch>
+        <Attributes>
+            Branch
+        </Attributes>
+    </GitHub_Branch>
+</GitHub>

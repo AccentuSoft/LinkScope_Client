@@ -1,0 +1,10 @@
+<ExampleEntities>
+  <Example>
+    <Attributes>
+      ExampleLabel
+    </Attributes>
+    <Icon>
+      Default.svg
+    </Icon>
+  </Example>
+</ExampleEntities>
