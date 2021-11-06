@@ -1,0 +1,53 @@
+PySide6>=6.2.0  # https://lists.qt-project.org/pipermail/pyside/2021-September/003083.html
+
+
+# For python-magic, the following packages may be required:
+## Linux:
+### sudo apt-get install libmagic1
+## Windows:
+### pip install python-magic-bin
+python-magic
+
+# The graphviz package is required.
+## Linux: sudo apt-get install graphviz
+## Windows: https://www.graphviz.org/download/
+
+pydot
+networkx
+
+defusedxml
+cryptography
+msgpack
+folium
+pillow
+lz4
+urllib3
+reportlab
+selenium
+pandas
+svglib
+
+##### Extra Packages for resolutions
+requests
+shodan
+docx2python
+PyPDF2
+tldextract
+beautifulsoup4
+python-Wappalyzer
+vtapi3
+social-analyzer
+requests_futures
+tweepy
+selenium-wire
+jellyfish
+shodan
+pandas
+lxml
+pycountry
+ipwhois
+docker
+email-validator
+docx2python
+exif
+xmltodict
