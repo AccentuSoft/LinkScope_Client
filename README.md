@@ -6,6 +6,23 @@
 ## Description
 This is the repository for the Nexus Client Online Investigation software. Nexus allows you to perform online investigations by representing information as discrete pieces of data, called Entities. These Entities can then be explored through Resolutions, which take the attributes of Entities as input, and resolve them to different, but connected, pieces of information. In such a way, one can create a knowledge graph (or abstract art) for any particular domain, which should help investigators easily discover answers and insights that otherwise might have been hard to extract.
 
+## Features
+Some notable features of Nexus include:
+
+### Client
+- Graph visualisation of information and their relationships
+- Drag and drop interface to add new data
+- Timeline of events based on creation date of entities
+- Import browser tabs and take screenshots of your session
+- Display locations on a world map
+- Easily extensible to suit your specific needs
+
+### Server
+- Collaborate with others live on projects
+- Extract sentiment, entities and relationships from files
+- Extract text from over 300 types of documents, and get summaries of the content for large files
+- Ask the Oracle a question about the data, and receive an answer with context
+
 ## Installation
 ### Supported Platforms
 Currently, Linux (Ubuntu, but most Debian derivatives should work) and Windows 10 are supported.
