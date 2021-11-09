@@ -19,6 +19,7 @@ class HostnameToIP:
             urlFeatures = primaryField.find('://')
             if urlFeatures != -1:
                 primaryField = primaryField[urlFeatures + 3:]
+            primaryField = primaryField.split('/')[0]  # Remove trailing slashes
             try:
                 entityResults = socket.getaddrinfo(primaryField, 443, proto=socket.IPPROTO_TCP) + \
                                 socket.getaddrinfo(primaryField, 80, proto=socket.IPPROTO_TCP)
