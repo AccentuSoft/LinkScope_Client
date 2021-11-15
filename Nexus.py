@@ -1340,7 +1340,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dockbarThree.chatBox.receiveMessage(message)
 
     def initializeLayout(self) -> None:
-        self.setMinimumSize(1600, 960)
 
         self.restoreGeometry(self.SETTINGS.value("MainWindow/Geometry"))
         self.restoreState(self.SETTINGS.value("MainWindow/WindowState"))
