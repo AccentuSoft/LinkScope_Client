@@ -94,7 +94,7 @@ class MenuBar(QtWidgets.QMenuBar):
         exportMenu.addAction(GraphMLCanvas)
         exportMenu.addAction(GraphMLDatabase)
 
-        editSettingsAction = fileMenu.addMenu("Edit Settings")
+        editSettingsMenu = fileMenu.addMenu("Edit Settings")
         editLog = QtGui.QAction('Logging Settings',
                                 self,
                                 statusTip="Edit Logging Settings",
@@ -110,15 +110,13 @@ class MenuBar(QtWidgets.QMenuBar):
                                        statusTip="Edit Resolutions Settings",
                                        triggered=self.editResolutionsSettings)
 
-        editSettingsAction.addAction(editLog)
-        editSettingsAction.addAction(editResolution)
-        editSettingsAction.addAction(editProject)
-
-        fileMenu.addMenu(editSettingsAction)
+        editSettingsMenu.addAction(editLog)
+        editSettingsMenu.addAction(editResolution)
+        editSettingsMenu.addAction(editProject)
 
         exitAction = QtGui.QAction("Exit",
                                    self,
-                                   statusTip="Save, Close Project and Exist",
+                                   statusTip="Save, Close Project and Exit",
                                    triggered=self.exitSoftware)
         fileMenu.addAction(exitAction)
 
