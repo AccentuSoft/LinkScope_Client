@@ -137,6 +137,33 @@ class MenuBar(QtWidgets.QMenuBar):
         runningResolutiosAction.setShortcut("Ctrl+R")
         viewMenu.addAction(runningResolutiosAction)
 
+        dockbarVisibilityMenu = viewMenu.addMenu("Toggle Dockbar Visibility")
+
+        self.dockbarOneVisibilityAction = QtGui.QAction("Toggle Dockbar One",
+                                                        self,
+                                                        statusTip="Toggle the visibility of Dockbar One",
+                                                        triggered=self.toggleDockbarOneVisibility)
+        dockbarVisibilityMenu.addAction(self.dockbarOneVisibilityAction)
+
+        self.dockbarTwoVisibilityAction = QtGui.QAction("Toggle Dockbar Two",
+                                                        self,
+                                                        statusTip="Toggle the visibility of Dockbar Two",
+                                                        triggered=self.toggleDockbarTwoVisibility)
+        dockbarVisibilityMenu.addAction(self.dockbarTwoVisibilityAction)
+
+        self.dockbarThreeVisibilityAction = QtGui.QAction("Toggle Dockbar Three",
+                                                          self,
+                                                          statusTip="Toggle the visibility of Dockbar Three",
+                                                          triggered=self.toggleDockbarThreeVisibility)
+        dockbarVisibilityMenu.addAction(self.dockbarThreeVisibilityAction)
+
+        toolbarVisibilityMenu = viewMenu.addMenu("Toggle Toolbar Visibility")
+        self.primaryToolbarVisibilityAction = QtGui.QAction("Toggle Primary Toolbar",
+                                                            self,
+                                                            statusTip="Toggle the visibility of the Primary Toolbar",
+                                                            triggered=self.togglePrimaryToolbarVisibility)
+        toolbarVisibilityMenu.addAction(self.primaryToolbarVisibilityAction)
+
         modulesMenu = self.addMenu("Modules")
         modulesMenu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
 
@@ -222,7 +249,46 @@ class MenuBar(QtWidgets.QMenuBar):
                                            triggered=self.downloadFile)
         serverMenu.addAction(downloadFileAction)
 
-    def importFromFile(self):
+    # Use this function to change the labels of functions when necessary.
+    # Not very efficient, but much more intuitive than creating a ton of different menus
+    #   and mashing them together.
+    def mousePressEvent(self, arg__1: QtGui.QMouseEvent) -> None:
+        super(MenuBar, self).mousePressEvent(arg__1)
+        self.dockbarOneVisibilityAction.setText("Hide Dockbar One" if self.parent().dockbarOne.isVisible() else
+                                                "Show Dockbar One")
+        self.dockbarTwoVisibilityAction.setText("Hide Dockbar Two" if self.parent().dockbarTwo.isVisible() else
+                                                "Show Dockbar Two")
+        self.dockbarThreeVisibilityAction.setText("Hide Dockbar Three" if self.parent().dockbarThree.isVisible() else
+                                                  "Show Dockbar Three")
+        self.primaryToolbarVisibilityAction.setText("Hide Primary Toolbar"
+                                                    if self.parent().primaryToolbar.isVisible() else
+                                                    "Show Primary Toolbar")
+
+    def toggleDockbarOneVisibility(self) -> None:
+        if self.parent().dockbarOne.isVisible():
+            self.parent().dockbarOne.setVisible(False)
+        else:
+            self.parent().dockbarOne.setVisible(True)
+
+    def toggleDockbarTwoVisibility(self) -> None:
+        if self.parent().dockbarTwo.isVisible():
+            self.parent().dockbarTwo.setVisible(False)
+        else:
+            self.parent().dockbarTwo.setVisible(True)
+
+    def toggleDockbarThreeVisibility(self) -> None:
+        if self.parent().dockbarThree.isVisible():
+            self.parent().dockbarThree.setVisible(False)
+        else:
+            self.parent().dockbarThree.setVisible(True)
+
+    def togglePrimaryToolbarVisibility(self) -> None:
+        if self.parent().primaryToolbar.isVisible():
+            self.parent().primaryToolbar.setVisible(False)
+        else:
+            self.parent().primaryToolbar.setVisible(True)
+
+    def importFromFile(self) -> None:
         importDialog = ImportFromFileDialog(self)
         importDialogAccept = importDialog.exec_()
         return_results = []
@@ -590,7 +656,7 @@ class MenuBar(QtWidgets.QMenuBar):
                         "Chrome/91.0.4472.124 Safari/537.36")
                     sessionFilePath = Path.home() / '.config' / 'google-chrome' / 'Default' / 'Sessions'
                     if not sessionFilePath.exists():
-                        sessionFilePath = Path.home() / 'snap' / 'chromium' / 'common' / 'chromium' /\
+                        sessionFilePath = Path.home() / 'snap' / 'chromium' / 'common' / 'chromium' / \
                                           'Default' / 'Sessions'
                 else:
                     browserOptions.add_argument(

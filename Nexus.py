@@ -1353,8 +1353,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.addDockWidget(QtCore.Qt.BottomDockWidgetArea,
                            self.dockbarThree)
 
+        self.addToolBar(self.primaryToolbar)
         self.setMenuBar(MenuBar.MenuBar(self))
-        self.addToolBar(ToolBarOne.ToolBarOne('Primary Toolbar', self))
 
         # Set the main window title and show it to the user.
         self.setWindowTitle("Nexus - " + self.SETTINGS.get('Project/Name', 'Untitled'))
@@ -1456,6 +1456,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dockbarTwo = DockBarTwo.DockBarTwo(self,
                                                 self.RESOURCEHANDLER,
                                                 self.LENTDB)
+
+        self.primaryToolbar = ToolBarOne.ToolBarOne('Primary Toolbar', self)
 
         self.initializeLayout()
 
