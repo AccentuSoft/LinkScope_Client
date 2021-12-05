@@ -620,6 +620,12 @@ class CanvasView(QtWidgets.QGraphicsView):
                                      triggered=self.scene().deleteSelectedItems)
         self.menu.addAction(actionDelete)
 
+        actionDeleteFromDatabase = QtGui.QAction('Delete Selected Items',
+                                                 self.menu,
+                                                 statusTip="Delete selected items from this project.",
+                                                 triggered=self.deleteItemsFromDatabase)
+        self.menu.addAction(actionDeleteFromDatabase)
+
         self.actionLinkDelete = QtGui.QAction('Delete Selected Links',
                                               self.menu,
                                               statusTip="Delete selected links from this canvas.",
@@ -651,6 +657,12 @@ class CanvasView(QtWidgets.QGraphicsView):
         self.menu.addAction(entitiesToOtherCanvas)
 
         self.menu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
+
+    def deleteItemsFromDatabase(self) -> None:
+        items = self.scene().selectedItems()
+        for item in items:
+            if isinstance(item, Entity.BaseNode):
+                self.tabbedPane.mainWindow.deleteSpecificEntity(item.uid)
 
     def adjustSceneRect(self) -> None:
         self.scene().adjustSceneRect()
