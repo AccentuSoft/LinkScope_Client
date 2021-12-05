@@ -36,7 +36,7 @@ class IPWhois:
                                           {uid: {'Resolution': 'IPWhois', 'Notes': ''}}])
                 if net['name'] is not None:
                     return_result.append([{'Company Name': net['name'],
-                                           'Entity Type': 'Country'},
+                                           'Entity Type': 'Company'},
                                           {uid: {'Resolution': 'IPWhois', 'Notes': ''}}])
                 if net['emails'] is not None:
                     for email in net['emails']:
