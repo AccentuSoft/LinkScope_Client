@@ -904,12 +904,14 @@ class MainWindow(QtWidgets.QMainWindow):
         result, i.e. run the function that adds nodes and links.
         """
         if isinstance(resolution_result, str):
-            self.MESSAGEHANDLER.info(f"Resolution {resolution_name} finished with status: {resolution_result}", True)
+            self.MESSAGEHANDLER.info(f"Resolution {resolution_name} finished with status: {resolution_result}",
+                                     popUp=True)
+        elif len(resolution_result) == 0:
+            self.MESSAGEHANDLER.info(f"Resolution {resolution_name} returned no results.", popUp=True)
         else:
             self.centralWidget().tabbedPane.facilitateResolution(resolution_name, resolution_result)
 
         self.cleanUpLocalFinishedResolutions()
-
         self.setStatus("Resolution: " + resolution_name + " completed.")
 
     def cleanUpLocalFinishedResolutions(self) -> None:
