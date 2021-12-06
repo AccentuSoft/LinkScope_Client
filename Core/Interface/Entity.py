@@ -260,6 +260,25 @@ class BaseConnector(QGraphicsItemGroup):  # TODO - Make letters bold?
     def paint(self, painter: QtGui.QPainter, option: QtWidgets.QStyleOptionGraphicsItem,
               widget: Optional[QtWidgets.QWidget] = ...) -> None:
 
+        currentStartPos = self.myStartItem.pos()
+        currentEndPos = self.myEndItem.pos()
+
+        if self.isSelected():
+            self.myColor = self.colorSelected
+        else:
+            self.myColor = self.colorDefault
+
+        if currentEndPos == self.oldEndPos and currentStartPos == self.oldStartPos:
+            myPen = QtGui.QPen(self.myColor)
+            painter.setPen(myPen)
+            painter.setBrush(self.myColor)
+            painter.drawLine(self.line)
+            painter.drawPolygon(self.arrowHead)
+            return
+
+        self.oldStartPos = currentStartPos
+        self.oldEndPos = currentEndPos
+
         p1 = QtCore.QPointF(self.myStartItem.pos().x() + 20, self.myStartItem.pos().y() + 20)
         p2 = QtCore.QPointF(self.myEndItem.pos().x() + 20, self.myEndItem.pos().y() + 20)
 
@@ -286,25 +305,6 @@ class BaseConnector(QGraphicsItemGroup):  # TODO - Make letters bold?
             else:
                 self.labelItem.setPos(line.pointAt(0.3))
             self.labelItem.setRotation(angle2)
-
-        currentStartPos = self.myStartItem.pos()
-        currentEndPos = self.myEndItem.pos()
-
-        if self.isSelected():
-            self.myColor = self.colorSelected
-        else:
-            self.myColor = self.colorDefault
-
-        if currentEndPos == self.oldEndPos and currentStartPos == self.oldStartPos:
-            myPen = QtGui.QPen(self.myColor)
-            painter.setPen(myPen)
-            painter.setBrush(self.myColor)
-            painter.drawLine(self.line)
-            painter.drawPolygon(self.arrowHead)
-            return
-
-        self.oldStartPos = currentStartPos
-        self.oldEndPos = currentEndPos
 
         myPen = QtGui.QPen(self.myColor)
         arrowSize = 20.0
