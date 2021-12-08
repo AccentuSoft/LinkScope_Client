@@ -39,9 +39,9 @@ class GetExternalURLs:
         from bs4 import BeautifulSoup
         returnResult = []
 
-        extract_a = parameters['Element types to check'].get('<a> elements', None) is not None
-        extract_img = parameters['Element types to check'].get('<img> elements', None) is not None
-        extract_link = parameters['Element types to check'].get('<link> elements', None) is not None
+        extract_a = '<a> elements' in parameters['Element types to check']
+        extract_img = '<img> elements' in parameters['Element types to check']
+        extract_link = '<link> elements' in parameters['Element types to check']
 
         with sync_playwright() as p:
             browser = p.firefox.launch()
