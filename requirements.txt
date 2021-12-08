@@ -1,4 +1,4 @@
-PySide6>=6.2.0  # https://lists.qt-project.org/pipermail/pyside/2021-September/003083.html
+PySide6>=6.2.0
 
 
 # For python-magic, the following packages may be required:
@@ -23,9 +23,15 @@ pillow
 lz4
 urllib3
 reportlab
-selenium
 pandas
 svglib
+lxml
+
+# Transition from selenium to playwright
+selenium
+playwright
+# Need to run 'playwright install'  - Packaging should take care of this.
+
 
 ##### Extra Packages for resolutions
 requests
@@ -43,7 +49,6 @@ selenium-wire
 jellyfish
 shodan
 pandas
-lxml
 pycountry
 ipwhois
 docker
