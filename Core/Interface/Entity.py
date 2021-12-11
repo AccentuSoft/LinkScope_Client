@@ -263,10 +263,7 @@ class BaseConnector(QGraphicsItemGroup):  # TODO - Make letters bold?
         currentStartPos = self.myStartItem.pos()
         currentEndPos = self.myEndItem.pos()
 
-        if self.isSelected():
-            self.myColor = self.colorSelected
-        else:
-            self.myColor = self.colorDefault
+        self.myColor = self.colorSelected if self.isSelected() else self.colorDefault
 
         if currentEndPos == self.oldEndPos and currentStartPos == self.oldStartPos:
             myPen = QtGui.QPen(self.myColor)
