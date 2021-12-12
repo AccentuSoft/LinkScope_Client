@@ -34,13 +34,15 @@ This repository has the code for the Linux version, with the Windows alternative
 ### Installing Dependencies
 Some dependencies need to be installed in order for the software to work properly. After downloading the release correspoding to your platform from the Releases tab, please perform the following steps to install the required dependencies:
 1. Linux
-	- `sudo apt update && sudo apt install libopengl0 graphviz libmagic1 -y`
-	- Download geckodriver and add it to your PATH: https://github.com/mozilla/geckodriver/releases
-	- Download chromedriver and add it to your PATH: https://chromedriver.chromium.org/
+    - `sudo apt update && sudo apt install libopengl0 graphviz libmagic1 -y`
+    - `playwright install`
+    - Download geckodriver and add it to your PATH: https://github.com/mozilla/geckodriver/releases
+    - Download chromedriver and add it to your PATH: https://chromedriver.chromium.org/
 2. Windows
-	- Download and install the graphviz package from https://www.graphviz.org/download/
-	- Download geckodriver and add it to your PATH: https://github.com/mozilla/geckodriver/releases
-	- Download chromedriver and add it to your PATH: https://chromedriver.chromium.org/
+    - Download and install the graphviz package from https://www.graphviz.org/download/
+    - Download geckodriver and add it to your PATH: https://github.com/mozilla/geckodriver/releases
+    - Download chromedriver and add it to your PATH: https://chromedriver.chromium.org/
+    - `playwright install`
 
 Helpful link for those unfamiliar with adding binaries to their PATH: https://zwbetz.com/how-to-add-a-binary-to-your-path-on-macos-linux-windows/
 
