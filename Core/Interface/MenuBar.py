@@ -12,8 +12,7 @@ import webbrowser
 from urllib import parse
 from pathlib import Path
 
-from selenium import webdriver
-from selenium.common import exceptions
+from playwright.sync_api import sync_playwright, Error
 
 from PySide6 import QtWidgets, QtGui, QtCore
 
@@ -310,17 +309,17 @@ class MenuBar(QtWidgets.QMenuBar):
                                       'Entity Type': csvContents['EntityType'][entity]}])
                             else:
                                 self.parent().MESSAGEHANDLER.warning(
-                                    'Please Check that the format of the csv provided is in '
-                                    f'terms of the documentation. Malformed entity detected at line {entity + 1}. The '
+                                    'Please Check that the format of the csv provided is as described by '
+                                    f'the documentation. Malformed entity detected at line {entity + 1}. The '
                                     f'field of the entity is Invalid', popUp=True)
                         else:
                             self.parent().MESSAGEHANDLER.warning(
-                                "Please Check that the format of the csv provided is in "
-                                f"terms of the documentation. Malformed entity detected at line {entity + 1}. The "
+                                "Please Check that the format of the csv provided is as described by "
+                                f"the documentation. Malformed entity detected at line {entity + 1}. The "
                                 f"entity type is Invalid", popUp=True)
                 except ValueError:
-                    self.parent().MESSAGEHANDLER.warning("Please Check that the format of the csv provided is in "
-                                                         "terms of the documentation. It should have 3 columns in "
+                    self.parent().MESSAGEHANDLER.warning("Please check that the format of the csv provided is as "
+                                                         "described by the documentation. It should have 3 columns in "
                                                          "order of EntityType, EntityField, EntityValue. All the "
                                                          "'Values' should be filled accordingly", popUp=True)
                     return_results = []
@@ -499,6 +498,7 @@ class MenuBar(QtWidgets.QMenuBar):
     def importFromBrowser(self) -> None:
         """
         Import session tabs to canvas. Optionally, also take a screenshot of them.
+        Assumes default browser profiles.
 
         :return:
         """
@@ -521,272 +521,277 @@ class MenuBar(QtWidgets.QMenuBar):
             returnResults = []
 
             progress.setValue(1)
-            if importDialog.firefoxChoice.isChecked():
-                browserOptions = webdriver.FirefoxOptions()
-                browserOptions.headless = True
-
-                if platform.system() == 'Linux':
-                    browserOptions.add_argument(
-                        "user-agent=Mozilla/5.0 (X11; Linux i686; rv:89.0) Gecko/20100101 Firefox/89.0")
-                    urlPath = Path.home() / '.mozilla' / 'firefox'
-                else:  # We already checked before that the platform is either 'Linux' or 'Windows'.
-                    browserOptions.add_argument(
-                        "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0")
-                    urlPath = Path(os.environ['APPDATA']) / 'Mozilla' / 'Firefox' / 'Profiles'
-
-                # Try to get the profile whose cookies database is currently being used.
-                # Failing that, try to get the first profile that has a cookies database.
-                # Failing that, assume no cookies are present, so do not use any.
-                try:
-                    currentProfile = str(Path(list(urlPath.glob('*/cookies.sqlite-wal'))[0]).parent)
-                except IndexError:
+            with sync_playwright() as p:
+                if importDialog.firefoxChoice.isChecked():
                     try:
-                        currentProfile = str(Path(list(urlPath.glob('*/cookies.sqlite'))[0]).parent)
-                    except IndexError:
-                        currentProfile = None
+                        browser = p.firefox.launch()
 
-                browser = None
-                try:
-                    if currentProfile is not None:
-                        browser = webdriver.Firefox(options=browserOptions, firefox_profile=currentProfile)
-                    else:
-                        browser = webdriver.Firefox(options=browserOptions)
+                        if platform.system() == 'Linux':
+                            context = browser.new_context(
+                                viewport={'width': 1920, 'height': 1080},
+                                user_agent='Mozilla/5.0 (X11; Linux i686; rv:94.0) Gecko/20100101 Firefox/94.0'
+                            )
+                            urlPath = Path.home() / '.mozilla' / 'firefox'
+                        else:  # We already checked before that the platform is either 'Linux' or 'Windows'.
+                            context = browser.new_context(
+                                viewport={'width': 1920, 'height': 1080},
+                                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:94.0) Gecko/20100101 '
+                                           'Firefox/94.0'
+                            )
+                            urlPath = Path(os.environ['APPDATA']) / 'Mozilla' / 'Firefox' / 'Profiles'
 
-                    tabsFilePath = list(urlPath.glob('*default*/sessionstore-backups/recovery.js*'))[0]
-                    tabsToOpen = set()
-
-                    tabsBytes = tabsFilePath.read_bytes()
-
-                    if tabsBytes[:8] == b'mozLz40\0':
-                        tabsBytes = lz4.block.decompress(tabsBytes[8:])
-                    tabsJson = json.loads(tabsBytes)
-                    for browserWindow in tabsJson['windows']:
-                        for browserTab in browserWindow['tabs']:
-                            if importDialog.firefoxSessionChoice.isChecked():
-                                for browserEntry in browserTab['entries']:
-                                    url = browserEntry['url']
-                                    if not url.startswith('about:'):
-                                        tabsToOpen.add((url, browserEntry['title']))
-                            else:
-                                browserEntry = browserTab['entries'][-1]
-                                url = browserEntry['url']
-                                if not url.startswith('about:'):
-                                    tabsToOpen.add((url, browserEntry['title']))
-
-                    self.parent().MESSAGEHANDLER.debug('Tabs to open: ' + str(tabsToOpen))
-                    projectFilesDir = Path(self.parent().SETTINGS.value("Project/FilesDir"))
-
-                    for tabToOpen in tabsToOpen:
-                        urlTitle = tabToOpen[1]
-                        actualURL = tabToOpen[0]
-                        decodedPath = parse.unquote(actualURL)
-                        parsedURL = parse.urlparse(decodedPath)
-                        urlPath = parsedURL.path
-
-                        if parsedURL.scheme == 'file':
-                            try:
-                                mime = magic.Magic(mime=True)
-                                pathType = mime.from_file(urlPath)
-                            except FileNotFoundError:
-                                continue
-
-                            if 'application' in pathType:
-                                returnResults.append([{'Document Name': urlTitle,
-                                                       'File Path': urlPath,
-                                                       'Entity Type': 'Document'}])
-                            elif 'image' in pathType:
-                                returnResults.append([{'Image Name': urlTitle,
-                                                       'File Path': urlPath,
-                                                       'Entity Type': 'Image'}])
-                            elif 'video' in pathType:
-                                returnResults.append([{'Video Name': urlTitle,
-                                                       'File Path': urlPath,
-                                                       'Entity Type': 'Video'}])
-                            elif 'archive' in pathType:
-                                returnResults.append([{'Archive Name': urlTitle,
-                                                       'File Path': urlPath,
-                                                       'Entity Type': 'Archive'}])
-
-                        elif parsedURL.scheme.startswith('http'):
-                            returnResults.append([{'URL': actualURL,
-                                                   'Entity Type': 'Website'}])
-
-                            if importDialog.importScreenshotsCheckbox.isChecked():
-                                browser.get(actualURL)
-
-                                urlSaveDir = projectFilesDir / urlTitle
-
-                                try:
-                                    if not urlSaveDir.exists():
-                                        urlSaveDir.mkdir(mode=0o700)
-                                except OSError:
-                                    urlSaveDir = None
-
-                                if urlSaveDir is not None:
-                                    screenshotSavePath = urlSaveDir / (actualURL.replace('/', '+') + ' screenshot.png')
-                                    browser.get_screenshot_as_file(str(screenshotSavePath))
-
-                                    returnResults.append(
-                                        [{'Image Name': urlTitle + ' Website Screenshot',
-                                          'File Path': screenshotSavePath,
-                                          'Entity Type': 'Image'},
-                                         {'Resolution': 'Screenshot of Tab', 'Notes': ''}])
-
-                except (FileNotFoundError, exceptions.WebDriverException):
-                    self.parent().MESSAGEHANDLER.warning('Geckodriver not installed or not in PATH.'
-                                                         ' Cannot import tabs from Firefox.', popUp=True)
-                except (IndexError, ValueError):
-                    pass
-
-                if browser is not None:
-                    browser.quit()
-
-            progress.setValue(2)
-            if importDialog.chromeChoice.isChecked() and not progress.wasCanceled():
-
-                # NOTE: Cookies are not obtained for chromium based browsers.
-
-                browserOptions = webdriver.ChromeOptions()
-                browserOptions.headless = True
-                browserOptions.add_argument('--remote-debugging-port=9222')
-
-                if platform.system() == 'Linux':
-                    browserOptions.add_argument(
-                        "user-agent=Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
-                        "Chrome/91.0.4472.124 Safari/537.36")
-                    sessionFilePath = Path.home() / '.config' / 'google-chrome' / 'Default' / 'Sessions'
-                    if not sessionFilePath.exists():
-                        sessionFilePath = Path.home() / 'snap' / 'chromium' / 'common' / 'chromium' / \
-                                          'Default' / 'Sessions'
-                else:
-                    browserOptions.add_argument(
-                        "user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) "
-                        "Chrome/91.0.4472.124 Safari/537.36")
-                    sessionFilePath = Path.home() / 'AppData' / 'Local' / 'Google' / 'Chrome' / 'User Data' / 'Default'
-
-                lastSessionOpenTabs = set()
-
-                # Get the session file with the largest timestamp (i.e. most recent session)
-                # Need the while loop to prevent race conditions
-                chromeSessionFileContents = None
-                if sessionFilePath.exists():
-                    while True:
-                        try:
-                            latestTimestamp = max([int(sessionFile.split("Session_", 1)[1])
-                                                   for sessionFile in os.listdir(sessionFilePath)
-                                                   if 'Session_' in sessionFile])
-                            sessionFilePath = sessionFilePath.joinpath("Session_" + str(latestTimestamp))
-                            chromeSessionFileContents = sessionFilePath.read_bytes()
-                            break
-                        except (FileNotFoundError, IndexError):
-                            pass
-                        except ValueError:
-                            # No session files means we can't do anything for chrome.
-                            break
-
-                if chromeSessionFileContents is None:
-                    self.parent().MESSAGEHANDLER.warning('Chrome / Chromium session file does not exist or is'
-                                                         ' inaccessible. Cannot import tabs from Chrome /'
-                                                         ' Chromium.', popUp=True)
-                else:
-                    projectFilesDir = Path(self.parent().SETTINGS.value("Project/FilesDir"))
-
-                    """
-                    WARNING: This is a hackish solution that does not always work. Documentation and tools to work
-                             with chrome and chromium session files are lacking last I checked,
-                             and most of the existing ones have been broken since the last update.
-                             This is a best-effort solution for now, which should mostly work.
-    
-                             As for how it works, it's just pattern matching after some observations about the
-                             file structure of chrome session files.
-    
-                             This will probably be revised in the future to make it actually parse chrome session
-                             files.
-                    """
-                    httpTabs = re.split(b'http', chromeSessionFileContents)
-                    for httpTab in httpTabs[1:]:
-                        try:
-                            tabURL = re.split(b'\x00|\x0b', httpTab)[0].decode()
-                        except UnicodeDecodeError:
-                            continue
-                        if tabURL.startswith('s://'):
-                            tabURL = 'https://' + tabURL[4:]
+                        tabsFilePath = list(urlPath.glob('*default*/sessionstore-backups/recovery.jsonlz4'))
+                        if len(tabsFilePath) == 0:
+                            self.parent().MESSAGEHANDLER.warning('No Firefox session detected. Skipping importing from'
+                                                                 ' Firefox.', popUp=True)
                         else:
-                            tabURL = 'http://' + tabURL[3:]
-                        if tabURL[-1] == '/':
-                            tabURL = tabURL[:-1]
-                        lastSessionOpenTabs.add(tabURL)
-                    fileTabs = re.split(b'file', chromeSessionFileContents)
-                    for fileTab in fileTabs[1:]:
-                        try:
-                            tabURL = 'file://' + re.split(b'\x00|\x0b', fileTab)[0].decode()[3:]
-                        except UnicodeDecodeError:
-                            continue
-                        lastSessionOpenTabs.add(tabURL)
+                            tabsFilePath = tabsFilePath[0]
+                            tabsToOpen = set()
 
-                    try:
-                        browser = webdriver.Chrome(options=browserOptions)
-                        for tabURL in lastSessionOpenTabs:
-                            decodedPath = parse.unquote(tabURL)
-                            parsedURL = parse.urlparse(decodedPath)
-                            urlPath = parsedURL.path
-                            urlTitle = parsedURL.netloc
+                            tabsBytes = tabsFilePath.read_bytes()
+                            if tabsBytes[:8] == b'mozLz40\0':
+                                tabsBytes = lz4.block.decompress(tabsBytes[8:])
+                            tabsJson = json.loads(tabsBytes)
+                            for browserWindow in tabsJson['windows']:
+                                for browserTab in browserWindow['tabs']:
+                                    if importDialog.firefoxSessionChoice.isChecked():
+                                        for browserEntry in browserTab['entries']:
+                                            url = browserEntry['url']
+                                            if not url.startswith('about:'):
+                                                tabsToOpen.add((url, browserEntry['title']))
+                                    else:
+                                        browserEntry = browserTab['entries'][-1]
+                                        url = browserEntry['url']
+                                        if not url.startswith('about:'):
+                                            tabsToOpen.add((url, browserEntry['title']))
 
-                            if parsedURL.scheme == 'file':
-                                urlTitle = Path(urlPath).name
-                                try:
-                                    mime = magic.Magic(mime=True)
-                                    pathType = mime.from_file(urlPath)
-                                except FileNotFoundError:
-                                    continue
+                            browserCookies = []
+                            for cookie in tabsJson['cookies']:
+                                newCookie = {'name': cookie['name'], 'value': cookie['value'],
+                                             'domain': cookie['domain'], 'path': cookie['path'],
+                                             'httpOnly': cookie.get('httponly', False),
+                                             'secure': cookie.get('secure', False)}
+                                if cookie.get('expiry', None) is not None:
+                                    newCookie['expires'] = float(cookie['expiry'])
+                                if cookie.get('sameSite', None) is not None:
+                                    newCookie['sameSite'] = cookie['sameSite']
+                                browserCookies.append(newCookie)
+                            context.add_cookies(browserCookies)
+                            page = context.new_page()
 
-                                if 'application' in pathType:
-                                    returnResults.append([{'Document Name': urlTitle,
-                                                           'File Path': urlPath,
-                                                           'Entity Type': 'Document'}])
-                                elif 'image' in pathType:
-                                    returnResults.append([{'Image Name': urlTitle,
-                                                           'File Path': urlPath,
-                                                           'Entity Type': 'Image'}])
-                                elif 'video' in pathType:
-                                    returnResults.append([{'Video Name': urlTitle,
-                                                           'File Path': urlPath,
-                                                           'Entity Type': 'Video'}])
-                                elif 'archive' in pathType:
-                                    returnResults.append([{'Archive Name': urlTitle,
-                                                           'File Path': urlPath,
-                                                           'Entity Type': 'Archive'}])
+                            self.parent().MESSAGEHANDLER.debug('Tabs to open: ' + str(tabsToOpen))
+                            projectFilesDir = Path(self.parent().SETTINGS.value("Project/FilesDir"))
 
-                            elif parsedURL.scheme.startswith('http'):
-                                returnResults.append([{'URL': tabURL,
-                                                       'Entity Type': 'Website'}])
+                            for tabToOpen in tabsToOpen:
+                                urlTitle = tabToOpen[1]
+                                actualURL = tabToOpen[0]
+                                decodedPath = parse.unquote(actualURL)
+                                parsedURL = parse.urlparse(decodedPath)
+                                urlPath = parsedURL.path
 
-                                if importDialog.importScreenshotsCheckbox.isChecked():
-                                    browser.get(tabURL)
-
-                                    urlSaveDir = projectFilesDir / urlTitle
-
+                                if parsedURL.scheme == 'file':
                                     try:
-                                        if not urlSaveDir.exists():
-                                            urlSaveDir.mkdir(mode=0o700)
-                                    except OSError:
-                                        urlSaveDir = None
+                                        mime = magic.Magic(mime=True)
+                                        pathType = mime.from_file(urlPath)
+                                    except FileNotFoundError:
+                                        continue
 
-                                    if urlSaveDir is not None:
-                                        screenshotSavePath = urlSaveDir / (tabURL.replace('/', '+') + ' screenshot.png')
-                                        browser.get_screenshot_as_file(str(screenshotSavePath))
+                                    if 'application' in pathType:
+                                        returnResults.append([{'Document Name': urlTitle,
+                                                               'File Path': urlPath,
+                                                               'Entity Type': 'Document'}])
+                                    elif 'image' in pathType:
+                                        returnResults.append([{'Image Name': urlTitle,
+                                                               'File Path': urlPath,
+                                                               'Entity Type': 'Image'}])
+                                    elif 'video' in pathType:
+                                        returnResults.append([{'Video Name': urlTitle,
+                                                               'File Path': urlPath,
+                                                               'Entity Type': 'Video'}])
+                                    elif 'archive' in pathType:
+                                        returnResults.append([{'Archive Name': urlTitle,
+                                                               'File Path': urlPath,
+                                                               'Entity Type': 'Archive'}])
 
-                                        returnResults.append(
-                                            [{'Image Name': urlTitle + ' Website Screenshot',
-                                              'File Path': screenshotSavePath,
-                                              'Entity Type': 'Image'},
-                                             {'Resolution': 'Screenshot of Tab', 'Notes': ''}])
+                                elif parsedURL.scheme.startswith('http'):
+                                    returnResults.append([{'URL': actualURL,
+                                                           'Entity Type': 'Website'}])
 
-                        browser.quit()
-                    except exceptions.WebDriverException as e:
-                        print(repr(e))
-                        self.parent().MESSAGEHANDLER.warning('Chromedriver not installed or not in PATH.'
-                                                             ' Cannot import tabs from Chrome / Chromium.', popUp=True)
+                                    if importDialog.importScreenshotsCheckbox.isChecked():
+                                        page.goto(actualURL)
+
+                                        urlSaveDir = projectFilesDir / urlTitle
+
+                                        try:
+                                            if not urlSaveDir.exists():
+                                                urlSaveDir.mkdir(mode=0o700)
+                                        except OSError:
+                                            urlSaveDir = None
+
+                                        if urlSaveDir is not None:
+                                            screenshotSavePath = str(urlSaveDir / (actualURL.replace('/', '+') +
+                                                                                   ' screenshot.png'))
+                                            page.screenshot(path=screenshotSavePath, full_page=True)
+
+                                            returnResults.append(
+                                                [{'Image Name': urlTitle + ' Website Screenshot',
+                                                  'File Path': screenshotSavePath,
+                                                  'Entity Type': 'Image'},
+                                                 {'Resolution': 'Screenshot of Tab', 'Notes': ''}])
+
+                        browser.close()
+                    except Error:
+                        self.parent().MESSAGEHANDLER.warning('Firefox executable is not installed. Cannot import '
+                                                             'tabs from Firefox.', popUp=True)
+
+                progress.setValue(2)
+                if importDialog.chromeChoice.isChecked() and not progress.wasCanceled():
+                    try:
+                        browser = p.chromium.launch()
+
+                        # NOTE: Cookies are not obtained for chromium based browsers.
+
+                        if platform.system() == 'Linux':
+                            context = browser.new_context(
+                                viewport={'width': 1920, 'height': 1080},
+                                user_agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
+                                           "Chrome/96.0.4664.45 Safari/537.36"
+                            )
+                            sessionFilePath = Path.home() / '.config' / 'google-chrome' / 'Default' / 'Sessions'
+                            if not sessionFilePath.exists():
+                                sessionFilePath = Path.home() / 'snap' / 'chromium' / 'common' / 'chromium' / \
+                                                  'Default' / 'Sessions'
+                        else:  # We already checked before that the platform is either 'Linux' or 'Windows'.
+                            context = browser.new_context(
+                                viewport={'width': 1920, 'height': 1080},
+                                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+                                           "(KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36"
+                            )
+                            sessionFilePath = Path.home() / 'AppData' / 'Local' / 'Google' / 'Chrome' / 'User Data' /\
+                                              'Default'
+
+                        lastSessionOpenTabs = set()
+
+                        # Get the session file with the largest timestamp (i.e. most recent session)
+                        # Need the while loop to prevent race conditions
+                        chromeSessionFileContents = None
+                        if sessionFilePath.exists():
+                            while True:
+                                try:
+                                    latestTimestamp = max([int(sessionFile.split("Session_", 1)[1])
+                                                           for sessionFile in os.listdir(sessionFilePath)
+                                                           if 'Session_' in sessionFile])
+                                    sessionFilePath = sessionFilePath.joinpath("Session_" + str(latestTimestamp))
+                                    chromeSessionFileContents = sessionFilePath.read_bytes()
+                                    break
+                                except (FileNotFoundError, IndexError):
+                                    pass
+                                except ValueError:
+                                    # No session files means we can't do anything for chrome.
+                                    break
+
+                        if chromeSessionFileContents is None:
+                            self.parent().MESSAGEHANDLER.warning('Chrome / Chromium session file does not exist or is'
+                                                                 ' inaccessible. Cannot import tabs from Chrome /'
+                                                                 ' Chromium.', popUp=True)
+                        else:
+                            projectFilesDir = Path(self.parent().SETTINGS.value("Project/FilesDir"))
+
+                            """
+                            WARNING: This is a hackish solution that does not always work. Documentation and tools to work
+                                     with chrome and chromium session files are lacking last I checked,
+                                     and most of the existing ones have been broken since the last update.
+                                     This is a best-effort solution for now, which should mostly work.
+            
+                                     As for how it works, it's just pattern matching after some observations about the
+                                     file structure of chrome session files.
+            
+                                     This will probably be revised in the future to make it actually parse chrome session
+                                     files.
+                            """
+                            httpTabs = re.split(b'http', chromeSessionFileContents)
+                            for httpTab in httpTabs[1:]:
+                                try:
+                                    tabURL = re.split(b'\x00|\x0b', httpTab)[0].decode()
+                                except UnicodeDecodeError:
+                                    continue
+                                if tabURL.startswith('s://'):
+                                    tabURL = 'https://' + tabURL[4:]
+                                else:
+                                    tabURL = 'http://' + tabURL[3:]
+                                if tabURL[-1] == '/':
+                                    tabURL = tabURL[:-1]
+                                lastSessionOpenTabs.add(tabURL)
+                            fileTabs = re.split(b'file', chromeSessionFileContents)
+                            for fileTab in fileTabs[1:]:
+                                try:
+                                    tabURL = 'file://' + re.split(b'\x00|\x0b', fileTab)[0].decode()[3:]
+                                except UnicodeDecodeError:
+                                    continue
+                                lastSessionOpenTabs.add(tabURL)
+
+                            page = context.new_page()
+                            for tabURL in lastSessionOpenTabs:
+                                decodedPath = parse.unquote(tabURL)
+                                parsedURL = parse.urlparse(decodedPath)
+                                urlPath = parsedURL.path
+                                urlTitle = parsedURL.netloc
+
+                                if parsedURL.scheme == 'file':
+                                    urlTitle = Path(urlPath).name
+                                    try:
+                                        mime = magic.Magic(mime=True)
+                                        pathType = mime.from_file(urlPath)
+                                    except FileNotFoundError:
+                                        continue
+
+                                    if 'application' in pathType:
+                                        returnResults.append([{'Document Name': urlTitle,
+                                                               'File Path': urlPath,
+                                                               'Entity Type': 'Document'}])
+                                    elif 'image' in pathType:
+                                        returnResults.append([{'Image Name': urlTitle,
+                                                               'File Path': urlPath,
+                                                               'Entity Type': 'Image'}])
+                                    elif 'video' in pathType:
+                                        returnResults.append([{'Video Name': urlTitle,
+                                                               'File Path': urlPath,
+                                                               'Entity Type': 'Video'}])
+                                    elif 'archive' in pathType:
+                                        returnResults.append([{'Archive Name': urlTitle,
+                                                               'File Path': urlPath,
+                                                               'Entity Type': 'Archive'}])
+
+                                elif parsedURL.scheme.startswith('http'):
+                                    returnResults.append([{'URL': tabURL,
+                                                           'Entity Type': 'Website'}])
+
+                                    if importDialog.importScreenshotsCheckbox.isChecked():
+                                        page.goto(tabURL)
+
+                                        urlSaveDir = projectFilesDir / urlTitle
+
+                                        try:
+                                            if not urlSaveDir.exists():
+                                                urlSaveDir.mkdir(mode=0o700)
+                                        except OSError:
+                                            urlSaveDir = None
+
+                                        if urlSaveDir is not None:
+                                            screenshotSavePath = str(urlSaveDir / (
+                                                        tabURL.replace('/', '+') + ' screenshot.png'))
+                                            page.screenshot(path=screenshotSavePath, full_page=True)
+
+                                            returnResults.append(
+                                                [{'Image Name': urlTitle + ' Website Screenshot',
+                                                  'File Path': screenshotSavePath,
+                                                  'Entity Type': 'Image'},
+                                                 {'Resolution': 'Screenshot of Tab', 'Notes': ''}])
+
+                        browser.close()
+                    except Error:
+                        self.parent().MESSAGEHANDLER.warning('Chrome / Chromium executable is not installed. Cannot '
+                                                             'import tabs from Chrome / Chromium.', popUp=True)
 
             progress.setValue(3)
             newNodeUIDs = []
