@@ -1,145 +1,93 @@
+#!/usr/bin/env python3
+
+"""
+This extracts only phone numbers that are marked as a 'tel:' hyperlink.
+Extraction of other phone numbers is imprecise, as random numbers may be interpreted as valid phone numbers.
+"""
+
+
 class PhoneNumbersExtractor:
     # A string that is treated as the name of this resolution.
-    name = "Get Phone Numbers In Domain"
+    name = "Extract Phone Numbers"
 
     # A string that describes this resolution.
-    description = "Returns Nodes of contact info for websites"
+    description = "Returns the Phone Numbers present on the website."
 
-    originTypes = {'Domain'}
+    originTypes = {'Domain', 'Website'}
 
-    resultTypes = {'Phrase'}
+    resultTypes = {'Phone Number'}
 
-    parameters = {'Max Webpages to Follow': {'description': 'Please enter the maximum number of webpages to follow. '
-                                                            'Default number 20. The greater the number the longer the '
-                                                            'resolution takes to complete. '
-                                                            'Enter "0" (no quotes) to use the default value.',
-                                             'type': 'String',
-                                             'value': '0'}}
+    parameters = {'Max Depth': {'description': 'Each link leading to another website in the same domain can be '
+                                               'explored to discover more entities. Each entity discovered after '
+                                               'exploring sites linked in the original website or domain is said to '
+                                               'have a "depth" value of 1. Entities found from exploring the links on '
+                                               'this page would have a "depth" of 2, and so on. A larger value could '
+                                               'result in EXPONENTIALLY more time taken to finish the resolution.\n'
+                                               'The default value is "0", which means only the provided website, or '
+                                               'the index page of the domain provided, is explored.',
+                                'type': 'String',
+                                'value': '0',
+                                'default': '0'}}
 
     def resolution(self, entityJsonList, parameters):
-        import requests.exceptions
-        import tldextract
-        from selenium import webdriver
+        from playwright.sync_api import sync_playwright
         from bs4 import BeautifulSoup
-
+        import urllib
         returnResults = []
-        max_urls = int(parameters['Max Webpages to Follow'])
-        if max_urls == 0:
-            max_urls = 20
 
-        phoneNumbers = set()
+        try:
+            maxDepth = int(parameters['Max Depth'])
+        except ValueError:
+            return "Invalid value provided for Max Webpages to Follow."
 
-        fireFoxOptions = webdriver.FirefoxOptions()
-        fireFoxOptions.headless = True
-        driver = webdriver.Firefox(options=fireFoxOptions)
+        def extractTels(currentUID: str, site: str, depth: int):
+            domain = ".".join(urllib.parse.urlparse(site).netloc.split('.')[-2:])
 
-        for entity in entityJsonList:
-            uid = entity['uid']
-
-            primaryField = entity[list(entity)[1]]
-
-            if primaryField.startswith('http://') or primaryField.startswith('https://'):
-                url = primaryField
-            else:
-                url = 'https://' + primaryField
-
-            # a queue of urls to be crawled next
-            new_urls = {url}
-
-            # a set of urls that we have already processed
-            processed_urls = set()
-
-            # a set of domains inside the target website
-            local_urls = set()
-
-            # a set of domains outside the target website
-            foreign_urls = set()
-
-            # a set of broken urls
-            broken_urls = set()
-
-            # process urls one by one until we exhaust the queue
-            while len(new_urls):
-                # move url from the queue to processed url set
-                url = new_urls.pop()
-
-                poundlessUrl = url.split('#')[0]
-
-                if url in processed_urls:
-                    continue
-
-                processed_urls.add(url)
-
-                # TODO: Rework this
-                # extract base url to resolve relative links
-                parts = tldextract.extract(poundlessUrl)
-                if parts.subdomain != '':
-                    base = parts.subdomain + '.' + parts.domain + '.' + parts.suffix
-                else:
-                    base = parts.domain + '.' + parts.suffix
-                strip_base = parts.domain + '.' + parts.suffix
-                base_url = 'https://' + base
-
-                if base_url != poundlessUrl and base_url in poundlessUrl:
-                    paths = poundlessUrl.split(base_url, 1)[1]
-                    path = poundlessUrl[:poundlessUrl.rfind('/') + 1] if '/' in paths else poundlessUrl
-                else:
-                    path = poundlessUrl
-
+            page = context.new_page()
+            for _ in range(3):
                 try:
-                    response = requests.get(poundlessUrl)
-                    if response.status_code == 404:
-                        continue
-                    elif base not in response.url:
-                        foreign_urls.add(response.url)
-                        continue
-                    soup = BeautifulSoup(response.text, "lxml")
-                    if response.status_code == 403:
-                        driver.get(poundlessUrl)
-                        pageSource = driver.page_source
-                        soup = BeautifulSoup(pageSource, "lxml")
-                        if base_url not in driver.current_url:
-                            foreign_urls.add(driver.current_url)
-                            continue
-
-                except(requests.exceptions.MissingSchema, requests.exceptions.ConnectionError,
-                       requests.exceptions.InvalidURL,
-                       requests.exceptions.InvalidSchema):
-                    # add broken urls to it’s own set, then continue
-                    broken_urls.add(poundlessUrl)
-                    continue
-
-                for link in soup.find_all('a'):
-                    # extract link url from the anchor
-                    anchor = link.attrs['href'] if 'href' in link.attrs else ''
-                    if anchor.startswith('tel:'):
-                        phoneNumbers.add(anchor)
-                    if anchor.startswith('/'):
-                        local_link = base_url + anchor
-                        local_link = local_link.split('#')[0]
-                        local_urls.add(local_link)
-                        if local_link not in processed_urls and base_url in local_link:
-                            new_urls.add(local_link)
-                    elif strip_base in anchor:
-                        anchor = anchor.split('#')[0]
-                        local_urls.add(anchor)
-                        if anchor not in processed_urls and base_url in anchor:
-                            new_urls.add(anchor)
-                    elif not anchor.startswith('http'):
-                        local_link = path + anchor
-                        local_link = local_link.split('#')[0]
-                        local_urls.add(local_link)
-                        if local_link not in processed_urls and base_url in local_link:
-                            new_urls.add(local_link)
-                    else:
-                        foreign_urls.add(anchor)
-
-                if len(processed_urls) > max_urls:
+                    page.goto(site, wait_until="networkidle", timeout=10000)
                     break
+                except TimeoutError:
+                    pass
 
-            for i in phoneNumbers:
-                returnResults.append([{'Phone Number': i,
-                                       'Entity Type': 'Phone Number'},
-                                      {uid: {'Resolution': 'Phone Numbers Found',
-                                             'Name': 'Phone Numbers Found', 'Notes': ''}}])
+            soupContents = BeautifulSoup(page.content(), 'lxml')
+
+            linksInAHref = soupContents.find_all('a')
+            for tag in linksInAHref:
+                newLink = tag.get('href', None)
+                if newLink is not None:
+                    if newLink.startswith('tel:'):
+                        returnResults.append([{'Phone Number': newLink[4:],
+                                               'Entity Type': 'Phone Number'},
+                                              {currentUID: {'Resolution': 'Phone Numbers Found',
+                                                            'Notes': ''}}])
+                    else:
+                        newDepth = depth - 1
+                        if newLink.startswith('http') and domain in newLink and newDepth > 0:
+                            extractTels(currentUID, newLink.split('#')[0], newDepth)
+
+            linksInLinkHref = soupContents.find_all('link')
+            for tag in linksInLinkHref:
+                newLink = tag.get('href', None)
+                if newLink is not None:
+                    newDepth = depth - 1
+                    if newLink.startswith('http') and domain in newLink and newDepth > 0:
+                        extractTels(currentUID, newLink.split('#')[0], newDepth)
+
+        with sync_playwright() as p:
+            browser = p.firefox.launch()
+            context = browser.new_context(
+                viewport={'width': 1920, 'height': 1080},
+                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:94.0) Gecko/20100101 Firefox/94.0'
+            )
+            for entity in entityJsonList:
+                uid = entity['uid']
+                url = entity.get('URL') if entity.get('URL', None) is not None else entity.get('Domain Name', None)
+                if url is None:
+                    continue
+                if not url.startswith('http://') and not url.startswith('https://'):
+                    url = 'http://' + url
+                extractTels(uid, url, maxDepth)
+
         return returnResults

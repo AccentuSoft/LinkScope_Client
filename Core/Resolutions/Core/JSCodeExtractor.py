@@ -6,7 +6,7 @@ class JSCodeExtractor:
     name = "Get Tracking Codes"
 
     # A string that describes this resolution.
-    description = "Returns Nodes of 'ca-pub', 'ua' and 'gtm' tracking codes for domains."
+    description = "Returns Nodes of 'ca-pub', 'ua' and 'gtm' tracking codes for websites."
 
     originTypes = {'Website'}
 
