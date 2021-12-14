@@ -11,7 +11,7 @@ class PhoneNumbersExtractor:
     name = "Extract Phone Numbers"
 
     # A string that describes this resolution.
-    description = "Returns the Phone Numbers present on the website."
+    description = "Returns the Phone Numbers present on a website or index page of a domain."
 
     originTypes = {'Domain', 'Website'}
 
@@ -33,16 +33,18 @@ class PhoneNumbersExtractor:
         from playwright.sync_api import sync_playwright
         from bs4 import BeautifulSoup
         import urllib
+
         returnResults = []
 
+        # Numbers less than zero are the same as zero.
         try:
             maxDepth = int(parameters['Max Depth'])
         except ValueError:
-            return "Invalid value provided for Max Webpages to Follow."
+            return "Invalid value provided for Max Webpages to follow."
+
+        exploredDepth = set()
 
         def extractTels(currentUID: str, site: str, depth: int):
-            domain = ".".join(urllib.parse.urlparse(site).netloc.split('.')[-2:])
-
             page = context.new_page()
             for _ in range(3):
                 try:
@@ -60,20 +62,25 @@ class PhoneNumbersExtractor:
                     if newLink.startswith('tel:'):
                         returnResults.append([{'Phone Number': newLink[4:],
                                                'Entity Type': 'Phone Number'},
-                                              {currentUID: {'Resolution': 'Phone Numbers Found',
+                                              {currentUID: {'Resolution': 'Phone Number Found',
                                                             'Notes': ''}}])
-                    else:
+                    elif newLink.startswith('http'):
+                        newLink = newLink.split('#')[0]
                         newDepth = depth - 1
-                        if newLink.startswith('http') and domain in newLink and newDepth > 0:
-                            extractTels(currentUID, newLink.split('#')[0], newDepth)
+                        if domain in newLink and newLink not in exploredDepth and newDepth > 0:
+                            exploredDepth.add(newLink)
+                            extractTels(currentUID, newLink, newDepth)
 
             linksInLinkHref = soupContents.find_all('link')
             for tag in linksInLinkHref:
                 newLink = tag.get('href', None)
                 if newLink is not None:
-                    newDepth = depth - 1
-                    if newLink.startswith('http') and domain in newLink and newDepth > 0:
-                        extractTels(currentUID, newLink.split('#')[0], newDepth)
+                    if newLink.startswith('http'):
+                        newLink = newLink.split('#')[0]
+                        newDepth = depth - 1
+                        if domain in newLink and newLink not in exploredDepth and newDepth > 0:
+                            exploredDepth.add(newLink)
+                            extractTels(currentUID, newLink, newDepth)
 
         with sync_playwright() as p:
             browser = p.firefox.launch()
@@ -88,6 +95,8 @@ class PhoneNumbersExtractor:
                     continue
                 if not url.startswith('http://') and not url.startswith('https://'):
                     url = 'http://' + url
+                domain = ".".join(urllib.parse.urlparse(url).netloc.split('.')[-2:])
                 extractTels(uid, url, maxDepth)
+            browser.close()
 
         return returnResults

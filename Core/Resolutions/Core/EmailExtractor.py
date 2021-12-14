@@ -1,167 +1,148 @@
+#!/usr/bin/env python3
+
+
 class EmailExtractor:
     # A string that is treated as the name of this resolution.
-    name = "Get Emails In Domain"
+    name = "Extract Emails"
 
     # A string that describes this resolution.
-    description = "Returns Nodes of contact info for websites"
+    description = "Returns the email addresses present on a website or index page of a domain."
 
-    originTypes = {'Domain'}
+    originTypes = {'Domain', 'Website'}
 
-    resultTypes = {'Phrase'}
+    resultTypes = {'Email Address'}
 
-    parameters = {'Max Webpages to Follow': {'description': 'Please enter the maximum number of webpages to follow.\n'
-                                                            'Default number 20. The greater the number the longer the\n'
-                                                            'resolution takes to complete.\n'
-                                                            'Enter "0" (no quotes) to use the default value.',
-                                             'type': 'String',
-                                             'default': '0'}}
+    parameters = {'Max Depth': {'description': 'Each link leading to another website in the same domain can be '
+                                               'explored to discover more entities. Each entity discovered after '
+                                               'exploring sites linked in the original website or domain is said to '
+                                               'have a "depth" value of 1. Entities found from exploring the links on '
+                                               'this page would have a "depth" of 2, and so on. A larger value could '
+                                               'result in EXPONENTIALLY more time taken to finish the resolution.\n'
+                                               'The default value is "0", which means only the provided website, or '
+                                               'the index page of the domain provided, is explored.',
+                                'type': 'String',
+                                'value': '0',
+                                'default': '0'},
+                  'Use Regex': {'description': 'Extraction of emails is done by finding "mailto" links in the source '
+                                               'code of the website. However, not all emails on the site may exist in '
+                                               'that format. Using Regex can result in more emails being extracted, '
+                                               'however it is possible that some false positives may be extracted '
+                                               'too.\nDo you want to also use Regex to extract emails, in addition to '
+                                               'the default extraction method?',
+                                'type': 'SingleChoice',
+                                'value': {'Yes', 'No'},
+                                'default': 'Yes'},
+                  'Verify Email Domain Validity': {'description': 'Verification checks are performed on extracted '
+                                                                  'emails to ensure that they are valid and working '
+                                                                  'email addresses. One of these checks involves '
+                                                                  'attempting to resolve the email address domain. '
+                                                                  'This will generate network traffic.\n'
+                                                                  'Do you want to verify email domain validity?',
+                                                   'type': 'SingleChoice',
+                                                   'value': {'Yes', 'No'},
+                                                   'default': 'No'}
+                  }
 
     def resolution(self, entityJsonList, parameters):
-        import requests.exceptions
-        import re
-        import tldextract
-        from email_validator import validate_email, caching_resolver, EmailNotValidError
-        from selenium import webdriver
-        from selenium.common.exceptions import SessionNotCreatedException
+        from playwright.sync_api import sync_playwright
         from bs4 import BeautifulSoup
-
-        try:
-            fireFoxOptions = webdriver.FirefoxOptions()
-            fireFoxOptions.headless = True
-            driver = webdriver.Firefox(options=fireFoxOptions)
-        except SessionNotCreatedException:
-            return "Please install the latest version of Firefox from the official Firefox website"
+        import urllib
+        import re
+        from email_validator import validate_email, caching_resolver, EmailNotValidError
 
         returnResults = []
-        max_urls = int(parameters['Max Webpages to Follow'])
-        if max_urls == 0:
-            max_urls = 20
 
-        emails = set()
+        # Numbers less than zero are the same as zero.
+        try:
+            maxDepth = int(parameters['Max Depth'])
+        except ValueError:
+            return "Invalid value provided for Max Webpages to follow."
 
-        for entity in entityJsonList:
-            uid = entity['uid']
+        # Source: https://emailregex.com/
+        # Alt: (?:[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+(\.([a-zA-Z0-9-])+)+)
+        emailRegex = re.compile(r"""(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])""")
+        useRegex = True if parameters['Use Regex'] == 'Yes' else False
 
-            primaryField = entity[list(entity)[1]]
+        resolver = caching_resolver(timeout=10)
+        verifyDomain = True if parameters['Verify Email Domain Validity'] == 'Yes' else False
 
-            if primaryField.startswith('http://') or primaryField.startswith('https://'):
-                url = primaryField
-            else:
-                url = 'https://' + primaryField
+        exploredDepth = set()
 
-            # a queue of urls to be crawled next
-            new_urls = {url}  # deque([url])
+        # The software can deduplicate, but handling it here is better.
+        allEmails = set()
 
-            # a set of urls that we have already processed
-            processed_urls = set()
-
-            # a set of domains inside the target website
-            local_urls = set()
-
-            # a set of domains outside the target website
-            foreign_urls = set()
-
-            # a set of broken urls
-            broken_urls = set()
-
-            # process urls one by one until we exhaust the queue
-            while len(new_urls):
-                # move url from the queue to processed url set
-                url = new_urls.pop()
-
-                poundlessUrl = url.split('#')[0]
-
-                if url in processed_urls:
-                    continue
-
-                processed_urls.add(url)
-
-                # TODO: Rework this
-                # extract base url to resolve relative links
-                parts = tldextract.extract(poundlessUrl)
-                if parts.subdomain != '':
-                    base = parts.subdomain + '.' + parts.domain + '.' + parts.suffix
-                else:
-                    base = parts.domain + '.' + parts.suffix
-                strip_base = parts.domain + '.' + parts.suffix
-                base_url = 'https://' + base
-
-                if base_url != poundlessUrl and base_url in poundlessUrl:
-                    paths = poundlessUrl.split(base_url, 1)[1]
-                    path = poundlessUrl[:poundlessUrl.rfind('/') + 1] if '/' in paths else poundlessUrl
-                else:
-                    path = poundlessUrl
-
+        def extractEmails(currentUID: str, site: str, depth: int):
+            page = context.new_page()
+            for _ in range(3):
                 try:
-                    response = requests.get(poundlessUrl)
-                    if response.status_code == 404:
-                        continue
-                    elif base not in response.url:
-                        foreign_urls.add(response.url)
-                        continue
-                    soup = BeautifulSoup(response.text, "lxml")
-                    if response.status_code == 403:
-                        driver.get(poundlessUrl)
-                        pageSource = driver.page_source
-                        soup = BeautifulSoup(pageSource, "lxml")
-                        if base_url not in driver.current_url:
-                            foreign_urls.add(driver.current_url)
-                            continue
-
-                except(requests.exceptions.MissingSchema, requests.exceptions.ConnectionError,
-                       requests.exceptions.InvalidURL,
-                       requests.exceptions.InvalidSchema):
-                    # add broken urls to it’s own set, then continue
-                    broken_urls.add(poundlessUrl)
-                    continue
-
-                for link in soup.find_all('a'):
-                    # extract link url from the anchor
-                    anchor = link.attrs['href'] if 'href' in link.attrs else ''
-                    if anchor.startswith('/'):
-                        local_link = base_url + anchor
-                        local_link = local_link.split('#')[0]
-                        local_urls.add(local_link)
-                        if local_link not in processed_urls and base_url in local_link:
-                            new_urls.add(local_link)
-                    elif strip_base in anchor:
-                        anchor = anchor.split('#')[0]
-                        local_urls.add(anchor)
-                        if anchor not in processed_urls and base_url in anchor:
-                            new_urls.add(anchor)
-                    elif not anchor.startswith('http'):
-                        local_link = path + anchor
-                        local_link = local_link.split('#')[0]
-                        local_urls.add(local_link)
-                        if local_link not in processed_urls and base_url in local_link:
-                            new_urls.add(local_link)
-                    else:
-                        foreign_urls.add(anchor)
-
-                if len(processed_urls) > max_urls:
+                    page.goto(site, wait_until="networkidle", timeout=10000)
                     break
+                except TimeoutError:
+                    pass
 
-            for lurl in processed_urls:
-                driver.get(lurl)
-                doc = driver.page_source
-                new_emails = set(re.findall(r"[\w.-]+@[\w.-]+", doc, re.IGNORECASE))
-                emails.update(new_emails)
+            soupContents = BeautifulSoup(page.content(), 'lxml')
+            if useRegex:
+                potentialEmails = emailRegex.findall(soupContents.get_text())
+                for potentialEmail in potentialEmails:
+                    try:
+                        valid = validate_email(potentialEmail, dns_resolver=resolver, check_deliverability=verifyDomain)
+                        if valid.email not in allEmails:
+                            allEmails.add(valid.email)
+                            returnResults.append([{'Email Address': valid.email,
+                                                   'Entity Type': 'Email Address'},
+                                                  {currentUID: {'Resolution': 'Email Address Found',
+                                                                'Notes': ''}}])
+                    except EmailNotValidError:
+                        pass
+            linksInAHref = soupContents.find_all('a')
+            for tag in linksInAHref:
+                newLink = tag.get('href', None)
+                if newLink is not None:
+                    if newLink.startswith('mailto:'):
+                        try:
+                            valid = validate_email(newLink[7:], dns_resolver=resolver,
+                                                   check_deliverability=verifyDomain)
+                            if valid.email not in allEmails:
+                                allEmails.add(valid.email)
+                                returnResults.append([{'Email Address': valid.email,
+                                                       'Entity Type': 'Email Address'},
+                                                      {currentUID: {'Resolution': 'Email Address Found',
+                                                                    'Notes': ''}}])
+                        except EmailNotValidError:
+                            pass
+                    elif newLink.startswith('http'):
+                        newLink = newLink.split('#')[0]
+                        newDepth = depth - 1
+                        if domain in newLink and newLink not in exploredDepth and newDepth > 0:
+                            exploredDepth.add(newLink)
+                            extractEmails(currentUID, newLink, newDepth)
 
-            resolver = caching_resolver(timeout=10)
+            linksInLinkHref = soupContents.find_all('link')
+            for tag in linksInLinkHref:
+                newLink = tag.get('href', None)
+                if newLink is not None:
+                    if newLink.startswith('http'):
+                        newLink = newLink.split('#')[0]
+                        newDepth = depth - 1
+                        if domain in newLink and newLink not in exploredDepth and newDepth > 0:
+                            exploredDepth.add(newLink)
+                            extractEmails(currentUID, newLink, newDepth)
 
-            for mail in emails:
-                try:
-                    # Validate.
-                    valid = validate_email(mail, dns_resolver=resolver)
+        with sync_playwright() as p:
+            browser = p.firefox.launch()
+            context = browser.new_context(
+                viewport={'width': 1920, 'height': 1080},
+                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:94.0) Gecko/20100101 Firefox/94.0'
+            )
+            for entity in entityJsonList:
+                uid = entity['uid']
+                url = entity.get('URL') if entity.get('URL', None) is not None else entity.get('Domain Name', None)
+                if url is None:
+                    continue
+                if not url.startswith('http://') and not url.startswith('https://'):
+                    url = 'http://' + url
+                domain = ".".join(urllib.parse.urlparse(url).netloc.split('.')[-2:])
+                extractEmails(uid, url, maxDepth)
+            browser.close()
 
-                    returnResults.append([{'Email Address': valid.email,
-                                           'Entity Type': 'Email Address'},
-                                          {uid: {'Resolution': 'Email Found', 'Name': 'Emails Found', 'Notes': ''}}])
-                except EmailNotValidError as e:
-                    # email is not valid, exception message is human-readable
-                    returnResults.append([{'Phrase': str(e),
-                                           'Entity Type': 'Phrase'},
-                                          {uid: {'Resolution': 'Email Found', 'Name': 'Emails Found', 'Notes': ''}}])
-
-        driver.quit()
         return returnResults

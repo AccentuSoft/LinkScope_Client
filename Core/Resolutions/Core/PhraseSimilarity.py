@@ -8,7 +8,7 @@ class PhraseSimilarity:
     parameters = {'Primary field or Notes': {'description': 'Choose Either Primary field or Notes',
                                              'type': 'SingleChoice',
                                              'value': {'Notes', 'Primary Field'}},
-                  'Algorithm': {'description': 'Choose Either Primary field or Notes',
+                  'Algorithm': {'description': 'Select the Algorithm to use',
                                 'type': 'SingleChoice',
                                 'value': {'levenshtein distance', 'damerau levenshtein distance',
                                           'jaro distance', 'jaro winkler similarity',
