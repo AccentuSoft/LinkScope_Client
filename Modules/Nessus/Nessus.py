@@ -328,7 +328,7 @@ class Nessus:
             element = driver.find_element_by_xpath(
                 "/html/body/section[3]/section[3]/section/form/div[1]/"
                 "div/div/div[1]/section/div[1]/div[1]/div[1]/div[1]/div/input")
-            element.send_keys(f"AccentuSoft Nexus Automated Scanning {targets} {scanType}")
+            element.send_keys(f"AccentuSoft LinkScope Automated Scanning {targets} {scanType}")
             element = driver.find_element_by_xpath(
                 "/html/body/section[3]/section[3]/section/form/div[1]/"
                 "div/div/div[1]/section/div[1]/div[1]/div[1]/div[5]/div/textarea")

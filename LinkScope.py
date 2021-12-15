@@ -131,7 +131,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.SETTINGS.setValue("Project/Name", oldName)
             return
 
-        self.setWindowTitle("Nexus - " + self.SETTINGS.get('Project/Name', 'Untitled'))
+        self.setWindowTitle("LinkScope - " + self.SETTINGS.get('Project/Name', 'Untitled'))
         self.saveProject()
         self.setStatus('Project Saved As: ' + newProjectPath.name)
 
@@ -276,10 +276,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.SETTINGS.setValue("Project/Name", newName)
 
         move(oldBaseDir, self.SETTINGS.value("Project/BaseDir"))
-        oldProjectFile = newBaseDir.joinpath(oldName + '.nexus')
+        oldProjectFile = newBaseDir.joinpath(oldName + '.linkscope')
         oldProjectFile.unlink(missing_ok=True)
 
-        self.setWindowTitle("Nexus - " + self.SETTINGS.get('Project/Name', 'Untitled'))
+        self.setWindowTitle("LinkScope - " + self.SETTINGS.get('Project/Name', 'Untitled'))
         self.saveProject()
         self.setStatus('Project Renamed to: ' + newName)
 
@@ -1357,7 +1357,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setMenuBar(MenuBar.MenuBar(self))
 
         # Set the main window title and show it to the user.
-        self.setWindowTitle("Nexus - " + self.SETTINGS.get('Project/Name', 'Untitled'))
+        self.setWindowTitle("LinkScope - " + self.SETTINGS.get('Project/Name', 'Untitled'))
 
         self.dockbarOne.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         self.dockbarTwo.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
@@ -2026,10 +2026,10 @@ class NewOrOpenWidget(QtWidgets.QDialog):
         filename = QtWidgets.QFileDialog.getOpenFileName(self,
                                                          "Open Project File",
                                                          str(Path.home()),
-                                                         "Nexus Projects(*.nexus)",
+                                                         "LinkScope Projects(*.linkscope)",
                                                          options=QtWidgets.QFileDialog.DontUseNativeDialog)
 
-        if filename[0].endswith('.nexus') and access(filename[0], R_OK | W_OK):
+        if filename[0].endswith('.linkscope') and access(filename[0], R_OK | W_OK):
             self.openProject = filename[0]
             self.close()
 

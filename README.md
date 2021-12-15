@@ -1,13 +1,13 @@
-# Nexus Client
+# LinkScope Client
 <p align="center">
   <img src="Repository_Images/Flower.png">
 </p>
 
 ## Description
-This is the repository for the Nexus Client Online Investigation software. Nexus allows you to perform online investigations by representing information as discrete pieces of data, called Entities. These Entities can then be explored through Resolutions, which take the attributes of Entities as input, and resolve them to different, but connected, pieces of information. In such a way, one can create a knowledge graph (or abstract art) for any particular domain, which should help investigators easily discover answers and insights that otherwise might have been hard to extract.
+This is the repository for the LinkScope Client Online Investigation software. LinkScope allows you to perform online investigations by representing information as discrete pieces of data, called Entities. These Entities can then be explored through Resolutions, which take the attributes of Entities as input, and resolve them to different, but connected, pieces of information. In such a way, one can create a knowledge graph (or abstract art) for any particular domain, which should help investigators easily discover answers and insights that otherwise might have been hard to extract.
 
 ## Features
-Some notable features of Nexus include:
+Some notable features of LinkScope include:
 
 ### Client
 - Graph visualisation of information and their relationships
@@ -46,14 +46,14 @@ Some dependencies need to be installed in order for the software to work properl
 
 Helpful link for those unfamiliar with adding binaries to their PATH: https://zwbetz.com/how-to-add-a-binary-to-your-path-on-macos-linux-windows/
 
-Releases (most recent one on the top): https://github.com/AccentuSoft/Nexus_Client/releases
+Releases (most recent one on the top): https://github.com/AccentuSoft/LinkScope_Client/releases
 
-The software comes packaged in a 7zip archive. Uncompress the archive, and double-click the executable to start the software. On Windows, the executable should be named 'Nexus.exe'. On Linux, it should be named 'Nexus'.
+The software comes packaged in a 7zip archive. Uncompress the archive, and double-click the executable to start the software. On Windows, the executable should be named 'LinkScope.exe'. On Linux, it should be named 'LinkScope'.
 
 ### Running from source
 One could also clone the repository and run the software as-is.
 
-On Linux, the dependencies and requirements (in requirements.txt) need to be installed, and then one can run the software by executing Nexus.py.
+On Linux, the dependencies and requirements (in requirements.txt) need to be installed, and then one can run the software by executing LinkScope.py.
 
 On Windows, the dependencies and requirements need to be installed, as well as the python-magic-bin library. This is done as follows:
 
@@ -63,7 +63,7 @@ Then, the Linux-specific functions need to be changed to the Windows version. Cu
 
 
 ## Extending the software
-Nexus was built from the ground up to be modular! In this repository's wiki, there are instructions on how to create your own modules, which can contain custom Entities and Resolutions. There is also an example module in the Modules directory that can act as a template, and has a verbose description of most things that a module creator should need to consider.
+LinkScope was built from the ground up to be modular! In this repository's wiki, there are instructions on how to create your own modules, which can contain custom Entities and Resolutions. There is also an example module in the Modules directory that can act as a template, and has a verbose description of most things that a module creator should need to consider.
 
 ## Security and safety
 Some warnings about using the software:

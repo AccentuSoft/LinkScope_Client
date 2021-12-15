@@ -32,7 +32,7 @@ closeSoftware = False
 # Has to be QObject for Signals to work.
 class CommunicationsHandler(QtCore.QObject):
     """
-    This class handles communication with a Nexus server.
+    This class handles communication with a LinkScope server.
 
     Convention for variables changes here - all variables that have to do with network communications
       are in snake_case. This makes them easy to differentiate from others, if it is important to track
