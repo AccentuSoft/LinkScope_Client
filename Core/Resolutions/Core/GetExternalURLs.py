@@ -35,13 +35,19 @@ class GetExternalURLs:
 
     def resolution(self, entityJsonList, parameters):
         import urllib
-        from playwright.sync_api import sync_playwright
+        from playwright.sync_api import sync_playwright, TimeoutError
         from bs4 import BeautifulSoup
+        import re
+
         returnResult = []
 
         extract_a = '<a> elements' in parameters['Element types to check']
         extract_img = '<img> elements' in parameters['Element types to check']
         extract_link = '<link> elements' in parameters['Element types to check']
+
+        # Sites like youtube replace external links with a redirect link originating
+        #   from the site itself. This sort of gets around that.
+        redirectRegex = re.compile(r'q=[^\s][^&^#]*', re.IGNORECASE)
 
         with sync_playwright() as p:
             browser = p.firefox.launch()
@@ -82,6 +88,11 @@ class GetExternalURLs:
                             if link.startswith('http'):
                                 if urlVisited[0] not in link:
                                     externalUrls.add(link.split('#')[0])
+                                else:
+                                    redirLinks = redirectRegex.findall(link)
+                                    if 'redirect' in link and len(redirLinks) > 0:
+                                        newLink = str(urllib.parse.unquote(redirLinks[0]))[2:]
+                                        externalUrls.add(newLink)
 
                 if extract_img:
                     linksInImgSrc = soupContents.find_all('img')

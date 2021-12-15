@@ -3,12 +3,12 @@
 
 class JSCodeExtractor:
     # A string that is treated as the name of this resolution.
-    name = "Get Tracking Codes"
+    name = "Extract Tracking Codes"
 
     # A string that describes this resolution.
-    description = "Returns Nodes of 'ca-pub', 'ua' and 'gtm' tracking codes for websites."
+    description = "Returns Nodes of 'ca-pub', 'ua' and 'gtm' tracking codes for websites and/or domains."
 
-    originTypes = {'Website'}
+    originTypes = {'Website', 'Domain'}
 
     resultTypes = {'Phrase'}
 
@@ -23,24 +23,20 @@ class JSCodeExtractor:
         pubRegex = re.compile(r'\bca-pub-\d{1,16}\b', re.IGNORECASE)
         gtmRegex = re.compile(r'\bGTM-[A-Z0-9]{1,7}\b', re.IGNORECASE)
         gRegex = re.compile(r'\bG-[A-Z0-9]{1,15}\b', re.IGNORECASE)
-        trackingSites = ['client=ca-pub', 'id=UA', 'id=GTM', 'id=G']
 
+        # In the future, if tracking codes from more companies are supported, change this so that resolutions
+        #   indicate which company the code is from.
         def GetTrackingCodes(pageUid, requestUrl) -> None:
-            trackingCodes = []
-            if [ele for ele in trackingSites if (ele in requestUrl)]:
-                for uaRegexMatch in uaRegex.findall(str(requestUrl)):
-                    trackingCodes.append(uaRegexMatch)
-                for pubRegexMatch in pubRegex.findall(str(requestUrl)):
-                    trackingCodes.append(pubRegexMatch)
-                for gtmRegexMatch in gtmRegex.findall(str(requestUrl)):
-                    trackingCodes.append(gtmRegexMatch)
-                for gRegexMatch in gRegex.findall(str(requestUrl)):
-                    trackingCodes.append(gRegexMatch)
+            trackingCodes = set()
+            trackingCodes.update(set(uaRegex.findall(requestUrl)))
+            trackingCodes.update(set(pubRegex.findall(requestUrl)))
+            trackingCodes.update(set(gtmRegex.findall(requestUrl)))
+            trackingCodes.update(set(gRegex.findall(requestUrl)))
 
             for trackingCode in trackingCodes:
                 returnResults.append([{'Phrase': trackingCode,
                                        'Entity Type': 'Phrase'},
-                                      {pageUid: {'Resolution': 'Tracking Code',
+                                      {pageUid: {'Resolution': 'Google Tracking Code',
                                                  'Notes': ''}}])
 
         with sync_playwright() as p:
@@ -51,7 +47,7 @@ class JSCodeExtractor:
             )
             for site in entityJsonList:
                 uid = site['uid']
-                url = site['URL']
+                url = site.get('URL') if site.get('URL', None) is not None else site.get('Domain Name', None)
                 if url is None:
                     continue
                 if not url.startswith('http://') and not url.startswith('https://'):

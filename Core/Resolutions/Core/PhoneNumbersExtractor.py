@@ -30,7 +30,7 @@ class PhoneNumbersExtractor:
                                 'default': '0'}}
 
     def resolution(self, entityJsonList, parameters):
-        from playwright.sync_api import sync_playwright
+        from playwright.sync_api import sync_playwright, TimeoutError
         from bs4 import BeautifulSoup
         import urllib
 

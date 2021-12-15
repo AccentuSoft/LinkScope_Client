@@ -1,182 +1,191 @@
 #!/usr/bin/env python3
 
+"""
+This resolution can, in rare instances, be a bit unreliable - if it finishes immediately, it's possible that not all
+links were considered, as the page's javascript may not have completely finished loading.
+
+Also, since as far as I can tell one cannot mute the audio of playwright, if a site that autoplays video / audio
+is explored, it is possible that some audio plays while the page is loading and its contents are processed.
+"""
+
 
 class AffiliateCodesExtractor:
     # A string that is treated as the name of this resolution.
-    name = "Get Affiliate-Codes from Website"
+    name = "Extract Affiliate Codes"
 
     # A string that describes this resolution.
     description = "Returns Nodes of facebook and amazon affiliate codes for websites"
 
-    originTypes = {'Domain'}
+    originTypes = {'Domain', 'Website'}
 
     resultTypes = {'Phrase'}
 
-    parameters = {'Max Webpages to Follow': {'description': 'Please enter the maximum number of webpages to follow. '
-                                                            'Default number 20. The greater the number the longer the '
-                                                            'resolution takes to complete. '
-                                                            'Enter "0" (no quotes) to use the default value.',
-                                             'type': 'String',
-                                             'default': '0'}}
+    parameters = {'Max Depth': {'description': 'Each link leading to another website in the same domain can be '
+                                               'explored to discover more entities. Each entity discovered after '
+                                               'exploring sites linked in the original website or domain is said to '
+                                               'have a "depth" value of 1. Entities found from exploring the links on '
+                                               'this page would have a "depth" of 2, and so on. A larger value could '
+                                               'result in EXPONENTIALLY more time taken to finish the resolution.\n'
+                                               'The default value is "0", which means only the provided website, or '
+                                               'the index page of the domain provided, is explored.',
+                                'type': 'String',
+                                'value': '0',
+                                'default': '0'},
+                  'Visit External Links': {'description': 'Affiliate codes can be hidden in shortened links, and they '
+                                                          'might not be visible unless one visits the site directly. '
+                                                          'Visiting external links should result in more affiliate '
+                                                          'tags being extracted. Of course, browsing to random pages '
+                                                          'is not always safe.\nVisit external links?',
+                                           'type': 'SingleChoice',
+                                           'value': {'Yes', 'No'}}}
 
     def resolution(self, entityJsonList, parameters):
-        import requests.exceptions
-        import tldextract
-        import re
-        from selenium import webdriver
-        # from urllib.parse import urlsplit
-        # from collections import deque
+        from playwright.sync_api import sync_playwright, TimeoutError
         from bs4 import BeautifulSoup
+        import urllib
+        import re
 
         returnResults = []
-        max_urls = int(parameters['Max Webpages to Follow'])
-        if max_urls == 0:
-            max_urls = 20
+        visitExternal = True if parameters['Visit External Links'] == 'Yes' else False
 
-        fireFoxOptions = webdriver.FirefoxOptions()
-        fireFoxOptions.headless = True
-        driver = webdriver.Firefox(options=fireFoxOptions)
-        # Access requests via the `requests` attribute
+        # Numbers less than zero are the same as zero.
+        try:
+            maxDepth = int(parameters['Max Depth'])
+        except ValueError:
+            return "Invalid value provided for Max Webpages to follow."
 
-        for entity in entityJsonList:
-            uid = entity['uid']
+        # Sites like youtube replace external links with a redirect link originating
+        #   from the site itself. This sort of gets around that.
+        redirectRegex = re.compile(r'q=[^\s][^&^#]*', re.IGNORECASE)
 
-            primaryField = entity[list(entity)[1]]
+        amazonRegex = re.compile(r'tag=[^\s][^&]*', re.IGNORECASE)
+        fbRegex = re.compile(r'client_id=\d{4,25}', re.IGNORECASE)
+        webullRegex = re.compile(r'inviteCode=[^\s][^&]*', re.IGNORECASE)
+        smartpassiveincomeRegex = re.compile(r'affcode=[^\s][^&]*', re.IGNORECASE)
+        skillshareRegex = re.compile(r'utm_campaign=[^\s][^&]*', re.IGNORECASE)
+        freetradeRegex = re.compile(r'https://freetrade.app.link/[^\s][^?]*', re.IGNORECASE)
+        freetradeRegex2 = re.compile(r'https://magic.freetrade.io/join/[^\s][^?^#]*', re.IGNORECASE)
 
-            if primaryField.startswith('http://') or primaryField.startswith('https://'):
-                url = primaryField
-            else:
-                url = 'https://' + primaryField
+        exploredDepth = set()
+        exploredForeign = set()
+        alreadyParsed = set()
 
-            trackingSites = ['tag=', 'client_id=']
-            AffiliateCode = []
-            amazonRegex = re.compile(r'tag=[^\s][^&]*', re.IGNORECASE)
-            fbRegex = re.compile(r'client_id=\d{4,25}', re.IGNORECASE)
+        def GetAffiliateCodes(currentUID: str, site: str):
+            requestUrl = str(urllib.parse.unquote(site))
+            if requestUrl not in alreadyParsed:
+                alreadyParsed.add(requestUrl)
+                for affiliateCode in amazonRegex.findall(requestUrl):
+                    returnResults.append([{'Phrase': affiliateCode,
+                                           'Entity Type': 'Phrase'},
+                                          {currentUID: {'Resolution': 'Amazon Affiliate Code',
+                                                        'Notes': ''}}])
+                for affiliateCode in fbRegex.findall(requestUrl):
+                    returnResults.append([{'Phrase': affiliateCode,
+                                           'Entity Type': 'Phrase'},
+                                          {currentUID: {'Resolution': 'Facebook Affiliate Code',
+                                                        'Notes': ''}}])
+                for affiliateCode in webullRegex.findall(requestUrl):
+                    returnResults.append([{'Phrase': affiliateCode,
+                                           'Entity Type': 'Phrase'},
+                                          {currentUID: {'Resolution': 'WeBull Affiliate Code',
+                                                        'Notes': ''}}])
+                for affiliateCode in smartpassiveincomeRegex.findall(requestUrl):
+                    returnResults.append([{'Phrase': affiliateCode,
+                                           'Entity Type': 'Phrase'},
+                                          {currentUID: {'Resolution': 'SmartPassiveIncome Affiliate Code',
+                                                        'Notes': ''}}])
+                for affiliateCode in skillshareRegex.findall(requestUrl):
+                    returnResults.append([{'Phrase': affiliateCode,
+                                           'Entity Type': 'Phrase'},
+                                          {currentUID: {'Resolution': 'SkillShare Affiliate Code',
+                                                        'Notes': ''}}])
+                for affiliateCode in freetradeRegex.findall(requestUrl):
+                    returnResults.append([{'Phrase': affiliateCode,
+                                           'Entity Type': 'Phrase'},
+                                          {currentUID: {'Resolution': 'FreeTrade Affiliate Code',
+                                                        'Notes': ''}}])
+                for affiliateCode in freetradeRegex2.findall(requestUrl):
+                    returnResults.append([{'Phrase': affiliateCode,
+                                           'Entity Type': 'Phrase'},
+                                          {currentUID: {'Resolution': 'FreeTrade Affiliate Code',
+                                                        'Notes': ''}}])
 
-            # a queue of urls to be crawled next
-            new_urls = {url}  # deque([url])
-
-            # a set of urls that we have already processed
-            processed_urls = set()
-
-            # a set of domains inside the target website
-            local_urls = set()
-
-            # a set of domains outside the target website
-            foreign_urls = set()
-
-            # a set of broken urls
-            broken_urls = set()
-
-            # process urls one by one until we exhaust the queue
-            while len(new_urls):
-                # move url from the queue to processed url set
-                url = new_urls.pop()
-
-                print('current url', url)
-
-                # print the current url
-                poundlessUrl = url.split('#')[0]
-
-                if url in processed_urls:
-                    continue
-
-                processed_urls.add(url)
-
-                # TODO: Rework this
-                # extract base url to resolve relative links
-                parts = tldextract.extract(poundlessUrl)
-                if parts.subdomain != '':
-                    base = parts.subdomain + '.' + parts.domain + '.' + parts.suffix
-                else:
-                    base = parts.domain + '.' + parts.suffix
-                strip_base = parts.domain + '.' + parts.suffix
-                base_url = 'https://' + base
-
-                if base_url != poundlessUrl and base_url in poundlessUrl:
-                    paths = poundlessUrl.split(base_url, 1)[1]
-                    path = poundlessUrl[:poundlessUrl.rfind('/') + 1] if '/' in paths else poundlessUrl
-                else:
-                    path = poundlessUrl
-
+        def extractCodes(currentUID: str, site: str, depth: int):
+            page = context.new_page()
+            for _ in range(3):
                 try:
-                    response = requests.get(poundlessUrl)
-                    if response.status_code == 404:
-                        continue
-                    elif base not in response.url:
-                        foreign_urls.add(response.url)
-                        continue
-                    soup = BeautifulSoup(response.text, "lxml")
-                    if response.status_code == 403:
-                        driver.get(poundlessUrl)
-                        pageSource = driver.page_source
-                        soup = BeautifulSoup(pageSource, "lxml")
-                        if base_url not in driver.current_url:
-                            foreign_urls.add(driver.current_url)
-                            continue
-
-                except(requests.exceptions.MissingSchema, requests.exceptions.ConnectionError,
-                       requests.exceptions.InvalidURL,
-                       requests.exceptions.InvalidSchema, Exception):
-                    # add broken urls to it’s own set, then continue
-                    broken_urls.add(poundlessUrl)
-                    continue
-
-                for link in soup.find_all('a'):
-                    # extract link url from the anchor
-                    anchor = link.attrs['href'] if 'href' in link.attrs else ''
-                    if anchor.startswith('/'):
-                        local_link = base_url + anchor
-                        local_link = local_link.split('#')[0]
-                        local_urls.add(local_link)
-                        if local_link not in processed_urls and local_link.startswith(base_url):
-                            new_urls.add(local_link)
-                    elif strip_base in anchor:
-                        anchor = anchor.split('#')[0]
-                        local_urls.add(anchor)
-                        if anchor not in processed_urls and anchor.startswith(base_url):
-                            new_urls.add(anchor)
-                    elif not anchor.startswith('http'):
-                        local_link = path + anchor
-                        local_link = local_link.split('#')[0]
-                        local_urls.add(local_link)
-                        if local_link not in processed_urls and local_link.startswith(base_url):
-                            new_urls.add(local_link)
-                    else:
-                        foreign_urls.add(anchor)
-
-                if len(processed_urls) > max_urls:
+                    page.goto(site, wait_until="networkidle", timeout=10000)
                     break
+                except TimeoutError:
+                    pass
 
-                # print('Foreign', foreign_urls)
+            soupContents = BeautifulSoup(page.content(), 'lxml')
 
-                # print('Processed', processed_urls)
-                # print('Local', local_urls)
+            linksInLinkHref = soupContents.find_all('link')
+            for tag in linksInLinkHref:
+                newLink = tag.get('href', None)
+                if newLink is not None:
+                    if newLink.startswith('http'):
+                        newLink = newLink.split('#')[0]
+                        newDepth = depth - 1
+                        if domain in newLink and newLink not in exploredDepth and newDepth > 0:
+                            exploredDepth.add(newLink)
+                            extractCodes(currentUID, newLink, newDepth)
 
-            for url in foreign_urls:
+            linksInAHref = soupContents.find_all('a')
+            for tag in linksInAHref:
+                newLink = tag.get('href', None)
+                if newLink is not None:
+                    if newLink.startswith('http'):
+                        newLink = newLink.split('#')[0]
+                        newDepth = depth - 1
+                        if domain in newLink:
+                            redirLinks = redirectRegex.findall(newLink)
+                            if 'redirect' in newLink and len(redirLinks) > 0:
+                                newLink = str(urllib.parse.unquote(redirLinks[0]))[2:]
+                                if newLink not in exploredForeign:
+                                    exploredForeign.add(newLink)
+                                    if visitExternal:
+                                        for _ in range(3):
+                                            try:
+                                                page.goto(newLink, wait_until="networkidle", timeout=10000)
+                                                GetAffiliateCodes(currentUID, page.url)
+                                                break
+                                            except TimeoutError:
+                                                pass
+                                else:
+                                    GetAffiliateCodes(currentUID, newLink)
+                            else:
+                                if newLink not in exploredDepth and newDepth > 0:
+                                    exploredDepth.add(newLink)
+                                    extractCodes(currentUID, newLink, newDepth)
+                        elif newLink not in exploredForeign:
+                            exploredForeign.add(newLink)
+                            if visitExternal:
+                                for _ in range(3):
+                                    try:
+                                        page.goto(newLink, wait_until="networkidle", timeout=10000)
+                                        GetAffiliateCodes(currentUID, page.url)
+                                        break
+                                    except TimeoutError:
+                                        pass
+                            else:
+                                GetAffiliateCodes(currentUID, newLink)
 
-                if trackingSites[0] in url:
-                    AffiliateCode.append(amazonRegex.findall(str(url))[0])
-                elif 'ASIN' in url:
-                    AffiliateCode.append(url.split('/')[-1])
-                elif trackingSites[1] in url:
-                    AffiliateCode.append(fbRegex.findall(str(url))[0])
-
-            codes = set(AffiliateCode)
-            # print(codes)
-
-            for i in codes:
-                if [ele for ele in trackingSites[0] if (ele in str(i))]:
-                    returnResults.append([{'Phrase': i,
-                                           'Entity Type': 'Phrase'},
-                                          {uid: {'Resolution': 'Amazon Affiliate ID',
-                                                 'Notes': ''}}])
-                else:
-                    returnResults.append([{'Phrase': i,
-                                           'Entity Type': 'Phrase'},
-                                          {uid: {'Resolution': 'Facebook Affiliate ID',
-                                                 'Notes': ''}}])
-            # print(broken_urls)
-            print(foreign_urls)
-            print(AffiliateCode)
+        with sync_playwright() as p:
+            browser = p.firefox.launch()
+            context = browser.new_context(
+                viewport={'width': 1920, 'height': 1080},
+                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:94.0) Gecko/20100101 Firefox/94.0'
+            )
+            for entity in entityJsonList:
+                uid = entity['uid']
+                url = entity.get('URL') if entity.get('URL', None) is not None else entity.get('Domain Name', None)
+                if url is None:
+                    continue
+                if not url.startswith('http://') and not url.startswith('https://'):
+                    url = 'http://' + url
+                domain = ".".join(urllib.parse.urlparse(url).netloc.split('.')[-2:])
+                extractCodes(uid, url, maxDepth)
+            browser.close()
         return returnResults
