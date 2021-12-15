@@ -66,13 +66,13 @@ class GetExternalURLs:
                 domain = ".".join(urllib.parse.urlparse(url).netloc.split('.')[-2:])
 
                 page = context.new_page()
-                allPages.append((domain, page, uid))
 
                 # Try to load the page a few times, in case of timeouts.
                 # I don't think making parts of this async actually helps in this case.
                 for _ in range(3):
                     try:
                         page.goto(url, wait_until="networkidle", timeout=10000)
+                        allPages.append((domain, page, uid))
                         break
                     except TimeoutError:
                         pass

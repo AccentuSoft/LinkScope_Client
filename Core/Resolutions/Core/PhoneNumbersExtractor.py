@@ -46,12 +46,16 @@ class PhoneNumbersExtractor:
 
         def extractTels(currentUID: str, site: str, depth: int):
             page = context.new_page()
+            pageResolved = False
             for _ in range(3):
                 try:
                     page.goto(site, wait_until="networkidle", timeout=10000)
+                    pageResolved = True
                     break
                 except TimeoutError:
                     pass
+            if not pageResolved:
+                return
 
             soupContents = BeautifulSoup(page.content(), 'lxml')
 
