@@ -662,6 +662,9 @@ class CanvasView(QtWidgets.QGraphicsView):
         items = self.scene().selectedItems()
         for item in items:
             if isinstance(item, Entity.BaseNode):
+                if isinstance(item, Entity.GroupNode):
+                    for childUID in list(item.groupedNodesUid):
+                        self.tabbedPane.mainWindow.deleteSpecificEntity(childUID)
                 self.tabbedPane.mainWindow.deleteSpecificEntity(item.uid)
 
     def adjustSceneRect(self) -> None:
