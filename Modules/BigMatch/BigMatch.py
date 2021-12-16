@@ -10,38 +10,56 @@ class BigMatch:
 
     def resolution(self, entityJsonList, parameters):
         from pathlib import Path
-        from selenium import webdriver
-        from selenium.common.exceptions import SessionNotCreatedException
-        from selenium.webdriver.common.by import By
-        from selenium.webdriver.support.ui import WebDriverWait
-        from selenium.webdriver.support import expected_conditions as EC
-        from bs4 import BeautifulSoup, SoupStrainer
+        from playwright.sync_api import sync_playwright, TimeoutError
+        import time
+        from bs4 import BeautifulSoup
 
         return_result = []
 
         url = "https://bigmatch.rev.ng/static/index.html"
-        try:
-            fireFoxOptions = webdriver.FirefoxOptions()
-            fireFoxOptions.headless = True
-            driver = webdriver.Firefox(options=fireFoxOptions)
-        except SessionNotCreatedException:
-            return "Please install the latest version of Firefox from the official Firefox website"
-        for entity in entityJsonList:
-            uid = entity['uid']
-            file_path = Path(entity["File Path"])
-            if not (file_path.exists() and file_path.is_file()):
-                continue
-            driver.implicitly_wait(3)
-            driver.get(url)
-            element = driver.find_element(By.ID, "input")
-            element.send_keys(str(file_path))  # Windows Compatibility
-            wait = WebDriverWait(driver, 5)
-            wait.until(EC.element_to_be_clickable((By.ID, 'results')))
-            response = driver.page_source
-            for link in BeautifulSoup(response, 'html.parser', parse_only=SoupStrainer('a')):
-                if link.has_attr('href'):
-                    if "github" in link['href']:
-                        return_result.append([{'URL': link['href'], 'Entity Type': 'Website'},
-                                             {uid: {'Resolution': 'BigMatch Github Link', 'Notes': ''}}])
+        failString = 'Too many strings in binary?'
+        successString = 'Results:'
 
+        with sync_playwright() as p:
+            browser = p.firefox.launch()
+            context = browser.new_context(
+                viewport={'width': 1920, 'height': 1080},
+                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:94.0) Gecko/20100101 Firefox/94.0'
+            )
+            page = context.new_page()
+
+            for entity in entityJsonList:
+                uid = entity['uid']
+                file_path = Path(parameters['Project Files Directory']) / entity["File Path"]
+                file_path = file_path.absolute()
+                if not (file_path.exists() and file_path.is_file()):
+                    continue
+                time.sleep(3)
+
+                for _ in range(3):
+                    try:
+                        page.goto(url, wait_until="networkidle", timeout=10000)
+                        inputLocator = page.locator("input")
+                        inputLocator.set_input_files([str(file_path)])
+                        time.sleep(5)
+                        soup = BeautifulSoup(page.content(), 'lxml')
+                        soupText = soup.get_text()
+                        while (failString not in soupText) and (successString not in soupText):
+                            time.sleep(1)
+                            soup = BeautifulSoup(page.content(), 'lxml')
+                            soupText = soup.get_text()
+                        if failString in soupText:
+                            return []
+                        for link in soup.find_all('a'):
+                            potentialLink = link.get('href', None)
+                            if potentialLink is not None:
+                                if 'github' in potentialLink:
+                                    return_result.append([{'URL': potentialLink, 'Entity Type': 'Website'},
+                                                          {uid: {'Resolution': 'BigMatch Github Link', 'Notes': ''}}])
+
+                        break
+                    except TimeoutError:
+                        pass
+            page.close()
+            browser.close()
         return return_result
