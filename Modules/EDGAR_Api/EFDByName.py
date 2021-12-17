@@ -3,10 +3,10 @@
 class EFDByName:
     name = 'Get EFD Reports by Name'
     description = 'Return Nodes Of Websites to Reports'
-    originTypes = {'Person'}
+    originTypes = {'Person', 'Politically Exposed Person'}
     resultTypes = {'Website'}
     parameters = {'Max Results': {'description': 'Please enter the maximum number of results to return.\n'
-                                                 'Returns 5 more recent by default',
+                                                 'Returns the 5 most recent by default.',
                                   'type': 'String',
                                   'default': '5'},
                   'Filer Type': {'description': 'Please enter the Name you want to search for.\n'
@@ -35,7 +35,12 @@ class EFDByName:
         returnResults = []
         links = []
 
-        linkNumbers = int(parameters['Max Results'])
+        try:
+            linkNumbers = int(parameters['Max Results'])
+        except ValueError:
+            return "Invalid integer provided in 'Max Results' parameter"
+        if linkNumbers <= 0:
+            return []
 
         url = 'https://efdsearch.senate.gov/search/'
         fireFoxOptions = webdriver.FirefoxOptions()

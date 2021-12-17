@@ -12,11 +12,10 @@ class WayBack:
 
     resultTypes = {'Website'}
 
-    parameters = {'Max Results': {'description': 'Please enter the maximum number of webpages to return.\n'
-                                                 'Enter "0" (no quotes) to return everything.',
+    parameters = {'Max Results': {'description': 'Please enter the maximum number of webpages to return.',
                                   'type': 'String',
                                   'value': 'Maximum number of results',
-                                  'default': '0'},
+                                  'default': '5'},
                   'Year range to search for': {'description': 'Please enter the range of years desired\n'
                                                               'In the Format: [start year] [end year]\n',
                                                'type': 'String',
@@ -37,8 +36,8 @@ class WayBack:
             max_results = int(parameters['Max Results'])
         except ValueError:
             return "The value for parameter 'Max Results' is not a valid integer."
-        if max_results == 0:
-            max_results = 99999999
+        if max_results <= 0:
+            return []
         yearRange = parameters['Year range to search for'].split(" ")
 
         with FuturesSession(max_workers=15) as session:

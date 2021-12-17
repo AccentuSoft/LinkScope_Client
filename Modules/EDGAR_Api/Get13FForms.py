@@ -12,7 +12,7 @@ class Get13FForms:
     resultTypes = {'Form13F'}
 
     parameters = {'Max Results': {'description': 'Please enter the maximum number of results to return.\n'
-                                                 'Returns the 5 most recent by default.',
+                                                 'Returns 5 more recent by default',
                                   'type': 'String',
                                   'default': '5'}}
 
@@ -31,7 +31,12 @@ class Get13FForms:
         name = ''
         date = ''
 
-        linkNumbers = int(parameters['Max Results'])
+        try:
+            linkNumbers = int(parameters['Max Results'])
+        except ValueError:
+            return "Invalid integer provided in 'Max Results' parameter"
+        if linkNumbers <= 0:
+            return []
         returnResults = []
         for entity in entityJsonList:
             archives_set = set()

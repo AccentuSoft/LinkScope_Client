@@ -9,11 +9,10 @@ class ExtractRelationship:
 
     resultTypes = {'Currency', 'Politically Exposed Person', 'Little Sis ID'}
 
-    parameters = {'Max Results': {'description': 'Please enter the maximum number of results to return. '
-                                                 'Enter "0" (no quotes) to return all available results.',
+    parameters = {'Max Results': {'description': 'Please enter the maximum number of results to return.',
                                   'type': 'String',
                                   'value': '',
-                                  'default': '0'}}
+                                  'default': '5'}}
 
     def resolution(self, entityJsonList, parameters):
         import time
@@ -26,6 +25,8 @@ class ExtractRelationship:
             linkNumbers = int(parameters['Max Results'])
         except ValueError:
             return "Non-integer specified for 'Max Results' parameter; cannot run resolution."
+        if linkNumbers <= 0:
+            return []
 
         for entity in entityJsonList:
             uid = entity['uid']
@@ -46,8 +47,7 @@ class ExtractRelationship:
             data = apiRequest.json()
 
             data = data['data']
-            if linkNumbers != 0:
-                data = data[:linkNumbers]
+            data = data[:linkNumbers]
 
             for relationship in data:
                 index_of_child.append(len(returnResults))

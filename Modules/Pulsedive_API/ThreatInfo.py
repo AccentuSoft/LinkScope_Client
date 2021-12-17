@@ -36,6 +36,8 @@ class ThreatInfo:
             linkNumbers = int(parameters['Max Articles'])
         except ValueError:
             return "Invalid integer value specified for Max Articles."
+        if linkNumbers < 0:
+            return []
 
         for entity in entityJsonList:
             uid = entity['uid']

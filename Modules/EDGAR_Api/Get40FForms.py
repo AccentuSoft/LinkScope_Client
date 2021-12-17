@@ -24,7 +24,12 @@ class Get40FForms:
             'User-Agent': 'user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0',
         }
 
-        linkNumbers = int(parameters['Max Results'])
+        try:
+            linkNumbers = int(parameters['Max Results'])
+        except ValueError:
+            return "Invalid integer provided in 'Max Results' parameter"
+        if linkNumbers <= 0:
+            return []
         returnResults = []
         for entity in entityJsonList:
             uid = entity['uid']

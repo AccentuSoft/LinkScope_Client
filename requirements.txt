@@ -26,6 +26,9 @@ reportlab
 pandas
 svglib
 lxml
+# Speeds up parsing of webpages by bs4
+cchardet
+bs4
 
 # Transition from selenium to playwright
 selenium

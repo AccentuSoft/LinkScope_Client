@@ -24,7 +24,7 @@ class IPv4Scan:
                                         },
                   'Nmap Ports': {'description': 'Select Ports to scan.\n'
                                                 'Type ports separated by commas no spaces: 80,443,22\n'
-                                                'Type "All" (no quotes) to scan ports',
+                                                'Type "All" (no quotes) to scan all ports',
                                  'type': 'String',
                                  'value': 'Enter ports to scan here',
                                  'default': 'All'

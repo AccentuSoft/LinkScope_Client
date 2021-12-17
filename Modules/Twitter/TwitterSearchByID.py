@@ -12,10 +12,9 @@ class TwitterSearchByID:
 
     resultTypes = {'Phrase'}
 
-    parameters = {'Max Results': {'description': 'Please enter the maximum number of results to return. '
-                                                 'Enter "0" (no quotes) to return all available results.',
+    parameters = {'Max Results': {'description': 'Please enter the maximum number of results to return.',
                                   'type': 'String',
-                                  'default': '0'},
+                                  'default': '5'},
                   'Access Token': {
                       'description': 'Enter your API Key',
                       'type': 'String',
@@ -38,7 +37,12 @@ class TwitterSearchByID:
         import tweepy
 
         returnResults = []
-        linkNumbers = int(parameters['Max Results'])
+        try:
+            linkNumbers = int(parameters['Max Results'])
+        except ValueError:
+            return "Invalid integer provided in 'Max Results' parameter"
+        if linkNumbers <= 0:
+            return []
         access_token = parameters['Access Token'].strip()
         access_token_secret = parameters['Secret'].strip()
         consumer_key = parameters['Consumer API Key'].strip()
@@ -52,8 +56,6 @@ class TwitterSearchByID:
         for entity in entityJsonList:
             uid = entity['uid']
             twitter_id = entity['Twitter ID']
-            if linkNumbers == 0:
-                linkNumbers = 9999999999
 
             cursor = tweepy.Cursor(api.user_timeline, id=twitter_id, tweeet_mode='extended').items(linkNumbers)
 

@@ -10,8 +10,7 @@ class OpenCorporateOfficerOccupation:
 
     resultTypes = {'Company'}
 
-    parameters = {'Max Results': {'description': 'Please enter the maximum number of results to return. '
-                                                 'Enter "0" (no quotes) to return all available results.',
+    parameters = {'Max Results': {'description': 'Please enter the maximum number of results to return.',
                                   'type': 'String',
                                   'value': ''},
 
@@ -36,9 +35,12 @@ class OpenCorporateOfficerOccupation:
         from urllib import parse
         returnResults = []
         officer_url = 'https://api.opencorporates.com/v0.4/officers/search'
-        linkNumbers = int(parameters['Max Results'])
-        if linkNumbers == 0:
-            linkNumbers = 9999999999
+        try:
+            linkNumbers = int(parameters['Max Results'])
+        except ValueError:
+            return "Invalid integer provided in 'Max Results' parameter"
+        if linkNumbers <= 0:
+            return []
 
         for entity in entityJsonList:
             uid = entity['uid']

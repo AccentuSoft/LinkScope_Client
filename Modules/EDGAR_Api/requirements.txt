@@ -1,4 +1,3 @@
 requests
-selenium
 beautifulsoup4
 xmltodict

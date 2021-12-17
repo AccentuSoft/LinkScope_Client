@@ -10,10 +10,10 @@ class OpenCorporateCompaniesAddress:
 
     resultTypes = {'Address'}
 
-    parameters = {'Max Results': {'description': 'Please enter the maximum number of results to return. '
-                                                 'Enter "0" (no quotes) to return all available results.',
+    parameters = {'Max Results': {'description': 'Please enter the maximum number of results to return.',
                                   'type': 'String',
-                                  'value': ''},
+                                  'value': '',
+                                  'default': '5'},
 
                   'OpenCorporates API Key': {
                       'description': 'Enter your API Key. If you do not have one, type: No Key (case sensitive).\n'
@@ -33,9 +33,12 @@ class OpenCorporateCompaniesAddress:
         returnResult = []
 
         officer_url = 'https://api.opencorporates.com/v0.4/companies/search'
-        linkNumbers = int(parameters['Max Results'])
-        if linkNumbers == 0:
-            linkNumbers = 9999999999
+        try:
+            linkNumbers = int(parameters['Max Results'])
+        except ValueError:
+            return "Invalid integer provided in 'Max Results' parameter"
+        if linkNumbers <= 0:
+            return []
 
         for entity in entityJsonList:
             uid = entity['uid']

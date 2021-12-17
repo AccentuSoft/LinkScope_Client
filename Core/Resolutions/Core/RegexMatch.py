@@ -19,7 +19,8 @@ class RegexMatch:
                                   'value': ''},
                   'Max Results': {'description': 'Please enter the Maximum number of Results to return',
                                   'type': 'String',
-                                  'value': ''},
+                                  'value': '',
+                                  'default': '5'},
                   'Re Flags': {'description': 'Select Re Flags to be used while compiling the regex',
                                'type': 'MultiChoice',
                                'value': {'re.I', 're.M', 're.S'}
@@ -35,7 +36,12 @@ class RegexMatch:
         }
 
         returnResults = []
-        linkNumbers = int(parameters['Max Results'])
+        try:
+            linkNumbers = int(parameters['Max Results'])
+        except ValueError:
+            return "Invalid integer provided in 'Max Results' parameter"
+        if linkNumbers <= 0:
+            return []
         search_param = parameters['Regex Match']
         flags = parameters['Re Flags']
         print(flags)

@@ -10,12 +10,12 @@ class OpenCorporateCompanyOfficers:
 
     resultTypes = {'Person', 'Date'}
 
-    parameters = {'Max Results': {'description': 'Please enter the maximum number of results to return.\n'
-                                                 'Enter "0" (no quotes) to return all available results.\n'
-                                                 'Only in some jurisdictions officers data are available,\n'
-                                                 'if no data are found the resolution will return no results.',
+    parameters = {'Max Results': {'description': 'Please enter the maximum number of results to return. '
+                                                 'Officer data may not be available for some jurisdictions. '
+                                                 'If no data is found the resolution will return no results.',
                                   'type': 'String',
-                                  'value': ''},
+                                  'value': '',
+                                  'default': '5'},
 
                   'Inactive Officers': {'description': 'Display Inactive Officers',
                                         'type': 'SingleChoice',
@@ -36,9 +36,12 @@ class OpenCorporateCompanyOfficers:
         import requests
         import time
         returnResults = []
-        linkNumbers = int(parameters['Max Results'])
-        if linkNumbers == 0:
-            linkNumbers = 9999999999
+        try:
+            linkNumbers = int(parameters['Max Results'])
+        except ValueError:
+            return "Invalid integer provided in 'Max Results' parameter"
+        if linkNumbers <= 0:
+            return []
 
         for entity in entityJsonList:
             jurisdictionCode = entity[list(entity)[3]]

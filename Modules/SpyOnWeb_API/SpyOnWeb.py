@@ -45,6 +45,8 @@ class SpyOnWeb:
             linkNumbers = 9999999999
         if uaNumber == 0:
             uaNumber = 9999999999
+        if linkNumbers < 0 or uaNumber < 0:
+            return []
 
         api_token = parameters['SpyOnWeb API Key'].strip()
 

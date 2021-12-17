@@ -5,7 +5,7 @@ class FramesLookUp:
     name = "Frames Look Up"
 
     # A string that describes this resolution.
-    description = "Returns Nodes 20-F Forms"
+    description = "Returns Frame Forms"
 
     originTypes = {'Form Field'}
 
@@ -33,7 +33,13 @@ class FramesLookUp:
             'User-Agent': 'user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0',
         }
 
-        linkNumbers = int(parameters['Max Results'])
+        try:
+            linkNumbers = int(parameters['Max Results'])
+        except ValueError:
+            return "Invalid integer provided in 'Max Results' parameter"
+        if linkNumbers <= 0:
+            return []
+
         year = parameters['Year']
         quarterChoice = parameters['Quarter']
         quarter = quarterChoice[quarterChoice.find("(") + 1:quarterChoice.find(")")]

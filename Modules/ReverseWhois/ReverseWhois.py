@@ -11,8 +11,7 @@ class ReverseWhois:
 
     resultTypes = {'Domain, Company'}
 
-    parameters = {'Max Results': {'description': 'Please enter the maximum number of domains to return. '
-                                                 'Enter "0" (no quotes) to return all available results.',
+    parameters = {'Max Results': {'description': 'Please enter the maximum number of domains to return.',
                                   'type': 'String',
                                   'value': 'Maximum number of results',
                                   'default': '0'},
@@ -30,9 +29,8 @@ class ReverseWhois:
             linkNumbers = int(parameters['Max Results'])
         except ValueError:
             return "Non-integer input provided for 'Max Results' parameter. Cannot execute resolution."
-
-        if linkNumbers == 0:
-            linkNumbers = 9999999999
+        if linkNumbers <= 0:
+            return []
 
         for entity in entityJsonList:
             uid = entity['uid']

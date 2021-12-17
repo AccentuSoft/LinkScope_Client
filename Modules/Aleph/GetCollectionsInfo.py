@@ -40,6 +40,8 @@ class GetCollectionsInfo:
             linkNumbers = int(parameters['Max Results'])
         except ValueError:
             return "The value for parameter 'Max Results' is not a valid integer."
+        if linkNumbers <= 0:
+            return []
         with FuturesSession(max_workers=15) as session:
             for entity in entityJsonList:
                 uidList.append(entity['uid'])
@@ -54,7 +56,7 @@ class GetCollectionsInfo:
                 return "Please check your internet connection"
 
             max_results = int(len(response['results']))
-            if linkNumbers == 0 or linkNumbers >= max_results:
+            if linkNumbers >= max_results:
                 collections = response['results']
             else:
                 collections = response['results'][0: linkNumbers]
