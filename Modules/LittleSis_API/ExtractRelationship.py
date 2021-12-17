@@ -46,8 +46,7 @@ class ExtractRelationship:
 
             data = apiRequest.json()
 
-            data = data['data']
-            data = data[:linkNumbers]
+            data = data['data'][:linkNumbers]
 
             for relationship in data:
                 index_of_child.append(len(returnResults))
