@@ -56,6 +56,8 @@ class GetExternalURLs:
                 user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:94.0) Gecko/20100101 Firefox/94.0'
             )
             allPages = []
+            page = context.new_page()
+
             for site in entityJsonList:
                 uid = site['uid']
                 url = site['URL']
@@ -65,7 +67,6 @@ class GetExternalURLs:
                     url = 'http://' + url
                 domain = ".".join(urllib.parse.urlparse(url).netloc.split('.')[-2:])
 
-                page = context.new_page()
 
                 # Try to load the page a few times, in case of timeouts.
                 # I don't think making parts of this async actually helps in this case.
@@ -115,6 +116,7 @@ class GetExternalURLs:
                 for externalUrl in externalUrls:
                     returnResult.append([{'URL': externalUrl, 'Entity Type': 'Website'},
                                          {urlVisited[2]: {'Resolution': 'External Link', 'Notes': ''}}])
+            page.close()
             browser.close()
 
         return returnResult

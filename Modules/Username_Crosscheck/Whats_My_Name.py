@@ -23,7 +23,7 @@ class Whats_My_Name:
         from concurrent.futures import as_completed
         from pathlib import Path
         import json
-        from playwright.sync_api import sync_playwright
+        from playwright.sync_api import sync_playwright, TimeoutError
 
         import re
         from requests.exceptions import RequestException

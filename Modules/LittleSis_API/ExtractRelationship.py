@@ -74,7 +74,7 @@ class ExtractRelationship:
 
                 try:
                     res = requests.get(f'https://littlesis.org/api/entities/{search_id}')
-                    time.sleep(0.2)
+                    time.sleep(0.25)
                 except requests.exceptions.ConnectionError:
                     return "Please check your internet connection"
                 if apiRequest.status_code != 200:

@@ -12,7 +12,7 @@ class GetN8FForms:
     resultTypes = {'Website'}
 
     parameters = {'Max Results': {'description': 'Please enter the maximum number of results to return.\n'
-                                                 'Returns 5 more recent by default',
+                                                 'Returns the 5 most recent by default.',
                                   'type': 'String',
                                   'default': '5'}}
 

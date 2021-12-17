@@ -1,3 +1,2 @@
 docker
 beautifulsoup4
-selenium

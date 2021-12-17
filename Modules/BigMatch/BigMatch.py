@@ -11,7 +11,6 @@ class BigMatch:
     def resolution(self, entityJsonList, parameters):
         from pathlib import Path
         from playwright.sync_api import sync_playwright, TimeoutError
-        import time
         from bs4 import BeautifulSoup
 
         return_result = []
@@ -34,18 +33,18 @@ class BigMatch:
                 file_path = file_path.absolute()
                 if not (file_path.exists() and file_path.is_file()):
                     continue
-                time.sleep(3)
+                page.wait_for_timeout(3000)
 
                 for _ in range(3):
                     try:
                         page.goto(url, wait_until="networkidle", timeout=10000)
                         inputLocator = page.locator("input")
                         inputLocator.set_input_files([str(file_path)])
-                        time.sleep(5)
+                        page.wait_for_timeout(3000)
                         soup = BeautifulSoup(page.content(), 'lxml')
                         soupText = soup.get_text()
                         while (failString not in soupText) and (successString not in soupText):
-                            time.sleep(1)
+                            page.wait_for_timeout(1000)
                             soup = BeautifulSoup(page.content(), 'lxml')
                             soupText = soup.get_text()
                         if failString in soupText:
