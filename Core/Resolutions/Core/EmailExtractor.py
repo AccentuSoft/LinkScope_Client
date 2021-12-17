@@ -52,9 +52,9 @@ class EmailExtractor:
 
         returnResults = []
 
-        # Numbers less than zero are the same as zero.
+        # Numbers less than zero are the same as zero, but we should try to prevent overflows.
         try:
-            maxDepth = int(parameters['Max Depth'])
+            maxDepth = max(int(parameters['Max Depth']), 0)
         except ValueError:
             return "Invalid value provided for Max Webpages to follow."
 
@@ -139,7 +139,7 @@ class EmailExtractor:
             )
             for entity in entityJsonList:
                 uid = entity['uid']
-                url = entity.get('URL') if entity.get('URL', None) is not None else entity.get('Domain Name', None)
+                url = entity.get('URL') if entity.get('Entity Type', '') == 'Website' else entity.get('Domain Name', None)
                 if url is None:
                     continue
                 if not url.startswith('http://') and not url.startswith('https://'):

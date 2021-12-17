@@ -48,7 +48,7 @@ class JSCodeExtractor:
             page = context.new_page()
             for site in entityJsonList:
                 uid = site['uid']
-                url = site.get('URL') if site.get('URL', None) is not None else site.get('Domain Name', None)
+                url = site.get('URL') if site.get('Entity Type', '') == 'Website' else site.get('Domain Name', None)
                 if url is None:
                     continue
                 if not url.startswith('http://') and not url.startswith('https://'):

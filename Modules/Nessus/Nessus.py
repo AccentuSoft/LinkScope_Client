@@ -8,7 +8,7 @@ class Nessus:
     resultTypes = {'Phrase', 'IP Address'}
     parameters = {
         'Nessus Base URL': {'description': 'Enter the url where Nessus starts on your computer or company network '
-                                           'e.g: https://127.0.0.1:8834 /',
+                                           'e.g: https://127.0.0.1:8834/',
                             'type': 'String',
                             'default': 'https://127.0.0.1:8834',
                             'value': ''},
