@@ -2,7 +2,7 @@
 import bs4
 
 
-class EFDByFromDate:
+class EFDByToDate:
     name = 'Get EFD Reports To Date'
     description = 'Return Nodes Of Websites to Reports'
     originTypes = {'Date'}

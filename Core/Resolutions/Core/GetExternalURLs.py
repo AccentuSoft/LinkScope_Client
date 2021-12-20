@@ -34,10 +34,11 @@ class GetExternalURLs:
                                              }}
 
     def resolution(self, entityJsonList, parameters):
-        import urllib
+        import tldextract
         from playwright.sync_api import sync_playwright, TimeoutError
         from bs4 import BeautifulSoup
         import re
+        import urllib
 
         returnResult = []
 
@@ -65,8 +66,7 @@ class GetExternalURLs:
                     continue
                 if not url.startswith('http://') and not url.startswith('https://'):
                     url = 'http://' + url
-                domain = ".".join(urllib.parse.urlparse(url).netloc.split('.')[-2:])
-
+                domain = tldextract.extract(url).fqdn
 
                 # Try to load the page a few times, in case of timeouts.
                 # I don't think making parts of this async actually helps in this case.

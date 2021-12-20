@@ -15,13 +15,13 @@ python-magic
 pydot
 networkx
 
+tldextract
 defusedxml
 cryptography
 msgpack
 folium
 pillow
 lz4
-urllib3
 reportlab
 pandas
 svglib
@@ -41,7 +41,6 @@ requests
 shodan
 docx2python
 PyPDF2
-tldextract
 beautifulsoup4
 python-Wappalyzer
 vtapi3
@@ -59,3 +58,4 @@ email-validator
 docx2python
 exif
 xmltodict
+urllib3

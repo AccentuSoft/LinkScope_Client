@@ -18,26 +18,42 @@ class JSCodeExtractor:
         from playwright.sync_api import sync_playwright
         import re
         returnResults = []
+        requestUrlsParsed = set()
 
         uaRegex = re.compile(r'\bUA-\d{4,10}-\d{1,4}\b', re.IGNORECASE)
         pubRegex = re.compile(r'\bca-pub-\d{1,16}\b', re.IGNORECASE)
         gtmRegex = re.compile(r'\bGTM-[A-Z0-9]{1,7}\b', re.IGNORECASE)
         gRegex = re.compile(r'\bG-[A-Z0-9]{1,15}\b', re.IGNORECASE)
+        qualtricsRegex = re.compile(r'\bQ_ZID=[a-zA-Z_0-9]*\b', re.IGNORECASE)
 
-        # In the future, if tracking codes from more companies are supported, change this so that resolutions
-        #   indicate which company the code is from.
         def GetTrackingCodes(pageUid, requestUrl) -> None:
-            trackingCodes = set()
-            trackingCodes.update(set(uaRegex.findall(requestUrl)))
-            trackingCodes.update(set(pubRegex.findall(requestUrl)))
-            trackingCodes.update(set(gtmRegex.findall(requestUrl)))
-            trackingCodes.update(set(gRegex.findall(requestUrl)))
-
-            for trackingCode in trackingCodes:
-                returnResults.append([{'Phrase': trackingCode,
-                                       'Entity Type': 'Phrase'},
-                                      {pageUid: {'Resolution': 'Google Tracking Code',
-                                                 'Notes': ''}}])
+            if requestUrl not in requestUrlsParsed:
+                requestUrlsParsed.add(requestUrl)
+                for uaCode in uaRegex.findall(requestUrl):
+                    returnResults.append([{'Phrase': uaCode,
+                                           'Entity Type': 'Phrase'},
+                                          {pageUid: {'Resolution': 'Google UA Tracking Code',
+                                                     'Notes': ''}}])
+                for pubCode in pubRegex.findall(requestUrl):
+                    returnResults.append([{'Phrase': pubCode,
+                                           'Entity Type': 'Phrase'},
+                                          {pageUid: {'Resolution': 'Google AdSense ca-pub Tracking Code',
+                                                     'Notes': ''}}])
+                for gtmCode in gtmRegex.findall(requestUrl):
+                    returnResults.append([{'Phrase': gtmCode,
+                                           'Entity Type': 'Phrase'},
+                                          {pageUid: {'Resolution': 'Google GTM Tracking Code',
+                                                     'Notes': ''}}])
+                for gCode in gRegex.findall(requestUrl):
+                    returnResults.append([{'Phrase': gCode,
+                                           'Entity Type': 'Phrase'},
+                                          {pageUid: {'Resolution': 'Google G Tracking Code',
+                                                     'Notes': ''}}])
+                for qCode in qualtricsRegex.findall(requestUrl):
+                    returnResults.append([{'Phrase': qCode[6:],
+                                           'Entity Type': 'Phrase'},
+                                          {pageUid: {'Resolution': 'Qualtrics Tracking Code',
+                                                     'Notes': ''}}])
 
         with sync_playwright() as p:
             browser = p.firefox.launch()

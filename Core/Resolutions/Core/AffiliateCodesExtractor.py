@@ -43,6 +43,7 @@ class AffiliateCodesExtractor:
         from playwright.sync_api import sync_playwright, TimeoutError
         from bs4 import BeautifulSoup
         import urllib
+        import tldextract
         import re
 
         returnResults = []
@@ -189,7 +190,7 @@ class AffiliateCodesExtractor:
                     continue
                 if not url.startswith('http://') and not url.startswith('https://'):
                     url = 'http://' + url
-                domain = ".".join(urllib.parse.urlparse(url).netloc.split('.')[-2:])
+                domain = tldextract.extract(url).fqdn
                 extractCodes(uid, url, maxDepth)
             browser.close()
         return returnResults

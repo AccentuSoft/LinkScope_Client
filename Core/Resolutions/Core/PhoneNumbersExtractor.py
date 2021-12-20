@@ -32,7 +32,7 @@ class PhoneNumbersExtractor:
     def resolution(self, entityJsonList, parameters):
         from playwright.sync_api import sync_playwright, TimeoutError
         from bs4 import BeautifulSoup
-        import urllib
+        import tldextract
 
         returnResults = []
 
@@ -99,7 +99,7 @@ class PhoneNumbersExtractor:
                     continue
                 if not url.startswith('http://') and not url.startswith('https://'):
                     url = 'http://' + url
-                domain = ".".join(urllib.parse.urlparse(url).netloc.split('.')[-2:])
+                domain = tldextract.extract(url).fqdn
                 extractTels(uid, url, maxDepth)
             browser.close()
 

@@ -46,7 +46,7 @@ class EmailExtractor:
     def resolution(self, entityJsonList, parameters):
         from playwright.sync_api import sync_playwright, TimeoutError
         from bs4 import BeautifulSoup
-        import urllib
+        import tldextract
         import re
         from email_validator import validate_email, caching_resolver, EmailNotValidError
 
@@ -144,7 +144,7 @@ class EmailExtractor:
                     continue
                 if not url.startswith('http://') and not url.startswith('https://'):
                     url = 'http://' + url
-                domain = ".".join(urllib.parse.urlparse(url).netloc.split('.')[-2:])
+                domain = tldextract.extract(url).fqdn
                 extractEmails(uid, url, maxDepth)
             browser.close()
 
