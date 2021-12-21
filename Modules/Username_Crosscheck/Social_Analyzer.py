@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+"""
+Note: Creates log files in temp folders in /tmp. Files are only readable by the person running the software.
+"""
 
 class Social_Analyzer:
     name = "Social Analyzer"
@@ -24,6 +27,10 @@ class Social_Analyzer:
         commentsRegex = re.compile('<!--.*?-->', re.DOTALL)
         websites = parameters['websites']
 
+        headers = {
+            'User-Agent': 'user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0',
+        }
+
         def resolutionHelper(uid, social_field, original_url):
             """
             Helper function that sends the web requests to each site. Due to the fact that some do not use https,
@@ -37,21 +44,21 @@ class Social_Analyzer:
             try:
                 originalUsernameRegex = re.escape(social_field)
                 originalUsernameRegex2 = re.compile(originalUsernameRegex, re.IGNORECASE)
-                firstResponse = requests.get(original_url, verify=False, timeout=30, allow_redirects=False)  # nosec
+                firstResponse = requests.get(original_url, verify=False, timeout=30, allow_redirects=False,
+                                             headers=headers)  # nosec
                 if firstResponse.status_code >= 300:
                     return False
                 else:
                     modifiedUsername = "".join(random.choices(
                         string.ascii_uppercase + string.digits, k=32))
                     usernameRegex = re.compile(social_field, re.IGNORECASE)
-                    r = requests.get(original_url, timeout=30, verify=False)  # nosec
+                    r = requests.get(original_url, timeout=30, verify=False, headers=headers)  # nosec
                     originalContent = r.text
                     if len(originalUsernameRegex2.findall(originalContent)) == 0:
-                        print(f"false positive (no {social_field} found in the content of:")
-                        print(original_url)
+                        # False Positive
                         return False
                     modified_url = original_url.replace(social_field, modifiedUsername)
-                    r = requests.get(modified_url, timeout=30, verify=False)  # nosec
+                    r = requests.get(modified_url, timeout=30, verify=False, headers=headers)  # nosec
                     modifiedUsernameContent = r.text
                     for regexMatch in commentsRegex.findall(originalContent):
                         originalContent = originalContent.replace(regexMatch, '')
@@ -60,23 +67,27 @@ class Social_Analyzer:
                     for regexMatch in usernameRegex.findall(originalContent):
                         originalContent = originalContent.replace(regexMatch, modifiedUsername)
                     if modifiedUsernameContent == originalContent:
-                        print("false positive:", original_url)
+                        # False positive
                         return False
                     else:
-                        return [{'Profile Link': original_url,
-                                 'Entity Type': 'Social Media Account'},
+                        return [{'URL': original_url,
+                                 'Entity Type': 'Website'},
                                 {uid: {'Resolution': 'Social Analyzer Report', 'Notes': ''}}]
             except (ConnectionError, RequestException) as error:
                 return "Connection error: " + str(error)
-        SocialAnalyzer = import_module("social-analyzer").SocialAnalyzer(silent=True)
 
         return_result = []
         for entity in entityJsonList:
+            SocialAnalyzer = import_module("social-analyzer").SocialAnalyzer(silent=True)
             uid = entity['uid']
             social_field = entity[list(entity)[1]].strip()
             results = SocialAnalyzer.run_as_object(
-                username=str(social_field), silent=True, output="json", filter='good', metadata=False, logs_dir='',
+                username=social_field, silent=True, output="json", filter='good', metadata=False, logs_dir='',
                 websites=websites, mode='fast', timeout=10, profiles='detected')
+
+            # Social Analyzer can return false positives. Verifying the results cuts down on those.
+            # In some *very* rare cases this might result in false negatives, but we have not been able to find any
+            #   examples of this.
             if len(results) != 0:
                 for link in results['detected']:
                     url = link['link']

@@ -108,7 +108,7 @@ class ResourceHandler:
             tree = parse(entityFile, forbid_dtd=True, forbid_entities=True, forbid_external=True)
         except Exception as exc:
             self.mainWindow.MESSAGEHANDLER.warning('Error occured when loading entities from '
-                                                   + entityFile + ', skipping.')
+                                                   + entityFile + ': ' + str(exc) + ', skipping.')
             return False
 
         root = tree.getroot()
