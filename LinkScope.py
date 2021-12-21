@@ -519,11 +519,13 @@ class MainWindow(QtWidgets.QMainWindow):
                     if str(primaryEntity.get(field)) == 'None':
                         primaryEntity[field] = otherEntity[field]
                 for incomingLink in allIncomingLinks:
-                    linksToAdd.append([incomingLink[0], primaryEntity['uid'], incomingLink['Resolution'],
-                                       incomingLink['Notes']])
+                    linkJson = self.LENTDB.getLink(incomingLink)
+                    linksToAdd.append([incomingLink[0], primaryEntity['uid'], linkJson['Resolution'],
+                                       linkJson['Notes']])
                 for outgoingLink in allOutgoingLinks:
-                    linksToAdd.append([primaryEntity['uid'], outgoingLink[1], outgoingLink['Resolution'],
-                                       outgoingLink['Notes']])
+                    linkJson = self.LENTDB.getLink(outgoingLink)
+                    linksToAdd.append([primaryEntity['uid'], outgoingLink[1], linkJson['Resolution'],
+                                       linkJson['Notes']])
                 self.deleteSpecificEntity(entityUID)
             self.centralWidget().tabbedPane.linkAddHelper(linksToAdd)
 
