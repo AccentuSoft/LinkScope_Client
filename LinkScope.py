@@ -554,21 +554,20 @@ class MainWindow(QtWidgets.QMainWindow):
             allScenesWithNode = [canvasTabs[view].scene() for view in canvasTabs
                                  if entityToSplitUID in canvasTabs[view].scene().sceneGraph.nodes()]
             for newEntityWithLinks in splitDialog.splitEntitiesWithLinks:
-                newEntity = {}
+                newEntity = {entityToSplitPrimaryFieldKey: newEntityWithLinks[0]}
                 for field in entityToSplit:
                     if field != 'uid' and field != entityToSplitPrimaryFieldKey:
                         newEntity[field] = entityToSplit[field]
-                newEntity[entityToSplitPrimaryFieldKey] = newEntityWithLinks[0]
                 newEntity = self.LENTDB.addEntity(newEntity)
 
                 for link in newEntityWithLinks[1]:
                     newLink = {}
                     for field in link:
                         newLink[field] = link[field]
-                        if newLink['uid'][0] == entityToSplitUID:
-                            newLink['uid'] = (newEntity['uid'], newLink['uid'][1])
-                        else:
-                            newLink['uid'] = (newLink['uid'][0], newEntity['uid'])
+                    if newLink['uid'][0] == entityToSplitUID:
+                        newLink['uid'] = (newEntity['uid'], newLink['uid'][1])
+                    else:
+                        newLink['uid'] = (newLink['uid'][0], newEntity['uid'])
                     self.LENTDB.addLink(newLink)
                 for scene in allScenesWithNode:
                     scene.addNodeProgrammatic(newEntity['uid'])
