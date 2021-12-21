@@ -1,7 +1,7 @@
 <Individuals>
   <Person>
     <Attributes>
-      Full Name,Gender
+      Full Name,Gender,Occupation,Date of Birth
     </Attributes>
     <Icon>
       Person.svg

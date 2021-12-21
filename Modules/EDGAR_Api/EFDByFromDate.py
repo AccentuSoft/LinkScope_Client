@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-import bs4
 
 
 class EFDByFromDate:
     name = 'Get EFD Reports From Date'
-    description = 'Return Nodes Of Websites to Reports'
+    description = 'Get EFD reports starting from the date specified by the input entities.'
     originTypes = {'Date'}
     resultTypes = {'Politically Exposed Person', 'Website'}
     parameters = {'Max Results': {'description': 'Please enter the maximum number of results to return. '
@@ -35,7 +34,7 @@ class EFDByFromDate:
     def resolution(self, entityJsonList, parameters):
         from datetime import datetime
         from playwright.sync_api import sync_playwright, TimeoutError
-        from bs4 import BeautifulSoup, SoupStrainer, Doctype
+        from bs4 import BeautifulSoup, SoupStrainer, Doctype, Tag
 
         returnResults = []
 
@@ -106,25 +105,23 @@ class EFDByFromDate:
                 try:
                     page.fill("input[name=\"submitted_end_date\"]", toDate)
                     page.fill("input[name=\"submitted_start_date\"]", date)
-                    for filerType in parameters['Filer Type']:
-                        if filerType == 'Senator':
-                            page.click("label:has-text(\"Senator\")")
-                        elif filerType == 'Candidate':
-                            page.click("label:has-text(\"Candidate\")")
-                        else:
-                            page.click("label:has-text(\"Former Senator\")")
+                    if 'Senator' in parameters['Filer Type']:
+                        page.click("label:has-text(\"Senator\")")
+                    if 'Candidate' in parameters['Filer Type']:
+                        page.click("label:has-text(\"Candidate\")")
+                    if 'Former Senator' in parameters['Filer Type']:
+                        page.click("label:has-text(\"Former Senator\")")
 
-                    for filerType in parameters['Report Type']:
-                        if filerType == 'Annual':
-                            page.click("text=Annual")
-                        elif filerType == 'Periodic Transactions':
-                            page.click("text=Periodic Transactions")
-                        elif filerType == 'Due Date Extension':
-                            page.click("text=Due Date Extension")
-                        elif filerType == 'Blind Trusts':
-                            page.click("text=Blind Trusts")
-                        else:
-                            page.click("text=Other Documents")
+                    if 'Annual' in parameters['Report Type']:
+                        page.click("text=Annual")
+                    if 'Periodic Transactions' in parameters['Report Type']:
+                        page.click("text=Periodic Transactions")
+                    if 'Due Date Extension' in parameters['Report Type']:
+                        page.click("text=Due Date Extension")
+                    if 'Blind Trusts' in parameters['Report Type']:
+                        page.click("text=Blind Trusts")
+                    if 'Other Documents' in parameters['Report Type']:
+                        page.click("text=Other Documents")
 
                     page.click("text=Search Reports")
 
@@ -138,10 +135,16 @@ class EFDByFromDate:
                     if lastIndex == 0:
                         continue
 
+                    # Need to click twice to sort by most recent.
+                    page.click("text=Date Received/Filed")
+                    page.wait_for_timeout(500)
+                    page.click("text=Date Received/Filed")
+                    page.wait_for_timeout(500)
+
                     while True:
                         soup = BeautifulSoup(page.content(), 'lxml', parse_only=SoupStrainer('tr'))
                         for record in soup:
-                            if isinstance(record, bs4.Tag) and record.get('class'):
+                            if isinstance(record, Tag) and record.get('class'):
                                 recordFields = record.childGenerator()
                                 senateName = next(recordFields).text
                                 senateName += " " + next(recordFields).text

@@ -1,22 +1,15 @@
 #!/usr/bin/env python3
 
+
 class EFDByName:
     name = 'Get EFD Reports by Name'
-    description = 'Return Nodes Of Websites to Reports'
+    description = 'Get EFD reports concerning the people specified by the input entities.'
     originTypes = {'Person', 'Politically Exposed Person'}
     resultTypes = {'Website'}
     parameters = {'Max Results': {'description': 'Please enter the maximum number of results to return.\n'
                                                  'Returns the 5 most recent by default.',
                                   'type': 'String',
                                   'default': '5'},
-                  'Filer Type': {'description': 'Please enter the Name you want to search for.\n'
-                                                'In the format: [First Name] [Last Name].'
-                                                'E.g. "Donald Trump" (No quotes)',
-                                 'type': 'MultiChoice',
-                                 'value': {'Senator',
-                                           'Candidate',
-                                           'Former Senator',
-                                           }},
                   'Report Type': {'description': 'Please select the Report Type you want to search for.',
                                   'type': 'MultiChoice',
                                   'value': {'Annual',
@@ -27,73 +20,146 @@ class EFDByName:
                                             }}}
 
     def resolution(self, entityJsonList, parameters):
-        import time
-        from selenium import webdriver
-        from selenium.webdriver.common.by import By
-        from bs4 import BeautifulSoup, SoupStrainer
+        from datetime import datetime
+        from playwright.sync_api import sync_playwright, TimeoutError
+        from bs4 import BeautifulSoup, SoupStrainer, Doctype, Tag
 
         returnResults = []
-        links = []
 
         try:
-            linkNumbers = int(parameters['Max Results'])
+            maxResults = int(parameters['Max Results'])
         except ValueError:
-            return "Invalid integer provided in 'Max Results' parameter"
-        if linkNumbers <= 0:
+            return "Invalid integer provided in 'Max Results' parameter."
+
+        if maxResults <= 0:
             return []
 
         url = 'https://efdsearch.senate.gov/search/'
-        fireFoxOptions = webdriver.FirefoxOptions()
-        fireFoxOptions.headless = True
-        driver = webdriver.Firefox(options=fireFoxOptions)
-        for entity in entityJsonList:
-            firstName = entity['Full Name'].split(' ')[0]
-            lastName = entity['Full Name'].split(' ')[1]
-            uid = entity['uid']
-            driver.implicitly_wait(1)
-            driver.get(url)
-            driver.find_element(By.ID, "agree_statement").click()
-            # until it loads the page
-            time.sleep(1)
-            # wait.until(EC.element_to_be_clickable((By.ID, 'reportTypeLabelAnnual')))
-            driver.find_element(By.ID, "firstName").send_keys(firstName)
-            driver.find_element(By.ID, "lastName").send_keys(lastName)
-            for filter_type in parameters['Filer Type']:
-                if filter_type == 'Senator':
-                    driver.find_element(By.ID, "filerTypeLabelSenator").click()
-                elif filter_type == 'Candidate':
-                    driver.find_element(By.ID, "filerTypeLabelCandidate").click()
-                else:
-                    driver.find_element(By.ID, "filerTypeLabelFormerSenator").click()
 
-            for report_type in parameters['Report Type']:
-                if report_type == 'Annual':
-                    driver.find_element(By.ID, "reportTypeLabelAnnual").click()
-                elif report_type == 'Periodic Transactions':
-                    driver.find_element(By.ID, "reportTypeLabelPtr").click()
-                elif report_type == 'Due Date Extension':
-                    driver.find_element(By.ID, "reportTypeLabelExtension").click()
-                elif report_type == 'Blind Trusts':
-                    driver.find_element(By.ID, "reportTypeLabelBlindTrusts").click()
-                else:
-                    driver.find_element(By.ID, "reportTypeLabelOther").click()
-            driver.find_element(By.CLASS_NAME, "form-control").submit()
-            time.sleep(1)
-            response = driver.page_source
-            for link in BeautifulSoup(response, 'html.parser', parse_only=SoupStrainer('a')):
-                """if link.has_attr('href') and 'view' in link:
-                    link = 'https://efdsearch.senate.gov/search/' + str(link)
-                    links.append(link)"""
-                anchor = link.attrs['href'] if 'href' in link.attrs else ''
-                if 'view' in anchor:
-                    anchor = 'https://efdsearch.senate.gov/search/' + anchor
-                    links.append(anchor)
+        with sync_playwright() as p:
+            browser = p.firefox.launch()
+            context = browser.new_context(
+                viewport={'width': 1920, 'height': 1080},
+                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:94.0) Gecko/20100101 Firefox/94.0'
+            )
+            page = context.new_page()
 
-            if linkNumbers > len(links):
-                linkNumbers = int(len(links))
+            pageResolved = False
+            for _ in range(5):
+                try:
+                    page.goto(url, wait_until="networkidle", timeout=10000)
+                    pageResolved = True
+                    break
+                except TimeoutError:
+                    pass
+            if not pageResolved:
+                return "Could not access efdsearch website."
 
-            for i in range(linkNumbers):
-                returnResults.append([{'URL': links[i], 'Entity Type': 'Website'},
-                                      {uid: {'Resolution': 'EFD Results', 'Notes': ''}}])
-        driver.quit()
+            try:
+                page.click("text=I understand the prohibitions on obtaining and use of financial disclosure repor")
+            except TimeoutError:
+                return "The efdsearch website is unresponsive"
+            page.wait_for_timeout(1000)
+
+            for entity in entityJsonList:
+                lastName = entity['Full Name'].split(' ')[-1]
+                firstName = " ".join(entity['Full Name'].split(' ')[:-1])
+
+                uid = entity['uid']
+                page.wait_for_timeout(1000)
+
+                pageResolved = False
+                for _ in range(3):
+                    try:
+                        page.goto(url, wait_until="networkidle", timeout=10000)
+                        pageResolved = True
+                        break
+                    except TimeoutError:
+                        pass
+                if not pageResolved:
+                    continue
+
+                try:
+                    personOccupation = entity['Occupation'].lower()
+                    if personOccupation == 'senator':
+                        page.click("label:has-text(\"Senator\")")
+                    elif personOccupation == 'candidate':
+                        page.click("label:has-text(\"Candidate\")")
+                    elif personOccupation == 'former senator':
+                        page.click("label:has-text(\"Former Senator\")")
+
+                    if 'Annual' in parameters['Report Type']:
+                        page.click("text=Annual")
+                    if 'Periodic Transactions' in parameters['Report Type']:
+                        page.click("text=Periodic Transactions")
+                    if 'Due Date Extension' in parameters['Report Type']:
+                        page.click("text=Due Date Extension")
+                    if 'Blind Trusts' in parameters['Report Type']:
+                        page.click("text=Blind Trusts")
+                    if 'Other Documents' in parameters['Report Type']:
+                        page.click("text=Other Documents")
+
+                    page.fill("[placeholder=\"First name (starts with)\"]", firstName)
+                    page.fill("[placeholder=\"Last name (starts with)\"]", lastName)
+
+                    page.click("text=Search Reports")
+
+                    entriesInfo = page.locator('#filedReports_info')
+                    entriesInfo.wait_for(state='visible')
+                    currentFirstIndex = 1
+                    currentLastIndex = int(entriesInfo.inner_text().split(" ")[3])
+                    lastIndex = int(entriesInfo.inner_text().split(" ")[5])
+                    resultCount = 0
+
+                    if lastIndex == 0:
+                        continue
+
+                    # Need to click twice to sort by most recent.
+                    page.click("text=Date Received/Filed")
+                    page.wait_for_timeout(500)
+                    page.click("text=Date Received/Filed")
+                    page.wait_for_timeout(500)
+
+                    while True:
+                        soup = BeautifulSoup(page.content(), 'lxml', parse_only=SoupStrainer('tr'))
+                        for record in soup:
+                            if isinstance(record, Tag) and record.get('class'):
+                                recordFields = record.childGenerator()
+                                senateName = next(recordFields).text
+                                senateName += " " + next(recordFields).text
+                                office = next(recordFields).text
+                                report = next(recordFields)
+                                reportType = report.text
+                                reportLink = next(report.children).get('href')
+                                dateCreated = datetime.strptime(next(recordFields).text, '%m/%d/%Y').isoformat()
+                                resultCount += 1
+                                returnResults.append([{'URL': 'https://efdsearch.senate.gov' + reportLink,
+                                                       'Report Type': reportType,
+                                                       'Entity Type': 'Website'},
+                                                      {uid: {'Resolution': 'Filed Disclosure Report',
+                                                             'Notes': '',
+                                                             'Date Created': dateCreated}}])
+                                if resultCount == maxResults:
+                                    break
+
+                        # Break if we've read enough records, or we ran out of records on this page.
+                        if resultCount == maxResults or currentLastIndex == lastIndex:
+                            break
+
+                        # We've read all the available records, so we click next.
+                        page.click("text=Next")
+                        entriesInfo.wait_for(state='visible')
+                        while currentFirstIndex == int(entriesInfo.inner_text().split(" ")[1]):
+                            page.wait_for_timeout(1000)
+                        currentFirstIndex = int(entriesInfo.inner_text().split(" ")[1])
+                        currentLastIndex = int(entriesInfo.inner_text().split(" ")[3])
+                        lastIndex = int(entriesInfo.inner_text().split(" ")[5])
+
+                except TimeoutError:
+                    continue
+                except Exception as e:
+                    return "Resolution '" + self.name + "' encountered an error: " + str(e)
+
+            page.close()
+            browser.close()
         return returnResults
