@@ -23,7 +23,7 @@ class IPv4Scan:
                                         'value': {'-T0', '-T1', '-T2', '-T3', '-T4', '-T5'}
                                         },
                   'Nmap Ports': {'description': 'Select Ports to scan.\n'
-                                                'Type ports separated by commas no spaces: 80,443,22\n'
+                                                'Type ports separated by commas and without spaces, e.g.: 80,443,22\n'
                                                 'Type "All" (no quotes) to scan all ports',
                                  'type': 'String',
                                  'value': 'Enter ports to scan here',
@@ -37,7 +37,8 @@ class IPv4Scan:
                   #                                  'value': 'No Commands'
                   #                                  },
                   'Root Privileges': {'description': 'Some Commands require Root Privileges\n'
-                                                     'Please provide your credentials in the form: [password]\n',
+                                                     'Please make sure you are running LinkScope as a user with sudo '
+                                                     'privileges, and provide your password:',
                                       'type': 'String',
                                       'value': ''
                                       }
@@ -72,14 +73,14 @@ class IPv4Scan:
             try:
                 ip_address(primary_field)
             except ValueError:
-                return "The Entity Provided isn't a valid IP Address"
+                return "The Entity provided isn't a valid IP Address"
 
             nmapParams.append(primary_field)
 
             temp_dir = tempfile.TemporaryDirectory()
             xmlPath = Path(temp_dir.name) / 'report.xml'
             nmapParams.append('-oX')
-            nmapParams.append(xmlPath)
+            nmapParams.append(str(xmlPath))
 
             allParams = sudoParams + nmapParams
             subprocess.Popen(allParams, stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -88,26 +89,6 @@ class IPv4Scan:
             with open(xmlPath, 'r') as f:
                 file_content = f.read()  # Read whole file in the file_content string
             jsonData = literal_eval(json.dumps(xmltodict.parse(file_content)).replace('null', 'None'))
-            scanInfo = jsonData['nmaprun']['scaninfo']
-            returnResults.append([{'Type': scanInfo['@type'],
-                                   'Protocol': scanInfo['@protocol'],
-                                   'Number of Services': scanInfo['@numservices'],
-                                   'Notes': 'Services: ' + scanInfo['@services'],
-                                   'Entity Type': 'Scan Info'},
-                                  {uid: {'Resolution': 'Nmap Result',
-                                         'Notes': ''}}])
-
-            runStats = jsonData['nmaprun']['runstats']
-            returnResults.append([{'Nmap Scan': primary_field + ' Scan: ' + runStats['finished']['@timestr'],
-                                   'Hosts Up': runStats['hosts']['@up'],
-                                   'Hosts Down': runStats['hosts']['@down'],
-                                   'Total Hosts': runStats['hosts']['@total'],
-                                   'Time Elapsed': runStats['finished']['@elapsed'],
-                                   'Exit Code': runStats['finished']['@exit'],
-                                   'Notes': runStats['finished']['@summary'],
-                                   'Entity Type': 'Run Stats'},
-                                  {uid: {'Resolution': 'Nmap Scan Statistics',
-                                         'Notes': ''}}])
 
             if jsonData['nmaprun'].get('host') is not None:
                 if jsonData['nmaprun']['host']['os'].get('osmatch') is not None:
@@ -137,8 +118,10 @@ class IPv4Scan:
 
                 if jsonData['nmaprun']['host']['os'].get('osfingerprint') is not None:
                     returnResults.append([{'Phrase': 'Fingerprint: ' + str(jsonData['nmaprun']['host']['os']
-                                                                           ['osfingerprint']['@fingerprint'])[0: 15],
-                                           'Notes': jsonData['nmaprun']['host']['os']['osfingerprint']['@fingerprint'],
+                                                                           ['osfingerprint']['@fingerprint'])[
+                                                                       0: 15],
+                                           'Notes': jsonData['nmaprun']['host']['os']['osfingerprint'][
+                                               '@fingerprint'],
                                            'Entity Type': 'Phrase'},
                                           {uid: {'Resolution': 'OS Fingerprint',
                                                  'Notes': ''}}])
@@ -147,27 +130,27 @@ class IPv4Scan:
                     portData = jsonData['nmaprun']['host']['ports']['port']
                     for port in portData:
                         index_of_child = len(returnResults)
-                        returnResults.append([{'Port': primary_field + ':' + port['@portid'] + ':' + port['@protocol'],
+                        returnResults.append([{'Port': primary_field + ':' + port['@portid'] + ':' +
+                                                       port['@protocol'],
+                                               'State': 'Closed',
                                                'Notes': '',
                                                'Entity Type': 'Port'},
                                               {uid: {'Resolution': 'Port Found',
                                                      'Notes': ''}}])
-                        returnResults.append([{'Port State': port['state']['@state'],
-                                               'Reason': port['state']['@reason'],
-                                               'Reason TTL': port['state']['@reason_ttl'],
-                                               'Notes': '',
-                                               'Entity Type': 'Port State'},
+                        returnResults.append([{'Phrase': port['state']['@state'],
+                                               'Entity Type': 'Phrase'},
                                               {index_of_child: {'Resolution': 'Port State',
                                                                 'Notes': ''}}])
-                        returnResults.append([{'Service Product': port['service']['@product'],
-                                               'Service Name': port['service']['@name'],
-                                               'Method': port['service']['@method'],
-                                               'Configuration': port['service']['@conf'],
-                                               'Notes': '',
-                                               'Entity Type': 'Port Service'},
-                                              {index_of_child: {'Resolution': 'Port Service',
-                                                                'Notes': ''}}])
-                        if type(port['script']) is list:
+                        if port['service'].get('@product') is not None:
+                            returnResults.append([{'Service Product': port['service'].get('@product'),
+                                                   'Service Name': port['service']['@name'],
+                                                   'Method': port['service']['@method'],
+                                                   'Configuration': port['service']['@conf'],
+                                                   'Notes': '',
+                                                   'Entity Type': 'Port Service'},
+                                                  {index_of_child: {'Resolution': 'Port Service',
+                                                                    'Notes': ''}}])
+                        if isinstance(port.get('script'), list):
                             for prt in port['script']:
                                 if prt.get('elem') is not None and type(prt.get('elem')) is dict:
                                     returnResults.append([{'ID': str(prt['@id']),
@@ -216,7 +199,7 @@ class IPv4Scan:
                                                           {index_of_child: {'Resolution': 'Port Script',
                                                                             'Notes': ''}}])
 
-                        if type(port['script']) is dict:
+                        elif isinstance(port.get('script'), dict):
                             if port['script'].get('elem') is not None and type(port['script'].get('elem')) is dict:
                                 returnResults.append([{'ID': str(port['script']['@id']),
                                                        'Output': str(port['script']['@output']),
