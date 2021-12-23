@@ -4,14 +4,15 @@
 Note: Creates log files in temp folders in /tmp. Files are only readable by the person running the software.
 """
 
+
 class Social_Analyzer:
     name = "Social Analyzer"
     description = "Find information about a persons social media accounts"
     originTypes = {'Phrase'}
     resultTypes = {'Social Media Account'}
     parameters = {'websites': {'description': 'Enter the domain names of the social media websites'
-                               ' to check or "all" (no quotes) to check all available websites.'
-                               ' Note that some of the results could be false positives.',
+                                              ' to check or "all" (no quotes) to check all available websites.'
+                                              ' Note that some of the results could be false positives.',
                                'type': 'String',
                                'default': 'all',
                                'value': 'e.g: Facebook.com, Instagram.com etc...'}}
@@ -31,15 +32,10 @@ class Social_Analyzer:
             'User-Agent': 'user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0',
         }
 
-        def resolutionHelper(uid, social_field, original_url):
+        def resolutionHelper(original_url):
             """
             Helper function that sends the web requests to each site. Due to the fact that some do not use https,
             certificate verification is disabled.
-
-            :param uid:
-            :param social_field:
-            :param original_url:
-            :return:
             """
             try:
                 originalUsernameRegex = re.escape(social_field)
@@ -78,6 +74,7 @@ class Social_Analyzer:
 
         return_result = []
         for entity in entityJsonList:
+            # Have to keep re-importing so that it works for entities beyond the first.
             SocialAnalyzer = import_module("social-analyzer").SocialAnalyzer(silent=True)
             uid = entity['uid']
             social_field = entity[list(entity)[1]].strip()
@@ -92,13 +89,13 @@ class Social_Analyzer:
                 for link in results['detected']:
                     url = link['link']
                     count = 0
-                    helperResult = resolutionHelper(uid, social_field, url)
+                    helperResult = resolutionHelper(url)
                     while helperResult is None:
                         time.sleep(5)
                         count += 1
                         if count == 3:
                             break
-                        helperResult = resolutionHelper(uid, social_field, url)
+                        helperResult = resolutionHelper(url)
                     if count != 3 and helperResult is not False:
                         return_result.append(helperResult)
         return return_result
