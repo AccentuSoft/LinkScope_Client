@@ -30,10 +30,8 @@ lxml
 cchardet
 bs4
 
-# Transition from selenium to playwright
-selenium
+# Need to run 'playwright install'.
 playwright
-# Need to run 'playwright install'  - Packaging should take care of this.
 
 
 ##### Extra Packages for resolutions
@@ -47,7 +45,6 @@ vtapi3
 social-analyzer
 requests_futures
 tweepy
-selenium-wire
 jellyfish
 shodan
 pandas

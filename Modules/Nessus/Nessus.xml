@@ -1,0 +1,12 @@
+<Nessus>
+    <Finding>
+        <Attributes>
+            Issue Synopsis,Solution,CVSS2 Score,CVSS2 Vector
+        </Attributes>
+    </Finding>
+    <CVE>
+        <Attributes>
+            CVE
+        </Attributes>
+    </CVE>
+</Nessus>
