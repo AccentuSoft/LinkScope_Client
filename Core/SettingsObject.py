@@ -39,7 +39,7 @@ class SettingsObject(dict):
         # It's not necessary to set this, but we will for
         #   the sake of completeness
         self.setValue("Logging/Severity", "20")
-        self.setValue("Logging/Logfile", 'logfile.log')
+        self.setValue("Logging/Logfile", str(Path.home() / 'LinkScope_logfile.log'))
 
     # Usability Alias
     def setValue(self, key, value):

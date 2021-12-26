@@ -2,6 +2,7 @@
 
 import logging
 
+from pathlib import Path
 from PySide6 import QtWidgets
 
 
@@ -71,7 +72,8 @@ class MessageHandler:
 
     def changeLogfile(self, newLogFile):
         self.mainWindow.SETTINGS.setValue("Logging/Logfile", newLogFile)
-        self.logFileHandler = logging.FileHandler(self.mainWindow.SETTINGS.value("Logging/Logfile", 'logfile.log'), 'a')
+        self.logFileHandler = logging.FileHandler(
+            self.mainWindow.SETTINGS.value("Logging/Logfile", str(Path.home() / 'LinkScope_logfile.log')), 'a')
         rootLogger = logging.getLogger()
         for handler in rootLogger.handlers[:]:
             if isinstance(handler, logging.FileHandler):
@@ -80,7 +82,8 @@ class MessageHandler:
 
     def __init__(self, parentObject):
         self.mainWindow = parentObject
-        self.logFileHandler = logging.FileHandler(self.mainWindow.SETTINGS.value("Logging/Logfile", 'logfile.log'), 'a')
+        self.logFileHandler = logging.FileHandler(
+            self.mainWindow.SETTINGS.value("Logging/Logfile", str(Path.home() / 'LinkScope_logfile.log')), 'a')
         self.logFormatter = logging.Formatter(
             '{' + self.mainWindow.SETTINGS.value("Project/Name", "Untitled") + '} [%(asctime)s] - %(levelname)s: %('
                                                                                'message)s')

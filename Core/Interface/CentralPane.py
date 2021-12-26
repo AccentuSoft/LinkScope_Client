@@ -976,10 +976,13 @@ class CanvasScene(QtWidgets.QGraphicsScene):
         self.nodesDict[item.uid] = item
         self.addItem(item)
         item.setPos(QtCore.QPointF(x, y))
+        self.parent().mainWindow.MESSAGEHANDLER.info('Added node: ' + str(item.uid))
 
     def addLinkToScene(self, link: Entity.BaseConnector) -> None:
         self.linksDict[link.startItem().uid + link.endItem().uid] = link
         self.addItem(link)
+        self.parent().mainWindow.MESSAGEHANDLER.info('Added link: (' + link.startItem().uid + ", " +
+                                                     link.endItem().uid + ')')
 
     def appendSelectedItemsToGroupToggle(self) -> None:
         if self.linking:
