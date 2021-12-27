@@ -109,7 +109,7 @@ class FileExtractor:
                                                          'Notes': ''}}])
 
                             docProperName = link.split('/')[-1]
-                            docFileName = hexlify(md5(link.encode()).digest()).decode() + ' | ' + docProperName
+                            docFileName = hexlify(md5(link.encode()).digest()).decode() + ' | ' + docProperName  # nosec
                             docFullPath = Path(parameters['Project Files Directory']) / docFileName
 
                             try:
@@ -151,7 +151,7 @@ class FileExtractor:
                                               {uid: {'Resolution': 'File URL',
                                                      'Notes': ''}}])
                         docProperName = link.split('/')[-1]
-                        docFileName = hexlify(md5(link.encode()).digest()).decode() + ' | ' + docProperName
+                        docFileName = hexlify(md5(link.encode()).digest()).decode() + ' | ' + docProperName  # nosec
                         docFullPath = Path(parameters['Project Files Directory']) / docFileName
 
                         try:

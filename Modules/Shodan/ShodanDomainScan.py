@@ -60,7 +60,7 @@ class ShodanDomainScan:
                                           {uid: {'Resolution': 'Shodan Domain AAAA records', 'Notes': ''}}])
                 elif dns_type == "TXT":
                     # Text records could be massive - do not want them breaking the UI
-                    textPrimaryField = hashlib.md5(value.encode())
+                    textPrimaryField = hashlib.md5(value.encode())  # nosec
                     return_result.append([{'Phrase': primary_field + ' TXT Record: ' +
                                                      hexlify(textPrimaryField.digest()).decode(),
                                            'Entity Type': 'Phrase',

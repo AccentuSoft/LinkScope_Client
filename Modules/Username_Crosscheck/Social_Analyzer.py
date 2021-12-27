@@ -40,12 +40,12 @@ class Social_Analyzer:
             try:
                 originalUsernameRegex = re.escape(social_field)
                 originalUsernameRegex2 = re.compile(originalUsernameRegex, re.IGNORECASE)
-                firstResponse = requests.get(original_url, verify=False, timeout=30, allow_redirects=False,
-                                             headers=headers)  # nosec
+                firstResponse = requests.get(original_url, verify=False, timeout=30, allow_redirects=False,  # nosec
+                                             headers=headers)
                 if firstResponse.status_code >= 300:
                     return False
                 else:
-                    modifiedUsername = "".join(random.choices(
+                    modifiedUsername = "".join(random.choices(  # nosec
                         string.ascii_uppercase + string.digits, k=32))
                     usernameRegex = re.compile(social_field, re.IGNORECASE)
                     r = requests.get(original_url, timeout=30, verify=False, headers=headers)  # nosec

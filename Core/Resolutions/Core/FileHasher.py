@@ -25,11 +25,11 @@ class FileHasher:
             block_size = 65536  # The size of each read from the file
             for hashing_algorithm in hashing_algorithms:
                 if hashing_algorithm == "SHA256":
-                    file_hash = hashlib.sha256()
+                    file_hash = hashlib.sha256()  # nosec
                 elif hashing_algorithm == "SHA1":
-                    file_hash = hashlib.sha1()
+                    file_hash = hashlib.sha1()  # nosec
                 else:
-                    file_hash = hashlib.md5()
+                    file_hash = hashlib.md5()  # nosec
                 with open(file_path, 'rb') as f:
                     fb = f.read(block_size)
                     while len(fb) > 0:

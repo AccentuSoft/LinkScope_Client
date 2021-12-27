@@ -72,7 +72,7 @@ class Reddit:
                                            'Entity Type': 'Person'},
                                           {index_of_child: {'Resolution': f"https://reddit.com{value['permalink']}",
                                                             'Notes': ''}}])
-                    comment = hashlib.md5(value['body'].encode())
+                    comment = hashlib.md5(value['body'].encode())  # nosec
                     comment = hexlify(comment.digest()).decode()
                     return_result.append([{'Comment': comment,
                                            'Notes': value['body'],
