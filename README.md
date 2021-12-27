@@ -33,11 +33,10 @@ This repository has the code for the Linux version, with the Windows alternative
 
 ### Installing the software
 #### Linux
-An installer is provided for Ubuntu 20.04 and derivatives:
+An installer is provided for Ubuntu 20.04 and derivatives.
+To download the installer and install the software, run the following commands in a terminal:
 
 `wget https://raw.githubusercontent.com/AccentuSoft/LinkScope_Client/main/LinuxInstaller.sh`
-
-Running the script with the 'install' parameter installs the software, like so:
 
 `bash LinuxInstaller.sh install`
 
