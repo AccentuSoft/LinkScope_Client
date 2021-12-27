@@ -90,6 +90,10 @@ class TabBar(QtWidgets.QTabBar):
                 return
 
             if delete:
+                sceneToClose = self.parent().canvasTabs[currName].scene()
+                groupNodes = [item for item in sceneToClose.items() if isinstance(item, Entity.GroupNode)]
+                for groupNode in groupNodes:
+                    sceneToClose.removeNode(groupNode)
                 tabIndex = self.parent().getTabIndexByName(currName)
                 self.parent().closeTab(tabIndex)
                 return
@@ -1481,7 +1485,6 @@ class CanvasScene(QtWidgets.QGraphicsScene):
             self.parent().mainWindow.setStatus('Please select more than one node to create a Group node.')
 
     def ungroupSelectedItems(self) -> None:
-        # groupNodes = [item for item in self.selectedItems() if isinstance(item, Entity.GroupNode)]
         groups = [item for item in self.selectedItems() if isinstance(item, Entity.GroupNode)]
         for group in groups:
             newNodesUIDs = group.groupedNodesUid
