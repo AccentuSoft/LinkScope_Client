@@ -76,7 +76,8 @@ if [ "$1" == "install" ]; then
     echo "Please check that /tmp/LinkScope.7z exists, and that it is an archive containing the latest version of the LinkScope Client software."
     exit
   fi
-  sudo echo "$DESKTOP_ENTRY" > /usr/share/applications/LinkScope.desktop
+  sudo echo "$DESKTOP_ENTRY" > /tmp/LinkScope.desktop
+  sudo mv /tmp/LinkScope.desktop /usr/share/applications/LinkScope.desktop
   sudo chmod +x /usr/share/applications/LinkScope.desktop
   read -p "Create a Desktop shortcut? WARNING: This will refresh the desktop! [y/N]" -n 1 -r
   # https://askubuntu.com/a/1014261    -- Making Desktop launchers with .desktop files
