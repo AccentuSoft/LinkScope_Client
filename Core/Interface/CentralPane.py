@@ -1164,7 +1164,7 @@ class CanvasScene(QtWidgets.QGraphicsScene):
             self.addEntityLinkCreatorHelper(self.nodesDict[entity])
 
         progress.setValue(steps)
-        self.parent().mainWindow.MESSAGEHANDLER.info('Loaded canvas ' + self.getSelfName())
+        self.parent().mainWindow.MESSAGEHANDLER.info('Loaded canvas ' + canvasName)
 
     def updatePositionInDB(self, uid, x, y) -> None:
         """

@@ -51,6 +51,9 @@ class DockBarThree(QtWidgets.QDockWidget):
         self.chatBox = ChatBox(self, self.parent())
         self.timeWidget = TimeWidget(self, self.parent())
         self.logViewer = QtWidgets.QPlainTextEdit()
+
+        # Because we're not going to stop the thread before closing, an error will be thrown by Qt.
+        # That error can be safely ignored.
         logViewerUpdateThread = LoggingUpdateThread(mainWindow.MESSAGEHANDLER)
         logViewerUpdateThread.loggingSignal.connect(self.updateLogs)
         logViewerUpdateThread.start()
