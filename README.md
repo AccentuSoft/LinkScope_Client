@@ -33,7 +33,9 @@ This repository has the code for the Linux version, with the Windows alternative
 
 ### Installing the software
 #### Linux
-An installer is provided for Ubuntu 20.04 and derivatives: https://raw.githubusercontent.com/AccentuSoft/LinkScope_Client/main/LinuxInstaller.sh
+An installer is provided for Ubuntu 20.04 and derivatives:
+
+`wget https://raw.githubusercontent.com/AccentuSoft/LinkScope_Client/main/LinuxInstaller.sh`
 
 Running the script with the 'install' parameter installs the software, like so:
 
