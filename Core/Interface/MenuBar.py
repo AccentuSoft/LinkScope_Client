@@ -1042,6 +1042,7 @@ class ViewAndStopResolutionsDialogOption(QtWidgets.QPushButton):
 
     def __init__(self, resolutionThread, fromServer, mainWindowObject):
         super(ViewAndStopResolutionsDialogOption, self).__init__()
+        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         self.mainWindowObject = mainWindowObject
         self.resolutionThread = resolutionThread
         self.fromServer = fromServer
