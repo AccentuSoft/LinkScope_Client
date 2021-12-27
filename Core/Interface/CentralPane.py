@@ -881,7 +881,9 @@ class CanvasView(QtWidgets.QGraphicsView):
 
     def sendEntitiesToOtherCanvas(self) -> None:
         entitiesToSend = [item.uid for item in self.scene().selectedItems()
-                          if isinstance(item, Entity.BaseNode)]
+                          if isinstance(item, Entity.BaseNode) and not isinstance(item, Entity.GroupNode)]
+        groupEntitiesToSend = [item.uid for item in self.scene().selectedItems()
+                               if isinstance(item, Entity.GroupNode)]
 
         otherTabs = [tabName for tabName in self.tabbedPane.canvasTabs if tabName != self.name]
         prompt = SendToOtherTabCanvasSelector(otherTabs)
@@ -893,11 +895,30 @@ class CanvasView(QtWidgets.QGraphicsView):
                 for entityToSend in entitiesToSend:
                     if otherCanvas.sceneGraph.nodes.get(entityToSend) is None:
                         otherCanvas.addNodeProgrammatic(entityToSend)
+                for groupEntityToSend in groupEntitiesToSend:
+                    # Have to make a new group entity, so that ungrouping in one canvas doesn't delete the entity
+                    #   group in another.
+                    entityJSON = self.tabbedPane.entityDB.getEntity(groupEntityToSend)
+                    # Dereference the list, so we don't have issues w/ the original Group Node.
+                    newEntity = self.tabbedPane.entityDB.addEntity(
+                        {'Group Name': 'Entity Group', 'Child UIDs': list(entityJSON['Child UIDs']),
+                         'Entity Type': 'EntityGroup'})
+                    newUID = newEntity['uid']
+
+                    # Ensure that no duplicate nodes exist.
+                    newGroupNode = otherCanvas.addNodeProgrammatic(newUID, newEntity['Child UIDs'])
+                    if newGroupNode is None:
+                        self.tabbedPane.mainWindow.MESSAGEHANDLER.info("Cannot send group node to other canvas: The "
+                                                                       "nodes it contains already exist there! Make "
+                                                                       "sure that the nodes in the group node you're "
+                                                                       "trying to send don't exist inside other groups "
+                                                                       "at the destination canvas.", popUp=True)
+                        self.tabbedPane.entityDB.removeEntity(newUID)
 
                 otherCanvas.rearrangeGraph()
             else:
                 self.tabbedPane.mainWindow.MESSAGEHANDLER.info("Please select a valid Canvas name, "
-                                                               "or create a new Canvas.")
+                                                               "or create a new Canvas.", popUp=True)
 
     def takePictureOfView(self, justViewport: bool = True, transparentBackground: bool = False) -> QtGui.QImage:
         # Need to set size and format of pic before using it.
@@ -1155,34 +1176,37 @@ class CanvasScene(QtWidgets.QGraphicsScene):
         newNodePos = (x, y)
         picture = entity.get('Icon')
 
-        if uid in self.sceneGraph.nodes:
-            del self.sceneGraph.nodes[uid]['groupID']
-        else:
-            self.sceneGraph.add_node(uid)
-        self.scenePos[uid] = newNodePos
         try:
             nodePrimaryAttribute = entity.get(list(entity)[1])
         except IndexError:
             nodePrimaryAttribute = ''
 
+        newNode = None
         if entity.get('Entity Type') == "EntityGroup":
-            newNode = Entity.GroupNode(picture, uid)
-            self.addNodeToScene(newNode, x, y)
-            groupItems = [uid for uid in entity['Child UIDs'] if uid not in self.nodesDict]
+            groupItems = [uid for uid in entity['Child UIDs'] if uid not in self.sceneGraph.nodes]
+            if len(groupItems) > 0:
+                newNode = Entity.GroupNode(picture, uid)
+                self.addNodeToScene(newNode, x, y)
 
-            newGroupList = newNode.listWidget
-            newGroupListGraphic = self.addWidget(newGroupList)
-            newGroupListGraphic.hide()
-            newNode.formGroup(groupItems, newGroupListGraphic)
-            for item in groupItems:
-                self.sceneGraph.add_node(item, groupID=newNode.uid)
+                newGroupList = newNode.listWidget
+                newGroupListGraphic = self.addWidget(newGroupList)
+                newGroupListGraphic.hide()
+                newNode.formGroup(groupItems, newGroupListGraphic)
+                for item in groupItems:
+                    self.sceneGraph.add_node(item, groupID=newNode.uid)
         else:
             if not fromServer:
                 self.parent().mainWindow.sendLocalCanvasUpdateToServer(self.getSelfName(), uid)
             newNode = Entity.BaseNode(picture, uid, nodePrimaryAttribute)
             self.addNodeToScene(newNode, x, y)
 
-        self.addEntityLinkCreatorHelper(newNode)
+        if newNode is not None:
+            self.addEntityLinkCreatorHelper(newNode)
+            if uid in self.sceneGraph.nodes:
+                del self.sceneGraph.nodes[uid]['groupID']
+            else:
+                self.sceneGraph.add_node(uid)
+            self.scenePos[uid] = newNodePos
 
         # Need to return entity Json to show the property editor if new
         #   entity was added.
@@ -1195,12 +1219,7 @@ class CanvasScene(QtWidgets.QGraphicsScene):
 
         picture = entity.get('Icon')
 
-        if uid in self.sceneGraph.nodes:
-            del self.sceneGraph.nodes[uid]['groupID']
-        else:
-            self.sceneGraph.add_node(uid)
-        self.sceneGraph.add_node(uid)
-
+        newNode = None
         if groupItems is None:
             # Do not sync group entities.
             if not fromServer:
@@ -1212,18 +1231,24 @@ class CanvasScene(QtWidgets.QGraphicsScene):
             newNode = Entity.BaseNode(picture, uid, nodePrimaryAttribute)
             self.addNodeToScene(newNode)
         else:
-            groupItems = [uid for uid in groupItems if uid not in self.nodesDict]
-            newNode = Entity.GroupNode(picture, uid)
-            self.addNodeToScene(newNode)
+            groupItems = [uid for uid in groupItems if uid not in self.sceneGraph.nodes]
+            if len(groupItems) > 0:
+                newNode = Entity.GroupNode(picture, uid)
+                self.addNodeToScene(newNode)
 
-            newGroupList = newNode.listWidget
-            newGroupListGraphic = self.addWidget(newGroupList)
-            newGroupListGraphic.hide()
-            newNode.formGroup(groupItems, newGroupListGraphic)
-            for item in groupItems:
-                self.sceneGraph.add_node(item, groupID=newNode.uid)
-
-        self.addEntityLinkCreatorHelper(newNode)
+                newGroupList = newNode.listWidget
+                newGroupListGraphic = self.addWidget(newGroupList)
+                newGroupListGraphic.hide()
+                newNode.formGroup(groupItems, newGroupListGraphic)
+                for item in groupItems:
+                    self.sceneGraph.add_node(item, groupID=newNode.uid)
+        if newNode is not None:
+            self.addEntityLinkCreatorHelper(newNode)
+            if uid in self.sceneGraph.nodes:
+                del self.sceneGraph.nodes[uid]['groupID']
+            else:
+                self.sceneGraph.add_node(uid)
+            self.sceneGraph.add_node(uid)
 
         return newNode
 
@@ -1449,8 +1474,8 @@ class CanvasScene(QtWidgets.QGraphicsScene):
             uid = newEntity['uid']
             [self.removeNode(item) for item in items]
             groupNode = self.addNodeProgrammatic(uid, itemUIDs)
-            # [self.sceneGraph.add_node(itemUID, groupID=uid) for itemUID in itemUIDs]
-            self.rearrangeGraph()
+            if groupNode is not None:
+                self.rearrangeGraph()
             return groupNode
         else:
             self.parent().mainWindow.setStatus('Please select more than one node to create a Group node.')
