@@ -4,7 +4,9 @@ from PySide6 import QtWidgets, QtCore, QtCharts, QtGui
 from Core.Interface import Stylesheets
 from datetime import datetime
 from getpass import getuser
+from time import sleep
 import networkx as nx
+import queue
 
 
 class DockBarThree(QtWidgets.QDockWidget):
@@ -16,12 +18,17 @@ class DockBarThree(QtWidgets.QDockWidget):
         # self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         childWidget = QtWidgets.QWidget()
         childWidget.setLayout(QtWidgets.QVBoxLayout())
+        childWidget.setContentsMargins(0, 0, 0, 0)
         self.setWidget(childWidget)
 
         childWidget2 = QtWidgets.QWidget()
+        childWidget2.setContentsMargins(0, 0, 0, 0)
         childWidget2.setLayout(QtWidgets.QHBoxLayout())
         childWidget.layout().addWidget(childWidget2)
-        childWidget2.layout().addWidget(self.timeWidget)
+        childWidget2.layout().addWidget(self.tabPane)
+        self.tabPane.setContentsMargins(0, 0, 0, 0)
+        self.tabPane.addTab(self.logViewer, 'Program Log')
+        self.tabPane.addTab(self.timeWidget, 'Timeline')
         childWidget2.layout().addWidget(self.chatBox)
         self.serverStatus.setStyleSheet(Stylesheets.DOCK_BAR_LABEL)
         childWidget.layout().addWidget(self.serverStatus)
@@ -38,11 +45,21 @@ class DockBarThree(QtWidgets.QDockWidget):
         self.setMaximumHeight(275)
         self.setMinimumHeight(275)
 
+        self.tabPane = QtWidgets.QTabWidget()
+
         self.serverStatus = ServerStatusBox(self)
         self.chatBox = ChatBox(self, self.parent())
         self.timeWidget = TimeWidget(self, self.parent())
+        self.logViewer = QtWidgets.QPlainTextEdit()
+        logViewerUpdateThread = LoggingUpdateThread(mainWindow.MESSAGEHANDLER)
+        logViewerUpdateThread.loggingSignal.connect(self.updateLogs)
+        logViewerUpdateThread.start()
+        self.logViewer.setReadOnly(True)
 
         self.initialiseLayout()
+
+    def updateLogs(self, newLogMessage: str):
+        self.logViewer.appendPlainText(newLogMessage)
 
 
 class TimeWidget(QtWidgets.QWidget):
@@ -236,7 +253,7 @@ class TimeWidget(QtWidgets.QWidget):
 
         yAxis = QtCharts.QValueAxis()
         yAxis.applyNiceNumbers()
-        yAxis.setTickCount(min(maxEntityNum + 1, 5))
+        yAxis.setTickCount(min(maxEntityNum + 1, 4))
 
         xAxis = QtCharts.QBarCategoryAxis()
         xAxis.append(xAxisValues)
@@ -502,3 +519,22 @@ class ChatBox(QtWidgets.QWidget):
         self.mainWindow.sendChatMessage(self.chatName + self.textSendBox.text())
         self.receiveMessage(self.chatName + self.textSendBox.text())
         self.textSendBox.setText("")
+
+
+class LoggingUpdateThread(QtCore.QThread):
+    loggingSignal = QtCore.Signal(str)
+
+    def __init__(self, messageHandler):
+        super().__init__()
+        self.messageHandler = messageHandler
+
+    def run(self):
+        while True:
+            if not self.messageHandler.logQueue.empty():
+                try:
+                    logMsg = self.messageHandler.logQueue.get().getMessage()
+                    self.loggingSignal.emit(logMsg)
+                except queue.Empty:
+                    pass
+            else:
+                sleep(0.25)

@@ -1005,13 +1005,13 @@ class CanvasScene(QtWidgets.QGraphicsScene):
         self.nodesDict[item.uid] = item
         self.addItem(item)
         item.setPos(QtCore.QPointF(x, y))
-        self.parent().mainWindow.MESSAGEHANDLER.info('Added node: ' + str(item.uid))
+        self.parent().mainWindow.MESSAGEHANDLER.info('Added node: ' + str(item.uid) + ' | ' + item.labelItem.text())
 
     def addLinkToScene(self, link: Entity.BaseConnector) -> None:
         self.linksDict[link.startItem().uid + link.endItem().uid] = link
         self.addItem(link)
         self.parent().mainWindow.MESSAGEHANDLER.info('Added link: (' + link.startItem().uid + ", " +
-                                                     link.endItem().uid + ')')
+                                                     link.endItem().uid + ') | ' + link.labelItem.text())
 
     def appendSelectedItemsToGroupToggle(self) -> None:
         if self.linking:
@@ -1164,6 +1164,7 @@ class CanvasScene(QtWidgets.QGraphicsScene):
             self.addEntityLinkCreatorHelper(self.nodesDict[entity])
 
         progress.setValue(steps)
+        self.parent().mainWindow.MESSAGEHANDLER.info('Loaded canvas ' + self.getSelfName())
 
     def updatePositionInDB(self, uid, x, y) -> None:
         """
@@ -1444,6 +1445,8 @@ class CanvasScene(QtWidgets.QGraphicsScene):
 
             item.iconItem.setPos(item.pos())
             item.addToGroup(item.iconItem)
+            primaryField = pEditor.objectJson[list(pEditor.objectJson)[1]]
+            self.parent().messageHandler.info('Edited node: ' + pEditor.objectJson['uid'] + ' | ' + primaryField)
 
     def editLinkProperties(self, linkUID: tuple) -> None:
         """
@@ -1460,6 +1463,8 @@ class CanvasScene(QtWidgets.QGraphicsScene):
         if pEditor.exec_():
             # Adding link with the same UID just overwrites properties.
             self.parent().entityDB.addLink(pEditor.objectJson)
+            self.parent().messageHandler.info('Edited link: ' + str(pEditor.objectJson['uid']) + ' | ' +
+                                              pEditor.objectJson['Resolution'])
 
     # Because the entities on each canvas are stored in dicts, and dicts are ordered, group nodes will always
     # come after the nodes they contain.

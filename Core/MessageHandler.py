@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
 import logging
+from logging import handlers
 
+from multiprocessing import Queue
 from pathlib import Path
 from PySide6 import QtWidgets
 
@@ -82,16 +84,21 @@ class MessageHandler:
 
     def __init__(self, parentObject):
         self.mainWindow = parentObject
+        self.logQueue = Queue()
         self.logFileHandler = logging.FileHandler(
             self.mainWindow.SETTINGS.value("Logging/Logfile", str(Path.home() / 'LinkScope_logfile.log')), 'a')
+        self.logQueueHandler = handlers.QueueHandler(self.logQueue)
         self.logFormatter = logging.Formatter(
             '{' + self.mainWindow.SETTINGS.value("Project/Name", "Untitled") + '} [%(asctime)s] - %(levelname)s: %('
                                                                                'message)s')
+        self.logFormatterQueue = logging.Formatter('[%(asctime)s] - %(levelname)s: %(message)s')
         self.logFileHandler.setFormatter(self.logFormatter)
+        self.logQueueHandler.setFormatter(self.logFormatterQueue)
         rootLogger = logging.getLogger()
         for handler in rootLogger.handlers[:]:
             if isinstance(handler, logging.FileHandler):
                 rootLogger.removeHandler(handler)
         rootLogger.addHandler(self.logFileHandler)
+        rootLogger.addHandler(self.logQueueHandler)
 
         self.setSeverityLevel(self.mainWindow.SETTINGS.value("Logging/Severity", logging.INFO))

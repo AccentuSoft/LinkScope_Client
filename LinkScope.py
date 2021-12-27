@@ -904,6 +904,7 @@ class MainWindow(QtWidgets.QMainWindow):
         resolutionThread = ResolutionExecutorThread(
             resolution, resArgument, resolutionParameterValues, self, resolutionUID)
         resolutionThread.sig.connect(self.resolutionSignalListener)
+        self.MESSAGEHANDLER.info('Running Resolution: ' + resolution)
         resolutionThread.start()
         self.resolutions.append((resolutionThread, category == 'Server Resolutions'))
 
@@ -1381,6 +1382,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.centralWidget().tabbedPane.createHomeTab()
 
         self.setStatus("Ready")
+        self.MESSAGEHANDLER.info('Project opened, ready to work.')
 
     def __init__(self):
         super(MainWindow, self).__init__()
