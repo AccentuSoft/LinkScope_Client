@@ -885,15 +885,19 @@ class CanvasView(QtWidgets.QGraphicsView):
 
         otherTabs = [tabName for tabName in self.tabbedPane.canvasTabs if tabName != self.name]
         prompt = SendToOtherTabCanvasSelector(otherTabs)
-        returnCode = prompt.exec()
 
-        if returnCode:
+        if prompt.exec():
             otherCanvasName = prompt.canvasNameSelector.currentText()
-            for entityToSend in entitiesToSend:
-                if self.tabbedPane.canvasTabs[otherCanvasName].scene().sceneGraph.nodes.get(entityToSend) is None:
-                    self.tabbedPane.canvasTabs[otherCanvasName].scene().addNodeProgrammatic(entityToSend)
+            if otherCanvasName:
+                otherCanvas = self.tabbedPane.canvasTabs[otherCanvasName].scene()
+                for entityToSend in entitiesToSend:
+                    if otherCanvas.sceneGraph.nodes.get(entityToSend) is None:
+                        otherCanvas.addNodeProgrammatic(entityToSend)
 
-            self.tabbedPane.canvasTabs[otherCanvasName].scene().rearrangeGraph()
+                otherCanvas.rearrangeGraph()
+            else:
+                self.tabbedPane.mainWindow.MESSAGEHANDLER.info("Please select a valid Canvas name, "
+                                                               "or create a new Canvas.")
 
     def takePictureOfView(self, justViewport: bool = True, transparentBackground: bool = False) -> QtGui.QImage:
         # Need to set size and format of pic before using it.
@@ -1687,6 +1691,7 @@ class SendToOtherTabCanvasSelector(QtWidgets.QDialog):
 
     def __init__(self, canvasNames: list):
         super(SendToOtherTabCanvasSelector, self).__init__()
+        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         self.setModal(True)
         self.setWindowTitle('Move Selected Entities to New Canvas')
 
