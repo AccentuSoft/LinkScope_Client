@@ -69,7 +69,7 @@ if [ "$1" == "install" ]; then
   sudo apt install p7zip-full curl libopengl0 graphviz libmagic1 -y
   echo "Downloading latest version of LinkScope client..."
   linuxURL=$(curl -sL https://github.com/AccentuSoft/LinkScope_Client/releases/latest | grep 'Ubuntu-x64.7z' -m 1 | cut -d '"' -f 2 | tr -d ' ')
-  curl -L $linuxURL -o /tmp/LinkScope.7z
+  curl -L https://github.com${linuxURL} -o /tmp/LinkScope.7z
   sudo 7z x /tmp/LinkScope.7z -o/usr/local/sbin/ && rm /tmp/LinkScope.7z
   if [ $? -ne 0 ]; then
     echo "Something went wrong during the download or extraction."
