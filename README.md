@@ -31,33 +31,37 @@ The versions differ slightly because a graph-related library is not available fo
 
 This repository has the code for the Linux version, with the Windows alternative code commented out where applicable.
 
-### Installing Dependencies
-Some dependencies need to be installed in order for the software to work properly. After downloading the release correspoding to your platform from the Releases tab, please perform the following steps to install the required dependencies:
-1. Linux
-    - `sudo apt update && sudo apt install libopengl0 graphviz libmagic1 -y`
-    - `playwright install`
-    - Download geckodriver and add it to your PATH: https://github.com/mozilla/geckodriver/releases
-    - Download chromedriver and add it to your PATH: https://chromedriver.chromium.org/
-2. Windows
-    - Download and install the graphviz package from https://www.graphviz.org/download/
-    - Download geckodriver and add it to your PATH: https://github.com/mozilla/geckodriver/releases
-    - Download chromedriver and add it to your PATH: https://chromedriver.chromium.org/
-    - `playwright install`
+### Installing the software
+#### Linux
+An installer is provided for Ubuntu 20.04 and derivatives: https://raw.githubusercontent.com/AccentuSoft/LinkScope_Client/main/LinuxInstaller.sh
 
-Helpful link for those unfamiliar with adding binaries to their PATH: https://zwbetz.com/how-to-add-a-binary-to-your-path-on-macos-linux-windows/
+Running the script with the 'install' parameter installs the software, like so:
 
-Releases (most recent one on the top): https://github.com/AccentuSoft/LinkScope_Client/releases
+`bash LinuxInstaller.sh install`
 
-The software comes packaged in a 7zip archive. Uncompress the archive, and double-click the executable to start the software. On Windows, the executable should be named 'LinkScope.exe'. On Linux, it should be named 'LinkScope'.
+#### Windows
+
+Windows users need to download and install graphviz from: https://www.graphviz.org/download/
+
+The most recent version of the software can be found at the Releases page (most recent one on the top): https://github.com/AccentuSoft/LinkScope_Client/releases
+
+Simply download the most recent release for Windows, unpack, and double-click the 'LinkScope.exe' executable to run the software.
 
 ### Running from source
 One could also clone the repository and run the software as-is.
 
-On Linux, the dependencies and requirements (in requirements.txt) need to be installed, and then one can run the software by executing LinkScope.py.
-
-On Windows, the dependencies and requirements need to be installed, as well as the python-magic-bin library. This is done as follows:
-
-`pip install python-magic-bin`
+Some dependencies need to be installed in order for the software to work properly. After downloading the release correspoding to your platform from the Releases tab, please perform the following steps to install the required dependencies:
+1. Linux
+    - `sudo apt update && sudo apt install libopengl0 graphviz libmagic1 -y`
+    - `pip install -r requirements.txt`
+    - `playwright install`
+2. Windows
+   - Download and install the graphviz package from https://www.graphviz.org/download/
+   - `pip install -r requirements.txt`
+   - `pip install python-magic-bin`
+   - `playwright install`
+   
+The software comes packaged in a 7zip archive. Uncompress the archive, and double-click the executable to start the software. On Windows, the executable should be named 'LinkScope.exe'. On Linux, it should be named 'LinkScope'.
 
 Then, the Linux-specific functions need to be changed to the Windows version. Currently, this is just the 'rearrangeGraph' function in Core/Interface/CentralPane. The comments at that location indicate the required changes.
 
