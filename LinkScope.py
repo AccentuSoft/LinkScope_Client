@@ -62,10 +62,13 @@ class MainWindow(QtWidgets.QMainWindow):
             self.SETTINGS.save()
             self.LENTDB.save()
             self.centralWidget().tabbedPane.save()
-        except Exception:
-            self.MESSAGEHANDLER.error("Could not Save Project.", exc_info=True)
-        self.setStatus("Project Saved.", 3000)
-        self.MESSAGEHANDLER.info('Project Saved')
+            self.setStatus("Project Saved.", 3000)
+            self.MESSAGEHANDLER.info('Project Saved')
+        except Exception as e:
+            errorMessage = "Could not Save Project: " + str(repr(e))
+            self.MESSAGEHANDLER.error(errorMessage, exc_info=True)
+            self.setStatus("Failed Saving Project.", 3000)
+            self.MESSAGEHANDLER.info("Failed Saving Project " + self.SETTINGS.value("Project/Name", 'Untitled'))
 
     def saveAsProject(self) -> None:
         if len(self.resolutions) > 0:
