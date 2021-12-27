@@ -568,7 +568,7 @@ class MenuBar(QtWidgets.QMenuBar):
                             browserCookies = []
                             for cookie in tabsJson['cookies']:
                                 newCookie = {'name': cookie['name'], 'value': cookie['value'],
-                                             'domain': cookie['domain'], 'path': cookie['path'],
+                                             'domain': cookie['host'], 'path': cookie['path'],
                                              'httpOnly': cookie.get('httponly', False),
                                              'secure': cookie.get('secure', False)}
                                 if cookie.get('expiry', None) is not None:

@@ -54,7 +54,7 @@ One could also clone the repository and run the software as-is.
 Some dependencies need to be installed in order for the software to work properly. After downloading the release correspoding to your platform from the Releases tab, please perform the following steps to install the required dependencies:
 1. Linux
     - `sudo apt update && sudo apt install libopengl0 graphviz libmagic1 -y`
-    - `pip install -r requirements.txt`
+    - `pip install -r requirements.txt --upgrade`
     - `playwright install`
 2. Windows
    - Download and install the graphviz package from https://www.graphviz.org/download/
