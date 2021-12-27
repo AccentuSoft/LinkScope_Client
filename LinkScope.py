@@ -2066,14 +2066,18 @@ class ResolutionExecutorThread(QtCore.QThread):
                                                                       self.resolutionArgument,
                                                                       self.resolutionParameters,
                                                                       self.uid)
+            if ret is None:
+                self.mainWindow.MESSAGEHANDLER.error('Resolution ' + self.resolution + ' failed during run.',
+                                                     popUp=False)
         except Exception as e:
-            self.mainWindow.MESSAGEHANDLER.error('Resolution failed during run: ' + str(e), popUp=False)
+            self.mainWindow.MESSAGEHANDLER.error('Resolution ' + self.resolution + ' failed during run: ' +
+                                                 str(e), popUp=False)
             ret = None
 
         # If the resolution is ran on the server or there is a problem, don't emit signal.
         if ret is not None and self.return_results:
-            self.done = True
             self.sig.emit(self.resolution, ret)
+            self.done = True
 
 
 class ResolutionParametersSelector(QtWidgets.QDialog):
