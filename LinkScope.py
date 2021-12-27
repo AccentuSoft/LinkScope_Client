@@ -281,7 +281,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.setWindowTitle("LinkScope - " + self.SETTINGS.get('Project/Name', 'Untitled'))
         self.saveProject()
-        self.setStatus('Project Renamed to: ' + newName)
+        statusMessage = 'Project Renamed to: ' + newName
+        self.setStatus(statusMessage)
+        self.MESSAGEHANDLER.info(statusMessage)
 
     def addCanvas(self) -> None:
         # Create or open canvas
@@ -292,7 +294,8 @@ class MainWindow(QtWidgets.QMainWindow):
         with self.syncedCanvasesLock:
             availableSyncedCanvases = self.syncedCanvases
         newCanvasPopup = CreateOrOpenCanvas(self, connected, availableSyncedCanvases)
-        newCanvasPopup.exec()
+        if newCanvasPopup.exec():
+            self.MESSAGEHANDLER.info("New Canvas added: " + newCanvasPopup.canvasName)
 
     def toggleWorldDoc(self) -> None:
         if self.centralWidget() is not None:
@@ -321,6 +324,7 @@ class MainWindow(QtWidgets.QMainWindow):
             if itemUID in scene.nodesDict:
                 scene.removeNode(scene.nodesDict[itemUID])
         self.LENTDB.removeEntity(itemUID)
+        self.MESSAGEHANDLER.info("Deleted node: " + itemUID)
 
     def deleteSpecificLink(self, linkUIDs: set) -> None:
         """
@@ -336,6 +340,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 scene.removeUIDFromLink(linkUID)
         for linkUID in linkUIDs:
             self.LENTDB.removeLink(linkUID)
+            self.MESSAGEHANDLER.info("Deleted link: " + str(linkUID))
 
     def setGroupAppendMode(self, enable: bool) -> None:
         if self.centralWidget().tabbedPane.getCurrentScene().linking:
@@ -1897,25 +1902,28 @@ class CreateOrOpenCanvas(QtWidgets.QDialog):
         dialogLayout.addWidget(openServerCanvasNameLabel, 9, 0, 1, 2)
         dialogLayout.addWidget(self.openServerCanvasDropdown, 9, 2, 1, 2)
         dialogLayout.addWidget(openServerCanvasButton, 10, 1, 1, 2)
+        self.canvasName = ""
 
     def confirmCreateCanvas(self):
-        createStatus = self.parent().centralWidget().tabbedPane.addCanvas(self.createCanvasTextbox.text())
+        self.canvasName = self.createCanvasTextbox.text()
+        createStatus = self.parent().centralWidget().tabbedPane.addCanvas(self.canvasName)
         if createStatus:
             self.accept()
         else:
             self.parent().MESSAGEHANDLER.warning("A Canvas with that name already exists!", popUp=True)
 
     def confirmOpenServerCanvas(self):
-        newCanvasName = self.openServerCanvasDropdown.currentText()
-        createStatus = self.parent().centralWidget().tabbedPane.addCanvas(newCanvasName)
+        self.canvasName = self.openServerCanvasDropdown.currentText()
+        createStatus = self.parent().centralWidget().tabbedPane.addCanvas(self.canvasName)
         if createStatus:
-            self.parent().syncCanvasByName(newCanvasName)
+            self.parent().syncCanvasByName(self.canvasName)
             self.accept()
         else:
             self.parent().MESSAGEHANDLER.warning("A Canvas with that name already exists!", popUp=True)
 
     def confirmOpenExistingCanvas(self):
-        self.parent().centralWidget().tabbedPane.showTab(self.openExistingCanvasDropdown.currentText())
+        self.canvasName = self.openExistingCanvasDropdown.currentText()
+        self.parent().centralWidget().tabbedPane.showTab(self.canvasName)
         self.accept()
 
 
