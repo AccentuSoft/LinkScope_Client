@@ -9,20 +9,21 @@ import magic
 import lz4.block
 import pandas as pd
 import webbrowser
+from typing import Union
 from urllib import parse
 from pathlib import Path
+from datetime import datetime
 
 from playwright.sync_api import sync_playwright, Error
 
 from PySide6 import QtWidgets, QtGui, QtCore
-
 from Core.Interface import Stylesheets
 from Core.Interface.Entity import BaseNode
 
 
 class MenuBar(QtWidgets.QMenuBar):
 
-    def __init__(self, parent=None):
+    def __init__(self, parent):
         super().__init__(parent=parent)
 
         fileMenu = self.addMenu("File")
@@ -667,7 +668,7 @@ class MenuBar(QtWidgets.QMenuBar):
                                 user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
                                            "(KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36"
                             )
-                            sessionFilePath = Path.home() / 'AppData' / 'Local' / 'Google' / 'Chrome' / 'User Data' /\
+                            sessionFilePath = Path.home() / 'AppData' / 'Local' / 'Google' / 'Chrome' / 'User Data' / \
                                               'Default'
 
                         lastSessionOpenTabs = set()
@@ -778,15 +779,17 @@ class MenuBar(QtWidgets.QMenuBar):
                                             urlSaveDir = None
 
                                         if urlSaveDir is not None:
+                                            timeNow = str(datetime.now().timestamp() * 1000000).split('.')[0]
                                             screenshotSavePath = str(urlSaveDir / (
-                                                        tabURL.replace('/', '+') + ' screenshot.png'))
+                                                    tabURL.replace('/', '+') + ' ' + timeNow + ' screenshot.png'))
                                             page.screenshot(path=screenshotSavePath, full_page=True)
 
                                             returnResults.append(
-                                                [{'Image Name': urlTitle + ' Website Screenshot',
+                                                [{'Image Name': decodedPath + ' Screenshot ' + timeNow,
                                                   'File Path': screenshotSavePath,
                                                   'Entity Type': 'Image'},
-                                                 {'Resolution': 'Screenshot of Tab', 'Notes': ''}])
+                                                 {len(returnResults) - 1: {'Resolution': 'Screenshot of Tab',
+                                                                           'Notes': ''}}])
 
                         browser.close()
                     except Error:
@@ -794,37 +797,97 @@ class MenuBar(QtWidgets.QMenuBar):
                                                              'import tabs from Chrome / Chromium.', popUp=True)
 
             progress.setValue(3)
-            newNodeUIDs = []
-            newLinks = []
             if progress.wasCanceled():
                 progress.setValue(4)
                 self.parent().setStatus('Cancelled importing entities from Browser.')
                 return
-
-            for newNode in returnResults:
-                newNodeJson = self.parent().LENTDB.addEntity(newNode[0])
-                if newNodeJson is not None:
-                    newNodeUIDs.append(newNodeJson['uid'])
-                else:
-                    newNodeUIDs.append(None)
-                if len(newNode) > 1:
-                    parentUID = newNodeUIDs[-2]
-                    if parentUID is not None:
-                        newLink = (parentUID, newNodeJson['uid'], newNode[1]['Resolution'], newNode[1]['Notes'])
-                        newLinks.append(newLink)
-
-            self.parent().centralWidget().tabbedPane.linkAddHelper(newLinks)
-            self.parent().setStatus('Imported entities from Browser.')
-
-            if importDialog.importToCanvasCheckbox.isChecked():
-                sceneToAddTo = self.parent().centralWidget().tabbedPane.getSceneByName(
-                    importDialog.importToCanvasDropdown.currentText())
-                for newNodeUID in newNodeUIDs:
-                    if newNodeUID is not None:
-                        sceneToAddTo.addNodeProgrammatic(newNodeUID)
-                sceneToAddTo.rearrangeGraph()
-                self.parent().setStatus('Imported entities from Browser into Canvas.')
+            self.importBrowserTabsFindings(returnResults, importDialog.importToCanvasCheckbox.isChecked(),
+                                           importDialog.importToCanvasDropdown.currentText())
             progress.setValue(4)
+
+    def importBrowserTabsFindings(self, resolution_result: list, importToCanvas: Union[bool, None] = None,
+                                  canvasToImportTo: Union[str, None] = None) -> None:
+        # See the function 'facilitateResolution' in CentralPane for guidance.
+
+        # Get all the entities, then split it into several lists, to make searching & iterating through them faster.
+        allEntities = [(entity['uid'], (entity[list(entity)[1]], entity['Entity Type']))
+                       for entity in self.parent().LENTDB.getAllEntities()]
+        allEntityUIDs, allEntityPrimaryFieldsAndTypes = map(list, zip(*allEntities))
+        allLinks = [linkUID['uid'] for linkUID in self.parent().LENTDB.getAllLinks()]
+        links = []
+        newNodeUIDs = []
+        for resultList in resolution_result:
+            newNodeJSON = resultList[0]
+            newNodeEntityType = newNodeJSON['Entity Type']
+            # Cannot assume proper order of dicts sent over the net.
+            newNodePrimaryFieldKey = self.parent().RESOURCEHANDLER.getPrimaryFieldForEntityType(newNodeEntityType)
+            newNodePrimaryField = newNodeJSON[newNodePrimaryFieldKey]
+
+            try:
+                # Attempt to get the index of an existing entity that shares primary field and type with the new
+                #   entity. Those two entities are considered to be referring to the same thing.
+                newNodeExistsIndex = allEntityPrimaryFieldsAndTypes.index((newNodePrimaryField, newNodeEntityType))
+                # If entity already exists, update the fields and re-add
+                newNodeExistingUID = allEntityUIDs[newNodeExistsIndex]
+                existingEntityJSON = self.parent().LENTDB.getEntity(newNodeExistingUID)
+                # Remove primary field and entity type, since those are duplicates. Primary field is the first element.
+                del newNodeJSON['Entity Type']
+                del newNodeJSON[newNodePrimaryFieldKey]
+                try:
+                    notesField = newNodeJSON.pop('Notes')
+                    existingEntityJSON['Notes'] += '\n' + notesField
+                except KeyError:
+                    # If no new field was actually added to the entity, don't re-add to the database
+                    if len(newNodeJSON) == 0:
+                        newNodeUIDs.append(newNodeExistingUID)
+                        continue
+                # Update old values to new ones, and add new ones where applicable.
+                existingEntityJSON.update(dict((newNodeKey, newNodeJSON[newNodeKey]) for newNodeKey in newNodeJSON))
+                self.parent().LENTDB.addEntity(existingEntityJSON, fromServer=True, updateTimeline=False)
+                newNodeUIDs.append(newNodeExistingUID)
+            except ValueError:
+                # If there is no index for which the primary field and entity type of the new node match one of the
+                #   existing ones, the node must indeed be new. We add it here.
+                entityJson = self.parent().LENTDB.addEntity(newNodeJSON, fromServer=True, updateTimeline=False)
+                newNodeUIDs.append(entityJson['uid'])
+                # Ensure that different entities involved in the resolution can't independently
+                #   create the same new entities.
+                allEntityUIDs.append(entityJson['uid'])
+                allEntityPrimaryFieldsAndTypes.append((newNodePrimaryField, newNodeEntityType))
+
+        for resultListIndex in range(len(resolution_result)):
+            if len(resolution_result[resultListIndex]) > 1:
+                outputEntityUID = newNodeUIDs[resultListIndex]
+                parentsDict = resolution_result[resultListIndex][1]
+                for parentID in parentsDict:
+                    parentUID = parentID
+                    if isinstance(parentUID, int):
+                        parentUID = newNodeUIDs[parentUID]
+                    resolutionName = parentsDict[parentID]['Resolution']
+                    newLinkUID = (parentUID, outputEntityUID)
+                    # Avoid creating more links between the same two entities.
+                    if newLinkUID in allLinks:
+                        linkJson = self.parent().LENTDB.getLinkIfExists(newLinkUID)
+                        if resolutionName not in linkJson['Notes']:
+                            linkJson['Notes'] += '\nConnection also produced by Resolution: ' + resolutionName
+                            self.parent().LENTDB.addLink(linkJson, fromServer=True)
+                    else:
+                        self.parent().LENTDB.addLink({'uid': newLinkUID, 'Resolution': resolutionName,
+                                                      'Notes': parentsDict[parentID]['Notes']}, fromServer=True)
+                        links.append((parentUID, outputEntityUID, resolutionName))
+                        allLinks.append(newLinkUID)
+
+        self.parent().syncDatabase()
+        if importToCanvas:
+            sceneToAddTo = self.parent().centralWidget().tabbedPane.getSceneByName(canvasToImportTo)
+            for newNodeUID in newNodeUIDs:
+                if newNodeUID is not None and newNodeUID not in sceneToAddTo.sceneGraph.nodes:
+                    sceneToAddTo.addNodeProgrammatic(newNodeUID)
+            sceneToAddTo.rearrangeGraph()
+        self.parent().centralWidget().tabbedPane.addLinksToTabs(links, "Browser Import")
+        self.parent().LENTDB.resetTimeline()
+        self.parent().saveProject()
+        self.parent().MESSAGEHANDLER.info('Imported tabs from browser successfully.')
 
 
 class BrowserImportDialog(QtWidgets.QDialog):

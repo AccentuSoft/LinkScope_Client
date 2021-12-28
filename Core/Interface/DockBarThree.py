@@ -54,9 +54,9 @@ class DockBarThree(QtWidgets.QDockWidget):
 
         # Because we're not going to stop the thread before closing, an error will be thrown by Qt.
         # That error can be safely ignored.
-        logViewerUpdateThread = LoggingUpdateThread(mainWindow.MESSAGEHANDLER)
-        logViewerUpdateThread.loggingSignal.connect(self.updateLogs)
-        logViewerUpdateThread.start()
+        self.logViewerUpdateThread = LoggingUpdateThread(mainWindow.MESSAGEHANDLER)
+        self.logViewerUpdateThread.loggingSignal.connect(self.updateLogs)
+        self.logViewerUpdateThread.start()
         self.logViewer.setReadOnly(True)
 
         self.initialiseLayout()
@@ -526,6 +526,7 @@ class ChatBox(QtWidgets.QWidget):
 
 class LoggingUpdateThread(QtCore.QThread):
     loggingSignal = QtCore.Signal(str)
+    endLogging = False
 
     def __init__(self, messageHandler):
         super().__init__()
@@ -533,6 +534,8 @@ class LoggingUpdateThread(QtCore.QThread):
 
     def run(self):
         while True:
+            if self.endLogging:
+                break
             if not self.messageHandler.logQueue.empty():
                 try:
                     logMsg = self.messageHandler.logQueue.get().getMessage()
@@ -540,4 +543,4 @@ class LoggingUpdateThread(QtCore.QThread):
                 except queue.Empty:
                     pass
             else:
-                sleep(0.25)
+                self.msleep(100)

@@ -4,6 +4,7 @@
 import sys
 import tempfile
 import threading
+import time
 
 import networkx as nx
 from ast import literal_eval
@@ -47,6 +48,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     # What happens when the software is closed
     def closeEvent(self, event) -> None:
+        self.dockbarThree.logViewerUpdateThread.endLogging = True
         # Save the window settings
         self.SETTINGS.setValue("MainWindow/Geometry", self.saveGeometry())
         self.SETTINGS.setValue("MainWindow/WindowState", self.saveState())
@@ -54,6 +56,10 @@ class MainWindow(QtWidgets.QMainWindow):
             self.FCOM.close()
         self.SETTINGS.setValue("Project/Server/Project", "")
         self.saveProject()
+        # Wait just a little for the logging thread to close.
+        # We don't _have_ to do this, but it stops errors from popping up due to threads being rudely interrupted.
+        while not self.dockbarThree.logViewerUpdateThread.isFinished():
+            time.sleep(0.01)
         super(MainWindow, self).closeEvent(event)
 
     def saveProject(self) -> None:
