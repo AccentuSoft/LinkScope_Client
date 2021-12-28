@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
 
+
+import hashlib
 import re
 import json
 import platform
+import sqlite3
+import tempfile
+import shutil
 import os
+import time
 
 import magic
 import lz4.block
@@ -14,7 +20,7 @@ from urllib import parse
 from pathlib import Path
 from datetime import datetime
 
-from playwright.sync_api import sync_playwright, Error
+from playwright.sync_api import sync_playwright, Error, TimeoutError
 
 from PySide6 import QtWidgets, QtGui, QtCore
 from Core.Interface import Stylesheets
@@ -566,17 +572,43 @@ class MenuBar(QtWidgets.QMenuBar):
                                         if not url.startswith('about:'):
                                             tabsToOpen.add((url, browserEntry['title']))
 
+                            cookiesDatabasePath = tabsFilePath.parent.parent / 'cookies.sqlite'
+                            newCookiesDatabase = tempfile.mkstemp(suffix='.sqlite')
+                            newCookiesDatabasePath = Path(newCookiesDatabase[1])
+
+                            # Try to copy the database a few times, so we can access it
+                            #   with sqlite (original is locked)
+                            copiedFile = False
+                            for _ in range(5):
+                                shutil.copyfile(cookiesDatabasePath, newCookiesDatabasePath)
+                                originalDigest = self.cookieFileHashHelper(cookiesDatabasePath)
+                                newDigest = self.cookieFileHashHelper(newCookiesDatabasePath)
+                                if originalDigest == newDigest:
+                                    copiedFile = True
+                                    break
+                                else:
+                                    time.sleep(0.2)
+
                             browserCookies = []
-                            for cookie in tabsJson['cookies']:
-                                newCookie = {'name': cookie['name'], 'value': cookie['value'],
-                                             'domain': cookie['host'], 'path': cookie['path'],
-                                             'httpOnly': cookie.get('httponly', False),
-                                             'secure': cookie.get('secure', False)}
-                                if cookie.get('expiry', None) is not None:
-                                    newCookie['expires'] = float(cookie['expiry'])
-                                if cookie.get('sameSite', None) is not None:
-                                    newCookie['sameSite'] = cookie['sameSite']
-                                browserCookies.append(newCookie)
+                            if not copiedFile:
+                                self.parent().MESSAGEHANDLER.warning('Could not access Firefox cookies.', popUp=True)
+                            else:
+                                cookiesDB = sqlite3.connect(newCookiesDatabasePath)
+                                for cookie in cookiesDB.execute('SELECT name,value,host,path,expiry,isSecure,'
+                                                                'isHttpOnly,sameSite FROM moz_cookies'):
+                                    newCookie = {'name': cookie[0], 'value': cookie[1],
+                                                 'domain': cookie[2], 'path': cookie[3],
+                                                 'expires': cookie[4], 'secure': bool(cookie[5]),
+                                                 'httpOnly': bool(cookie[6])}
+                                    if cookie[7] == 0:
+                                        newCookie['sameSite'] = "None"
+                                    elif cookie[7] == 1:
+                                        newCookie['sameSite'] = "Lax"
+                                    elif cookie[7] == 2:
+                                        newCookie['sameSite'] = "Strict"
+                                    browserCookies.append(newCookie)
+                                cookiesDB.close()
+                            newCookiesDatabasePath.unlink(missing_ok=True)
                             context.add_cookies(browserCookies)
                             page = context.new_page()
 
@@ -619,7 +651,11 @@ class MenuBar(QtWidgets.QMenuBar):
                                                            'Entity Type': 'Website'}])
 
                                     if importDialog.importScreenshotsCheckbox.isChecked():
-                                        page.goto(actualURL)
+                                        # If we time out, take a screenshot of the page as-is.
+                                        try:
+                                            page.goto(actualURL)
+                                        except TimeoutError:
+                                            pass
 
                                         urlSaveDir = projectFilesDir / urlTitle
 
@@ -630,20 +666,22 @@ class MenuBar(QtWidgets.QMenuBar):
                                             urlSaveDir = None
 
                                         if urlSaveDir is not None:
-                                            screenshotSavePath = str(urlSaveDir / (actualURL.replace('/', '+') +
-                                                                                   ' screenshot.png'))
+                                            timeNow = str(datetime.now().timestamp() * 1000000).split('.')[0]
+                                            screenshotSavePath = str(urlSaveDir / (
+                                                    actualURL.replace('/', '+') + ' ' + timeNow + ' screenshot.png'))
                                             page.screenshot(path=screenshotSavePath, full_page=True)
 
                                             returnResults.append(
-                                                [{'Image Name': urlTitle + ' Website Screenshot',
+                                                [{'Image Name': decodedPath + ' Screenshot ' + timeNow,
                                                   'File Path': screenshotSavePath,
                                                   'Entity Type': 'Image'},
-                                                 {'Resolution': 'Screenshot of Tab', 'Notes': ''}])
+                                                 {len(returnResults) - 1: {'Resolution': 'Screenshot of Tab',
+                                                                           'Notes': ''}}])
 
                         browser.close()
-                    except Error:
-                        self.parent().MESSAGEHANDLER.warning('Firefox executable is not installed. Cannot import '
-                                                             'tabs from Firefox.', popUp=True)
+                    except Error as e:
+                        self.parent().MESSAGEHANDLER.warning('Cannot import tabs from Firefox: ' + str(repr(e)),
+                                                             popUp=True)
 
                 progress.setValue(2)
                 if importDialog.chromeChoice.isChecked() and not progress.wasCanceled():
@@ -768,8 +806,11 @@ class MenuBar(QtWidgets.QMenuBar):
                                                            'Entity Type': 'Website'}])
 
                                     if importDialog.importScreenshotsCheckbox.isChecked():
-                                        page.goto(tabURL)
-
+                                        # If we time out, take a screenshot of the page as-is.
+                                        try:
+                                            page.goto(tabURL)
+                                        except TimeoutError:
+                                            pass
                                         urlSaveDir = projectFilesDir / urlTitle
 
                                         try:
@@ -801,9 +842,17 @@ class MenuBar(QtWidgets.QMenuBar):
                 progress.setValue(4)
                 self.parent().setStatus('Cancelled importing entities from Browser.')
                 return
-            self.importBrowserTabsFindings(returnResults, importDialog.importToCanvasCheckbox.isChecked(),
-                                           importDialog.importToCanvasDropdown.currentText())
+            if returnResults:
+                self.importBrowserTabsFindings(returnResults, importDialog.importToCanvasCheckbox.isChecked(),
+                                               importDialog.importToCanvasDropdown.currentText())
             progress.setValue(4)
+
+    def cookieFileHashHelper(self, filePath):
+        cookieHash = hashlib.md5()
+        with open(filePath, 'rb') as cookieFile:
+            for chunk in iter(lambda: cookieFile.read(4096), b""):
+                cookieHash.update(chunk)
+        return cookieHash.digest()
 
     def importBrowserTabsFindings(self, resolution_result: list, importToCanvas: Union[bool, None] = None,
                                   canvasToImportTo: Union[str, None] = None) -> None:
@@ -812,7 +861,11 @@ class MenuBar(QtWidgets.QMenuBar):
         # Get all the entities, then split it into several lists, to make searching & iterating through them faster.
         allEntities = [(entity['uid'], (entity[list(entity)[1]], entity['Entity Type']))
                        for entity in self.parent().LENTDB.getAllEntities()]
-        allEntityUIDs, allEntityPrimaryFieldsAndTypes = map(list, zip(*allEntities))
+        if allEntities:
+            allEntityUIDs, allEntityPrimaryFieldsAndTypes = map(list, zip(*allEntities))
+        else:
+            allEntityUIDs = []
+            allEntityPrimaryFieldsAndTypes = []
         allLinks = [linkUID['uid'] for linkUID in self.parent().LENTDB.getAllLinks()]
         links = []
         newNodeUIDs = []

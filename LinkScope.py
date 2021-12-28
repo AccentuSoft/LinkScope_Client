@@ -19,7 +19,6 @@ from datetime import datetime
 from typing import Union
 from PySide6 import QtWidgets, QtGui, QtCore
 
-import Core.SettingsObject
 from Core import MessageHandler, SettingsObject
 from Core import ResourceHandler
 from Core import ReportGeneration
@@ -43,7 +42,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def centralWidget(self) -> Union[QtWidgets.QWidget, QtWidgets.QWidget, CentralPane.WorkspaceWidget]:
         return super(MainWindow, self).centralWidget()
 
-    def getSettings(self) -> Core.SettingsObject.SettingsObject:
+    def getSettings(self) -> SettingsObject.SettingsObject:
         return self.SETTINGS
 
     # What happens when the software is closed

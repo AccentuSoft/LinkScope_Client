@@ -317,7 +317,13 @@ class TabbedPane(QtWidgets.QTabWidget):
         # Get all the entities, then split it into several lists, to make searching & iterating through them faster.
         allEntities = [(entity['uid'], (entity[list(entity)[1]], entity['Entity Type']))
                        for entity in self.entityDB.getAllEntities()]
-        allEntityUIDs, allEntityPrimaryFieldsAndTypes = map(list, zip(*allEntities))
+        # In case we have no entities in the database when the resolution finishes, i.e. the user deletes the origin
+        #   node for the resolution, or runs something that creates nodes from nothing.
+        if allEntities:
+            allEntityUIDs, allEntityPrimaryFieldsAndTypes = map(list, zip(*allEntities))
+        else:
+            allEntityUIDs = []
+            allEntityPrimaryFieldsAndTypes = []
         allLinks = [linkUID['uid'] for linkUID in self.entityDB.getAllLinks()]
         links = []
         newNodeUIDs = []
@@ -372,19 +378,21 @@ class TabbedPane(QtWidgets.QTabWidget):
                 parentUID = parentID
                 if isinstance(parentUID, int):
                     parentUID = newNodeUIDs[parentUID]
-                resolutionName = parentsDict[parentID]['Resolution']
-                newLinkUID = (parentUID, outputEntityUID)
-                # Avoid creating more links between the same two entities.
-                if newLinkUID in allLinks:
-                    linkJson = self.entityDB.getLinkIfExists(newLinkUID)
-                    if resolutionName not in linkJson['Notes']:
-                        linkJson['Notes'] += '\nConnection also produced by Resolution: ' + resolutionName
-                        self.entityDB.addLink(linkJson, fromServer=True)
-                else:
-                    self.entityDB.addLink({'uid': newLinkUID, 'Resolution': resolutionName,
-                                           'Notes': parentsDict[parentID]['Notes']}, fromServer=True)
-                    links.append((parentUID, outputEntityUID, resolutionName))
-                    allLinks.append(newLinkUID)
+                # Sanity check: Check that the node that was used for this resolution still exists.
+                if parentUID in newNodeUIDs:
+                    resolutionName = parentsDict[parentID]['Resolution']
+                    newLinkUID = (parentUID, outputEntityUID)
+                    # Avoid creating more links between the same two entities.
+                    if newLinkUID in allLinks:
+                        linkJson = self.entityDB.getLinkIfExists(newLinkUID)
+                        if resolutionName not in linkJson['Notes']:
+                            linkJson['Notes'] += '\nConnection also produced by Resolution: ' + resolutionName
+                            self.entityDB.addLink(linkJson, fromServer=True)
+                    else:
+                        self.entityDB.addLink({'uid': newLinkUID, 'Resolution': resolutionName,
+                                               'Notes': parentsDict[parentID]['Notes']}, fromServer=True)
+                        links.append((parentUID, outputEntityUID, resolutionName))
+                        allLinks.append(newLinkUID)
 
         progress.setValue(2)
 
@@ -433,9 +441,6 @@ class TabbedPane(QtWidgets.QTabWidget):
 
                         nodeJSON = self.entityDB.getEntity(uid)
 
-                        # This is more efficient for large canvases than syncing afterwards.
-                        self.mainWindow.sendLocalCanvasUpdateToServer(canvas, uid)
-
                         picture = nodeJSON.get('Icon')
                         scene.sceneGraph.add_node(uid)
 
@@ -445,8 +450,7 @@ class TabbedPane(QtWidgets.QTabWidget):
                             nodePrimaryAttribute = ''
                         newNode = Entity.BaseNode(picture, uid, nodePrimaryAttribute)
                         scene.addNodeToScene(newNode)
-                        # No need to send this link to server - it will be created automatically.
-                        scene.addLinkDragDrop(scene.nodesDict[parentUID], newNode, newLink[2], fromServer=True)
+                        scene.addLinkDragDrop(scene.nodesDict[parentUID], newNode, newLink[2])
 
                         addedNodes.append(newNode)
                     elif parentUID in scene.nodesDict and uid in scene.nodesDict:
