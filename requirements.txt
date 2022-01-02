@@ -16,6 +16,8 @@ pydot
 networkx
 
 tldextract
+ipwhois
+pycountry
 defusedxml
 cryptography
 msgpack
@@ -46,10 +48,7 @@ social-analyzer
 requests_futures
 tweepy
 jellyfish
-shodan
 pandas
-pycountry
-ipwhois
 docker
 email-validator
 docx2python
