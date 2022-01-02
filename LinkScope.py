@@ -1329,17 +1329,17 @@ class MainWindow(QtWidgets.QMainWindow):
                                       int(self.SETTINGS.value("Project/Number of Answers Returned")))
                 self.setStatus("Asked Question")
 
-    def questionAnswerListener(self, response: dict) -> None:
+    def questionAnswerListener(self, response: list) -> None:
         textAns = "No Answer."
-        answerCount = len(response['answers'])
+        answerCount = len(response)
         if answerCount != 0:
             textAns = ""
             for answerIndex in range(answerCount):
-                answer = response['answers'][answerIndex]
-                if answer['answer'] is not None:
+                answer = response[answerIndex]
+                if answer['answer']:
                     textAns += "Answer " + str(answerIndex + 1) + ": " + answer['answer'] + "\n\n"
                     textAns += "Context: ..." + answer['context'] + "...\n\n"
-                    textAns += "Document Used: " + answer['meta']['resourceName'][2:-1]
+                    textAns += "Document Used: " + answer['doc']
                     textAns += "\n\n"
                 else:
                     textAns += "Answer " + str(answerIndex + 1) + ": No Answer\n\n"
