@@ -115,7 +115,8 @@ class ResolutionManager:
                     if category == "Server Resolutions":
                         self.mainWindow.executeRemoteResolution(resolutionName, resolutionEntitiesInput, parameters,
                                                                 resolutionUID)
-                        return None
+                        # Returning a bool so we know that the resolution is running on the server.
+                        return True
 
                     resolutionClass = self.resolutions[category][resolution]['resolution']()
                     result = resolutionClass.resolution(resolutionEntitiesInput, parameters)

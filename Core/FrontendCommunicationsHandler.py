@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
+
+from ast import literal_eval
 from typing import Union
 from pathlib import Path
 from msgpack import loads, dumps
 import socket
 import threading
 import time
-import pickle
 import re
 import networkx as nx
 
@@ -55,12 +56,12 @@ class CommunicationsHandler(QtCore.QObject):
     close_project_canvas_signal = QtCore.Signal(str)
     receive_project_database_update = QtCore.Signal(dict, bool)
     receive_project_canvas_update = QtCore.Signal(str, str)
-    receive_sync_database = QtCore.Signal(nx.DiGraph)
+    receive_sync_database = QtCore.Signal(dict, dict)
     status_message_signal = QtCore.Signal(str, bool)
     receive_project_file_list = QtCore.Signal(list)
     file_upload_finished_signal = QtCore.Signal(str)
     file_upload_abort_signal = QtCore.Signal(str)
-    receive_sync_canvas_signal = QtCore.Signal(str, nx.DiGraph)
+    receive_sync_canvas_signal = QtCore.Signal(str, dict, dict)
 
     def __init__(self, mainWindow):
 
@@ -205,7 +206,7 @@ class CommunicationsHandler(QtCore.QObject):
         # Note that Base64 encoded data is about 4/3 times the size of the original.
         # 768 * 4/3 = 1024
         print('Sending message:', messageJson)
-        argEncoded = b64encode(pickle.dumps(messageJson))
+        argEncoded = b64encode(str(messageJson).encode())
         largeMessageUUID = str(uuid4())
         try:
             for data in range(0, len(argEncoded), 768):
@@ -267,7 +268,8 @@ class CommunicationsHandler(QtCore.QObject):
                     else:
                         preInbox[messageID] = receivedMessage
                     if receivedMessage.get("done"):
-                        preInbox[messageID]["message"] = pickle.loads(b64decode(preInbox[messageID]["message"]))
+                        preInbox[messageID]["message"] = literal_eval(
+                            b64decode(preInbox[messageID]["message"]).decode())
                         self.inbox.put(preInbox.pop(messageID).get("message"))
 
             except socket.error as socketError:
@@ -282,14 +284,6 @@ class CommunicationsHandler(QtCore.QObject):
                     break
             except ValueError:
                 # E.g.: Unpack failed: incomplete input
-                pass
-            except pickle.UnpicklingError:
-                # If something went wrong with one of the packets, ignore.
-                # User can re-sync the database if needed.
-                # This rarely occurs in normal operation.
-                pass
-            except ModuleNotFoundError:
-                # Missing module to unpickle message.
                 pass
 
     def askServerForResolutions(self):
@@ -390,12 +384,14 @@ class CommunicationsHandler(QtCore.QObject):
         message = {'Operation': 'Sync Database',
                    'Arguments': {
                        'project_name': project_name,
-                       'client_project_graph': client_project_graph
+                       'client_project_graph': str(self.mainWindow.RESOURCEHANDLER.deconstructGraph(
+                           client_project_graph))
                    }}
         self.transmitMessage(message)
 
-    def receiveSyncDatabase(self, database: nx.DiGraph):
-        self.receive_sync_database.emit(database)
+    def receiveSyncDatabase(self, database: str):
+        database_nodes, database_edges = self.mainWindow.RESOURCEHANDLER.reconstructGraph(database)
+        self.receive_sync_database.emit(database_nodes, database_edges)
 
     def askServerForFileList(self, project_name: str):
         message = {"Operation": "Get File List",
@@ -408,11 +404,12 @@ class CommunicationsHandler(QtCore.QObject):
                        'Arguments': {
                            'project_name': project_name,
                            'canvas_name': canvas_name,
-                           "canvas_graph": canvas_graph}}
+                           "canvas_graph": str(self.mainWindow.RESOURCEHANDLER.deconstructGraph(canvas_graph))}}
             self.transmitMessage(message)
 
-    def receiveSyncCanvas(self, canvas_name: str, canvas_graph: nx.DiGraph):
-        self.receive_sync_canvas_signal.emit(canvas_name, canvas_graph)
+    def receiveSyncCanvas(self, canvas_name: str, canvas_graph: str):
+        graph_nodes, graph_edges = self.mainWindow.RESOURCEHANDLER.reconstructGraph(canvas_graph)
+        self.receive_sync_canvas_signal.emit(canvas_name, graph_nodes, graph_edges)
 
     def closeCanvas(self, project_name: str, canvas_name: str):
         if self.isConnected():
@@ -429,9 +426,17 @@ class CommunicationsHandler(QtCore.QObject):
     # Being verbose is better than prematurely optimizing for a few kbps of
     #   network traffic.
     def receiveDatabaseUpdateEvent(self, entity_json: dict, add: bool):
+        try:
+            entity_json['Icon'] = QtCore.QByteArray(b64decode(entity_json['Icon']))
+        except KeyError:
+            pass
         self.receive_project_database_update.emit(entity_json, add)
 
     def sendDatabaseUpdateEvent(self, project_name: str, entity_json: dict, add: bool):
+        try:
+            entity_json['Icon'] = entity_json['Icon'].toBase64().data()
+        except KeyError:
+            pass
         message = {"Operation": "Update Project Entities",
                    "Arguments": {
                        'project_name': project_name,

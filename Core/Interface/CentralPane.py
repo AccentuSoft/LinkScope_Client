@@ -379,7 +379,7 @@ class TabbedPane(QtWidgets.QTabWidget):
                 if isinstance(parentUID, int):
                     parentUID = newNodeUIDs[parentUID]
                 # Sanity check: Check that the node that was used for this resolution still exists.
-                if parentUID in newNodeUIDs:
+                if parentUID in allEntityUIDs:
                     resolutionName = parentsDict[parentID]['Resolution']
                     newLinkUID = (parentUID, outputEntityUID)
                     # Avoid creating more links between the same two entities.
@@ -1564,14 +1564,11 @@ class CanvasScene(QtWidgets.QGraphicsScene):
             self.removeItem(edgeItem)
         del edgeItem
 
-    def syncCanvas(self, newCanvas: nx.DiGraph) -> None:
+    def syncCanvas(self, canvas_nodes: dict, canvas_edges: dict) -> None:
         """
         Merge canvas updates from remote client into this canvas.
-
-        :param newCanvas:
-        :return:
         """
-        newNodes = [node for node in newCanvas.nodes() if node not in self.nodesDict and
+        newNodes = [node for node in canvas_nodes if node not in self.nodesDict and
                     self.parent().mainWindow.LENTDB.getEntity(node)['Entity Type'] != 'EntityGroup']
         # newGroupNodes = [y for y in newNodes
         #                 if self.parent().mainWindow.LENTDB.getEntity(y)['Entity Type'] == 'EntityGroup']
@@ -1585,10 +1582,10 @@ class CanvasScene(QtWidgets.QGraphicsScene):
 
         # Edges technically only added if the related nodes are already created,
         #   otherwise addNodeProgrammatic should add them automatically.
-        edges = [edge for edge in newCanvas.edges() if (edge not in self.linksDict) and
+        edges = [edge for edge in canvas_edges if (edge not in self.linksDict) and
                  (edge[0] in self.nodesDict and edge[1] in self.nodesDict)]
         for edge in edges:
-            self.addLinkProgrammatic(edge, newCanvas.edges.get(edge)['Resolution'], fromServer=True)
+            self.addLinkProgrammatic(edge, canvas_edges.get(edge)['Resolution'], fromServer=True)
         self.rearrangeGraph()
 
 

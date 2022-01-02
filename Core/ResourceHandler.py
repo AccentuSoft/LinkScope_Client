@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 
+import networkx as nx
 from defusedxml.ElementTree import parse
 from datetime import datetime
 from os import listdir
 from pathlib import Path
 from uuid import uuid4
+from ast import literal_eval
+from base64 import b64decode
 
 from PySide6.QtGui import QIcon
 from PySide6.QtCore import QByteArray
@@ -243,3 +246,26 @@ class ResourceHandler:
     def getLinkArrowPicture(self):
         picture = Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) / "Resources" / "Icons" / "Right-Arrow.svg"
         return QIcon(str(picture)).pixmap(40, 40)
+
+    def deconstructGraph(self, graph: nx.DiGraph) -> tuple:
+        nodes = {}
+        for nodeKey in graph.nodes:
+            # Dereference the original dict so we don't actually convert its icon to data.
+            nodes[nodeKey] = dict(graph.nodes.get(nodeKey))
+            try:
+                nodes[nodeKey]['Icon'] = nodes[nodeKey]['Icon'].toBase64().data()
+            except KeyError:
+                pass
+
+        edges = {edgeKey: graph.edges.get(edgeKey) for edgeKey in graph.edges}
+        return nodes, edges
+
+    def reconstructGraph(self, graphString: str) -> tuple:
+        nodes, edges = literal_eval(graphString)
+        for node in nodes:
+            try:
+                nodes[node]['Icon'] = QByteArray(b64decode(nodes[node]['Icon']))
+            except KeyError:
+                pass
+
+        return nodes, edges

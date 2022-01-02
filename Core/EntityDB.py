@@ -366,7 +366,7 @@ class EntitiesDB:
             self.dbLock.release()
             return returnValue
 
-    def mergeDatabases(self, newDB: nx.DiGraph, fromServer=True):
+    def mergeDatabases(self, newDB_nodes: dict, newDB_edges: dict, fromServer=True):
         """
         Merges the existing database with the one provided.
         
@@ -375,27 +375,26 @@ class EntitiesDB:
         self.dbLock.acquire()
         differenceGraph = nx.DiGraph()
         # Note: If we ever receive a node without a 'Date Last Edited' field, ignore it.
-        differenceGraph.add_nodes_from([(x, newDB.nodes[x])
-                                        for x in newDB.nodes() if (x not in self.database.nodes()) or
+        differenceGraph.add_nodes_from([(x, newDB_nodes[x])
+                                        for x in newDB_nodes if (x not in self.database.nodes()) or
                                         (
                                                 x in self.database.nodes() and
-                                                newDB.nodes[x].get('Date Last Edited') and
-                                                newDB.nodes[x]['Date Last Edited'] >
+                                                newDB_nodes[x].get('Date Last Edited') and
+                                                newDB_nodes[x]['Date Last Edited'] >
                                                 self.database.nodes[x]['Date Last Edited']
                                         )
                                         ])
-        differenceGraph.add_edges_from([(x, y, newDB.edges[(x, y)])
-                                        for x, y in newDB.edges() if ((x, y) not in self.database.edges()) or
+        differenceGraph.add_edges_from([(x, y, newDB_edges[(x, y)])
+                                        for x, y in newDB_edges if ((x, y) not in self.database.edges()) or
                                         (
                                                 (x, y) in self.database.edges() and
-                                                newDB.edges[(x, y)].get('Date Last Edited') and
-                                                newDB.edges[(x, y)]['Date Last Edited'] >
+                                                newDB_edges[(x, y)].get('Date Last Edited') and
+                                                newDB_edges[(x, y)]['Date Last Edited'] >
                                                 self.database.edges[(x, y)]['Date Last Edited']
                                         )
                                         ])
         if differenceGraph.number_of_nodes() > 0:
             for node in differenceGraph.nodes:
-                print('Merging Node: ' + str(node))
                 self.mainWindow.populateEntitiesWidget(differenceGraph.nodes[node], add=True)
             self.database = nx.compose(self.database, differenceGraph)
             if not fromServer:

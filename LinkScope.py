@@ -1104,20 +1104,18 @@ class MainWindow(QtWidgets.QMainWindow):
             self.setStatus('Stopped syncing Canvas: ' + canvasName)
             self.MESSAGEHANDLER.info('Stopped syncing Canvas: ' + canvasName)
 
-    def receiveSyncCanvasListener(self, canvas_name: str, canvas_graph: str) -> None:
+    def receiveSyncCanvasListener(self, canvas_name: str, canvas_nodes: dict, canvas_edges: dict) -> None:
         if canvas_name in self.centralWidget().tabbedPane.canvasTabs:
             canvasToSync = self.centralWidget().tabbedPane.canvasTabs[canvas_name]
             if canvasToSync.synced:
-                canvasToSync.scene().syncCanvas(canvas_graph)
+                canvasToSync.scene().syncCanvas(canvas_nodes, canvas_edges)
                 self.MESSAGEHANDLER.debug('Canvas ' + canvas_name + ' synced.')
 
-    def receiveSyncDatabaseListener(self, database) -> None:
+    def receiveSyncDatabaseListener(self, database_nodes: dict, database_edges: dict) -> None:
         """
         Handles received Database Sync events sent from the server.
-        :param database:
-        :return:
         """
-        self.LENTDB.mergeDatabases(database, fromServer=True)
+        self.LENTDB.mergeDatabases(database_nodes, database_edges, fromServer=True)
         self.MESSAGEHANDLER.debug('Project database synced.')
 
     def sendLocalCanvasUpdateToServer(self, canvas_name: str, entity_or_link_uid: Union[str, tuple]) -> None:
@@ -2075,10 +2073,13 @@ class ResolutionExecutorThread(QtCore.QThread):
                                                                       self.uid)
             if ret is None:
                 self.mainWindow.MESSAGEHANDLER.error('Resolution ' + self.resolution + ' failed during run.',
-                                                     popUp=False)
+                                                     popUp=True)
+            elif isinstance(ret, bool):
+                # Resolution is running on the server, we do not have results right now.
+                ret = None
         except Exception as e:
             self.mainWindow.MESSAGEHANDLER.error('Resolution ' + self.resolution + ' failed during run: ' +
-                                                 str(e), popUp=False)
+                                                 str(e), popUp=True)
             ret = None
 
         # If the resolution is ran on the server or there is a problem, don't emit signal.
