@@ -1340,7 +1340,7 @@ class CanvasScene(QtWidgets.QGraphicsScene):
         linkStringUID = origin.uid + destination.uid
         if linkStringUID in self.linksDict:
             linkToEdit = self.linksDict[linkStringUID]
-            if linkToEdit.labelItem.text() != name:
+            if linkToEdit.labelItem.text() != name and linkUID not in linkToEdit.uid:
                 linkToEdit.updateLabel('')
             linkToEdit.uid.add(linkUID)
         else:
@@ -1363,7 +1363,7 @@ class CanvasScene(QtWidgets.QGraphicsScene):
         linkStringUID = parentItem.uid + childItem.uid
         if linkStringUID in self.linksDict:
             linkToEdit = self.linksDict[linkStringUID]
-            if linkToEdit.labelItem.text() != name:
+            if linkToEdit.labelItem.text() != name and uid not in linkToEdit.uid:
                 linkToEdit.updateLabel('')
             linkToEdit.uid.add(uid)
         else:
