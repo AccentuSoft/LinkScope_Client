@@ -848,7 +848,7 @@ class MenuBar(QtWidgets.QMenuBar):
             progress.setValue(4)
 
     def cookieFileHashHelper(self, filePath):
-        cookieHash = hashlib.md5()
+        cookieHash = hashlib.md5()  # nosec
         with open(filePath, 'rb') as cookieFile:
             for chunk in iter(lambda: cookieFile.read(4096), b""):
                 cookieHash.update(chunk)

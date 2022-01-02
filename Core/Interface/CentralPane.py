@@ -441,6 +441,9 @@ class TabbedPane(QtWidgets.QTabWidget):
 
                         nodeJSON = self.entityDB.getEntity(uid)
 
+                        # This is more efficient for large canvases than syncing afterwards.
+                        self.mainWindow.sendLocalCanvasUpdateToServer(canvas, uid)
+
                         picture = nodeJSON.get('Icon')
                         scene.sceneGraph.add_node(uid)
 

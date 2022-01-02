@@ -55,7 +55,8 @@ class CommunicationsHandler(QtCore.QObject):
     open_project_canvas_signal = QtCore.Signal(str)
     close_project_canvas_signal = QtCore.Signal(str)
     receive_project_database_update = QtCore.Signal(dict, bool)
-    receive_project_canvas_update = QtCore.Signal(str, str)
+    receive_project_canvas_update_node = QtCore.Signal(str, str)
+    receive_project_canvas_update_link = QtCore.Signal(str, tuple)
     receive_sync_database = QtCore.Signal(dict, dict)
     status_message_signal = QtCore.Signal(str, bool)
     receive_project_file_list = QtCore.Signal(list)
@@ -88,7 +89,8 @@ class CommunicationsHandler(QtCore.QObject):
         self.close_project_signal.connect(self.mainWindow.closeCurrentServerProject)
         self.close_project_canvas_signal.connect(self.mainWindow.closeServerCanvasListener)
         self.receive_project_database_update.connect(self.mainWindow.receiveServerDatabaseUpdate)
-        self.receive_project_canvas_update.connect(self.mainWindow.receiveServerCanvasUpdate)
+        self.receive_project_canvas_update_node.connect(self.mainWindow.receiveServerCanvasUpdate)
+        self.receive_project_canvas_update_link.connect(self.mainWindow.receiveServerCanvasUpdate)
         self.receive_sync_database.connect(self.mainWindow.receiveSyncDatabaseListener)
         self.receive_project_file_list.connect(self.mainWindow.receiveFileListListener)
         self.file_upload_finished_signal.connect(self.mainWindow.fileUploadFinishedListener)
@@ -444,8 +446,11 @@ class CommunicationsHandler(QtCore.QObject):
                        "add": add}}
         self.transmitMessage(message)
 
-    def receiveCanvasUpdateEvent(self, canvas_name: str, entity_or_link_uid: str):
-        self.receive_project_canvas_update.emit(canvas_name, entity_or_link_uid)
+    def receiveCanvasUpdateEvent(self, canvas_name: str, entity_or_link_uid: Union[str, tuple]):
+        if isinstance(entity_or_link_uid, str):
+            self.receive_project_canvas_update_node.emit(canvas_name, entity_or_link_uid)
+        else:
+            self.receive_project_canvas_update_link.emit(canvas_name, entity_or_link_uid)
 
     def sendCanvasUpdateEvent(self, project_name: str, canvas_name: str, entity_or_link_uid: Union[str, tuple]):
         message = {"Operation": "Update Canvas Entities",

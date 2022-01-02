@@ -1131,16 +1131,18 @@ class MainWindow(QtWidgets.QMainWindow):
     def receiveServerCanvasUpdate(self, canvas_name: str, entity_or_link_uid: Union[str, tuple]) -> None:
         scene = self.centralWidget().tabbedPane.getSceneByName(canvas_name)
         if scene is not None:
-            if isinstance(entity_or_link_uid, str):
-                # Add Entity
-                if entity_or_link_uid not in scene.nodesDict:
-                    scene.addNodeProgrammatic(entity_or_link_uid, fromServer=True)
-                    scene.rearrangeGraph()
-            else:
-                # Add Link
-                if entity_or_link_uid not in scene.linksDict:
-                    scene.addLinkProgrammatic(entity_or_link_uid, fromServer=True)
-                    scene.rearrangeGraph()
+            # Check that the argument in the update is not empty.
+            if entity_or_link_uid:
+                if isinstance(entity_or_link_uid, str):
+                    # Add Entity
+                    if entity_or_link_uid not in scene.nodesDict:
+                        scene.addNodeProgrammatic(entity_or_link_uid, fromServer=True)
+                        scene.rearrangeGraph()
+                else:
+                    # Add Link
+                    if entity_or_link_uid not in scene.linksDict:
+                        scene.addLinkProgrammatic(entity_or_link_uid, fromServer=True)
+                        scene.rearrangeGraph()
 
         self.MESSAGEHANDLER.debug('Received update to canvas: ' + canvas_name + ' for entity / link: ' +
                                   str(entity_or_link_uid))
@@ -1159,25 +1161,27 @@ class MainWindow(QtWidgets.QMainWindow):
                                       str(add))
 
     def receiveServerDatabaseUpdate(self, entityJson, add) -> None:
-        uid = entityJson['uid']
-        if add:
-            # Add item
-            if isinstance(uid, str):
-                # Add Entity
-                self.LENTDB.addEntity(entityJson, fromServer=True)
+        # Check that the JSON received is not empty.
+        if entityJson:
+            uid = entityJson['uid']
+            if add:
+                # Add item
+                if isinstance(uid, str):
+                    # Add Entity
+                    self.LENTDB.addEntity(entityJson, fromServer=True)
+                else:
+                    # Add Link
+                    self.centralWidget().tabbedPane.serverLinkAddHelper(entityJson)
             else:
-                # Add Link
-                self.centralWidget().tabbedPane.serverLinkAddHelper(entityJson)
-        else:
-            # Remove item
-            if isinstance(uid, str):
-                # Remove Entity
-                self.centralWidget().tabbedPane.nodeRemoveAllHelper(uid)
-                self.LENTDB.removeEntity(uid, fromServer=True)
-            else:
-                # Remove Link
-                self.centralWidget().tabbedPane.linkRemoveAllHelper(uid)
-                self.LENTDB.removeLink(uid, fromServer=True)
+                # Remove item
+                if isinstance(uid, str):
+                    # Remove Entity
+                    self.centralWidget().tabbedPane.nodeRemoveAllHelper(uid)
+                    self.LENTDB.removeEntity(uid, fromServer=True)
+                else:
+                    # Remove Link
+                    self.centralWidget().tabbedPane.linkRemoveAllHelper(uid)
+                    self.LENTDB.removeLink(uid, fromServer=True)
 
         self.MESSAGEHANDLER.debug('Received database update from server: ' + str(entityJson) + ' - Operation: ' +
                                   str(add))

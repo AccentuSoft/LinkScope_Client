@@ -159,7 +159,7 @@ class EntitiesDB:
             returnValue = self.database.nodes[uid]
         except KeyError:
             self.messageHandler.warning(
-                "Tried to get entity with nonexistent UID.")
+                "Tried to get entity with nonexistent UID: " + uid)
         finally:
             self.dbLock.release()
             return returnValue
@@ -394,9 +394,11 @@ class EntitiesDB:
                                         )
                                         ])
         if differenceGraph.number_of_nodes() > 0:
-            for node in differenceGraph.nodes:
-                self.mainWindow.populateEntitiesWidget(differenceGraph.nodes[node], add=True)
             self.database = nx.compose(self.database, differenceGraph)
+            # Some nodes given by differenceGraph may be empty dicts, with an existing node's uid as the key.
+            for node in differenceGraph.nodes:
+                self.mainWindow.populateEntitiesWidget(self.database.nodes[node], add=True)
+
             if not fromServer:
                 if self.mainWindow.FCOM.isConnected():
                     # diffNew = nx.DiGraph()
