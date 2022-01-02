@@ -1291,15 +1291,17 @@ class MainWindow(QtWidgets.QMainWindow):
                         document_name = selectedDocuments[0].getFileName()
                     else:
                         self.setStatus("Must upload and select document before obtaining summary.")
+                        self.MESSAGEHANDLER.warning("Must upload and select document from 'Files Loaded' section "
+                                                    "before getting summary.", popUp=True)
                 self.FCOM.askServerForFileSummary(project_name, document_name)
             else:
                 self.setStatus("Not Connected to Server.")
-                self.MESSAGEHANDLER.info('Cannot get summary of document ' + document_name +
-                                         ': Not connected to a Server.', popUp=True)
+                self.MESSAGEHANDLER.info('Cannot get summary of documents: Not working on a Server Project.',
+                                         popUp=True)
         else:
             self.setStatus("No currently open Server Project.")
-            self.MESSAGEHANDLER.info('Cannot get summary of document ' + document_name +
-                                     ': Not working on a Server Project.', popUp=True)
+
+            self.MESSAGEHANDLER.info('Cannot get summary of documents: Not connected to a Server.', popUp=True)
 
     def receiveSummaryOfDocument(self, document_name: str, summary: str):
         self.centralWidget().setDocTitleAndContents(document_name, summary)
