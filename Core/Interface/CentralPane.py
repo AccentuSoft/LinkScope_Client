@@ -1213,12 +1213,12 @@ class CanvasScene(QtWidgets.QGraphicsScene):
             self.addNodeToScene(newNode, x, y)
 
         if newNode is not None:
-            self.addEntityLinkCreatorHelper(newNode)
             if uid in self.sceneGraph.nodes:
                 del self.sceneGraph.nodes[uid]['groupID']
             else:
                 self.sceneGraph.add_node(uid)
             self.scenePos[uid] = newNodePos
+            self.addEntityLinkCreatorHelper(newNode)
 
         # Need to return entity Json to show the property editor if new
         #   entity was added.
@@ -1255,12 +1255,12 @@ class CanvasScene(QtWidgets.QGraphicsScene):
                 for item in groupItems:
                     self.sceneGraph.add_node(item, groupID=newNode.uid)
         if newNode is not None:
-            self.addEntityLinkCreatorHelper(newNode)
             if uid in self.sceneGraph.nodes:
                 del self.sceneGraph.nodes[uid]['groupID']
             else:
                 self.sceneGraph.add_node(uid)
             self.sceneGraph.add_node(uid)
+            self.addEntityLinkCreatorHelper(newNode)
 
         return newNode
 
@@ -1585,7 +1585,7 @@ class CanvasScene(QtWidgets.QGraphicsScene):
 
         # Edges technically only added if the related nodes are already created,
         #   otherwise addNodeProgrammatic should add them automatically.
-        edges = [edge for edge in canvas_edges if (edge not in self.linksDict) and
+        edges = [edge for edge in canvas_edges if (edge[0] + edge[1] not in self.linksDict) and
                  (edge[0] in self.nodesDict and edge[1] in self.nodesDict)]
         for edge in edges:
             self.addLinkProgrammatic(edge, canvas_edges.get(edge)['Resolution'], fromServer=True)
