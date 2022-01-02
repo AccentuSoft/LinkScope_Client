@@ -298,10 +298,20 @@ class CommunicationsHandler(QtCore.QObject):
 
     def runRemoteResolution(self, resolution_name: str, resolution_entities: list, resolution_parameters: dict,
                             resolution_uid: str):
+        resolution_entities_to_send = []
+        for entity in resolution_entities:
+            try:
+                dereferenced_entity = dict(entity)
+                resolution_entities_to_send.append(dereferenced_entity)
+                # Icon is not necessary for any resolution as of now: 2022/1/2.
+                # Cutting it out saves data.
+                dereferenced_entity['Icon'] = ''
+            except KeyError:
+                pass
         message = {'Operation': 'Run Resolution',
                    'Arguments': {
                        'resolution_name': resolution_name,
-                       'resolution_entities': resolution_entities,
+                       'resolution_entities': resolution_entities_to_send,
                        'resolution_parameters': resolution_parameters,
                        'resolution_uid': resolution_uid
                    }}
@@ -529,16 +539,20 @@ class CommunicationsHandler(QtCore.QObject):
         This function checks if there is anything in the inbox, and if
         there is, calls the appropriate functions.
         """
+        prevMesg = None
         while True:
             try:
-                message = self.inbox.get(timeout=0.1)
+                message = self.inbox.get(timeout=0.2)
             except Empty:
                 with closeSoftwareLock:
                     if not closeSoftware:
-                        time.sleep(0.1)
+                        time.sleep(0.2)
                         continue
                     else:
                         return
+            if prevMesg == message:
+                # Same message, do not waste time handling.
+                continue
             print('Message To handle:', message)  # TODO Make this logging.
             operation = message['Operation']
             arguments = message['Arguments']
@@ -577,6 +591,7 @@ class CommunicationsHandler(QtCore.QObject):
             else:
                 self.mainWindow.MESSAGEHANDLER.warning('Unhandled message: ' + str(message) +
                                                        ' On Operation: ' + str(operation))
+            prevMesg = message
 
     def handleStatusMessage(self, operation: str, message: str, status_code: int):
         """
