@@ -193,7 +193,7 @@ class CommunicationsHandler(QtCore.QObject):
         #   sent will always be less than or equal to 1280 bytes.
         padNeeded = 1280 - len(bytesObject)
         message = encryptor.update(b'a' * padNeeded + bytesObject) + encryptor.finalize()
-        return message
+        return b64encode(message) + b'\x00\x00\x00'
 
     def decryptTransmission(self, bytesObject):
         decrypter = self.cipher.decryptor()
@@ -252,14 +252,23 @@ class CommunicationsHandler(QtCore.QObject):
         it exists.
         """
         preInbox = {}
+        oldData = b''
         while True:
             try:
                 receivedInfo = self.sock.recv(5120)
                 if receivedInfo == b'':
                     # Socket closed.
                     break
-                for message in range(0, len(receivedInfo), 1280):
-                    decryptedInfo = self.decryptTransmission(receivedInfo[message:message + 1280])
+                receivedInfo = oldData + receivedInfo
+                messages = receivedInfo.split(b'\x00\x00\x00')
+                if not receivedInfo.endswith(b'\x00\x00\x00'):
+                    oldData = messages[-1]
+                    messages = messages[:-1]
+                else:
+                    oldData = b''
+                for message in messages:
+                    message = b64decode(message)
+                    decryptedInfo = self.decryptTransmission(message)
                     if decryptedInfo is None:
                         self.mainWindow.MESSAGEHANDLER.warning("Invalid message received from server.")
                         continue
@@ -286,7 +295,9 @@ class CommunicationsHandler(QtCore.QObject):
                     break
             except ValueError:
                 # E.g.: Unpack failed: incomplete input
-                pass
+                # In this case, we are being sent fragmented messages.
+                # They will be reconstructed eventually, once all the pieces get here.
+                continue
 
     def askServerForResolutions(self):
         message = {"Operation": "Get Server Resolutions",
