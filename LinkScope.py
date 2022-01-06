@@ -1570,12 +1570,23 @@ class ReportWizard(QtWidgets.QWizard):
         timelineImagePath = Path(temp_dir.name) / 'timeline.png'
         timelinePicture.save(str(timelineImagePath), "PNG")
 
-        ReportGeneration.PDFReport(str(path), reportData, outgoingEntitiesForEachEntity, incomingEntitiesForEachEntity,
-                                   entityList, canvasImagePath, timelineImagePath, self.primaryFieldsList,
-                                   incomingEntityPrimaryFieldsForEachEntity, outgoingEntityPrimaryFieldsForEachEntity)
+        savePath = Path(reportData[0]['SavePath']).absolute()
 
-        timelineImagePath.unlink(missing_ok=True)
-        self.parent().MESSAGEHANDLER.info(reportData)
+        try:
+            ReportGeneration.PDFReport(str(path), reportData, outgoingEntitiesForEachEntity,
+                                       incomingEntitiesForEachEntity, entityList, canvasImagePath, timelineImagePath,
+                                       self.primaryFieldsList, incomingEntityPrimaryFieldsForEachEntity,
+                                       outgoingEntityPrimaryFieldsForEachEntity)
+
+            self.parent().MESSAGEHANDLER.debug(reportData)
+            self.parent().MESSAGEHANDLER.info("Saved Report at: " + str(savePath), popUp=True)
+        except PermissionError:
+            self.parent().MESSAGEHANDLER.error("Could not generate report. No permission to save at the chosen "
+                                               "location: " + str(savePath), popUp=True, exc_info=False)
+        except Exception as exc:
+            self.parent().MESSAGEHANDLER.error("Could not generate report: " + str(exc), popUp=True, exc_info=True)
+        finally:
+            timelineImagePath.unlink(missing_ok=True)
 
 
 class InitialConfigPage(QtWidgets.QWizardPage):
