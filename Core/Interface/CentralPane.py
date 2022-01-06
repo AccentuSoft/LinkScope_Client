@@ -945,6 +945,9 @@ class CanvasView(QtWidgets.QGraphicsView):
             item.setSelected(False)
         if justViewport:
             picture = QtGui.QImage(self.viewport().size(), QtGui.QImage.Format_ARGB32_Premultiplied)
+            # Pictures are initialised with junk data - need to clear it out before painting
+            #   to avoid visual artifacts.
+            picture.fill(QtGui.QColor(0, 0, 0, 0))
             picturePainter = QtGui.QPainter(picture)
             tempBrush = self.backgroundBrush()
             if transparentBackground:
@@ -952,8 +955,12 @@ class CanvasView(QtWidgets.QGraphicsView):
             self.render(picturePainter)
             self.setBackgroundBrush(tempBrush)
         else:
+            # Convert QRectF to QRect - can't have floats when it comes to picture size.
             rectToPrint = self.scene().sceneRect().toRect()
             picture = QtGui.QImage(rectToPrint.size(), QtGui.QImage.Format_ARGB32_Premultiplied)
+            # Pictures are initialised with junk data - need to clear it out before painting
+            #   to avoid visual artifacts.
+            picture.fill(QtGui.QColor(0, 0, 0, 0))
             picturePainter = QtGui.QPainter(picture)
             tempBrush = self.scene().backgroundBrush()
             if transparentBackground:
@@ -1664,7 +1671,6 @@ class PropertiesEditorFilePathField(QtWidgets.QLineEdit):
         self.setText(str(value))
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
-
         selectedPath = QtWidgets.QFileDialog().getOpenFileName(parent=self, caption='Select File Path',
                                                                options=QtWidgets.QFileDialog.DontUseNativeDialog)[0]
         if selectedPath != '':
