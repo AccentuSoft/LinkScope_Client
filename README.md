@@ -71,10 +71,7 @@ Then, the Linux-specific functions need to be changed to the Windows version. Cu
 LinkScope was built from the ground up to be modular! In this repository's wiki, there are instructions on how to create your own modules, which can contain custom Entities and Resolutions. There is also an example module in the Modules directory that can act as a template, and has a verbose description of most things that a module creator should need to consider.
 
 ## Security and safety
-Some warnings about using the software:
-
-### Do NOT open any kind of project file given to you by untrusted sources.
-Maliciously crafted files can be used to potentially execute arbitrary code on your computer. The safe way of importing work from others is by having the source export their database as a GraphML file, which another user can then import.
+A warning about using the software:
 
 ### Do NOT use Resolutions obtained by untrusted sources.
 Resolutions are essentially Python code that ingests information from various data sources. Make sure that the people providing you with code to run are trustworthy, and that you inspect all the modules you use before installing them. Pre-compiled binaries on systems without Python installed are not able to install new resolutions, so compiling custom versions of the client to suit your investigators' needs should effectively mitigate this risk.
