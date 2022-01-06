@@ -52,6 +52,8 @@ class BaseNode(QGraphicsItemGroup):
 
     def updateLabel(self, newText: str = '') -> None:
         if newText != '':
+            if len(newText) > 25:
+                newText = newText[:22] + "..."
             self.labelItem.setText(newText)
             labelWidth = self.labelItem.boundingRect().width()
             self.labelItem.setPos(self.iconItem.x() + 20 - (labelWidth / 2), self.iconItem.y() + 45)
@@ -218,6 +220,8 @@ class BaseConnector(QGraphicsItemGroup):  # TODO - Make letters bold?
         self.line = QtCore.QLineF()
 
     def updateLabel(self, newText: str = '') -> None:
+        if len(newText) > 25:
+            newText = newText[:22] + "..."
         self.labelItem.setText(newText)
         self.update()
 
