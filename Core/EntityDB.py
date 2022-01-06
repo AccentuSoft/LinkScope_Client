@@ -4,6 +4,7 @@ from shutil import move
 from msgpack import load, dump
 from threading import Lock
 from pathlib import Path
+from typing import Union
 
 import networkx as nx
 
@@ -314,14 +315,14 @@ class EntitiesDB:
         self.dbLock.release()
         return returnValue
 
-    def isNode(self, uid: str):
+    def isNode(self, uid: Union[str, list, tuple]):
         """
         Returns True if the uid (primary attribute) given exists as
         an entity, and False otherwise.
         """
         self.dbLock.acquire()
         returnValue = False
-        if self.database.nodes.get(uid) is not None:
+        if isinstance(uid, str) and self.database.nodes.get(uid) is not None:
             returnValue = True
         self.dbLock.release()
         return returnValue
@@ -337,14 +338,13 @@ class EntitiesDB:
             return True
         return False
 
-    def isLink(self, uid: tuple):
+    def isLink(self, uid: Union[str, list, tuple]):
         """
         Returns True if the uid given exists as a link, and False otherwise.
         """
         self.dbLock.acquire()
         returnValue = False
-        item = self.database.edges.get(uid)
-        if item is not None:
+        if isinstance(uid, tuple) and self.database.edges.get(uid) is not None:
             returnValue = True
         self.dbLock.release()
         return returnValue

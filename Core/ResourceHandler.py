@@ -298,7 +298,8 @@ class ResourceHandler:
             returnGraph.add_node(node, **graphNodes[node])
 
         for edge in graphEdges:
-            edgeUID = literal_eval(edge)
+            edgeUID = tuple(literal_eval(edge))
+            graphEdges[edge]['uid'] = edgeUID
             returnGraph.add_edge(*edgeUID, **graphEdges[edge])
 
         return returnGraph
