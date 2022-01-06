@@ -13,7 +13,7 @@ from shutil import move
 from inspect import getsourcefile
 from os import listdir, access, R_OK, W_OK
 from os.path import abspath, dirname
-from pickle import load
+from msgpack import load
 from pathlib import Path
 from datetime import datetime
 from typing import Union
@@ -49,8 +49,8 @@ class MainWindow(QtWidgets.QMainWindow):
     def closeEvent(self, event) -> None:
         self.dockbarThree.logViewerUpdateThread.endLogging = True
         # Save the window settings
-        self.SETTINGS.setValue("MainWindow/Geometry", self.saveGeometry())
-        self.SETTINGS.setValue("MainWindow/WindowState", self.saveState())
+        self.SETTINGS.setValue("MainWindow/Geometry", self.saveGeometry().data())
+        self.SETTINGS.setValue("MainWindow/WindowState", self.saveState().data())
         if self.FCOM.isConnected():
             self.FCOM.close()
         self.SETTINGS.setValue("Project/Server/Project", "")
@@ -74,6 +74,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.MESSAGEHANDLER.error(errorMessage, exc_info=True)
             self.setStatus("Failed Saving Project.", 3000)
             self.MESSAGEHANDLER.info("Failed Saving Project " + self.SETTINGS.value("Project/Name", 'Untitled'))
+            raise e
 
     def saveAsProject(self) -> None:
         if len(self.resolutions) > 0:
@@ -1362,8 +1363,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def initializeLayout(self) -> None:
 
-        self.restoreGeometry(self.SETTINGS.value("MainWindow/Geometry"))
-        self.restoreState(self.SETTINGS.value("MainWindow/WindowState"))
+        self.restoreGeometry(QtCore.QByteArray(self.SETTINGS.value("MainWindow/Geometry")))
+        self.restoreState(QtCore.QByteArray(self.SETTINGS.value("MainWindow/WindowState")))
 
         self.addDockWidget(QtCore.Qt.LeftDockWidgetArea,
                            self.dockbarOne)
@@ -1405,8 +1406,8 @@ class MainWindow(QtWidgets.QMainWindow):
         if not nW.createProject and nW.openProject is None:
             sys.exit()
 
+        self.SETTINGS = SettingsObject.SettingsObject()
         if nW.createProject:
-            self.SETTINGS = SettingsObject.SettingsObject()
             self.SETTINGS.setValue(
                 "Project/BaseDir", str(Path(nW.pDir.text()).joinpath(nW.pName.text())))
             self.SETTINGS.setValue("Project/FilesDir",
@@ -1435,7 +1436,8 @@ class MainWindow(QtWidgets.QMainWindow):
         elif nW.openProject is not None:
             projectDir = Path(nW.openProject).parent.absolute()
             projectDirFile = open(nW.openProject, "rb")
-            self.SETTINGS = load(projectDirFile)
+            self.SETTINGS.load(load(projectDirFile))
+            projectDirFile.close()
 
             # Re-set file path related settings in case the project or the software was moved.
             self.SETTINGS.setValue("Program/BaseDir", dirname(abspath(getsourcefile(lambda: 0))))

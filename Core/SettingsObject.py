@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from pickle import dump
+from msgpack import dump
 from shutil import move
 from pathlib import Path
 from Core.PathHelper import is_path_exists_or_creatable_portable
@@ -57,3 +57,7 @@ class SettingsObject(dict):
             dump(self, projectFile)
             projectFile.close()
             move(tempSavePath, actualSavePath)
+
+    def load(self, savedDict: dict):
+        for key in savedDict:
+            self[key] = savedDict[key]
