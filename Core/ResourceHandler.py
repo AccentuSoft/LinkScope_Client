@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+
+from typing import Union
+
 import networkx as nx
 from defusedxml.ElementTree import parse
 from datetime import datetime
@@ -19,7 +22,7 @@ class ResourceHandler:
         return self.icons[iconName]
 
     # Load all resources needed.
-    def __init__(self, mainWindow, messageHandler):
+    def __init__(self, mainWindow, messageHandler) -> None:
         self.mainWindow = mainWindow
         self.messageHandler = messageHandler
         self.entityCategoryList = {}
@@ -58,13 +61,13 @@ class ResourceHandler:
 
         self.loadCoreEntities()
 
-    def getEntityCategories(self):
+    def getEntityCategories(self) -> list:
         eList = []
         for category in self.entityCategoryList:
             eList.append(category)
         return eList
 
-    def getAllEntityDetailsWithIconsInCategory(self, category):
+    def getAllEntityDetailsWithIconsInCategory(self, category) -> list:
         eList = []
         for entity in self.entityCategoryList[category]:
             entityValue = self.entityCategoryList[category][entity]
@@ -73,7 +76,7 @@ class ResourceHandler:
                           ))
         return eList
 
-    def getEntityAttributes(self, entityType):
+    def getEntityAttributes(self, entityType) -> Union[None, list]:
         aList = []
         try:
             for category in self.entityCategoryList:
@@ -87,7 +90,7 @@ class ResourceHandler:
             return None
         return aList
 
-    def getAllEntitiesInCategory(self, category):
+    def getAllEntitiesInCategory(self, category) -> list:
         """
         Get all Entity Types in the specified category.
         """
@@ -96,7 +99,7 @@ class ResourceHandler:
             eList.append(entity)
         return eList
 
-    def getAllEntities(self):
+    def getAllEntities(self) -> list:
         """
         Get all recognised Entity Types.
         """
@@ -132,13 +135,13 @@ class ResourceHandler:
                 'Icon': str(Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) / "Resources" / "Icons" / icon)}
         return True
 
-    def loadCoreEntities(self):
+    def loadCoreEntities(self) -> None:
         entDir = Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) / "Core" / "Entities"
         for entFile in listdir(entDir):
             if entFile.endswith('.xml'):
                 self.addRecognisedEntityTypes(entDir / entFile)
 
-    def loadModuleEntities(self):
+    def loadModuleEntities(self) -> None:
         entDir = Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) / "Modules"
         for module in listdir(entDir):
             for entFile in listdir(entDir / module):
@@ -146,7 +149,7 @@ class ResourceHandler:
                     self.addRecognisedEntityTypes(
                         entDir / module / entFile)
 
-    def getEntityJson(self, entityType: str, jsonData=None):
+    def getEntityJson(self, entityType: str, jsonData=None) -> Union[dict, None]:
         eJson = {'uid': str(uuid4())}
         try:
             for category in self.entityCategoryList:
@@ -188,7 +191,7 @@ class ResourceHandler:
                                       "malformed entity type: " + str(entityType), True)
             return None
 
-    def getBareBonesEntityJson(self, entityType):
+    def getBareBonesEntityJson(self, entityType) -> Union[dict, None]:
         eJson = {}
         try:
             for category in self.entityCategoryList:
@@ -204,7 +207,7 @@ class ResourceHandler:
 
         return eJson
 
-    def getLinkJson(self, jsonData):
+    def getLinkJson(self, jsonData) -> Union[dict, None]:
         linkJson = {}
         try:
             linkJson['uid'] = jsonData['uid']
@@ -221,7 +224,7 @@ class ResourceHandler:
 
         return linkJson
 
-    def getEntityDefaultPicture(self, entityType):
+    def getEntityDefaultPicture(self, entityType) -> QByteArray:
         picture = Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) / "Resources" / "Icons" / "Default.svg"
         try:
             for category in self.entityCategoryList:
@@ -260,7 +263,20 @@ class ResourceHandler:
         edges = {edgeKey: graph.edges.get(edgeKey) for edgeKey in graph.edges}
         return nodes, edges
 
-    def reconstructGraph(self, graphString: str) -> tuple:
+    def deconstructGraphForFileDump(self, graph: nx.DiGraph) -> tuple:
+        nodes = {}
+        for nodeKey in graph.nodes:
+            # Dereference the original dict so we don't actually convert its icon to data.
+            nodes[nodeKey] = dict(graph.nodes.get(nodeKey))
+            try:
+                nodes[nodeKey]['Icon'] = nodes[nodeKey]['Icon'].toBase64().data()
+            except KeyError:
+                pass
+
+        edges = {str(edgeKey): graph.edges.get(edgeKey) for edgeKey in graph.edges}
+        return nodes, edges
+
+    def reconstructGraphFromString(self, graphString: str) -> tuple:
         nodes, edges = literal_eval(graphString)
         for node in nodes:
             try:
@@ -269,3 +285,20 @@ class ResourceHandler:
                 pass
 
         return nodes, edges
+
+    def reconstructGraphFullFromFile(self, graphNodesAndEdges: Union[tuple, list]) -> nx.DiGraph:
+        returnGraph = nx.DiGraph()
+        graphNodes = graphNodesAndEdges[0]
+        graphEdges = graphNodesAndEdges[1]
+        for node in graphNodes:
+            try:
+                graphNodes[node]['Icon'] = QByteArray(b64decode(graphNodes[node]['Icon']))
+            except KeyError:
+                pass
+            returnGraph.add_node(node, **graphNodes[node])
+
+        for edge in graphEdges:
+            edgeUID = literal_eval(edge)
+            returnGraph.add_edge(*edgeUID, **graphEdges[edge])
+
+        return returnGraph

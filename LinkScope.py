@@ -160,7 +160,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 nx.write_graphml(currentCanvasGraph, filePath)
                 self.setStatus('Canvas exported successfully.')
             except Exception as exc:
-                self.MESSAGEHANDLER.error("Could not export canvas to file.", popUp=True)
+                self.MESSAGEHANDLER.error("Could not export canvas to file: " + str(exc), popUp=True)
                 self.setStatus('Canvas export failed.')
 
     def importCanvasFromGraphML(self):
@@ -227,17 +227,19 @@ class MainWindow(QtWidgets.QMainWindow):
             try:
                 filePath = openDialog.selectedFiles()[0]
                 read_graphml = nx.read_graphml(filePath)
-                for node in read_graphml.nodes:
-                    read_graphml.nodes[node]['Icon'] = self.RESOURCEHANDLER.getEntityDefaultPicture(
-                        read_graphml.nodes[node]['Entity Type'])
-                for edge in read_graphml.edges:
-                    read_graphml.edges[edge]['uid'] = literal_eval(read_graphml.edges[edge]['uid'])
-                self.LENTDB.mergeDatabases(read_graphml, fromServer=False)
+                read_graphml_nodes = {key: read_graphml.nodes[key] for key in read_graphml.nodes}
+                read_graphml_edges = {key: read_graphml.edges[key] for key in read_graphml.edges}
+                for node in read_graphml_nodes:
+                    read_graphml_nodes[node]['Icon'] = self.RESOURCEHANDLER.getEntityDefaultPicture(
+                        read_graphml_nodes[node]['Entity Type'])
+                for edge in read_graphml_edges:
+                    read_graphml_edges[edge]['uid'] = literal_eval(read_graphml_edges[edge]['uid'])
+                self.LENTDB.mergeDatabases(read_graphml_nodes, read_graphml_edges, fromServer=False)
                 self.dockbarOne.existingEntitiesPalette.loadEntities()
                 self.LENTDB.resetTimeline()
                 self.setStatus('Database imported successfully.')
             except Exception as exc:
-                self.MESSAGEHANDLER.error("Could not import database from file.", popUp=True)
+                self.MESSAGEHANDLER.error("Could not import database from file: " + str(exc), popUp=True)
                 self.setStatus('Database import failed.')
 
     def generateReport(self):

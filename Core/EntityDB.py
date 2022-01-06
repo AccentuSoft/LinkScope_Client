@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from shutil import move
-from pickle import load, dump
+from msgpack import load, dump
 from threading import Lock
 from pathlib import Path
 
@@ -26,16 +26,16 @@ class EntitiesDB:
 
     def loadDatabase(self):
         """
-        Load DiGraph from pickle file.
+        Load DiGraph from LinkScope Database file - msgpack dumped object.
         """
         self.dbLock.acquire()
         if self.database is not None:
             self.save()
-        databaseFile = Path(self.mainWindow.SETTINGS.value("Project/FilesDir")).joinpath("LocalEntitiesDB.pkl")
+        databaseFile = Path(self.mainWindow.SETTINGS.value("Project/FilesDir")).joinpath("LocalEntitiesDB.lsdb")
         self.messageHandler.debug('Opening Database at: ' + str(databaseFile))
         try:
             dbFile = open(databaseFile, "rb")
-            self.database = load(dbFile)
+            self.database = self.mainWindow.RESOURCEHANDLER.reconstructGraphFullFromFile(load(dbFile))
             dbFile.close()
             self.messageHandler.info('Loaded Local Entities Database.')
         except FileNotFoundError:
@@ -63,17 +63,17 @@ class EntitiesDB:
 
     def save(self):
         """
-        Saves the graph (pickles it too) to the specified file.
+        Saves the graph to the specified file.
         """
 
         # Get the database file path again, in case it changed.
-        databaseFile = Path(self.mainWindow.SETTINGS.value("Project/FilesDir")).joinpath("LocalEntitiesDB.pkl")
+        databaseFile = Path(self.mainWindow.SETTINGS.value("Project/FilesDir")).joinpath("LocalEntitiesDB.lsdb")
         if databaseFile is None:
             raise ValueError('Database File is None, cannot save database.')
         self.dbLock.acquire()
         tmpSavePath = databaseFile.with_suffix(databaseFile.suffix + '.tmp')
         dbFile = open(tmpSavePath, "wb")
-        dump(self.database, dbFile)
+        dump(self.mainWindow.RESOURCEHANDLER.deconstructGraphForFileDump(self.database), dbFile)
         dbFile.close()
         move(tmpSavePath, databaseFile)
         self.messageHandler.info('Database Saved.')

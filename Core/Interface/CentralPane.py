@@ -9,7 +9,7 @@ from typing import Union
 import folium
 import networkx as nx
 from shutil import move
-from pickle import dump, load
+from msgpack import dump, load
 from PIL import Image
 from PIL.ImageQt import ImageQt
 from pathlib import Path
@@ -505,28 +505,28 @@ class TabbedPane(QtWidgets.QTabWidget):
     def save(self) -> None:
         if len(self.canvasTabs) == 0:
             return
-        canvasDBPath = Path(self.mainWindow.SETTINGS.value("Project/BaseDir")) / "Project Files" / "canvasTabs.pkl"
+        canvasDBPath = Path(self.mainWindow.SETTINGS.value("Project/BaseDir")) / "Project Files" / "canvasTabs.lscanvas"
         canvasDBPathTmp = canvasDBPath.with_suffix(canvasDBPath.suffix + '.tmp')
 
         canvasDBFile = open(canvasDBPathTmp, "wb")
         saveJson = {}
         for canvasName in self.canvasTabs:
             saveJson[canvasName] = [
-                self.canvasTabs[canvasName].scene().sceneGraph,
+                self.resourceHandler.deconstructGraphForFileDump(self.canvasTabs[canvasName].scene().sceneGraph),
                 self.canvasTabs[canvasName].scene().scenePos]
         dump(saveJson, canvasDBFile)
         canvasDBFile.close()
         move(canvasDBPathTmp, canvasDBPath)
 
     def open(self) -> None:
-        canvasDBPath = Path(self.mainWindow.SETTINGS.value("Project/BaseDir")) / "Project Files" / "canvasTabs.pkl"
+        canvasDBPath = Path(self.mainWindow.SETTINGS.value("Project/BaseDir")) / "Project Files" / "canvasTabs.lscanvas"
 
         if Path(canvasDBPath).exists():
             canvasDBFile = open(canvasDBPath, "rb")
             savedJson = load(canvasDBFile)
             for canvasName in savedJson:
                 self.addCanvas(canvasName,
-                               savedJson[canvasName][0],
+                               self.resourceHandler.reconstructGraphFullFromFile(savedJson[canvasName][0]),
                                savedJson[canvasName][1])
             canvasDBFile.close()
 

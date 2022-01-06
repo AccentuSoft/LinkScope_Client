@@ -413,7 +413,7 @@ class CommunicationsHandler(QtCore.QObject):
         self.transmitMessage(message)
 
     def receiveSyncDatabase(self, database: str):
-        database_nodes, database_edges = self.mainWindow.RESOURCEHANDLER.reconstructGraph(database)
+        database_nodes, database_edges = self.mainWindow.RESOURCEHANDLER.reconstructGraphFromString(database)
         self.receive_sync_database.emit(database_nodes, database_edges)
 
     def askServerForFileList(self, project_name: str):
@@ -431,7 +431,7 @@ class CommunicationsHandler(QtCore.QObject):
             self.transmitMessage(message)
 
     def receiveSyncCanvas(self, canvas_name: str, canvas_graph: str):
-        graph_nodes, graph_edges = self.mainWindow.RESOURCEHANDLER.reconstructGraph(canvas_graph)
+        graph_nodes, graph_edges = self.mainWindow.RESOURCEHANDLER.reconstructGraphFromString(canvas_graph)
         self.receive_sync_canvas_signal.emit(canvas_name, graph_nodes, graph_edges)
 
     def closeCanvas(self, project_name: str, canvas_name: str):
