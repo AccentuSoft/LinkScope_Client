@@ -329,6 +329,7 @@ class PDFReport:
 
         self.elements.append(PageBreak())
 
+    # Currently, does not really help very much and does not look good, so the graph page is not generated.
     def graphPage(self, timeLineImage):
         spacer = Spacer(10, 10)
         self.elements.append(spacer)
@@ -416,9 +417,10 @@ class PDFReport:
                             entity=entity[i - 3], incomingNames=incomingNames[i - 3], outgoingNames=outgoingNames[i - 3],
                             appendixNumber=i - 3)
 
-        head = 'Graph Report'
-        self.nextPagesHeader(True, head)
-        self.graphPage(timelineImage)
+        # Graph report stuff disabled, at least for now.
+        # head = 'Graph Report'
+        # self.nextPagesHeader(True, head)
+        # self.graphPage(timelineImage)
 
         # Build
         self.doc = MyDocTemplate(path)
