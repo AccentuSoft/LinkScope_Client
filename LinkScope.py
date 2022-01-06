@@ -1566,15 +1566,15 @@ class ReportWizard(QtWidgets.QWizard):
         canvasImagePath = Path(temp_dir.name) / 'canvas.png'
         canvasPicture.save(str(canvasImagePath), "PNG")
 
-        timelinePicture = self.parent().dockbarThree.timeWidget.takePictureOfView(False)
-        timelineImagePath = Path(temp_dir.name) / 'timeline.png'
-        timelinePicture.save(str(timelineImagePath), "PNG")
+        # timelinePicture = self.parent().dockbarThree.timeWidget.takePictureOfView(False)
+        # timelineImagePath = Path(temp_dir.name) / 'timeline.png'
+        # timelinePicture.save(str(timelineImagePath), "PNG")
 
         savePath = Path(reportData[0]['SavePath']).absolute()
 
         try:
             ReportGeneration.PDFReport(str(path), reportData, outgoingEntitiesForEachEntity,
-                                       incomingEntitiesForEachEntity, entityList, canvasImagePath, timelineImagePath,
+                                       incomingEntitiesForEachEntity, entityList, canvasImagePath, None,  # <timelinePic
                                        self.primaryFieldsList, incomingEntityPrimaryFieldsForEachEntity,
                                        outgoingEntityPrimaryFieldsForEachEntity)
 
@@ -1586,7 +1586,8 @@ class ReportWizard(QtWidgets.QWizard):
         except Exception as exc:
             self.parent().MESSAGEHANDLER.error("Could not generate report: " + str(exc), popUp=True, exc_info=True)
         finally:
-            timelineImagePath.unlink(missing_ok=True)
+            # Technically not necessary as the temp directory is deleted.
+            canvasImagePath.unlink(missing_ok=True)
 
 
 class InitialConfigPage(QtWidgets.QWizardPage):

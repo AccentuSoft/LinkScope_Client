@@ -121,8 +121,9 @@ class PDFReport:
         # path to image needed
         img = Image(summaryCanvasImage)
         img.preserveAspectRatio = True
-        img.drawHeight = 5.5 * inch
-        img.drawWidth = 6.5 * inch
+        img._restrictSize(6.5 * inch, 5.5 * inch)
+        # img.drawHeight = 5.5 * inch
+        # img.drawWidth = 6.5 * inch
         img.hAlign = 'CENTER'
 
         self.elements.append(paragraphReportSummary)
