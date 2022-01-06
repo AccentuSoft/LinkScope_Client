@@ -522,13 +522,17 @@ class TabbedPane(QtWidgets.QTabWidget):
         canvasDBPath = Path(self.mainWindow.SETTINGS.value("Project/BaseDir")) / "Project Files" / "canvasTabs.lscanvas"
 
         if Path(canvasDBPath).exists():
-            canvasDBFile = open(canvasDBPath, "rb")
-            savedJson = load(canvasDBFile)
-            for canvasName in savedJson:
-                self.addCanvas(canvasName,
-                               self.resourceHandler.reconstructGraphFullFromFile(savedJson[canvasName][0]),
-                               savedJson[canvasName][1])
-            canvasDBFile.close()
+            try:
+                canvasDBFile = open(canvasDBPath, "rb")
+                savedJson = load(canvasDBFile)
+                for canvasName in savedJson:
+                    self.addCanvas(canvasName,
+                                   self.resourceHandler.reconstructGraphFullFromFile(savedJson[canvasName][0]),
+                                   savedJson[canvasName][1])
+                canvasDBFile.close()
+            except Exception as exc:
+                self.messageHandler.error("Exception occurred when opening tabs: " + str(exc) +
+                                          "\nSkipping opening tabs.", popUp=True)
 
 
 class DocWorldPane(QtWidgets.QWidget):
@@ -1171,7 +1175,7 @@ class CanvasScene(QtWidgets.QGraphicsScene):
             self.addEntityLinkCreatorHelper(self.nodesDict[entity])
 
         progress.setValue(steps)
-        self.parent().mainWindow.MESSAGEHANDLER.info('Loaded canvas ' + canvasName)
+        self.parent().mainWindow.MESSAGEHANDLER.info('Loaded canvas: ' + canvasName)
 
     def updatePositionInDB(self, uid, x, y) -> None:
         """
