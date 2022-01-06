@@ -41,6 +41,10 @@ class EntitiesDB:
         except FileNotFoundError:
             self.messageHandler.info('Creating new Local Entities Database.')
             self.database = nx.DiGraph()
+        except Exception as exc:
+            self.messageHandler.error('Cannot parse Database: ' + str(exc) + "\nCreating new Local Entities Database.",
+                                      popUp=True)
+            self.database = nx.DiGraph()
         finally:
             self.dbLock.release()
 
