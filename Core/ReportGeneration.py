@@ -10,8 +10,7 @@ from reportlab.platypus.tableofcontents import TableOfContents
 from reportlab.lib.units import cm
 
 from reportlab.pdfgen import canvas
-from reportlab.platypus import (Paragraph, PageBreak, Image, Spacer, Table,
-                                ParagraphAndImage)
+from reportlab.platypus import Paragraph, PageBreak, Image, Spacer, Table, LongTable, ParagraphAndImage
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_JUSTIFY
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.pagesizes import LETTER, inch
@@ -188,13 +187,20 @@ class PDFReport:
                 ['Resolution Name', 'Child Entity', 'Date Created', 'Notes']]
             index = 0
             for link in outgoingLinks:
-                linkName = link['Resolution']
-                parentNode = outgoingNames[index]
-                linkNotes = link['Notes']
+                resolutionText = link['Resolution']
+                childNodeText = outgoingNames[index]
+                linkNotesText = link['Notes']
+                linkName = "".join([resolutionText[counter:counter+24] + "\n"
+                                    for counter in range(0, len(resolutionText), 24)])
+                childNode = "".join([childNodeText[counter:counter+24] + "\n"
+                                    for counter in range(0, len(childNodeText), 24)])
+                linkNotes = "".join([linkNotesText[counter:counter+24] + "\n"
+                                    for counter in range(0, len(linkNotesText), 24)])
                 dateCreated = link['Date Created']
-                outgoing_data.append([linkName, parentNode, dateCreated, Paragraph(linkNotes)])
+                outgoing_data.append([linkName, childNode, dateCreated, Paragraph(linkNotes)])
                 index += 1
-            outgoing_table = Table(data=outgoing_data, style=links_table_style, hAlign="CENTER")
+            outgoing_table = Table(data=outgoing_data, style=links_table_style, hAlign="CENTER",
+                                   colWidths=[140, 140, 140, 140])
             spacer = Spacer(10, 10)
             self.elements.append(spacer)
         else:
@@ -211,13 +217,20 @@ class PDFReport:
                 ['Resolution Name', 'Parent Entity', 'Date Created', 'Notes']]
             index = 0
             for link in incomingLinks:
-                linkName = link['Resolution']
-                parentNode = incomingNames[index]
-                linkNotes = link['Notes']
+                resolutionText = link['Resolution']
+                parentNodeText = incomingNames[index]
+                linkNotesText = link['Notes']
+                linkName = "".join([resolutionText[counter:counter+24] + "\n"
+                                    for counter in range(0, len(resolutionText), 24)])
+                parentNode = "".join([parentNodeText[counter:counter+24] + "\n"
+                                      for counter in range(0, len(parentNodeText), 24)])
+                linkNotes = "".join([linkNotesText[counter:counter+24] + "\n"
+                                    for counter in range(0, len(linkNotesText), 24)])
                 dateCreated = link['Date Created']
                 incoming_data.append([linkName, parentNode, dateCreated, Paragraph(linkNotes)])
                 index += 1
-            incoming_table = Table(data=incoming_data, style=links_table_style, hAlign="CENTER")
+            incoming_table = Table(data=incoming_data, style=links_table_style, hAlign="CENTER",
+                                   colWidths=[140, 140, 140, 140])
             spacer = Spacer(10, 10)
             self.elements.append(spacer)
         else:
@@ -243,7 +256,9 @@ class PDFReport:
                               ('VALIGN', (0, 0), (-1, -1), 'MIDDLE')]
         for key in list(entity):
             if key != 'uid' and key != 'Icon' and key != 'Notes' and key != 'Date Last Edited':
-                value = entity[key]
+                valueText = entity[key]
+                value = "".join([valueText[counter:counter+80] + "\n"
+                                 for counter in range(0, len(valueText), 80)])
                 entity_data.append([Paragraph(key, tableParagraph), Paragraph(value, tableParagraph)])
             elif key == 'Notes':
                 entity_notes_header = Paragraph("Entity Notes ", notesHeader)
@@ -289,7 +304,8 @@ class PDFReport:
         self.elements.append(outgoing_table)
 
         if not incomingLinks and not outgoingLinks:
-            print('No links to draw link pie graph for: ' + title)
+            # No links to draw link pie graph.
+            pass
         else:
             pieDraw = Drawing()
             pie = Pie()
