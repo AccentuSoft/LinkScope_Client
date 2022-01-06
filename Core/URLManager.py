@@ -5,7 +5,7 @@ import magic
 from pathlib import Path
 from os import symlink
 from shutil import copy2
-from hashlib import md5
+from hashlib import sha3_512
 from binascii import hexlify
 
 from PySide6 import QtCore
@@ -92,7 +92,7 @@ class URLManager:
                 else False
             projectFilesPath = Path(self.mainWindow.SETTINGS.value("Project/FilesDir"))
             # Create a unique path in Project Files
-            saveHash = hexlify(md5(str(urlPath).encode()).digest()).decode()[:8]
+            saveHash = hexlify(sha3_512(str(urlPath).encode()).digest()).decode()[:8]  # nosec
             savePath = projectFilesPath / (saveHash + '|' + urlPath.name)
 
             if createSymlink:
