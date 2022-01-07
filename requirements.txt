@@ -48,7 +48,6 @@ social-analyzer
 requests_futures
 tweepy
 jellyfish
-pandas
 docker
 email-validator
 docx2python

@@ -88,6 +88,8 @@ class MainWindow(QtWidgets.QMainWindow):
         saveAsDialog.setViewMode(QtWidgets.QFileDialog.List)
         saveAsDialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
         saveAsDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+        saveAsDialog.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
+
         saveAsExec = saveAsDialog.exec()
         if not saveAsExec:
             self.setStatus('Save As operation cancelled.')
@@ -152,6 +154,7 @@ class MainWindow(QtWidgets.QMainWindow):
         saveAsDialog.setViewMode(QtWidgets.QFileDialog.List)
         saveAsDialog.setNameFilter("GraphML (*.xml)")
         saveAsDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+        saveAsDialog.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         if saveAsDialog.exec():
             try:
                 filePath = saveAsDialog.selectedFiles()[0]
@@ -168,6 +171,8 @@ class MainWindow(QtWidgets.QMainWindow):
         openDialog.setOption(QtWidgets.QFileDialog.DontUseNativeDialog, True)
         openDialog.setViewMode(QtWidgets.QFileDialog.List)
         openDialog.setNameFilter("GraphML (*.xml)")
+        openDialog.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
+
         if openDialog.exec():
             filePath = openDialog.selectedFiles()[0]
             try:
@@ -207,6 +212,8 @@ class MainWindow(QtWidgets.QMainWindow):
         saveAsDialog.setViewMode(QtWidgets.QFileDialog.List)
         saveAsDialog.setNameFilter("GraphML (*.xml)")
         saveAsDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+        saveAsDialog.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
+
         if saveAsDialog.exec():
             try:
                 filePath = saveAsDialog.selectedFiles()[0]
@@ -215,7 +222,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 nx.write_graphml(currentDatabase, filePath)
                 self.setStatus('Database exported successfully.')
             except Exception as exc:
-                self.MESSAGEHANDLER.error("Could not export database to file.", popUp=True)
+                self.MESSAGEHANDLER.error("Could not export database to file: " + str(exc), popUp=True)
                 self.setStatus('Database export failed.')
 
     def importDatabaseFromGraphML(self):
@@ -223,6 +230,8 @@ class MainWindow(QtWidgets.QMainWindow):
         openDialog.setOption(QtWidgets.QFileDialog.DontUseNativeDialog, True)
         openDialog.setViewMode(QtWidgets.QFileDialog.List)
         openDialog.setNameFilter("GraphML (*.xml)")
+        openDialog.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
+
         if openDialog.exec():
             try:
                 filePath = openDialog.selectedFiles()[0]
