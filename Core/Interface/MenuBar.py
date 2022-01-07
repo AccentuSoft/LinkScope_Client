@@ -1124,6 +1124,7 @@ class ViewAndStopResolutionsDialog(QtWidgets.QDialog):
 
     def __init__(self, mainWindowObject):
         super(ViewAndStopResolutionsDialog, self).__init__()
+        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         self.setModal(True)
         self.setLayout(QtWidgets.QVBoxLayout())
         self.mainWindowObject = mainWindowObject

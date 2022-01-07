@@ -15,7 +15,7 @@ TOOLBAR_STYLESHEET = """QToolBar {background-color: rgb(41, 45, 62);
                      """
 
 MAIN_WINDOW_STYLESHEET = """
-                        QWidget, QDialog{ 
+                        QWidget, QFileDialog, QDialog{ 
                         background-color: rgb(41, 45, 62);
                          color: rgba(248, 248, 242, 1) !important;
                          font-size: 15px;
@@ -77,7 +77,7 @@ MAIN_WINDOW_STYLESHEET = """
                         border-radius: 3px;
                         border-top-color: rgb(0, 173, 238);
                         }
-                        
+                        QComboBox { combobox-popup: 0; }
                         
                         """
 
