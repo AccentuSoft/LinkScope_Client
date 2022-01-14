@@ -94,8 +94,7 @@ class TabBar(QtWidgets.QTabBar):
                 groupNodes = [item for item in sceneToClose.items() if isinstance(item, Entity.GroupNode)]
                 for groupNode in groupNodes:
                     sceneToClose.removeNode(groupNode)
-                tabIndex = self.parent().getTabIndexByName(currName)
-                self.parent().closeTab(tabIndex)
+                self.parent().closeTab(currName)
                 return
 
             if newTabName == currName or newTabName == "":
@@ -236,11 +235,14 @@ class TabbedPane(QtWidgets.QTabWidget):
         self.canvasTabs[newName].name = newName
 
     def getViewAtIndex(self, index: int):
-        return self.canvasTabs[list(self.canvasTabs)[index]]
+        return self.canvasTabs[self.tabText(index)]
 
-    def closeTab(self, index) -> None:
-        self.canvasTabs.pop(list(self.canvasTabs)[index])
-        self.removeTab(index)
+    def closeTab(self, tabName: str) -> None:
+        for tabIndex in range(self.count()):
+            if self.tabText(tabIndex) == tabName:
+                self.removeTab(tabIndex)
+                break
+        self.canvasTabs.pop(tabName)
 
     def hideTab(self, index) -> None:
         self.removeTab(index)
@@ -248,7 +250,7 @@ class TabbedPane(QtWidgets.QTabWidget):
     def showTab(self, canvasName) -> None:
         if canvasName in self.canvasTabs:
             view = self.canvasTabs[canvasName]
-            self.addTab(view, canvasName)
+            self.insertTab(list(self.canvasTabs).index(canvasName), view, canvasName)
             if view.synced:
                 syncIndex = self.getTabIndexByName(canvasName)
                 self.setTabIcon(syncIndex, QtGui.QIcon(self.resourceHandler.getIcon("uploading")))
@@ -280,10 +282,10 @@ class TabbedPane(QtWidgets.QTabWidget):
         event.accept()
 
     def getCurrentScene(self):
-        return self.canvasTabs[list(self.canvasTabs)[self.currentIndex()]].scene()
+        return self.canvasTabs[self.tabText(self.currentIndex())].scene()
 
     def getCurrentView(self):
-        return self.canvasTabs[list(self.canvasTabs)[self.currentIndex()]]
+        return self.canvasTabs[self.tabText(self.currentIndex())]
 
     def disableAllTabsExceptCurrent(self) -> None:
         """
