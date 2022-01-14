@@ -113,6 +113,7 @@ class RenameOrDeleteTabDialog(QtWidgets.QDialog):
 
     def __init__(self, isSynced: bool, currName: str) -> None:
         super(RenameOrDeleteTabDialog, self).__init__()
+        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         self.setModal(True)
         self.setWindowTitle('Rename Or Delete Tab')
 
