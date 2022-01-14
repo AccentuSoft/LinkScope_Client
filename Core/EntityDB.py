@@ -126,6 +126,37 @@ class EntitiesDB:
 
         return returnValue
 
+    def addEntities(self, entsJsonList: list, fromServer: bool = False):
+        self.dbLock.acquire()
+        returnValue = []
+
+        for entJson in entsJsonList:
+            # Check if we're overwriting an existing entity
+            exists = None
+            if entJson.get('uid') is not None:
+                exists = self.getEntityNoLock(entJson.get('uid'))
+
+            entity = self.resourceHandler.getEntityJson(
+                entJson.get('Entity Type'),
+                entJson)
+
+            if entity is None:
+                continue
+            # Use uid as key. Code is holdover from time where primary field == uid.
+            self.database.add_node(entity['uid'], **entity)
+            returnValue.append(entity)
+            if exists:
+                # Update canvases if the node already exists.
+                self.mainWindow.updateEntityNodeLabelsOnCanvases(entity['uid'], entity[list(entity)[1]])
+            if not fromServer:
+                self.mainWindow.sendLocalDatabaseUpdateToServer(entity, True)
+            self.mainWindow.populateEntitiesWidget(entity, add=True)
+
+        self.dbLock.release()
+        self.resetTimeline()
+
+        return returnValue
+
     def addLink(self, linkJson: dict, fromServer=False):
         """
         Add a link between two entities in the database.
@@ -145,10 +176,22 @@ class EntitiesDB:
                                       "no uid to database.")
         else:
             linkUID = link['uid']
-            self.database.add_edge(linkUID[0], linkUID[1], **link)
             if exists:
+                newRes = link.get('Resolution')
+                newNotes = link.get('Notes')
+                if newRes and newRes != exists['Resolution']:
+                    link['Resolution'] = exists['Resolution'] + ' | ' + newRes
+                    if newNotes and newNotes != exists['Notes']:
+                        link['Notes'] = exists['Notes'] + '\n\n' + str(newNotes)
+                exists.update(link)
+                link.update(exists)
                 # Update canvases if the link already exists.
+                # We can do this before updating the database here because the GUI will be updated only after this
+                #   function returns. If we ever execute this function outside the main event loop, we will need
+                #   to alter the execution flow.
                 self.mainWindow.updateLinkLabelsOnCanvases(linkUID[0] + linkUID[1], link['Resolution'])
+            self.database.add_edge(linkUID[0], linkUID[1], **link)
+
         self.dbLock.release()
         if not fromServer:
             self.mainWindow.sendLocalDatabaseUpdateToServer(link, True)
@@ -234,10 +277,9 @@ class EntitiesDB:
             self.dbLock.release()
             return returnValue
 
-    def removeEntity(self, uid: str, fromServer=False):
+    def removeEntity(self, uid: str, fromServer=False, updateTimeLine=True):
         """
-        Removes the entity with the given uid, if it
-        exists.
+        Removes the entity with the given uid, if it exists.
         """
         self.dbLock.acquire()
         ent = None
@@ -250,7 +292,8 @@ class EntitiesDB:
             self.mainWindow.handleGroupNodeUpdateAfterEntityDeletion(uid)  # Blocking - locks the db.
             if not fromServer:
                 self.mainWindow.sendLocalDatabaseUpdateToServer(ent, False)
-            self.updateTimeline(ent, False)
+            if updateTimeLine:
+                self.updateTimeline(ent, False)
 
     def removeLink(self, uid, fromServer=False):
         """
@@ -274,6 +317,23 @@ class EntitiesDB:
             details = self.database.nodes[node]
             if details[list(details)[1]] == primaryAttr:
                 result = True
+                break
+        self.dbLock.release()
+        return result
+
+    def getEntityOfType(self, primaryAttr: str, entityType: str):
+        """
+        Checks if an entity with the specified primary attribute exists, and if it does, return it.
+        """
+        result = None
+        primaryField = self.resourceHandler.getPrimaryFieldForEntityType(entityType)
+        if primaryField is None:
+            return result
+        self.dbLock.acquire()
+        for node in self.database.nodes():
+            details = self.database.nodes[node]
+            if details['Entity Type'] == entityType and details[primaryField] == primaryAttr:
+                result = dict(details)
                 break
         self.dbLock.release()
         return result
@@ -349,14 +409,14 @@ class EntitiesDB:
         self.dbLock.release()
         return returnValue
 
-    def isLinkNoLock(self, uid: tuple):
+    def isLinkNoLock(self, uid: tuple) -> Union[bool, dict]:
         """
         Returns True if the uid given exists as a link, and False otherwise.
         
         Used only in this class, as it does not lock.
         """
         if self.database.edges.get(uid) is not None:
-            return True
+            return self.database.edges[uid]
         return False
 
     def getEntityType(self, uid: str):

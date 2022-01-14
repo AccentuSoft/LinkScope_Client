@@ -168,7 +168,8 @@ class ResourceHandler:
         eJson['Icon'] = self.getEntityDefaultPicture(entityType)
 
         if jsonData is not None:
-            for key in eJson:
+            # Allow setting of attributes that are not defined in the Entity specification.
+            for key in jsonData:
                 value = jsonData.get(key)
                 if value is not None and value != '':
                     eJson[key] = value
@@ -181,7 +182,7 @@ class ResourceHandler:
 
         return eJson
 
-    def getPrimaryFieldForEntityType(self, entityType: str):
+    def getPrimaryFieldForEntityType(self, entityType: str) -> Union[str, None]:
         try:
             for category in self.entityCategoryList:
                 if entityType in self.entityCategoryList[category]:
@@ -207,7 +208,7 @@ class ResourceHandler:
 
         return eJson
 
-    def getLinkJson(self, jsonData) -> Union[dict, None]:
+    def getLinkJson(self, jsonData: dict) -> Union[dict, None]:
         linkJson = {}
         try:
             linkJson['uid'] = jsonData['uid']
@@ -221,6 +222,11 @@ class ResourceHandler:
             linkJson['Date Created'] = utcNow
         linkJson['Date Last Edited'] = utcNow
         linkJson['Notes'] = str(jsonData.get('Notes'))
+
+        # Transfer all values from jsonData to linkJson, but preserve the values and order of linkJson for existing
+        #   keys.
+        jsonData.update(linkJson)
+        linkJson.update(jsonData)
 
         return linkJson
 

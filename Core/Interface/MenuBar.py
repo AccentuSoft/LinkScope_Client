@@ -19,6 +19,7 @@ from typing import Union
 from urllib import parse
 from pathlib import Path
 from datetime import datetime
+from uuid import uuid4
 
 from playwright.sync_api import sync_playwright, Error, TimeoutError
 
@@ -298,66 +299,158 @@ class MenuBar(QtWidgets.QMenuBar):
         importDialog = ImportFromFileDialog(self)
         importDialogAccept = importDialog.exec_()
         return_results = []
-        fileDirectory = importDialog.fileDirectory
+        newLinks = []
+        fileDirectory = Path(importDialog.fileDirectoryLine.text())
         if importDialogAccept and fileDirectory != '':
-            sceneToAddTo = None
-            if importDialog.importToCanvasCheckbox.isChecked():
-                sceneToAddTo = self.parent().centralWidget().tabbedPane.getSceneByName(
-                    importDialog.importToCanvasDropdown.currentText())
-            if importDialog.CSVFileChoice.isChecked():
+            if fileDirectory.exists() and fileDirectory.is_file():
+                sceneToAddTo = None
+
                 try:
-                    csvContents = pd.read_csv(fileDirectory, usecols=['EntityType', 'EntityField', 'EntityValue'])
-                    for entity in range(len(csvContents['EntityType'])):
-                        if csvContents['EntityType'][entity] in self.parent().RESOURCEHANDLER.getAllEntities():
-                            if csvContents['EntityField'][entity] in list(
-                                    self.parent().RESOURCEHANDLER.getEntityJson(csvContents['EntityType'][entity])):
-                                return_results.append(
-                                    [{csvContents['EntityField'][entity]: str(csvContents['EntityValue'][entity]),
-                                      'Entity Type': csvContents['EntityType'][entity]}])
-                            else:
-                                self.parent().MESSAGEHANDLER.warning(
-                                    'Please Check that the format of the csv provided is as described by '
-                                    f'the documentation. Malformed entity detected at line {entity + 1}. The '
-                                    f'field of the entity is Invalid', popUp=True)
-                        else:
-                            self.parent().MESSAGEHANDLER.warning(
-                                "Please Check that the format of the csv provided is as described by "
-                                f"the documentation. Malformed entity detected at line {entity + 1}. The "
-                                f"entity type is Invalid", popUp=True)
-                except ValueError:
-                    self.parent().MESSAGEHANDLER.warning("Please check that the format of the csv provided is as "
-                                                         "described by the documentation. It should have 3 columns in "
-                                                         "order of EntityType, EntityField, EntityValue. All the "
-                                                         "'Values' should be filled accordingly", popUp=True)
-                    return_results = []
-            elif importDialog.textFileChoice.isChecked():
-                importDialog = ImportFromTextFileDialog(self)
-                if importDialog.exec_():
-                    txtFileContents = open(fileDirectory, 'r')
-                    selectedEntityType = importDialog.importTypeDropdown.currentText()
-                    jsonOfField = self.parent().RESOURCEHANDLER.getEntityJson(selectedEntityType)
-                    primary_field = list(jsonOfField)[1]
-                    for line in txtFileContents.readlines():
-                        if re.match(r'\w', line):
-                            return_results.append(
-                                [{primary_field: line,
-                                  'Entity Type': selectedEntityType}])
-            newNodeUIDs = []
-            newLinks = []
-            for newNode in return_results:
-                newNodeJson = self.parent().LENTDB.addEntity(newNode[0])
-                if newNodeJson is not None:
-                    newNodeUIDs.append(newNodeJson['uid'])
-                else:
-                    newNodeUIDs.append(None)
+                    if importDialog.textFileChoice.isChecked():
+                        fileContents = []
+                        with open(fileDirectory, 'r') as importFile:
+                            # Read a maximum of 3 lines from the file:
+                            count = 0
+                            for line in importFile:
+                                fileContents.append(line.strip())
+                                count += 1
+                                if count >= 3:
+                                    break
 
-            self.parent().centralWidget().tabbedPane.linkAddHelper(newLinks)
+                        importTextFileDialog = ImportFromTextFileDialog(self, fileContents)
+                        if importTextFileDialog.exec_():
+                            if importTextFileDialog.importToCanvasCheckbox.isChecked():
+                                sceneToAddTo = self.parent().centralWidget().tabbedPane.getSceneByName(
+                                    importTextFileDialog.importToCanvasDropdown.currentText())
 
-            if sceneToAddTo is not None:
-                for newNodeUID in newNodeUIDs:
-                    if newNodeUID is not None:
-                        sceneToAddTo.addNodeProgrammatic(newNodeUID)
-                sceneToAddTo.rearrangeGraph()
+                            selectedEntityType = importTextFileDialog.importTypeDropdown.currentText()
+                            primary_field = importTextFileDialog.typePrimaryFieldValueLabel.text()
+
+                            with open(fileDirectory, 'r') as importFile:
+                                for line in importFile:
+                                    lineValue = line.strip()
+                                    if lineValue:
+                                        return_results.append({primary_field: lineValue,
+                                                               'Entity Type': selectedEntityType})
+                    elif importDialog.CSVFileChoice.isChecked():
+                        csvDF = pd.read_csv(fileDirectory)
+
+                        # Remove duplicate column names
+                        csvDF = csvDF.loc[:, ~csvDF.columns.duplicated()]
+
+                        # Fill NaN values with an empty string
+                        csvDF.fillna('')
+
+                        # If we have less than 2 rows, we cannot import
+                        rowNumber = len(csvDF.index)
+                        if rowNumber < 2:
+                            raise ValueError("Invalid CSV file data - Not enough rows.")
+
+                        importEntityCSVDialog = ImportEntityFromCSVFile(self, csvDF)
+                        if importEntityCSVDialog.exec_():
+                            attributeRows = [comboBox.currentText()
+                                             for comboBox in importEntityCSVDialog.fieldMappingComboBoxes]
+                            for attribute in range(len(attributeRows)):
+                                if attributeRows[attribute] == '':
+                                    attributeRows[attribute] = csvDF.columns[attribute]
+
+                            if importEntityCSVDialog.importToCanvasCheckbox.isChecked():
+                                sceneToAddTo = self.parent().centralWidget().tabbedPane.getSceneByName(
+                                    importEntityCSVDialog.importToCanvasDropdown.currentText())
+
+                            entityTypeToImportAs = importEntityCSVDialog.entityTypeChoiceDropdown.currentText()
+                            for row in csvDF.itertuples(index=False):
+                                newEntityJSON = {str(attributeRows[key]): str(row[key])
+                                                 for key in range(len(attributeRows))}
+                                newEntityJSON['Entity Type'] = entityTypeToImportAs
+                                return_results.append(newEntityJSON)
+
+                    elif importDialog.CSVFileChoiceLinks.isChecked():
+                        csvDF = pd.read_csv(fileDirectory)
+
+                        # Remove duplicate column names
+                        csvDF = csvDF.loc[:, ~csvDF.columns.duplicated()]
+
+                        # Fill NaN values with an empty string
+                        csvDF.fillna('')
+
+                        # If we have less than 2 rows, we cannot import
+                        rowNumber = len(csvDF.index)
+                        if rowNumber < 2:
+                            raise ValueError("Invalid CSV file data - Not enough rows.")
+
+                        importLinksCSVDialog = ImportLinksFromCSVFile(self, csvDF)
+                        if importLinksCSVDialog.exec_():
+                            entityOneType = importLinksCSVDialog.entityOneTypeChoiceDropdown.currentText()
+                            entityTwoType = importLinksCSVDialog.entityTwoTypeChoiceDropdown.currentText()
+
+                            for row in csvDF.itertuples(index=False):
+                                count = 0
+                                linkJSON = {}
+                                entityOneJSON = {}
+                                entityTwoJSON = {}
+                                resolutionID = ""
+                                notes = ""
+
+                                for column in row:
+                                    column = str(column)
+                                    mapping = importLinksCSVDialog.fieldMappingComboBoxes[count].currentText()
+                                    if mapping == 'Entity One':
+                                        entityOneJSON = self.parent().LENTDB.getEntityOfType(column, entityOneType)
+                                    elif mapping == 'Entity Two':
+                                        entityTwoJSON = self.parent().LENTDB.getEntityOfType(column, entityTwoType)
+                                    elif mapping == 'Notes':
+                                        notes = column
+                                    elif mapping == 'Resolution ID':
+                                        resolutionID = column
+                                    else:
+                                        linkJSON[csvDF.columns[count]] = column
+                                    count += 1
+
+                                if (entityOneJSON is not None) and (entityTwoJSON is not None):
+                                    linkJSON['uid'] = (entityOneJSON['uid'], entityTwoJSON['uid'])
+                                    linkJSON['Notes'] = notes
+                                    if importLinksCSVDialog.randAsIs.isChecked():
+                                        linkJSON['Resolution'] = resolutionID
+                                    elif importLinksCSVDialog.randMerge.isChecked():
+                                        linkJSON['Resolution'] = resolutionID + ' | ' + str(uuid4())
+                                    elif importLinksCSVDialog.randReplace.isChecked():
+                                        linkJSON['Resolution'] = str(uuid4())
+
+                                    self.parent().LENTDB.addLink(linkJSON)
+                                    newLinks.append((entityOneJSON['uid'], entityTwoJSON['uid'],
+                                                     linkJSON['Resolution']))
+
+                    newNodeUIDs = [newEntity['uid'] for newEntity in self.parent().LENTDB.addEntities(return_results)]
+
+                    if sceneToAddTo is not None:
+                        for newNodeUID in newNodeUIDs:
+                            if newNodeUID is not None:
+                                sceneToAddTo.addNodeProgrammatic(newNodeUID)
+                        sceneToAddTo.rearrangeGraph()
+
+                    if newLinks:
+                        self.parent().centralWidget().tabbedPane.addLinksToTabs(newLinks, 'File Links')
+                        self.parent().LENTDB.resetTimeline()
+
+                except PermissionError:
+                    self.parent().MESSAGEHANDLER.error('No permission to access the file at the path provided.',
+                                                       popUp=True, exc_info=False)
+                except UnicodeDecodeError:
+                    self.parent().MESSAGEHANDLER.error('File path provided points to a binary file that cannot be '
+                                                       'interpreted as text.', popUp=True, exc_info=False)
+                except FileNotFoundError:
+                    self.parent().MESSAGEHANDLER.error('File path provided does not point to an existing file.',
+                                                       popUp=True, exc_info=False)
+                except TypeError:
+                    self.parent().MESSAGEHANDLER.error('Type Error occurred while processing file. Please ensure that '
+                                                       'you have selected a file of the appropriate type.',
+                                                       popUp=True, exc_info=False)
+                except Exception as e:
+                    self.parent().MESSAGEHANDLER.error('Exception occurred while processing file: ' + str(e),
+                                                       popUp=True, exc_info=False)
+            else:
+                self.parent().MESSAGEHANDLER.error('Invalid file path provided!', popUp=True, exc_info=False)
 
     def savePic(self) -> None:
         canvasSaveDialog = CanvasPictureDialog(self)
@@ -1176,40 +1269,184 @@ class ViewAndStopResolutionsDialogOption(QtWidgets.QPushButton):
         self.parent().layout().removeRow(self)
 
 
-class ImportFromFileDialog(QtWidgets.QDialog):
-    def popupFileDialog(self):
-        self.fileDirectory = QtWidgets.QFileDialog().getOpenFileName(parent=self, caption='Select file to import',
-                                                                     options=QtWidgets.QFileDialog.DontUseNativeDialog,
-                                                                     filter="CSV or txt (*.csv *.txt)")[0]
-        if self.fileDirectory != '':
-            self.fileDirectoryLine.setText(self.fileDirectory)
+class ImportLinksFromCSVFile(QtWidgets.QDialog):
 
-    def __init__(self, parent):
-        super(ImportFromFileDialog, self).__init__(parent=parent)
-        self.fileDirectory = ''
-        self.setWindowTitle('Import From File')
+    def __init__(self, parent, csvTableContents: pd.DataFrame):
+        super(ImportLinksFromCSVFile, self).__init__(parent=parent)
+
+        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         self.setModal(True)
+        importLayout = QtWidgets.QVBoxLayout()
+        self.setLayout(importLayout)
 
-        dialogLayout = QtWidgets.QGridLayout()
-        self.setLayout(dialogLayout)
-        descriptionLabel = QtWidgets.QLabel('Choose the filetype you selected')
-        descriptionLabel.setWordWrap(True)
-        dialogLayout.addWidget(descriptionLabel, 0, 0, 1, 2)
+        columnNumber = len(csvTableContents.columns)
 
-        self.fileDirectoryButton = QtWidgets.QPushButton("Select file...")
-        self.fileDirectoryLine = QtWidgets.QLineEdit()
-        self.fileDirectoryLine.setReadOnly(True)
-        self.textFileChoice = QtWidgets.QRadioButton('Text file')
-        self.textFileChoice.setStyleSheet(Stylesheets.RADIO_BUTTON_STYLESHEET)
-        self.textFileChoice.setChecked(True)
-        self.CSVFileChoice = QtWidgets.QRadioButton('CSV (Please see documentation for formatting)')
-        self.CSVFileChoice.setStyleSheet(Stylesheets.RADIO_BUTTON_STYLESHEET)
+        titleLabel = QtWidgets.QLabel("Import Links from CSV")
+        titleLabel.setAlignment(QtCore.Qt.AlignCenter)
 
-        dialogLayout.addWidget(self.fileDirectoryLine, 1, 0, 1, 2)
-        dialogLayout.addWidget(self.fileDirectoryButton, 2, 0, 1, 2)
-        dialogLayout.addWidget(self.textFileChoice, 3, 0, 1, 2)
-        dialogLayout.addWidget(self.CSVFileChoice, 4, 0, 1, 2)
+        descLabel = QtWidgets.QLabel("Select the Entity Type of the Parent entity (Entity One) and the Entity Type of "
+                                     "the Child entity (Entity Two). Then, map these entities to columns in the CSV "
+                                     "file. You may also map the rest of the fields to the other columns of the CSV "
+                                     "file. Lastly, choose how to import and / or generate the ID for each Resolution.")
+        descLabel.setWordWrap(True)
 
+        entityOneTypeChoiceWidget = QtWidgets.QWidget()
+        entityOneTypeChoiceLayout = QtWidgets.QHBoxLayout()
+        entityOneTypeChoiceWidget.setLayout(entityOneTypeChoiceLayout)
+        entityOneTypeChoiceLabel = QtWidgets.QLabel("Entity One type:")
+        self.entityOneTypeChoiceDropdown = QtWidgets.QComboBox()
+        self.entityOneTypeChoiceDropdown.setEditable(False)
+        self.entityOneTypeChoiceDropdown.addItems(parent.parent().RESOURCEHANDLER.getAllEntities())
+        entityOneTypeChoiceLayout.addWidget(entityOneTypeChoiceLabel)
+        entityOneTypeChoiceLayout.addWidget(self.entityOneTypeChoiceDropdown)
+
+        entityTwoTypeChoiceWidget = QtWidgets.QWidget()
+        entityTwoTypeChoiceLayout = QtWidgets.QHBoxLayout()
+        entityTwoTypeChoiceWidget.setLayout(entityTwoTypeChoiceLayout)
+        entityTwoTypeChoiceLabel = QtWidgets.QLabel("Entity Two type:")
+        self.entityTwoTypeChoiceDropdown = QtWidgets.QComboBox()
+        self.entityTwoTypeChoiceDropdown.setEditable(False)
+        self.entityTwoTypeChoiceDropdown.addItems(parent.parent().RESOURCEHANDLER.getAllEntities())
+        entityTwoTypeChoiceLayout.addWidget(entityTwoTypeChoiceLabel)
+        entityTwoTypeChoiceLayout.addWidget(self.entityTwoTypeChoiceDropdown)
+
+        self.fieldMappingComboBoxes = []
+        tableFieldAttributeMapping = QtWidgets.QWidget()
+        tableFieldAttributeMappingLayout = QtWidgets.QHBoxLayout()
+        tableFieldAttributeMapping.setLayout(tableFieldAttributeMappingLayout)
+        for fieldIndex in range(columnNumber):
+            fieldMappingWidget = QtWidgets.QComboBox()
+            fieldMappingWidget.setEditable(False)
+            fieldMappingWidget.currentIndexChanged.connect(self.changeMappingForField)
+            fieldMappingWidget.addItems(['', 'Entity One', 'Entity Two', 'Resolution ID', 'Notes'])
+            self.fieldMappingComboBoxes.append(fieldMappingWidget)
+            tableFieldAttributeMappingLayout.addWidget(fieldMappingWidget)
+
+        csvTable = QtWidgets.QTableWidget(3, columnNumber, self)
+        csvTable.setHorizontalHeaderLabels(csvTableContents.columns)
+        for row in csvTableContents[:3].itertuples():
+            rowValues = list(row)
+            for column in range(columnNumber):
+                columnItem = QtWidgets.QTableWidgetItem(str(rowValues[column + 1]))
+                columnItem.setFlags(columnItem.flags() & ~QtCore.Qt.ItemIsEditable)
+                csvTable.setItem(rowValues[0], column, columnItem)
+
+        randomizationLabel = QtWidgets.QLabel("If the resolution identifiers (i.e. 'Resolution ID') are not guaranteed "
+                                              "to be unique, you can configure whether you'd like to leave them as-is, "
+                                              "append a random token, or ignore any resolution identifiers and just "
+                                              "have random tokens as the Resolution IDs.\nPlease select what you would "
+                                              "like to do:")
+        randomizationLabel.setWordWrap(True)
+        randomizationLabel.setAlignment(QtCore.Qt.AlignCenter)
+        self.randAsIs = QtWidgets.QRadioButton("Use 'Resolution ID' as-is.")
+        self.randMerge = QtWidgets.QRadioButton("Append a random token to the values mapped to the 'Resolution ID' "
+                                                "field.")
+        self.randReplace = QtWidgets.QRadioButton("Ignore the 'Resolution ID' mapping, instead generate random values "
+                                                  "for Resolution IDs.")
+        self.randAsIs.setChecked(True)
+
+        buttonsWidget = QtWidgets.QWidget()
+        buttonsWidgetLayout = QtWidgets.QHBoxLayout()
+        buttonsWidget.setLayout(buttonsWidgetLayout)
+        confirmButton = QtWidgets.QPushButton('Confirm')
+        cancelButton = QtWidgets.QPushButton('Cancel')
+        buttonsWidgetLayout.addWidget(cancelButton)
+        buttonsWidgetLayout.addWidget(confirmButton)
+        cancelButton.clicked.connect(self.reject)
+        confirmButton.clicked.connect(self.checkIfEntitiesAreMapped)
+
+        importLayout.addWidget(titleLabel)
+        importLayout.addWidget(descLabel)
+        importLayout.addWidget(entityOneTypeChoiceWidget)
+        importLayout.addWidget(entityTwoTypeChoiceWidget)
+        importLayout.addWidget(tableFieldAttributeMapping)
+        importLayout.addWidget(csvTable)
+        importLayout.addWidget(randomizationLabel)
+        importLayout.addWidget(self.randAsIs)
+        importLayout.addWidget(self.randMerge)
+        importLayout.addWidget(self.randReplace)
+        importLayout.addWidget(buttonsWidget)
+
+    def changeMappingForField(self, newIndex):
+        for comboBox in self.fieldMappingComboBoxes:
+            if comboBox.currentIndex() == newIndex and not comboBox.hasFocus():
+                comboBox.setCurrentIndex(0)
+
+    def checkIfEntitiesAreMapped(self):
+        # Check if Entity One and Entity Two labels are assigned, do not proceed if not.
+        isOneAssigned = False
+        isTwoAssigned = False
+        for comboBox in self.fieldMappingComboBoxes:
+            if comboBox.currentIndex() == 1:
+                isOneAssigned = True
+            elif comboBox.currentIndex() == 2:
+                isTwoAssigned = True
+        if isOneAssigned and isTwoAssigned:
+            self.accept()
+        else:
+            self.parent().parent().MESSAGEHANDLER.warning('Need to configure mappings for Entity One (parent) and '
+                                                          'Entity Two (child) before proceeding.', popUp=True)
+
+
+class ImportEntityFromCSVFile(QtWidgets.QDialog):
+
+    def __init__(self, parent, csvTableContents: pd.DataFrame):
+        super(ImportEntityFromCSVFile, self).__init__(parent=parent)
+
+        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
+        self.setModal(True)
+        importLayout = QtWidgets.QVBoxLayout()
+        self.setLayout(importLayout)
+
+        columnNumber = len(csvTableContents.columns)
+
+        titleLabel = QtWidgets.QLabel("Import Entities from CSV")
+        titleLabel.setAlignment(QtCore.Qt.AlignCenter)
+
+        descLabel = QtWidgets.QLabel("Select the entity type to import the entities from the CSV file as. "
+                                     "Then, configure the mapping between the CSV fields and entity attributes. To do "
+                                     "so, select from the drop-down boxes the entity attributes that correspond to "
+                                     "each field in the CSV file. The drop-down boxes left blank will have the "
+                                     "corresponding CSV column names be treated as attribute names for the new "
+                                     "entities.")
+        descLabel.setWordWrap(True)
+
+        entityTypeChoiceWidget = QtWidgets.QWidget()
+        entityTypeChoiceLayout = QtWidgets.QHBoxLayout()
+        entityTypeChoiceWidget.setLayout(entityTypeChoiceLayout)
+
+        entityTypeChoiceLabel = QtWidgets.QLabel("Entity Type to Import As:")
+        self.entityTypeChoiceDropdown = QtWidgets.QComboBox()
+        self.entityTypeChoiceDropdown.setEditable(False)
+        self.entityTypeChoiceDropdown.addItems(parent.parent().RESOURCEHANDLER.getAllEntities())
+        self.entityTypeChoiceDropdown.currentIndexChanged.connect(self.pickEntityToImportAs)
+        entityTypeChoiceLayout.addWidget(entityTypeChoiceLabel)
+        entityTypeChoiceLayout.addWidget(self.entityTypeChoiceDropdown)
+
+        self.fieldMappingComboBoxes = []
+        tableFieldAttributeMapping = QtWidgets.QWidget()
+        tableFieldAttributeMappingLayout = QtWidgets.QHBoxLayout()
+        tableFieldAttributeMapping.setLayout(tableFieldAttributeMappingLayout)
+        for fieldIndex in range(columnNumber):
+            fieldMappingWidget = QtWidgets.QComboBox()
+            fieldMappingWidget.setEditable(False)
+            fieldMappingWidget.currentIndexChanged.connect(self.changeMappingForField)
+            fieldMappingWidget.addItem('')
+            self.fieldMappingComboBoxes.append(fieldMappingWidget)
+            tableFieldAttributeMappingLayout.addWidget(fieldMappingWidget)
+
+        csvTable = QtWidgets.QTableWidget(3, columnNumber, self)
+        csvTable.setHorizontalHeaderLabels(csvTableContents.columns)
+        for row in csvTableContents[:3].itertuples():
+            rowValues = list(row)
+            for column in range(columnNumber):
+                columnItem = QtWidgets.QTableWidgetItem(str(rowValues[column + 1]))
+                columnItem.setFlags(columnItem.flags() & ~QtCore.Qt.ItemIsEditable)
+                csvTable.setItem(rowValues[0], column, columnItem)
+
+        importToCanvasChoiceWidget = QtWidgets.QWidget()
+        importToCanvasChoiceLayout = QtWidgets.QHBoxLayout()
+        importToCanvasChoiceWidget.setLayout(importToCanvasChoiceLayout)
         self.importToCanvasCheckbox = QtWidgets.QCheckBox('Import To Canvas:')
         self.importToCanvasCheckbox.setStyleSheet(Stylesheets.CHECK_BOX_STYLESHEET)
         self.importToCanvasDropdown = QtWidgets.QComboBox()
@@ -1218,8 +1455,95 @@ class ImportFromFileDialog(QtWidgets.QDialog):
         self.importToCanvasDropdown.setDisabled(True)
         self.importToCanvasCheckbox.toggled.connect(lambda: self.importToCanvasDropdown.setDisabled(
             self.importToCanvasDropdown.isEnabled()))
-        dialogLayout.addWidget(self.importToCanvasCheckbox, 5, 0, 1, 1)
-        dialogLayout.addWidget(self.importToCanvasDropdown, 5, 1, 1, 1)
+        importToCanvasChoiceLayout.addWidget(self.importToCanvasCheckbox)
+        importToCanvasChoiceLayout.addWidget(self.importToCanvasDropdown)
+
+        buttonsWidget = QtWidgets.QWidget()
+        buttonsWidgetLayout = QtWidgets.QHBoxLayout()
+        buttonsWidget.setLayout(buttonsWidgetLayout)
+        confirmButton = QtWidgets.QPushButton('Confirm')
+        cancelButton = QtWidgets.QPushButton('Cancel')
+        buttonsWidgetLayout.addWidget(cancelButton)
+        buttonsWidgetLayout.addWidget(confirmButton)
+        cancelButton.clicked.connect(self.reject)
+        confirmButton.clicked.connect(self.confirmThatPrimaryFieldIsMapped)
+
+        importLayout.addWidget(titleLabel)
+        importLayout.addWidget(descLabel)
+        importLayout.addWidget(entityTypeChoiceWidget)
+        importLayout.addWidget(tableFieldAttributeMapping)
+        importLayout.addWidget(csvTable)
+        importLayout.addWidget(importToCanvasChoiceWidget)
+        importLayout.addWidget(buttonsWidget)
+
+        self.pickEntityToImportAs()
+
+    def pickEntityToImportAs(self):
+        currentEntityAttributes = [''] + self.parent().parent().RESOURCEHANDLER.getEntityAttributes(
+            self.entityTypeChoiceDropdown.currentText())
+        for comboBox in self.fieldMappingComboBoxes:
+            comboBox.clear()
+            comboBox.addItems(currentEntityAttributes)
+
+    def changeMappingForField(self, newIndex):
+        for comboBox in self.fieldMappingComboBoxes:
+            if comboBox.currentIndex() == newIndex and not comboBox.hasFocus():
+                comboBox.setCurrentIndex(0)
+
+    def confirmThatPrimaryFieldIsMapped(self):
+        primaryField = self.parent().parent().RESOURCEHANDLER.getPrimaryFieldForEntityType(
+            self.entityTypeChoiceDropdown.currentText())
+        for comboBox in self.fieldMappingComboBoxes:
+            if comboBox.currentText() == primaryField:
+                self.accept()
+        self.parent().parent().MESSAGEHANDLER.warning('Primary field (' + primaryField +
+                                                      ') needs to be mapped before proceeding.')
+
+
+class ImportFromFileDialog(QtWidgets.QDialog):
+    def popupFileDialog(self):
+        self.fileDirectory = QtWidgets.QFileDialog().getOpenFileName(parent=self, caption='Select file to import',
+                                                                     dir=str(Path.home()),
+                                                                     options=QtWidgets.QFileDialog.DontUseNativeDialog,
+                                                                     filter="CSV or txt (*.csv *.txt)")[0]
+        if self.fileDirectory != '':
+            self.fileDirectoryLine.setText(self.fileDirectory)
+
+    def __init__(self, parent):
+        super(ImportFromFileDialog, self).__init__(parent=parent)
+        self.fileDirectory = ''
+        self.setWindowTitle('Import Entities From Text File')
+        self.setModal(True)
+
+        dialogLayout = QtWidgets.QGridLayout()
+        self.setLayout(dialogLayout)
+        descriptionLabel = QtWidgets.QLabel('Select the file to import Entities or Links from:')
+        descriptionLabel.setAlignment(QtCore.Qt.AlignCenter)
+        descriptionLabel.setWordWrap(True)
+        dialogLayout.addWidget(descriptionLabel, 0, 0, 1, 2)
+
+        self.fileDirectoryButton = QtWidgets.QPushButton("Select file...")
+        self.fileDirectoryLine = QtWidgets.QLineEdit()
+        self.fileDirectoryLine.setReadOnly(True)
+
+        fileChoiceLabel = QtWidgets.QLabel('Specify the type of the chosen file and what to import:')
+        fileChoiceLabel.setAlignment(QtCore.Qt.AlignCenter)
+        fileChoiceLabel.setWordWrap(True)
+
+        self.textFileChoice = QtWidgets.QRadioButton('Text file - Entities Import')
+        self.textFileChoice.setStyleSheet(Stylesheets.RADIO_BUTTON_STYLESHEET)
+        self.textFileChoice.setChecked(True)
+        self.CSVFileChoice = QtWidgets.QRadioButton('CSV - Entities Import')
+        self.CSVFileChoice.setStyleSheet(Stylesheets.RADIO_BUTTON_STYLESHEET)
+        self.CSVFileChoiceLinks = QtWidgets.QRadioButton('CSV - Links Import')
+        self.CSVFileChoiceLinks.setStyleSheet(Stylesheets.RADIO_BUTTON_STYLESHEET)
+
+        dialogLayout.addWidget(self.fileDirectoryLine, 1, 0, 1, 2)
+        dialogLayout.addWidget(self.fileDirectoryButton, 2, 0, 1, 2)
+        dialogLayout.addWidget(fileChoiceLabel, 3, 0, 1, 2)
+        dialogLayout.addWidget(self.textFileChoice, 4, 0, 1, 2)
+        dialogLayout.addWidget(self.CSVFileChoice, 5, 0, 1, 2)
+        dialogLayout.addWidget(self.CSVFileChoiceLinks, 6, 0, 1, 2)
 
         acceptButton = QtWidgets.QPushButton('Accept')
         acceptButton.setAutoDefault(True)
@@ -1235,28 +1559,64 @@ class ImportFromFileDialog(QtWidgets.QDialog):
         self.setMaximumHeight(300)
         self.setMinimumHeight(300)
 
-        dialogLayout.addWidget(cancelButton, 6, 0, 1, 1)
-        dialogLayout.addWidget(acceptButton, 6, 1, 1, 1)
+        dialogLayout.addWidget(cancelButton, 7, 0, 1, 1)
+        dialogLayout.addWidget(acceptButton, 7, 1, 1, 1)
 
 
 class ImportFromTextFileDialog(QtWidgets.QDialog):
 
-    def __init__(self, parent):
+    def __init__(self, parent, fileContents):
         super(ImportFromTextFileDialog, self).__init__(parent=parent)
         self.setWindowTitle('Import From Text File')
         self.setModal(True)
 
         dialogLayout = QtWidgets.QGridLayout()
         self.setLayout(dialogLayout)
-        descriptionLabel = QtWidgets.QLabel('Choose what type the entities will be imported as')
+        descriptionLabel = QtWidgets.QLabel('Importing entities from text file, one entity per line.')
+        descriptionLabel.setAlignment(QtCore.Qt.AlignCenter)
         descriptionLabel.setWordWrap(True)
         dialogLayout.addWidget(descriptionLabel, 0, 0, 1, 2)
+
+        importTypeLabel = QtWidgets.QLabel('Choose the Entity Type to import as:')
+        importTypeLabel.setWordWrap(True)
+        dialogLayout.addWidget(importTypeLabel, 1, 0, 1, 1)
 
         self.importTypeDropdown = QtWidgets.QComboBox()
         self.importTypeDropdown.addItems(parent.parent().RESOURCEHANDLER.getAllEntities())
         self.importTypeDropdown.setEditable(False)
+        dialogLayout.addWidget(self.importTypeDropdown, 1, 1, 1, 1)
+        self.importTypeDropdown.currentTextChanged.connect(self.updatePrimaryFieldValueLabel)
 
-        dialogLayout.addWidget(self.importTypeDropdown, 3, 1, 1, 1)
+        typePrimaryFieldLabel = QtWidgets.QLabel('Primary Field for chosen type:')
+        typePrimaryFieldLabel.setWordWrap(False)
+        dialogLayout.addWidget(typePrimaryFieldLabel, 2, 0, 1, 1)
+
+        self.typePrimaryFieldValueLabel = QtWidgets.QLineEdit('')
+        self.typePrimaryFieldValueLabel.setReadOnly(True)
+        dialogLayout.addWidget(self.typePrimaryFieldValueLabel, 2, 1, 1, 1)
+
+        textTable = QtWidgets.QTableWidget(3, 1, self)
+        textTable.setWordWrap(True)
+        textTable.setFixedWidth(450)
+        for line in range(len(fileContents)):
+            columnItem = QtWidgets.QTableWidgetItem(fileContents[line])
+            columnItem.setFlags(columnItem.flags() & ~QtCore.Qt.ItemIsEditable)
+            textTable.setItem(line, 0, columnItem)
+        textTable.setColumnWidth(0, 450)
+        textTable.setHorizontalHeaderLabels(['File Entities Preview'])
+
+        dialogLayout.addWidget(textTable, 3, 0, 1, 2)
+
+        self.importToCanvasCheckbox = QtWidgets.QCheckBox('Import To Canvas:')
+        self.importToCanvasCheckbox.setStyleSheet(Stylesheets.CHECK_BOX_STYLESHEET)
+        self.importToCanvasDropdown = QtWidgets.QComboBox()
+        self.importToCanvasDropdown.addItems(list(parent.parent().centralWidget().tabbedPane.canvasTabs))
+        self.importToCanvasDropdown.setEditable(False)
+        self.importToCanvasDropdown.setDisabled(True)
+        self.importToCanvasCheckbox.toggled.connect(lambda: self.importToCanvasDropdown.setDisabled(
+            self.importToCanvasDropdown.isEnabled()))
+        dialogLayout.addWidget(self.importToCanvasCheckbox, 4, 0, 1, 1)
+        dialogLayout.addWidget(self.importToCanvasDropdown, 4, 1, 1, 1)
 
         acceptButton = QtWidgets.QPushButton('Accept')
         acceptButton.setAutoDefault(True)
@@ -1266,13 +1626,19 @@ class ImportFromTextFileDialog(QtWidgets.QDialog):
         cancelButton.clicked.connect(self.reject)
         acceptButton.setFocus()
 
-        self.setMaximumWidth(450)
-        self.setMinimumWidth(300)
-        self.setMaximumHeight(300)
-        self.setMinimumHeight(300)
+        self.setFixedWidth(472)
+        self.setFixedHeight(300)
 
-        dialogLayout.addWidget(cancelButton, 4, 0, 1, 1)
-        dialogLayout.addWidget(acceptButton, 4, 1, 1, 1)
+        dialogLayout.addWidget(cancelButton, 5, 0, 1, 1)
+        dialogLayout.addWidget(acceptButton, 5, 1, 1, 1)
+
+        # Initialize the primary field value label to whatever is the primary field of the first entity
+        #   in the drop down selection box.
+        self.updatePrimaryFieldValueLabel()
+
+    def updatePrimaryFieldValueLabel(self):
+        self.typePrimaryFieldValueLabel.setText(str(self.parent().parent().RESOURCEHANDLER.getPrimaryFieldForEntityType(
+            self.importTypeDropdown.currentText())))
 
 
 class CanvasPictureDialog(QtWidgets.QDialog):

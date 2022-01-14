@@ -491,7 +491,7 @@ class TabbedPane(QtWidgets.QTabWidget):
                     self.canvasTabs[canvas].scene().addLinkProgrammatic(linkUID, lJson['Resolution'], fromServer=True)
                 self.canvasTabs[canvas].scene().rearrangeGraph()
 
-    def nodeRemoveAllHelper(self, nodeUID) -> None:
+    def nodeRemoveAllHelper(self, nodeUID: str) -> None:
         for canvas in self.canvasTabs:
             currentScene = self.canvasTabs[canvas].scene()
             if nodeUID in currentScene.nodesDict:
@@ -679,8 +679,11 @@ class CanvasView(QtWidgets.QGraphicsView):
             if isinstance(item, Entity.BaseNode):
                 if isinstance(item, Entity.GroupNode):
                     for childUID in list(item.groupedNodesUid):
-                        self.tabbedPane.mainWindow.deleteSpecificEntity(childUID)
-                self.tabbedPane.mainWindow.deleteSpecificEntity(item.uid)
+                        self.tabbedPane.nodeRemoveAllHelper(childUID)
+                        self.tabbedPane.mainWindow.LENTDB.removeEntity(childUID, updateTimeLine=False)
+                self.tabbedPane.nodeRemoveAllHelper(item.uid)
+                self.tabbedPane.mainWindow.LENTDB.removeEntity(item.uid, updateTimeLine=False)
+        self.tabbedPane.mainWindow.LENTDB.resetTimeline()
 
     def adjustSceneRect(self) -> None:
         self.scene().adjustSceneRect()
@@ -1404,8 +1407,8 @@ class CanvasScene(QtWidgets.QGraphicsScene):
             try:
                 return self.nodesDict[uid]
             except KeyError:
-                self.parent().messageHandler.error('Canvas state is undefined: Tried to draw a link involving a '
-                                                   'node not present in the canvas, uid: ' + uid)
+                self.parent().messageHandler.error('Canvas state is undefined: Tried to get a node not present in the '
+                                                   'canvas, uid: ' + str(uid))
         return None
 
     def removeGroupNodeLinksForUID(self, groupUID, nodeUID) -> None:

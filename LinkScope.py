@@ -339,10 +339,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.linkingNodes = True
 
     def deleteSpecificEntity(self, itemUID: str) -> None:
-        for canvas in self.centralWidget().tabbedPane.canvasTabs:
-            scene = self.centralWidget().tabbedPane.canvasTabs[canvas].scene()
-            if itemUID in scene.nodesDict:
-                scene.removeNode(scene.nodesDict[itemUID])
+        self.centralWidget().tabbedPane.nodeRemoveAllHelper(itemUID)
         self.LENTDB.removeEntity(itemUID)
         self.MESSAGEHANDLER.info("Deleted node: " + itemUID)
 
@@ -452,7 +449,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 shortestPath = None
 
         if shortestPath is None:
-            self.setStatus('No path between the selected nodes was found.')
+            messagePathNotFound = 'No path found connecting the selected nodes: ' + str(endPoints)
+            self.setStatus(messagePathNotFound)
+            self.MESSAGEHANDLER.info(messagePathNotFound, popUp=True)
         else:
             self.centralWidget().tabbedPane.getCurrentScene().clearSelection()
             for item in [node for node in self.centralWidget().tabbedPane.getCurrentScene().items()
@@ -462,7 +461,7 @@ class MainWindow(QtWidgets.QMainWindow):
             linksToSelect = [(a, b) for a, b in zip(shortestPath, shortestPath[1:])]
             for linkItem in [link for link in self.centralWidget().tabbedPane.getCurrentScene().items()
                              if isinstance(link, BaseConnector)]:
-                if linkItem.uid in linksToSelect:
+                if linkItem.uid.intersection(linksToSelect):
                     linkItem.setSelected(True)
             self.setStatus('Shortest path found.')
 
@@ -470,34 +469,38 @@ class MainWindow(QtWidgets.QMainWindow):
         currentScene = self.centralWidget().tabbedPane.getCurrentScene()
         currentUIDs = [item.uid for item in currentScene.items() if isinstance(item, BaseNode)
                        or isinstance(item, BaseConnector)]
-        entityPrimaryFields = []
+        entityPrimaryFields = {}
         for uid in currentUIDs:
-            item = self.LENTDB.getEntity(uid)
-            if item is None:
-                item = self.LENTDB.getLink(uid)
-            if item is None:
-                continue
-            entityPrimaryFields.append(item[list(item)[1]])
-        matchedPrimaryFieldsAndUIDs = [item for item in zip(currentUIDs, entityPrimaryFields)]
-        # Remove duplicates
-        entityPrimaryFields = list(set(entityPrimaryFields))
-        matchedPrimaryFieldsAndUIDs = list(set(matchedPrimaryFieldsAndUIDs))
-        findPrompt = FindEntityOnCanvasDialog(entityPrimaryFields)
-        promptReturnCode = findPrompt.exec()
+            if isinstance(uid, str):
+                item = self.LENTDB.getEntity(uid)
+                if item is not None:
+                    if not entityPrimaryFields.get(item[list(item)[1]]):
+                        entityPrimaryFields[item[list(item)[1]]] = set()
+                    entityPrimaryFields[item[list(item)[1]]].add(uid)
 
-        if promptReturnCode:
+            elif isinstance(uid, set):
+                for potentialLinkItem in uid:
+                    item = self.LENTDB.getLink(potentialLinkItem)
+                    if item is not None:
+                        if not entityPrimaryFields.get(item['Resolution']):
+                            entityPrimaryFields[item['Resolution']] = set()
+                        entityPrimaryFields[item['Resolution']].add(str(uid))
+        findPrompt = FindEntityOnCanvasDialog(list(entityPrimaryFields))
+
+        if findPrompt.exec():
             uidsToSelect = []
             findText = findPrompt.findInput.text()
-            for item in matchedPrimaryFieldsAndUIDs:
-                if item[1].startswith(findText):
-                    uidsToSelect.append(item[0])
+            for item in entityPrimaryFields:
+                if item.startswith(findText):
+                    # Add the elements in each index to uidsToSelect instead of the sets themselves.
+                    uidsToSelect.extend(entityPrimaryFields[item])
 
             currentScene.clearSelection()
             for item in [linkOrEntity for linkOrEntity in currentScene.items()
                          if isinstance(linkOrEntity, BaseNode) or isinstance(linkOrEntity, BaseConnector)]:
-                if item.uid in uidsToSelect:
+                if str(item.uid) in uidsToSelect:
                     item.setSelected(True)
-            if len(uidsToSelect) == 1:
+            if len(uidsToSelect) == 1 and ',' not in uidsToSelect[0]:
                 self.centralWidget().tabbedPane.getCurrentView().centerViewportOnNode(uidsToSelect[0])
 
     def mergeEntities(self) -> None:
