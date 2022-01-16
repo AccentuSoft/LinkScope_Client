@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 # Load modules
+import re
 import sys
 import tempfile
 import threading
@@ -465,7 +466,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     linkItem.setSelected(True)
             self.setStatus('Shortest path found.')
 
-    def findEntityOrLinkOnCanvas(self) -> None:
+    def findEntityOrLinkOnCanvas(self, regex: bool = False) -> None:
         currentScene = self.centralWidget().tabbedPane.getCurrentScene()
         currentUIDs = [item.uid for item in currentScene.items() if isinstance(item, BaseNode)
                        or isinstance(item, BaseConnector)]
@@ -485,23 +486,38 @@ class MainWindow(QtWidgets.QMainWindow):
                         if not entityPrimaryFields.get(item['Resolution']):
                             entityPrimaryFields[item['Resolution']] = set()
                         entityPrimaryFields[item['Resolution']].add(str(uid))
-        findPrompt = FindEntityOnCanvasDialog(list(entityPrimaryFields))
+        findPrompt = FindEntityOnCanvasDialog(list(entityPrimaryFields), regex)
 
         if findPrompt.exec():
             uidsToSelect = []
             findText = findPrompt.findInput.text()
-            for item in entityPrimaryFields:
-                if item.startswith(findText):
-                    # Add the elements in each index to uidsToSelect instead of the sets themselves.
-                    uidsToSelect.extend(entityPrimaryFields[item])
+            if regex:
+                expression = re.compile(findText)
+                for item in entityPrimaryFields:
+                    if expression.match(item):
+                        # Add the elements in each index to uidsToSelect instead of the sets themselves.
+                        uidsToSelect.extend(entityPrimaryFields[item])
 
-            currentScene.clearSelection()
-            for item in [linkOrEntity for linkOrEntity in currentScene.items()
-                         if isinstance(linkOrEntity, BaseNode) or isinstance(linkOrEntity, BaseConnector)]:
-                if str(item.uid) in uidsToSelect:
-                    item.setSelected(True)
-            if len(uidsToSelect) == 1 and ',' not in uidsToSelect[0]:
-                self.centralWidget().tabbedPane.getCurrentView().centerViewportOnNode(uidsToSelect[0])
+                currentScene.clearSelection()
+                for item in [linkOrEntity for linkOrEntity in currentScene.items()
+                             if isinstance(linkOrEntity, BaseNode) or isinstance(linkOrEntity, BaseConnector)]:
+                    if str(item.uid) in uidsToSelect:
+                        item.setSelected(True)
+                if len(uidsToSelect) == 1 and ',' not in uidsToSelect[0]:
+                    self.centralWidget().tabbedPane.getCurrentView().centerViewportOnNode(uidsToSelect[0])
+            else:
+                for item in entityPrimaryFields:
+                    if item.startswith(findText):
+                        # Add the elements in each index to uidsToSelect instead of the sets themselves.
+                        uidsToSelect.extend(entityPrimaryFields[item])
+
+                currentScene.clearSelection()
+                for item in [linkOrEntity for linkOrEntity in currentScene.items()
+                             if isinstance(linkOrEntity, BaseNode) or isinstance(linkOrEntity, BaseConnector)]:
+                    if str(item.uid) in uidsToSelect:
+                        item.setSelected(True)
+                if len(uidsToSelect) == 1 and ',' not in uidsToSelect[0]:
+                    self.centralWidget().tabbedPane.getCurrentView().centerViewportOnNode(uidsToSelect[0])
 
     def mergeEntities(self) -> None:
         """
@@ -2628,12 +2644,12 @@ class SettingsDeleteKeyButton(QtWidgets.QPushButton):
 
 class FindEntityOnCanvasDialog(QtWidgets.QDialog):
 
-    def __init__(self, primaryFieldsList: list):
+    def __init__(self, primaryFieldsList: list, regex: bool):
         super(FindEntityOnCanvasDialog, self).__init__()
         self.setModal(True)
         self.setMinimumWidth(400)
         self.setWindowTitle('Find Entity')
-        self.setStyleSheet(Stylesheets.MENUS_STYLESHEET)
+        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
 
         findLabel = QtWidgets.QLabel('Find:')
 
@@ -2649,7 +2665,14 @@ class FindEntityOnCanvasDialog(QtWidgets.QDialog):
         cancelButton.clicked.connect(self.reject)
 
         autoCompleter = QtWidgets.QCompleter(primaryFieldsList)
-        autoCompleter.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
+        if regex:
+            # Doesn't actually work in python, as far as I can see.
+            # Throws error:  Unhandled QCompleter::filterMode flag is used.
+            # autoCompleter.setFilterMode(QtGui.Qt.MatchRegularExpression)
+            pass
+        else:
+            autoCompleter.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
+            autoCompleter.setFilterMode(QtCore.Qt.MatchContains)
         self.findInput.setCompleter(autoCompleter)
 
         findLayout = QtWidgets.QGridLayout()

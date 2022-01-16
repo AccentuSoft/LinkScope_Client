@@ -130,12 +130,18 @@ class MenuBar(QtWidgets.QMenuBar):
         viewMenu = self.addMenu("View")
         viewMenu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
 
-        saveAction = QtGui.QAction("&Find",
+        findAction = QtGui.QAction("&Find",
                                    self,
-                                   statusTip="Find Links or Entities",
+                                   statusTip="Find Links or Entities by their Primary Field",
                                    triggered=self.findEntityOrLink)
-        saveAction.setShortcut("Ctrl+F")
-        viewMenu.addAction(saveAction)
+        findAction.setShortcut("Ctrl+F")
+        viewMenu.addAction(findAction)
+
+        regexFindAction = QtGui.QAction("Regex Find",
+                                        self,
+                                        statusTip="Find Links or Entities by their Primary Field using Regex",
+                                        triggered=self.findEntityOrLinkRegex)
+        viewMenu.addAction(regexFindAction)
 
         runningResolutiosAction = QtGui.QAction("&Running Resolutions",
                                                 self,
@@ -484,11 +490,11 @@ class MenuBar(QtWidgets.QMenuBar):
                                             self.parent().LENTDB.addLink(linkJSONThree)
 
                                             newLinks.append((entityOneJSON['uid'], newNode['uid'],
-                                                            linkJSONOne['Resolution']))
+                                                             linkJSONOne['Resolution']))
                                             newLinks.append((newNode['uid'], entityTwoJSON['uid'],
-                                                            linkJSONTwo['Resolution']))
+                                                             linkJSONTwo['Resolution']))
                                             newLinks.append((entityOneJSON['uid'], entityTwoJSON['uid'],
-                                                            linkJSONThree['Resolution']))
+                                                             linkJSONThree['Resolution']))
 
                             else:
                                 entityOneType = importLinksCSVDialog.entityOneTypeChoiceDropdown.currentText()
@@ -701,6 +707,9 @@ class MenuBar(QtWidgets.QMenuBar):
 
     def findEntityOrLink(self) -> None:
         self.parent().findEntityOrLinkOnCanvas()
+
+    def findEntityOrLinkRegex(self) -> None:
+        self.parent().findEntityOrLinkOnCanvas(regex=True)
 
     def openWebsite(self) -> None:  # TODO: Expose this to the user
         currentScene = self.parent().centralWidget().tabbedPane.getCurrentScene()
