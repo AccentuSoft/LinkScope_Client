@@ -332,10 +332,12 @@ class TabbedPane(QtWidgets.QTabWidget):
         newNodeUIDs = []
         for resultList in resolution_result:
             newNodeJSON = resultList[0]
-            newNodeEntityType = newNodeJSON['Entity Type']
+            newNodeEntityType = newNodeJSON.get('Entity Type')
             # Cannot assume proper order of dicts sent over the net.
             newNodePrimaryFieldKey = self.mainWindow.RESOURCEHANDLER.getPrimaryFieldForEntityType(newNodeEntityType)
-            newNodePrimaryField = newNodeJSON[newNodePrimaryFieldKey]
+            newNodePrimaryField = newNodeJSON.get(newNodePrimaryFieldKey)
+            if not newNodeEntityType or not newNodePrimaryField:
+                continue
 
             try:
                 # Attempt to get the index of an existing entity that shares primary field and type with the new
@@ -429,7 +431,8 @@ class TabbedPane(QtWidgets.QTabWidget):
         self.addLinksToTabs(newLinks)
         self.entityDB.resetTimeline()
 
-    def addLinksToTabs(self, newLinks, resolution_name: str = 'Entity Group') -> None:
+    def addLinksToTabs(self, newLinks, resolution_name: str = 'Entity Group',
+                       linkGroupingOverride: bool = False) -> None:
         for canvas in self.canvasTabs:
             scene = self.canvasTabs[canvas].scene()
             sceneChanged = False
@@ -463,8 +466,8 @@ class TabbedPane(QtWidgets.QTabWidget):
                         # Need to send this to server, since it won't be drawn otherwise.
                         scene.addLinkDragDrop(scene.nodesDict[parentUID], scene.nodesDict[uid], newLink[2])
 
-                if len(addedNodes) >= int(self.mainWindow.SETTINGS.value("Project/Resolution Result Grouping Threshold",
-                                                                         "15")):
+                if len(addedNodes) >= int(self.mainWindow.SETTINGS.value(
+                        "Project/Resolution Result Grouping Threshold", "15")) and not linkGroupingOverride:
                     itemUIDs = [item.uid for item in addedNodes]
                     newGroupEntity = self.parent().entityDB.addEntity(
                         {'Group Name': resolution_name,

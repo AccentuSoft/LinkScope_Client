@@ -298,7 +298,7 @@ class MenuBar(QtWidgets.QMenuBar):
     def importFromFile(self) -> None:
         importDialog = ImportFromFileDialog(self)
         importDialogAccept = importDialog.exec_()
-        return_results = []
+        newNodes = []
         newLinks = []
         fileDirectory = Path(importDialog.fileDirectoryLine.text())
         if importDialogAccept and fileDirectory != '':
@@ -330,8 +330,10 @@ class MenuBar(QtWidgets.QMenuBar):
                                 for line in importFile:
                                     lineValue = line.strip()
                                     if lineValue:
-                                        return_results.append({primary_field: lineValue,
-                                                               'Entity Type': selectedEntityType})
+                                        newEntityJSON = {primary_field: lineValue.strip(),
+                                                         'Entity Type': selectedEntityType}
+                                        if newEntityJSON not in newNodes:
+                                            newNodes.append(newEntityJSON)
                     elif importDialog.CSVFileChoice.isChecked():
                         csvDF = pd.read_csv(fileDirectory)
 
@@ -345,6 +347,9 @@ class MenuBar(QtWidgets.QMenuBar):
                         rowNumber = len(csvDF.index)
                         if rowNumber < 2:
                             raise ValueError("Invalid CSV file data - Not enough rows.")
+
+                        if len(csvDF.columns) < 1:
+                            raise ValueError("Invalid CSV file data - Not enough columns.")
 
                         importEntityCSVDialog = ImportEntityFromCSVFile(self, csvDF)
                         if importEntityCSVDialog.exec_():
@@ -360,10 +365,11 @@ class MenuBar(QtWidgets.QMenuBar):
 
                             entityTypeToImportAs = importEntityCSVDialog.entityTypeChoiceDropdown.currentText()
                             for row in csvDF.itertuples(index=False):
-                                newEntityJSON = {str(attributeRows[key]): str(row[key])
+                                newEntityJSON = {str(attributeRows[key]).strip(): str(row[key]).strip()
                                                  for key in range(len(attributeRows))}
                                 newEntityJSON['Entity Type'] = entityTypeToImportAs
-                                return_results.append(newEntityJSON)
+                                if newEntityJSON not in newNodes:
+                                    newNodes.append(newEntityJSON)
 
                     elif importDialog.CSVFileChoiceLinks.isChecked():
                         csvDF = pd.read_csv(fileDirectory)
@@ -379,49 +385,157 @@ class MenuBar(QtWidgets.QMenuBar):
                         if rowNumber < 2:
                             raise ValueError("Invalid CSV file data - Not enough rows.")
 
+                        if len(csvDF.columns) < 1:
+                            raise ValueError("Invalid CSV file data - Not enough columns.")
+
                         importLinksCSVDialog = ImportLinksFromCSVFile(self, csvDF)
                         if importLinksCSVDialog.exec_():
-                            entityOneType = importLinksCSVDialog.entityOneTypeChoiceDropdown.currentText()
-                            entityTwoType = importLinksCSVDialog.entityTwoTypeChoiceDropdown.currentText()
+                            unmapped = []
+                            for columnIndex in range(len(importLinksCSVDialog.fieldMappingComboBoxes)):
+                                columnMapping = importLinksCSVDialog.fieldMappingComboBoxes[columnIndex].currentText()
+                                if columnMapping != '':
+                                    csvDF.rename(columns={csvDF.columns[columnIndex]: columnMapping}, inplace=True)
+                                elif not importLinksCSVDialog.fieldIncludeCheckBoxes[columnIndex].isChecked():
+                                    unmapped.append(csvDF.columns[columnIndex])
 
-                            for row in csvDF.itertuples(index=False):
-                                count = 0
-                                linkJSON = {}
-                                entityOneJSON = {}
-                                entityTwoJSON = {}
-                                resolutionID = ""
-                                notes = ""
+                            if unmapped:
+                                fieldsRemainingDF = csvDF[unmapped].copy()
+                                for unmappedField in unmapped:
+                                    csvDF.drop(unmappedField, axis=1, inplace=True)
+                                createLinkEntitiesDialog = ImportLinkEntitiesFromCSVFile(self, fieldsRemainingDF)
 
-                                for column in row:
-                                    column = str(column)
-                                    mapping = importLinksCSVDialog.fieldMappingComboBoxes[count].currentText()
-                                    if mapping == 'Entity One':
-                                        entityOneJSON = self.parent().LENTDB.getEntityOfType(column, entityOneType)
-                                    elif mapping == 'Entity Two':
-                                        entityTwoJSON = self.parent().LENTDB.getEntityOfType(column, entityTwoType)
-                                    elif mapping == 'Notes':
-                                        notes = column
-                                    elif mapping == 'Resolution ID':
-                                        resolutionID = column
-                                    else:
-                                        linkJSON[csvDF.columns[count]] = column
-                                    count += 1
+                                if createLinkEntitiesDialog.exec_():
+                                    entityOneType = importLinksCSVDialog.entityOneTypeChoiceDropdown.currentText()
+                                    entityTwoType = importLinksCSVDialog.entityTwoTypeChoiceDropdown.currentText()
 
-                                if (entityOneJSON is not None) and (entityTwoJSON is not None):
-                                    linkJSON['uid'] = (entityOneJSON['uid'], entityTwoJSON['uid'])
-                                    linkJSON['Notes'] = notes
-                                    if importLinksCSVDialog.randAsIs.isChecked():
-                                        linkJSON['Resolution'] = resolutionID
-                                    elif importLinksCSVDialog.randMerge.isChecked():
-                                        linkJSON['Resolution'] = resolutionID + ' | ' + str(uuid4())
-                                    elif importLinksCSVDialog.randReplace.isChecked():
-                                        linkJSON['Resolution'] = str(uuid4())
+                                    attributeRows = [comboBox.currentText()
+                                                     for comboBox in createLinkEntitiesDialog.fieldMappingComboBoxes]
+                                    for attribute in range(len(attributeRows)):
+                                        if attributeRows[attribute] == '':
+                                            attributeRows[attribute] = fieldsRemainingDF.columns[attribute]
 
-                                    self.parent().LENTDB.addLink(linkJSON)
-                                    newLinks.append((entityOneJSON['uid'], entityTwoJSON['uid'],
-                                                     linkJSON['Resolution']))
+                                    entityTypeToImportAs = \
+                                        createLinkEntitiesDialog.entityTypeChoiceDropdown.currentText()
 
-                    newNodeUIDs = [newEntity['uid'] for newEntity in self.parent().LENTDB.addEntities(return_results)]
+                                    newEntityPrimaryAttribute = \
+                                        self.parent().RESOURCEHANDLER.getPrimaryFieldForEntityType(entityTypeToImportAs)
+
+                                    for entityRow, linkRow in zip(fieldsRemainingDF.itertuples(index=False),
+                                                                  csvDF.itertuples(index=False)):
+
+                                        count = 0
+                                        linkJSON = {}
+                                        entityOneJSON = {}
+                                        entityTwoJSON = {}
+                                        resolutionID = ""
+                                        notes = ""
+
+                                        for column in linkRow:
+                                            column = str(column)
+                                            mapping = csvDF.columns[count]
+                                            if mapping == 'Entity One':
+                                                entityOneJSON = self.parent().LENTDB.getEntityOfType(column,
+                                                                                                     entityOneType)
+                                            elif mapping == 'Entity Two':
+                                                entityTwoJSON = self.parent().LENTDB.getEntityOfType(column,
+                                                                                                     entityTwoType)
+                                            elif mapping == 'Notes':
+                                                notes = column
+                                            elif mapping == 'Resolution ID':
+                                                resolutionID = column
+                                            else:
+                                                linkJSON[mapping] = column
+                                            count += 1
+
+                                        if (entityOneJSON is not None) and (entityTwoJSON is not None):
+                                            # linkJSON['uid'] = (entityOneJSON['uid'], entityTwoJSON['uid'])
+                                            linkJSON['Notes'] = notes
+                                            if importLinksCSVDialog.randAsIs.isChecked():
+                                                linkJSON['Resolution'] = resolutionID
+                                            elif importLinksCSVDialog.randMerge.isChecked():
+                                                linkJSON['Resolution'] = resolutionID + ' | ' + str(uuid4())
+                                            elif importLinksCSVDialog.randReplace.isChecked():
+                                                linkJSON['Resolution'] = str(uuid4())
+
+                                            # If 'Resolution ID' is not mapped, generate random IDs.
+                                            if not linkJSON.get('Resolution'):
+                                                linkJSON['Resolution'] = str(uuid4())
+
+                                            linkJSONOne = dict(linkJSON)
+                                            linkJSONOne['Resolution'] += ' OUT'
+                                            linkJSONTwo = dict(linkJSON)
+                                            linkJSONTwo['Resolution'] += ' IN'
+                                            linkJSONThree = dict(linkJSON)
+
+                                            newEntityJSON = {str(attributeRows[key]): str(entityRow[key]).strip()
+                                                             for key in range(len(attributeRows))}
+                                            newEntityJSON['Entity Type'] = entityTypeToImportAs
+                                            newNode = self.parent().LENTDB.getEntityOfType(
+                                                newEntityJSON[newEntityPrimaryAttribute], entityTypeToImportAs)
+                                            if not newNode:
+                                                newNode = self.parent().LENTDB.addEntity(newEntityJSON,
+                                                                                         updateTimeline=False)
+
+                                            linkJSONOne['uid'] = (entityOneJSON['uid'], newNode['uid'])
+                                            linkJSONTwo['uid'] = (newNode['uid'], entityTwoJSON['uid'])
+                                            linkJSONThree['uid'] = (entityOneJSON['uid'], entityTwoJSON['uid'])
+                                            self.parent().LENTDB.addLink(linkJSONOne)
+                                            self.parent().LENTDB.addLink(linkJSONTwo)
+                                            self.parent().LENTDB.addLink(linkJSONThree)
+
+                                            newLinks.append((entityOneJSON['uid'], newNode['uid'],
+                                                            linkJSONOne['Resolution']))
+                                            newLinks.append((newNode['uid'], entityTwoJSON['uid'],
+                                                            linkJSONTwo['Resolution']))
+                                            newLinks.append((entityOneJSON['uid'], entityTwoJSON['uid'],
+                                                            linkJSONThree['Resolution']))
+
+                            else:
+                                entityOneType = importLinksCSVDialog.entityOneTypeChoiceDropdown.currentText()
+                                entityTwoType = importLinksCSVDialog.entityTwoTypeChoiceDropdown.currentText()
+
+                                for row in csvDF.itertuples(index=False):
+                                    count = 0
+                                    linkJSON = {}
+                                    entityOneJSON = {}
+                                    entityTwoJSON = {}
+                                    resolutionID = ""
+                                    notes = ""
+
+                                    for column in row:
+                                        column = str(column)
+                                        mapping = csvDF.columns[count]
+                                        if mapping == 'Entity One':
+                                            entityOneJSON = self.parent().LENTDB.getEntityOfType(column, entityOneType)
+                                        elif mapping == 'Entity Two':
+                                            entityTwoJSON = self.parent().LENTDB.getEntityOfType(column, entityTwoType)
+                                        elif mapping == 'Notes':
+                                            notes = column
+                                        elif mapping == 'Resolution ID':
+                                            resolutionID = column
+                                        else:
+                                            linkJSON[mapping] = column
+                                        count += 1
+
+                                    if (entityOneJSON is not None) and (entityTwoJSON is not None):
+                                        linkJSON['uid'] = (entityOneJSON['uid'], entityTwoJSON['uid'])
+                                        linkJSON['Notes'] = notes
+                                        if importLinksCSVDialog.randAsIs.isChecked():
+                                            linkJSON['Resolution'] = resolutionID
+                                        elif importLinksCSVDialog.randMerge.isChecked():
+                                            linkJSON['Resolution'] = resolutionID + ' | ' + str(uuid4())
+                                        elif importLinksCSVDialog.randReplace.isChecked():
+                                            linkJSON['Resolution'] = str(uuid4())
+
+                                        # If 'Resolution ID' is not mapped, generate random IDs.
+                                        if not linkJSON.get('Resolution'):
+                                            linkJSON['Resolution'] = str(uuid4())
+
+                                        self.parent().LENTDB.addLink(linkJSON)
+                                        newLinks.append((entityOneJSON['uid'], entityTwoJSON['uid'],
+                                                         linkJSON['Resolution']))
+
+                    newNodeUIDs = [newEntity['uid'] for newEntity in self.parent().LENTDB.addEntities(newNodes)]
 
                     if sceneToAddTo is not None:
                         for newNodeUID in newNodeUIDs:
@@ -430,7 +544,8 @@ class MenuBar(QtWidgets.QMenuBar):
                         sceneToAddTo.rearrangeGraph()
 
                     if newLinks:
-                        self.parent().centralWidget().tabbedPane.addLinksToTabs(newLinks, 'File Links')
+                        self.parent().centralWidget().tabbedPane.addLinksToTabs(newLinks, 'File Links',
+                                                                                linkGroupingOverride=True)
                         self.parent().LENTDB.resetTimeline()
 
                 except PermissionError:
@@ -587,7 +702,7 @@ class MenuBar(QtWidgets.QMenuBar):
     def findEntityOrLink(self) -> None:
         self.parent().findEntityOrLinkOnCanvas()
 
-    def openWebsite(self) -> None:
+    def openWebsite(self) -> None:  # TODO: Expose this to the user
         currentScene = self.parent().centralWidget().tabbedPane.getCurrentScene()
         websites = [item.uid for item in currentScene.selectedItems()
                     if isinstance(item, BaseNode) and
@@ -830,16 +945,16 @@ class MenuBar(QtWidgets.QMenuBar):
                             projectFilesDir = Path(self.parent().SETTINGS.value("Project/FilesDir"))
 
                             """
-                            WARNING: This is a hackish solution that does not always work. Documentation and tools to work
-                                     with chrome and chromium session files are lacking last I checked,
+                            WARNING: This is a hackish solution that does not always work. Documentation and tools to
+                                     work with chrome and chromium session files are lacking last I checked,
                                      and most of the existing ones have been broken since the last update.
                                      This is a best-effort solution for now, which should mostly work.
             
                                      As for how it works, it's just pattern matching after some observations about the
                                      file structure of chrome session files.
             
-                                     This will probably be revised in the future to make it actually parse chrome session
-                                     files.
+                                     This will probably be revised in the future to make it actually parse chrome
+                                     session files.
                             """
                             httpTabs = re.split(b'http', chromeSessionFileContents)
                             for httpTab in httpTabs[1:]:
@@ -1278,6 +1393,7 @@ class ImportLinksFromCSVFile(QtWidgets.QDialog):
         self.setModal(True)
         importLayout = QtWidgets.QVBoxLayout()
         self.setLayout(importLayout)
+        self.setWindowTitle("Import Links from CSV")
 
         columnNumber = len(csvTableContents.columns)
 
@@ -1309,6 +1425,16 @@ class ImportLinksFromCSVFile(QtWidgets.QDialog):
         self.entityTwoTypeChoiceDropdown.addItems(parent.parent().RESOURCEHANDLER.getAllEntities())
         entityTwoTypeChoiceLayout.addWidget(entityTwoTypeChoiceLabel)
         entityTwoTypeChoiceLayout.addWidget(self.entityTwoTypeChoiceDropdown)
+
+        self.fieldIncludeCheckBoxes = []
+        tableFieldCheckBoxesWidget = QtWidgets.QWidget()
+        tableFieldCheckBoxesWidgetLayout = QtWidgets.QHBoxLayout()
+        tableFieldCheckBoxesWidget.setLayout(tableFieldCheckBoxesWidgetLayout)
+        for fieldIndex in range(columnNumber):
+            checkBoxWidget = QtWidgets.QCheckBox('Include Field? ')
+            checkBoxWidget.setToolTip('Check the box to include this column as an attribute for the resolution.')
+            self.fieldIncludeCheckBoxes.append(checkBoxWidget)
+            tableFieldCheckBoxesWidgetLayout.addWidget(checkBoxWidget)
 
         self.fieldMappingComboBoxes = []
         tableFieldAttributeMapping = QtWidgets.QWidget()
@@ -1361,6 +1487,7 @@ class ImportLinksFromCSVFile(QtWidgets.QDialog):
         importLayout.addWidget(entityTwoTypeChoiceWidget)
         importLayout.addWidget(tableFieldAttributeMapping)
         importLayout.addWidget(csvTable)
+        importLayout.addWidget(tableFieldCheckBoxesWidget)
         importLayout.addWidget(randomizationLabel)
         importLayout.addWidget(self.randAsIs)
         importLayout.addWidget(self.randMerge)
@@ -1368,9 +1495,21 @@ class ImportLinksFromCSVFile(QtWidgets.QDialog):
         importLayout.addWidget(buttonsWidget)
 
     def changeMappingForField(self, newIndex):
-        for comboBox in self.fieldMappingComboBoxes:
-            if comboBox.currentIndex() == newIndex and not comboBox.hasFocus():
-                comboBox.setCurrentIndex(0)
+        for comboBoxIndex in range(len(self.fieldMappingComboBoxes)):
+            comboBox = self.fieldMappingComboBoxes[comboBoxIndex]
+            checkBox = self.fieldIncludeCheckBoxes[comboBoxIndex]
+            if comboBox.currentIndex() == newIndex:
+                if newIndex == 0:
+                    checkBox.setEnabled(True)
+                else:
+                    if comboBox.hasFocus():
+                        checkBox.setEnabled(False)
+                        checkBox.setChecked(True)
+                    else:
+                        comboBox.setCurrentIndex(0)
+                        if newIndex != 0:
+                            checkBox.setEnabled(True)
+                            checkBox.setChecked(False)
 
     def checkIfEntitiesAreMapped(self):
         # Check if Entity One and Entity Two labels are assigned, do not proceed if not.
@@ -1384,8 +1523,106 @@ class ImportLinksFromCSVFile(QtWidgets.QDialog):
         if isOneAssigned and isTwoAssigned:
             self.accept()
         else:
-            self.parent().parent().MESSAGEHANDLER.warning('Need to configure mappings for Entity One (parent) and '
-                                                          'Entity Two (child) before proceeding.', popUp=True)
+            self.parent().parent().MESSAGEHANDLER.warning('Need to at least configure mappings for Entity One (parent) '
+                                                          'and Entity Two (child) before proceeding.', popUp=True)
+
+
+class ImportLinkEntitiesFromCSVFile(QtWidgets.QDialog):
+
+    def __init__(self, parent, csvTableContents: pd.DataFrame):
+        super(ImportLinkEntitiesFromCSVFile, self).__init__(parent=parent)
+
+        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
+        self.setModal(True)
+        importLayout = QtWidgets.QVBoxLayout()
+        self.setLayout(importLayout)
+        self.setWindowTitle("Create Entities from Link Fields")
+
+        columnNumber = len(csvTableContents.columns)
+
+        titleLabel = QtWidgets.QLabel("Create Entities from Link Fields")
+        titleLabel.setAlignment(QtCore.Qt.AlignCenter)
+
+        descLabel = QtWidgets.QLabel("Select the entity type to import the remaining fields as. "
+                                     "Then, configure the mapping between the CSV fields and entity attributes. To do "
+                                     "so, select from the drop-down boxes the entity attributes that correspond to "
+                                     "each field in the CSV file. The drop-down boxes left blank will have the "
+                                     "corresponding CSV column names be treated as attribute names for the new "
+                                     "entities.")
+        descLabel.setWordWrap(True)
+
+        entityTypeChoiceWidget = QtWidgets.QWidget()
+        entityTypeChoiceLayout = QtWidgets.QHBoxLayout()
+        entityTypeChoiceWidget.setLayout(entityTypeChoiceLayout)
+
+        entityTypeChoiceLabel = QtWidgets.QLabel("Entity Type to Import As:")
+        self.entityTypeChoiceDropdown = QtWidgets.QComboBox()
+        self.entityTypeChoiceDropdown.setEditable(False)
+        self.entityTypeChoiceDropdown.addItems(parent.parent().RESOURCEHANDLER.getAllEntities())
+        self.entityTypeChoiceDropdown.currentIndexChanged.connect(self.pickEntityToImportAs)
+        entityTypeChoiceLayout.addWidget(entityTypeChoiceLabel)
+        entityTypeChoiceLayout.addWidget(self.entityTypeChoiceDropdown)
+
+        self.fieldMappingComboBoxes = []
+        tableFieldAttributeMapping = QtWidgets.QWidget()
+        tableFieldAttributeMappingLayout = QtWidgets.QHBoxLayout()
+        tableFieldAttributeMapping.setLayout(tableFieldAttributeMappingLayout)
+        for fieldIndex in range(columnNumber):
+            fieldMappingWidget = QtWidgets.QComboBox()
+            fieldMappingWidget.setEditable(False)
+            fieldMappingWidget.currentIndexChanged.connect(self.changeMappingForField)
+            fieldMappingWidget.addItem('')
+            self.fieldMappingComboBoxes.append(fieldMappingWidget)
+            tableFieldAttributeMappingLayout.addWidget(fieldMappingWidget)
+
+        csvTable = QtWidgets.QTableWidget(3, columnNumber, self)
+        csvTable.setHorizontalHeaderLabels(csvTableContents.columns)
+        for row in csvTableContents[:3].itertuples():
+            rowValues = list(row)
+            for column in range(columnNumber):
+                columnItem = QtWidgets.QTableWidgetItem(str(rowValues[column + 1]))
+                columnItem.setFlags(columnItem.flags() & ~QtCore.Qt.ItemIsEditable)
+                csvTable.setItem(rowValues[0], column, columnItem)
+
+        buttonsWidget = QtWidgets.QWidget()
+        buttonsWidgetLayout = QtWidgets.QHBoxLayout()
+        buttonsWidget.setLayout(buttonsWidgetLayout)
+        confirmButton = QtWidgets.QPushButton('Confirm')
+        cancelButton = QtWidgets.QPushButton('Cancel')
+        buttonsWidgetLayout.addWidget(cancelButton)
+        buttonsWidgetLayout.addWidget(confirmButton)
+        cancelButton.clicked.connect(self.reject)
+        confirmButton.clicked.connect(self.confirmThatPrimaryFieldIsMapped)
+
+        importLayout.addWidget(titleLabel)
+        importLayout.addWidget(descLabel)
+        importLayout.addWidget(entityTypeChoiceWidget)
+        importLayout.addWidget(tableFieldAttributeMapping)
+        importLayout.addWidget(csvTable)
+        importLayout.addWidget(buttonsWidget)
+
+        self.pickEntityToImportAs()
+
+    def pickEntityToImportAs(self):
+        currentEntityAttributes = [''] + self.parent().parent().RESOURCEHANDLER.getEntityAttributes(
+            self.entityTypeChoiceDropdown.currentText())
+        for comboBox in self.fieldMappingComboBoxes:
+            comboBox.clear()
+            comboBox.addItems(currentEntityAttributes)
+
+    def changeMappingForField(self, newIndex):
+        for comboBox in self.fieldMappingComboBoxes:
+            if comboBox.currentIndex() == newIndex and not comboBox.hasFocus():
+                comboBox.setCurrentIndex(0)
+
+    def confirmThatPrimaryFieldIsMapped(self):
+        primaryField = self.parent().parent().RESOURCEHANDLER.getPrimaryFieldForEntityType(
+            self.entityTypeChoiceDropdown.currentText())
+        for comboBox in self.fieldMappingComboBoxes:
+            if comboBox.currentText() == primaryField:
+                self.accept()
+        self.parent().parent().MESSAGEHANDLER.warning('Primary field (' + primaryField +
+                                                      ') needs to be mapped before proceeding.')
 
 
 class ImportEntityFromCSVFile(QtWidgets.QDialog):
@@ -1397,6 +1634,7 @@ class ImportEntityFromCSVFile(QtWidgets.QDialog):
         self.setModal(True)
         importLayout = QtWidgets.QVBoxLayout()
         self.setLayout(importLayout)
+        self.setWindowTitle("Import Entities from CSV")
 
         columnNumber = len(csvTableContents.columns)
 
@@ -1493,16 +1731,22 @@ class ImportEntityFromCSVFile(QtWidgets.QDialog):
     def confirmThatPrimaryFieldIsMapped(self):
         primaryField = self.parent().parent().RESOURCEHANDLER.getPrimaryFieldForEntityType(
             self.entityTypeChoiceDropdown.currentText())
+        primaryFieldMapped = False
         for comboBox in self.fieldMappingComboBoxes:
             if comboBox.currentText() == primaryField:
-                self.accept()
-        self.parent().parent().MESSAGEHANDLER.warning('Primary field (' + primaryField +
-                                                      ') needs to be mapped before proceeding.')
+                # Executing self.accept() will not actually end the prompt, so we use bools to check and confirm.
+                primaryFieldMapped = True
+                break
+        if primaryFieldMapped:
+            self.accept()
+        else:
+            self.parent().parent().MESSAGEHANDLER.warning('Primary field (' + primaryField +
+                                                          ') needs to be mapped before proceeding.')
 
 
 class ImportFromFileDialog(QtWidgets.QDialog):
     def popupFileDialog(self):
-        self.fileDirectory = QtWidgets.QFileDialog().getOpenFileName(parent=self, caption='Select file to import',
+        self.fileDirectory = QtWidgets.QFileDialog().getOpenFileName(parent=self, caption='Select File to Import From',
                                                                      dir=str(Path.home()),
                                                                      options=QtWidgets.QFileDialog.DontUseNativeDialog,
                                                                      filter="CSV or txt (*.csv *.txt)")[0]
@@ -1512,7 +1756,7 @@ class ImportFromFileDialog(QtWidgets.QDialog):
     def __init__(self, parent):
         super(ImportFromFileDialog, self).__init__(parent=parent)
         self.fileDirectory = ''
-        self.setWindowTitle('Import Entities From Text File')
+        self.setWindowTitle('Import Entities From File')
         self.setModal(True)
 
         dialogLayout = QtWidgets.QGridLayout()

@@ -126,7 +126,7 @@ class EntitiesDB:
 
         return returnValue
 
-    def addEntities(self, entsJsonList: list, fromServer: bool = False):
+    def addEntities(self, entsJsonList: Union[list, set, tuple], fromServer: bool = False):
         self.dbLock.acquire()
         returnValue = []
 
