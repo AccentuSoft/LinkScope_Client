@@ -143,12 +143,20 @@ class MenuBar(QtWidgets.QMenuBar):
                                         triggered=self.findEntityOrLinkRegex)
         viewMenu.addAction(regexFindAction)
 
-        runningResolutiosAction = QtGui.QAction("&Running Resolutions",
-                                                self,
-                                                statusTip="View Running Resolutions",
-                                                triggered=self.runningResolutions)
-        runningResolutiosAction.setShortcut("Ctrl+R")
-        viewMenu.addAction(runningResolutiosAction)
+        runningResolutionsAction = QtGui.QAction("&Running Resolutions",
+                                                 self,
+                                                 statusTip="View Running Resolutions",
+                                                 triggered=self.runningResolutions)
+        runningResolutionsAction.setShortcut("Ctrl+R")
+        viewMenu.addAction(runningResolutionsAction)
+        viewMenu.addSeparator()
+        openWebsiteInBrowserTabAction = QtGui.QAction("Open Selected Websites in Browser",
+                                                      self,
+                                                      statusTip="Open the Selected Website entities in new "
+                                                                "Browser tabs.",
+                                                      triggered=self.openWebsite)
+        viewMenu.addAction(openWebsiteInBrowserTabAction)
+        viewMenu.addSeparator()
 
         dockbarVisibilityMenu = viewMenu.addMenu("Toggle Dockbar Visibility")
 
@@ -711,13 +719,16 @@ class MenuBar(QtWidgets.QMenuBar):
     def findEntityOrLinkRegex(self) -> None:
         self.parent().findEntityOrLinkOnCanvas(regex=True)
 
-    def openWebsite(self) -> None:  # TODO: Expose this to the user
+    def openWebsite(self) -> None:
         currentScene = self.parent().centralWidget().tabbedPane.getCurrentScene()
-        websites = [item.uid for item in currentScene.selectedItems()
-                    if isinstance(item, BaseNode) and
-                    self.parent().LENTDB.getEntity(item.uid)['Entity Type'] == 'Website']
-        for website in websites:
-            webbrowser.open(website[list(website)[1]], new=0, autoraise=True)
+        for item in currentScene.selectedItems():
+            if isinstance(item, BaseNode):
+                itemJSON = self.parent().LENTDB.getEntity(item.uid)
+                if itemJSON.get('Entity Type') == 'Website':
+                    try:
+                        webbrowser.open(itemJSON['URL'], new=0, autoraise=True)
+                    except KeyError:
+                        continue
 
     def importFromBrowser(self) -> None:
         """
