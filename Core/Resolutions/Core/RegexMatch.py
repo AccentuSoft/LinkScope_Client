@@ -6,22 +6,20 @@ class RegexMatch:
     name = "Get Regex Match"
 
     # A string that describes this resolution.
-    description = "Returns Nodes of contact info for websites"
+    description = "Extract text from Phrases and Websites with Regular Expressions."
 
     originTypes = {'Phrase', 'Website'}
 
     resultTypes = {'Phrase'}
 
-    parameters = {'Regex Match': {'description': "Please enter the Regex to be searched for.\n"
-                                                 "if any matches are found to be exactly the same as the entity's "
-                                                 "primary field they will be ignored",
+    parameters = {'Regex Match': {'description': "Please enter the Regex expression to extract strings with.",
                                   'type': 'String',
                                   'value': ''},
-                  'Max Results': {'description': 'Please enter the Maximum number of Results to return',
+                  'Max Results': {'description': 'Please enter the Maximum number of Results to return.',
                                   'type': 'String',
                                   'value': '',
                                   'default': '5'},
-                  'Re Flags': {'description': 'Select Re Flags to be used while compiling the regex',
+                  'Re Flags': {'description': 'Select the Regex Flags to be used.',
                                'type': 'MultiChoice',
                                'value': {'re.I', 're.M', 're.S'}
                                }
@@ -32,46 +30,37 @@ class RegexMatch:
         import requests
 
         headers = {
-            'User-Agent': 'user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0',
+            'User-Agent': 'user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:94.0) Gecko/20100101 Firefox/94.0',
         }
 
         returnResults = []
         try:
-            linkNumbers = int(parameters['Max Results'])
+            maxResults = int(parameters['Max Results'])
         except ValueError:
             return "Invalid integer provided in 'Max Results' parameter"
-        if linkNumbers <= 0:
+        if maxResults <= 0:
             return []
         search_param = parameters['Regex Match']
         flags = parameters['Re Flags']
-        print(flags)
+
+        flagsToUse = 0
+        for flag in flags:
+            flagsToUse |= flag
 
         for entity in entityJsonList:
             uid = entity['uid']
             if entity['Entity Type'] == 'Phrase':
-                text = str(entity['Notes']) + str(entity['Phrase'])
+                text = str(entity['Notes']) + "\n" + str(entity['Phrase'])
             else:  # Website entity
                 r = requests.get(entity["URL"], headers=headers)
                 text = r.text
 
-            if len(flags) == 3:
-                search_re = re.findall(search_param, text, flags=re.I | re.S | re.M)
-            elif len(flags) == 2:
-                search_re = re.findall(search_param, text, flags=flags[0] | flags[1])
-            elif len(flags) == 1:
-                search_re = re.findall(search_param, text, flags=flags[0])
-            else:
-                search_re = re.findall(search_param, text)
+            search_re = re.findall(search_param, text, flags=flagsToUse)
 
-            if linkNumbers > len(search_re):
-                linkNumbers = int(len(search_re))
-
-            for i in range(linkNumbers):
-                if search_re[i] == entity[list(entity)[1]]:
-                    continue
-                returnResults.append([{'Phrase': search_re[i],
+            for regexMatch in search_re[:maxResults]:
+                returnResults.append([{'Phrase': 'Regex Match: ' + regexMatch,
                                        'Entity Type': 'Phrase',
                                        'Notes': ''},
-                                      {uid: {'Resolution': 'Phrase Details',
+                                      {uid: {'Resolution': 'Regex String Match',
                                              'Notes': ''}}])
         return returnResults
