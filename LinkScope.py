@@ -491,6 +491,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if findPrompt.exec():
             uidsToSelect = []
             findText = findPrompt.findInput.text()
+
             if regex:
                 expression = re.compile(findText)
                 for item in entityPrimaryFields:
@@ -498,26 +499,63 @@ class MainWindow(QtWidgets.QMainWindow):
                         # Add the elements in each index to uidsToSelect instead of the sets themselves.
                         uidsToSelect.extend(entityPrimaryFields[item])
 
-                currentScene.clearSelection()
-                for item in [linkOrEntity for linkOrEntity in currentScene.items()
-                             if isinstance(linkOrEntity, BaseNode) or isinstance(linkOrEntity, BaseConnector)]:
-                    if str(item.uid) in uidsToSelect:
-                        item.setSelected(True)
-                if len(uidsToSelect) == 1 and ',' not in uidsToSelect[0]:
-                    self.centralWidget().tabbedPane.getCurrentView().centerViewportOnNode(uidsToSelect[0])
             else:
                 for item in entityPrimaryFields:
                     if item.startswith(findText):
                         # Add the elements in each index to uidsToSelect instead of the sets themselves.
                         uidsToSelect.extend(entityPrimaryFields[item])
 
-                currentScene.clearSelection()
-                for item in [linkOrEntity for linkOrEntity in currentScene.items()
-                             if isinstance(linkOrEntity, BaseNode) or isinstance(linkOrEntity, BaseConnector)]:
-                    if str(item.uid) in uidsToSelect:
-                        item.setSelected(True)
-                if len(uidsToSelect) == 1 and ',' not in uidsToSelect[0]:
-                    self.centralWidget().tabbedPane.getCurrentView().centerViewportOnNode(uidsToSelect[0])
+            currentScene.clearSelection()
+            for item in [linkOrEntity for linkOrEntity in currentScene.items()
+                         if isinstance(linkOrEntity, BaseNode) or isinstance(linkOrEntity, BaseConnector)]:
+                if str(item.uid) in uidsToSelect:
+                    item.setSelected(True)
+            if len(uidsToSelect) == 1 and ',' not in uidsToSelect[0]:
+                self.centralWidget().tabbedPane.getCurrentView().centerViewportOnNode(uidsToSelect[0])
+
+    def findEntityOfTypeOnCanvas(self, regex: bool = False) -> None:
+        currentScene = self.centralWidget().tabbedPane.getCurrentScene()
+        currentUIDs = [item.uid for item in currentScene.items() if isinstance(item, BaseNode)]
+        # Keys: Entity Types. Values: dicts, where the key is the primary field and the value is the UID.
+        entityTypesOnCanvas = {}
+        for uid in currentUIDs:
+            item = self.LENTDB.getEntity(uid)
+            if item is not None:
+                itemType = item.get('Entity Type')
+                itemPrimaryFieldValue = item[self.RESOURCEHANDLER.getPrimaryFieldForEntityType(itemType)]
+                if itemType not in entityTypesOnCanvas:
+                    entityTypesOnCanvas[itemType] = {}
+                if itemPrimaryFieldValue not in entityTypesOnCanvas[itemType]:
+                    entityTypesOnCanvas[itemType][itemPrimaryFieldValue] = set()
+                entityTypesOnCanvas[itemType][itemPrimaryFieldValue].add(uid)
+
+        findPrompt = FindEntityOfTypeOnCanvasDialog(entityTypesOnCanvas, regex)
+
+        if findPrompt.exec():
+            uidsToSelect = []
+            findText = findPrompt.findInput.text()
+            findType = findPrompt.typeInput.currentText()
+
+            if regex:
+                expression = re.compile(findText)
+                for item in entityTypesOnCanvas[findType]:
+                    if expression.match(item):
+                        # Add the elements in each index to uidsToSelect instead of the sets themselves.
+                        uidsToSelect.extend(entityTypesOnCanvas[findType][item])
+
+            else:
+                for item in entityTypesOnCanvas[findType]:
+                    if item.startswith(findText):
+                        # Add the elements in each index to uidsToSelect instead of the sets themselves.
+                        uidsToSelect.extend(entityTypesOnCanvas[findType][item])
+
+            currentScene.clearSelection()
+            for item in [sceneEntity for sceneEntity in currentScene.items()
+                         if isinstance(sceneEntity, BaseNode)]:
+                if item.uid in uidsToSelect:
+                    item.setSelected(True)
+            if len(uidsToSelect) == 1:
+                self.centralWidget().tabbedPane.getCurrentView().centerViewportOnNode(uidsToSelect[0])
 
     def mergeEntities(self) -> None:
         """
@@ -2682,6 +2720,62 @@ class FindEntityOnCanvasDialog(QtWidgets.QDialog):
         findLayout.addWidget(self.findInput, 0, 1, 1, 1)
         findLayout.addWidget(cancelButton, 1, 0, 1, 1)
         findLayout.addWidget(confirmButton, 1, 1, 1, 1)
+
+
+class FindEntityOfTypeOnCanvasDialog(QtWidgets.QDialog):
+
+    def __init__(self, entityTypesDict: dict, regex: bool):
+        super(FindEntityOfTypeOnCanvasDialog, self).__init__()
+        self.setModal(True)
+        self.setMinimumWidth(400)
+        self.setWindowTitle('Find Entity Of Type')
+        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
+
+        typeLabel = QtWidgets.QLabel('Entity Type:')
+        self.typeInput = QtWidgets.QComboBox()
+        self.typeInput.setEditable(False)
+        self.typeInput.addItems(list(entityTypesDict))
+        self.typeInput.currentIndexChanged.connect(self.changeSelectedType)
+        findLabel = QtWidgets.QLabel('Find Entity:')
+
+        findLabel.setAlignment(QtCore.Qt.AlignCenter)
+        self.findInput = QtWidgets.QLineEdit('')
+        self.findInput.setPlaceholderText('Type the primary field value to search for')
+
+        confirmButton = QtWidgets.QPushButton('Confirm')
+        confirmButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET_2)
+        confirmButton.clicked.connect(self.accept)
+        cancelButton = QtWidgets.QPushButton('Cancel')
+        cancelButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET_2)
+        cancelButton.clicked.connect(self.reject)
+
+        self.autoCompleters = {}
+        for entityType in entityTypesDict:
+            autoCompleter = QtWidgets.QCompleter(list(entityTypesDict[entityType]))
+            self.autoCompleters[entityType] = autoCompleter
+            if regex:
+                # Doesn't actually work in python, as far as I can see.
+                # Throws error:  Unhandled QCompleter::filterMode flag is used.
+                # autoCompleter.setFilterMode(QtGui.Qt.MatchRegularExpression)
+                pass
+            else:
+                autoCompleter.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
+                autoCompleter.setFilterMode(QtCore.Qt.MatchContains)
+
+        findLayout = QtWidgets.QGridLayout()
+        self.setLayout(findLayout)
+
+        findLayout.addWidget(typeLabel, 0, 0, 1, 1)
+        findLayout.addWidget(self.typeInput, 0, 1, 1, 1)
+        findLayout.addWidget(findLabel, 1, 0, 1, 1)
+        findLayout.addWidget(self.findInput, 1, 1, 1, 1)
+        findLayout.addWidget(cancelButton, 2, 0, 1, 1)
+        findLayout.addWidget(confirmButton, 2, 1, 1, 1)
+
+        self.changeSelectedType()
+
+    def changeSelectedType(self):
+        self.findInput.setCompleter(self.autoCompleters[self.typeInput.currentText()])
 
 
 class MergeEntitiesDialog(QtWidgets.QDialog):

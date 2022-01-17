@@ -12,7 +12,10 @@ class ContainsPhrase:
 
     resultTypes = {'Phrase'}
 
-    parameters = {'Phrase to Search for': {'description': 'Please enter the Phrase to be searched for.',
+    parameters = {'Phrase to Search for': {'description': 'Please enter the Phrase to be searched for. Note that the '
+                                                          'search is performed in the "Notes" field of a Phrase or the '
+                                                          'body of the selected Website entities, not their primary '
+                                                          'fields.',
                                            'type': 'String',
                                            'value': ''},
                   'Case Sensitive': {'description': 'Do you want the phrase to be case sensitive?',
@@ -26,7 +29,7 @@ class ContainsPhrase:
         import re
 
         headers = {
-            'User-Agent': 'user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0',
+            'User-Agent': 'user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:94.0) Gecko/20100101 Firefox/94.0',
         }
 
         returnResults = []
@@ -37,9 +40,11 @@ class ContainsPhrase:
             searchPhrase = parameters['Phrase to Search for']
             uid = entity['uid']
             if entity['Entity Type'] == 'Phrase':
-                text = str(entity['Notes'])
+                text = str(entity.get('Notes'))
+                primaryField = entity['Phrase']
             else:  # Website entity
                 request = requests.get(entity["URL"], headers=headers)
+                primaryField = entity['URL']
                 text = request.text
 
             if parameters['Case Sensitive'] == 'No':
@@ -53,12 +58,14 @@ class ContainsPhrase:
                     offsets.append(match.start())
                     counter += 1
 
-            returnResults.append([{'Phrase': searchPhrase,
-                                   'Entity Type': 'Phrase',
-                                   'Notes': f'{searchPhrase} was found {counter} times\n'
-                                            f'offsets: Matches at character indices: '
-                                            f'{(", ".join(map(str, offsets)))}'},
-                                  {uid: {'Resolution': 'Contains Phrase',
-                                         'Notes': ''}}])
+            if counter > 0:
+                returnResults.append([{'Phrase': primaryField + ' Contains Phrase: "' + searchPhrase +
+                                                 f'" {counter} times',
+                                       'Entity Type': 'Phrase',
+                                       'Notes': f'"{searchPhrase}" was found {counter} time(s)\n'
+                                                f'Offsets: Matches at character indices: '
+                                                f'{(", ".join(map(str, offsets)))}'},
+                                      {uid: {'Resolution': 'Contains Phrase ' + searchPhrase,
+                                             'Notes': ''}}])
 
         return returnResults

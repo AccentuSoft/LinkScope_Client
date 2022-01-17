@@ -137,11 +137,25 @@ class MenuBar(QtWidgets.QMenuBar):
         findAction.setShortcut("Ctrl+F")
         viewMenu.addAction(findAction)
 
+        typeFindAction = QtGui.QAction("Find Entity of Type",
+                                       self,
+                                       statusTip="Find Entities of a certain type by their Primary Field",
+                                       triggered=self.findEntitiesOfType)
+        viewMenu.addAction(typeFindAction)
+
         regexFindAction = QtGui.QAction("Regex Find",
                                         self,
                                         statusTip="Find Links or Entities by their Primary Field using Regex",
                                         triggered=self.findEntityOrLinkRegex)
         viewMenu.addAction(regexFindAction)
+
+        regexTypeFindAction = QtGui.QAction("Regex Find Entity of Type",
+                                            self,
+                                            statusTip="Find Entities of a certain type by their Primary Field using "
+                                                      "Regex",
+                                            triggered=self.findEntitiesOfTypeRegex)
+        viewMenu.addAction(regexTypeFindAction)
+        viewMenu.addSeparator()
 
         runningResolutionsAction = QtGui.QAction("&Running Resolutions",
                                                  self,
@@ -718,6 +732,12 @@ class MenuBar(QtWidgets.QMenuBar):
 
     def findEntityOrLinkRegex(self) -> None:
         self.parent().findEntityOrLinkOnCanvas(regex=True)
+
+    def findEntitiesOfType(self) -> None:
+        self.parent().findEntityOfTypeOnCanvas()
+
+    def findEntitiesOfTypeRegex(self) -> None:
+        self.parent().findEntityOfTypeOnCanvas(regex=True)
 
     def openWebsite(self) -> None:
         currentScene = self.parent().centralWidget().tabbedPane.getCurrentScene()
@@ -1912,6 +1932,7 @@ class CanvasPictureDialog(QtWidgets.QDialog):
         self.fileDirectory = ""
         self.setWindowTitle('Save Canvas Picture')
         self.setModal(True)
+        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
 
         dialogLayout = QtWidgets.QGridLayout()
         self.setLayout(dialogLayout)
