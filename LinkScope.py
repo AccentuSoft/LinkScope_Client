@@ -181,7 +181,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 currentScene = self.centralWidget().tabbedPane.getCurrentScene()
                 for node in read_graphml.nodes():
                     entity = self.LENTDB.getEntity(node)
-                    if node not in currentScene.nodesDict:
+                    if node not in currentScene.sceneGraph.nodes:
                         if entity['Entity Type'] == 'EntityGroup':
                             currentScene.addNodeProgrammatic(node, entity['Child UIDs'])
                         else:
