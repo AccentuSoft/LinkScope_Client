@@ -156,6 +156,8 @@ class MainWindow(QtWidgets.QMainWindow):
         saveAsDialog.setNameFilter("GraphML (*.xml)")
         saveAsDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
         saveAsDialog.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
+        saveAsDialog.setDirectory(str(Path.home()))
+
         if saveAsDialog.exec():
             try:
                 filePath = saveAsDialog.selectedFiles()[0]
@@ -173,6 +175,7 @@ class MainWindow(QtWidgets.QMainWindow):
         openDialog.setViewMode(QtWidgets.QFileDialog.List)
         openDialog.setNameFilter("GraphML (*.xml)")
         openDialog.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
+        openDialog.setDirectory(str(Path.home()))
 
         if openDialog.exec():
             filePath = openDialog.selectedFiles()[0]
@@ -203,7 +206,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.LENTDB.dbLock.release()
 
         for node in currentDatabase.nodes:
+            # Remove icons. Will reset custom icons to default, but saves space.
             del currentDatabase.nodes[node]['Icon']
+            if currentDatabase.nodes[node].get('Child UIDs'):
+                currentDatabase.nodes[node]['Child UIDs'] = str(currentDatabase.nodes[node]['Child UIDs'])
 
         for edge in currentDatabase.edges:
             currentDatabase.edges[edge]['uid'] = str(currentDatabase.edges[edge]['uid'])
@@ -214,6 +220,7 @@ class MainWindow(QtWidgets.QMainWindow):
         saveAsDialog.setNameFilter("GraphML (*.xml)")
         saveAsDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
         saveAsDialog.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
+        saveAsDialog.setDirectory(str(Path.home()))
 
         if saveAsDialog.exec():
             try:
@@ -232,6 +239,7 @@ class MainWindow(QtWidgets.QMainWindow):
         openDialog.setViewMode(QtWidgets.QFileDialog.List)
         openDialog.setNameFilter("GraphML (*.xml)")
         openDialog.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
+        openDialog.setDirectory(str(Path.home()))
 
         if openDialog.exec():
             try:
@@ -242,6 +250,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 for node in read_graphml_nodes:
                     read_graphml_nodes[node]['Icon'] = self.RESOURCEHANDLER.getEntityDefaultPicture(
                         read_graphml_nodes[node]['Entity Type'])
+                    if read_graphml_nodes[node].get('Child UIDs'):
+                        read_graphml_nodes[node]['Child UIDs'] = literal_eval(read_graphml_nodes[node]['Child UIDs'])
                 for edge in read_graphml_edges:
                     read_graphml_edges[edge]['uid'] = literal_eval(read_graphml_edges[edge]['uid'])
                 self.LENTDB.mergeDatabases(read_graphml_nodes, read_graphml_edges, fromServer=False)
