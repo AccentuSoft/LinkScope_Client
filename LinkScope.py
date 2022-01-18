@@ -118,6 +118,7 @@ class MainWindow(QtWidgets.QMainWindow):
         saveAsDialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
         saveAsDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
         saveAsDialog.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
+        saveAsDialog.setDirectory(str(Path.home()))
 
         saveAsExec = saveAsDialog.exec()
         if not saveAsExec:
@@ -1868,6 +1869,7 @@ class EntityPage(QtWidgets.QWizardPage):
 
     def editPath(self):
         selectedPath = QtWidgets.QFileDialog().getOpenFileName(parent=self, caption='Select New Icon',
+                                                               dir=str(Path.home()),
                                                                options=QtWidgets.QFileDialog.DontUseNativeDialog,
                                                                filter="Image Files (*.png *.jpg)")[0]
         if selectedPath != '':
@@ -1875,6 +1877,7 @@ class EntityPage(QtWidgets.QWizardPage):
 
     def editAppendixPath(self):
         selectedPath = QtWidgets.QFileDialog().getOpenFileName(parent=self, caption='Select New Icon',
+                                                               dir=str(Path.home()),
                                                                options=QtWidgets.QFileDialog.DontUseNativeDialog,
                                                                filter="Image Files (*.png *.jpg)")[0]
         if selectedPath != '':

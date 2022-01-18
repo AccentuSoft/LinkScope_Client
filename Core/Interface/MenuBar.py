@@ -1658,11 +1658,17 @@ class ImportLinkEntitiesFromCSVFile(QtWidgets.QDialog):
     def confirmThatPrimaryFieldIsMapped(self):
         primaryField = self.parent().parent().RESOURCEHANDLER.getPrimaryFieldForEntityType(
             self.entityTypeChoiceDropdown.currentText())
+        primaryFieldMapped = False
         for comboBox in self.fieldMappingComboBoxes:
             if comboBox.currentText() == primaryField:
-                self.accept()
-        self.parent().parent().MESSAGEHANDLER.warning('Primary field (' + primaryField +
-                                                      ') needs to be mapped before proceeding.')
+                # Just doing self.accept() here will not work.
+                primaryFieldMapped = True
+                break
+        if primaryFieldMapped:
+            self.accept()
+        else:
+            self.parent().parent().MESSAGEHANDLER.warning('Primary field (' + primaryField +
+                                                          ') needs to be mapped before proceeding.', popUp=True)
 
 
 class ImportEntityFromCSVFile(QtWidgets.QDialog):
@@ -1781,7 +1787,7 @@ class ImportEntityFromCSVFile(QtWidgets.QDialog):
             self.accept()
         else:
             self.parent().parent().MESSAGEHANDLER.warning('Primary field (' + primaryField +
-                                                          ') needs to be mapped before proceeding.')
+                                                          ') needs to be mapped before proceeding.', popUp=True)
 
 
 class ImportFromFileDialog(QtWidgets.QDialog):
