@@ -230,12 +230,6 @@ class DocList(QtWidgets.QTreeWidget):
         self.uploadedFileWidgets = []
         self.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
         self.menu = QtWidgets.QMenu()
-
-        actionDelete = QtGui.QAction('Delete Selected Files',
-                                     self.menu,
-                                     statusTip="Delete the selected files from the server.",
-                                     triggered=self.deleteSelectedFiles)
-        self.menu.addAction(actionDelete)
         self.menu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
 
     def addUploadingFileToList(self, fileName: str):
@@ -268,13 +262,6 @@ class DocList(QtWidgets.QTreeWidget):
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
         super(DocList, self).mousePressEvent(event)
         # TODO - be able to drag downloaded files onto canvas, and create entities when that happens.
-
-    def deleteSelectedFiles(self):
-        filesToDel = [file.getFileName() for file in self.selectedItems() if isinstance(file, DocWidget)]
-        for fileName in filesToDel:
-            # TODO
-            pass
-            # self.mainWindow.deleteSpecificEntity(itemUID)
 
 
 class DocWidget(QtWidgets.QTreeWidgetItem):

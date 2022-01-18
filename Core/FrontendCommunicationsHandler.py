@@ -597,8 +597,6 @@ class CommunicationsHandler(QtCore.QObject):
                 self.receiveFileSummaryListener(**arguments)
             elif operation == "File Upload Abort":
                 self.receiveFileUploadAbort(**arguments)
-            elif operation == "Delete File":
-                pass
             else:
                 self.mainWindow.MESSAGEHANDLER.warning('Unhandled message: ' + str(message) +
                                                        ' On Operation: ' + str(operation))
@@ -656,8 +654,8 @@ class CommunicationsHandler(QtCore.QObject):
                 # Remove resolution from resolutions list.
                 resolution_uid = message.split(': ', 1)[1]
                 self.remove_server_resolution_from_running_signal.emit(resolution_uid)
-            elif operation == 'Delete File':
-                # Remove file from uploaded files list.
+            elif operation == 'Delete Project':
+                # Remove project from server projects list.
                 pass  # TODO
             elif operation == 'File Upload Abort':
                 file_name = message.split(': ', 1)[1]
@@ -687,7 +685,7 @@ class CommunicationsHandler(QtCore.QObject):
             fileHandler = self.downloadingFiles.get(file_name)
             fileHandler.write(file_contents)
         except Exception:
-            # In case the file is deleted in the middle of writing, or anything else going wrong.
+            # In case something goes wrong in the middle of writing.
             self.mainWindow.MESSAGEHANDLER.warning('Received data for file: ' + file_name +
                                                    ' but no valid file handler exists for this file.')
 
@@ -715,11 +713,10 @@ class CommunicationsHandler(QtCore.QObject):
         abortedPath = Path(self.mainWindow.SETTINGS.value("Project/FilesDir")) / file_name
         abortedPath.unlink(missing_ok=True)
 
-    def deleteFile(self, project_name: str, file_name: str):
-        message = {"Operation": "Delete File",
+    def deleteProject(self, project_name: str):
+        message = {"Operation": "Delete Project",
                    "Arguments": {
-                       'project_name': project_name,
-                       'file_name': file_name}}
+                       'project_name': project_name}}
         self.transmitMessage(message)
 
     def askServerForFileSummary(self, project_name: str, document_name: str):
