@@ -9,6 +9,8 @@ from PySide6.QtWidgets import QGraphicsItem
 from PySide6.QtWidgets import QGraphicsItemGroup, QGraphicsSimpleTextItem, QGraphicsPixmapItem
 from PySide6.QtSvgWidgets import QGraphicsSvgItem
 
+TEXTFONT = QtGui.QFont("Mono", 11, 700)
+
 
 class BaseNode(QGraphicsItemGroup):
 
@@ -34,6 +36,7 @@ class BaseNode(QGraphicsItemGroup):
         self.labelItem = QGraphicsSimpleTextItem('')
         self.addToGroup(self.iconItem)
         self.addToGroup(self.labelItem)
+        self.labelItem.setFont(TEXTFONT)
 
         self.updateLabel(primaryAttribute)
         self.labelItem.setCacheMode(self.labelItem.DeviceCoordinateCache)
@@ -174,7 +177,7 @@ class GroupNode(BaseNode):
 
 # Ref: https://doc.qt.io/qt-5/qtwidgets-graphicsview-diagramscene-example.html#arrow-class-definition
 # Ref: https://github.com/PySide/Examples/blob/master/examples/graphicsview/diagramscene/diagramscene.py
-class BaseConnector(QGraphicsItemGroup):  # TODO - Make letters bold?
+class BaseConnector(QGraphicsItemGroup):
 
     def __init__(self, origin, destination, name: str = 'None', uid=None, parent=None) -> None:
         super(BaseConnector, self).__init__(parent)
@@ -186,6 +189,7 @@ class BaseConnector(QGraphicsItemGroup):  # TODO - Make letters bold?
         self.labelItem = QGraphicsSimpleTextItem('')
         self.labelItem.setCacheMode(self.labelItem.ItemCoordinateCache)
         self.addToGroup(self.labelItem)
+        self.labelItem.setFont(TEXTFONT)
 
         self.updateLabel(name)
 

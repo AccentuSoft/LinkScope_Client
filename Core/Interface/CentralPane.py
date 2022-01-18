@@ -1062,10 +1062,10 @@ class CanvasScene(QtWidgets.QGraphicsScene):
                     itemsX.append(item.pos().x())
                     itemsY.append(item.pos().y())
 
-            minX = min(itemsX) - 200
-            minY = min(itemsY) - 200
-            width = max(itemsX) - minX + 250
-            height = max(itemsY) - minY + 100
+            minX = min(itemsX) - 210
+            minY = min(itemsY) - 110
+            width = max(itemsX) - minX + 260
+            height = max(itemsY) - minY + 110
 
             return QtCore.QRectF(minX, minY, width, height)
         except ValueError:
