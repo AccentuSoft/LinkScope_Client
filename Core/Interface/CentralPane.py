@@ -634,50 +634,62 @@ class CanvasView(QtWidgets.QGraphicsView):
         self.synced = False
 
         self.menu = QtWidgets.QMenu()
+        self.menu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
+        viewMenu = self.menu.addMenu("Hide / Delete")
+        viewMenu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
+        groupingMenu = self.menu.addMenu("Grouping")
+        groupingMenu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
 
         actionDelete = QtGui.QAction('Hide Selected Items',
-                                     self.menu,
+                                     viewMenu,
                                      statusTip="Hide selected items from this canvas.",
                                      triggered=self.scene().deleteSelectedItems)
-        self.menu.addAction(actionDelete)
+        viewMenu.addAction(actionDelete)
 
         actionDeleteFromDatabase = QtGui.QAction('Delete Selected Items',
-                                                 self.menu,
+                                                 viewMenu,
                                                  statusTip="Delete selected items from this project.",
                                                  triggered=self.deleteItemsFromDatabase)
-        self.menu.addAction(actionDeleteFromDatabase)
+        viewMenu.addAction(actionDeleteFromDatabase)
 
         self.actionLinkDelete = QtGui.QAction('Delete Selected Links',
-                                              self.menu,
+                                              viewMenu,
                                               statusTip="Delete selected links from this canvas.",
                                               triggered=self.deleteSelectedLinks)
-        self.menu.addAction(self.actionLinkDelete)
+        viewMenu.addAction(self.actionLinkDelete)
 
         self.actionGroup = QtGui.QAction('Group Selected Entities',
-                                         self.menu,
+                                         groupingMenu,
                                          statusTip="Group together selected entity items into one entity.",
                                          triggered=self.groupSelectedItems)
-        self.menu.addAction(self.actionGroup)
+        groupingMenu.addAction(self.actionGroup)
 
         self.actionUngroup = QtGui.QAction('Ungroup Selected Entities',
-                                           self.menu,
+                                           groupingMenu,
                                            statusTip="Ungroup selected group entity items.",
                                            triggered=self.ungroupSelectedItems)
-        self.menu.addAction(self.actionUngroup)
+        groupingMenu.addAction(self.actionUngroup)
 
         self.actionAddGroup = QtGui.QAction('Add Selected Entities to Existing Group',
-                                            self.menu,
+                                            groupingMenu,
                                             statusTip="Add selected entities to an existing group entity.",
                                             triggered=self.appendSelectedItemsToGroup)
-        self.menu.addAction(self.actionAddGroup)
+        groupingMenu.addAction(self.actionAddGroup)
 
-        entitiesToOtherCanvas = QtGui.QAction('Send Selected Entities to Other Canvas',
-                                              self.menu,
-                                              statusTip="Send the selected entities to a different, existing canvas.",
-                                              triggered=self.sendEntitiesToOtherCanvas)
-        self.menu.addAction(entitiesToOtherCanvas)
+        entitiesToOtherCanvasAction = QtGui.QAction('Send Selected Entities to Other Canvas',
+                                                    self.menu,
+                                                    statusTip="Send the selected entities to a different, existing "
+                                                              "canvas.",
+                                                    triggered=self.sendEntitiesToOtherCanvas)
+        self.menu.addAction(entitiesToOtherCanvasAction)
 
-        self.menu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
+        importConnectedEntitiesAction = QtGui.QAction('Import Connected Entities',
+                                                      self.menu,
+                                                      statusTip="Import all entities directly connected to the "
+                                                                "selected entities (both incoming and outgoing), into "
+                                                                "this canvas.",
+                                                      triggered=self.importConnectedEntities)
+        self.menu.addAction(importConnectedEntitiesAction)
 
     def deleteItemsFromDatabase(self) -> None:
         items = self.scene().selectedItems()
@@ -749,11 +761,22 @@ class CanvasView(QtWidgets.QGraphicsView):
                 if entityJson is None:
                     entityJson = self.tabbedPane.entityDB.addEntity(nodeJson)
                 entityUID = entityJson['uid']
-                if entityUID not in self.scene().sceneGraph.nodes() and entityJson['Entity Type'] != 'EntityGroup':
-                    self.scene().addNodeDragDrop(
-                        entityUID,
-                        pos.x() - 20,
-                        pos.y() - 20)
+
+                if entityUID not in self.scene().sceneGraph.nodes():
+                    if entityJson['Entity Type'] == 'EntityGroup':
+                        newGroup = self.tabbedPane.mainWindow.copyGroupEntity(entityUID, self.scene())
+                        if newGroup is not None:
+                            newNode = self.scene().addNodeProgrammatic(newGroup['uid'], newGroup['Child UIDs'])
+                            newNode.setPos(pos.x() - 20, pos.y() - 20)
+                        else:
+                            self.tabbedPane.messageHandler.warning("Cannot add selected Group Node to scene: Scene "
+                                                                   "already contains all nodes that the Group Node "
+                                                                   "currently contains.", popUp=True)
+                    else:
+                        self.scene().addNodeDragDrop(
+                            entityUID,
+                            pos.x() - 20,
+                            pos.y() - 20)
                 else:
                     wasGrouped = False
                     for groupNode in [node for node in self.items() if isinstance(node, Entity.GroupNode)]:
@@ -922,27 +945,47 @@ class CanvasView(QtWidgets.QGraphicsView):
                 for groupEntityToSend in groupEntitiesToSend:
                     # Have to make a new group entity, so that ungrouping in one canvas doesn't delete the entity
                     #   group in another.
-                    entityJSON = self.tabbedPane.entityDB.getEntity(groupEntityToSend)
-                    # Dereference the list, so we don't have issues w/ the original Group Node.
-                    newEntity = self.tabbedPane.entityDB.addEntity(
-                        {'Group Name': 'Entity Group', 'Child UIDs': list(entityJSON['Child UIDs']),
-                         'Entity Type': 'EntityGroup'})
-                    newUID = newEntity['uid']
+                    newGroupEntityJSON = self.tabbedPane.mainWindow.copyGroupEntity(groupEntityToSend, otherCanvas)
+                    newGroupNode = None
+                    if newGroupEntityJSON:
+                        # Ensure that no duplicate nodes exist.
+                        newGroupNode = otherCanvas.addNodeProgrammatic(newGroupEntityJSON['uid'],
+                                                                       newGroupEntityJSON['Child UIDs'])
+                        if not newGroupNode:
+                            self.tabbedPane.entityDB.removeEntity(newGroupEntityJSON['uid'])
 
-                    # Ensure that no duplicate nodes exist.
-                    newGroupNode = otherCanvas.addNodeProgrammatic(newUID, newEntity['Child UIDs'])
-                    if newGroupNode is None:
+                    if not newGroupEntityJSON or not newGroupNode:
                         self.tabbedPane.mainWindow.MESSAGEHANDLER.info("Cannot send group node to other canvas: The "
                                                                        "nodes it contains already exist there! Make "
                                                                        "sure that the nodes in the group node you're "
                                                                        "trying to send don't exist inside other groups "
                                                                        "at the destination canvas.", popUp=True)
-                        self.tabbedPane.entityDB.removeEntity(newUID)
 
                 otherCanvas.rearrangeGraph()
             else:
                 self.tabbedPane.mainWindow.MESSAGEHANDLER.info("Please select a valid Canvas name, "
                                                                "or create a new Canvas.", popUp=True)
+
+    def importConnectedEntities(self):
+        selectedEntities = [item.uid for item in self.scene().selectedItems() if isinstance(item, Entity.BaseNode)]
+        self.scene().clearSelection()
+        for entity in selectedEntities:
+            linkedEntities = [link[0] for link in self.tabbedPane.entityDB.getIncomingLinks(entity)
+                              if link[0] not in self.scene().sceneGraph.nodes]
+            linkedEntities.extend([link[1] for link in self.tabbedPane.entityDB.getOutgoingLinks(entity)
+                                   if link[1] not in self.scene().sceneGraph.nodes])
+            for groupEntity in [linkedGroupEntity for linkedGroupEntity in linkedEntities
+                                if linkedGroupEntity.endswith('@')]:
+                newEntityJSON = self.tabbedPane.mainWindow.copyGroupEntity(groupEntity, self.scene())
+                if newEntityJSON:
+                    newNode = self.scene().addNodeProgrammatic(newEntityJSON['uid'], newEntityJSON['Child UIDs'])
+                    linkedEntities.remove(groupEntity)
+                    newNode.setSelected(True)
+            for regularEntity in linkedEntities:
+                if regularEntity not in self.scene().sceneGraph.nodes:
+                    newNode = self.scene().addNodeProgrammatic(regularEntity)
+                    newNode.setSelected(True)
+        self.scene().rearrangeGraph()
 
     def takePictureOfView(self, justViewport: bool = True, transparentBackground: bool = False) -> QtGui.QImage:
         # Need to set size and format of pic before using it.
@@ -1215,9 +1258,13 @@ class CanvasScene(QtWidgets.QGraphicsScene):
 
         newNode = None
         if entity.get('Entity Type') == "EntityGroup":
+            # We have to create a NEW Entity Group if we don't want to mess with the old one, as different
+            #   canvases will have different nodes on them.
+            # The 'addNode' functions assume that they've been passed whatever entity group is the correct one, i.e.
+            #   either a new one being created or an old one that was copied.
             groupItems = [uid for uid in entity['Child UIDs'] if uid not in self.sceneGraph.nodes]
             if len(groupItems) > 0:
-                newNode = Entity.GroupNode(picture, uid)
+                newNode = Entity.GroupNode(picture, uid, entity['Group Name'])
                 self.addNodeToScene(newNode, x, y)
 
                 newGroupList = newNode.listWidget
@@ -1226,7 +1273,7 @@ class CanvasScene(QtWidgets.QGraphicsScene):
                 newNode.formGroup(groupItems, newGroupListGraphic)
                 for item in groupItems:
                     self.sceneGraph.add_node(item, groupID=newNode.uid)
-        else:
+        elif entity.get('Entity Type'):
             if not fromServer:
                 self.parent().mainWindow.sendLocalCanvasUpdateToServer(self.getSelfName(), uid)
             newNode = Entity.BaseNode(picture, uid, nodePrimaryAttribute)
@@ -1265,7 +1312,7 @@ class CanvasScene(QtWidgets.QGraphicsScene):
         else:
             groupItems = [uid for uid in groupItems if uid not in self.sceneGraph.nodes]
             if len(groupItems) > 0:
-                newNode = Entity.GroupNode(picture, uid)
+                newNode = Entity.GroupNode(picture, uid, entity['Group Name'])
                 self.addNodeToScene(newNode)
 
                 newGroupList = newNode.listWidget

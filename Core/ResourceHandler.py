@@ -151,6 +151,8 @@ class ResourceHandler:
 
     def getEntityJson(self, entityType: str, jsonData=None) -> Union[dict, None]:
         eJson = {'uid': str(uuid4())}
+        if entityType in self.getAllEntitiesInCategory('Meta'):
+            eJson['uid'] += '@'
         try:
             for category in self.entityCategoryList:
                 if entityType in self.entityCategoryList[category]:

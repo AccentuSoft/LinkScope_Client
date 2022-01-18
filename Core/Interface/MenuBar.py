@@ -68,12 +68,12 @@ class MenuBar(QtWidgets.QMenuBar):
                                        statusTip="Import entities from a file.",
                                        triggered=self.importFromFile)
 
-        graphMLCanvasAction = QtGui.QAction("GraphML - Canvas",
+        graphMLCanvasAction = QtGui.QAction("From GraphML - Canvas",
                                             self,
                                             statusTip="Import canvas from a GraphML file.",
                                             triggered=self.parent().importCanvasFromGraphML)
 
-        graphMLDatabaseAction = QtGui.QAction("GraphML - Database",
+        graphMLDatabaseAction = QtGui.QAction("From GraphML - Database",
                                               self,
                                               statusTip="Import database from a GraphML file.",
                                               triggered=self.parent().importDatabaseFromGraphML)
@@ -88,12 +88,12 @@ class MenuBar(QtWidgets.QMenuBar):
         canvasPictureAction = QtGui.QAction("Save Picture of Canvas", self,
                                             statusTip="Save a picture of your canvas",
                                             triggered=self.savePic)
-        GraphMLCanvas = QtGui.QAction('GraphML - Canvas ',
+        GraphMLCanvas = QtGui.QAction('To GraphML - Canvas ',
                                       self,
                                       statusTip="Export Canvas to GraphML",
                                       triggered=self.parent().exportCanvasToGraphML)
 
-        GraphMLDatabase = QtGui.QAction('GraphML - Database ',
+        GraphMLDatabase = QtGui.QAction('To GraphML - Database ',
                                         self,
                                         statusTip="Export Database to GraphML",
                                         triggered=self.parent().exportDatabaseToGraphML)

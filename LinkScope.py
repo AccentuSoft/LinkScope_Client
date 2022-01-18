@@ -46,6 +46,34 @@ class MainWindow(QtWidgets.QMainWindow):
     def getSettings(self) -> SettingsObject.SettingsObject:
         return self.SETTINGS
 
+    # Duplicate and alter a group entity to make it
+    def copyGroupEntity(self, existingGroupUID: str, targetCanvas: CentralPane.CanvasScene) -> Union[dict, None]:
+        # Have to make a new group entity, so that ungrouping in one canvas doesn't delete the entity
+        #   group in another.
+        entityJSON = self.LENTDB.getEntity(existingGroupUID)
+        # Dereference the list, so we don't have issues w/ the original Group Node.
+        newChildren = [childUID for childUID in list(entityJSON['Child UIDs'])
+                       if childUID not in targetCanvas.sceneGraph.nodes]
+        # Don't create the entity if all the nodes in it already exist on the target canvas.
+        if len(newChildren) == 0:
+            return None
+        newEntity = self.LENTDB.addEntity(
+            {'Group Name': entityJSON['Group Name'] + ' Copy',
+             'Child UIDs': newChildren,
+             'Entity Type': 'EntityGroup'})
+        newUID = newEntity['uid']
+
+        # Need to re-create the links too
+        for linkUID in self.LENTDB.getOutgoingLinks(entityJSON['uid']):
+            newLinkJSON = dict(self.LENTDB.getLink(linkUID))
+            newLinkJSON['uid'] = (newUID, linkUID[1])
+            self.LENTDB.addLink(newLinkJSON)
+        for linkUID in self.LENTDB.getIncomingLinks(entityJSON['uid']):
+            newLinkJSON = dict(self.LENTDB.getLink(linkUID))
+            newLinkJSON['uid'] = (linkUID[0], newUID)
+            self.LENTDB.addLink(newLinkJSON)
+        return newEntity
+
     # What happens when the software is closed
     def closeEvent(self, event) -> None:
         self.dockbarThree.logViewerUpdateThread.endLogging = True
@@ -182,19 +210,31 @@ class MainWindow(QtWidgets.QMainWindow):
             try:
                 read_graphml = nx.read_graphml(filePath)
                 currentScene = self.centralWidget().tabbedPane.getCurrentScene()
-                for node in read_graphml.nodes():
-                    entity = self.LENTDB.getEntity(node)
+                # Deduplication, just in case.
+                graphMLNodes = set(read_graphml.nodes())
+                nodesToReadFirst = [self.LENTDB.getEntity(node) for node in graphMLNodes
+                                    if not read_graphml.nodes[node].get('groupID')]
+                nodesToReadFirst = [entity for entity in nodesToReadFirst if entity is not None and
+                                    entity['Entity Type'] == 'EntityGroup']
+                for entity in nodesToReadFirst:
+                    # Create new group entity so we don't mess with the contents of the original.
+                    if entity['uid'] not in currentScene.sceneGraph.nodes:
+                        newGroupEntity = self.copyGroupEntity(entity['uid'], currentScene)
+                        if newGroupEntity is not None:
+                            currentScene.addNodeProgrammatic(newGroupEntity['uid'], newGroupEntity['Child UIDs'])
+                    graphMLNodes.remove(entity['uid'])
+                for node in graphMLNodes:
+                    # Need to check as existing group nodes could have been updated with new nodes after export
+                    #   but before the import.
                     if node not in currentScene.sceneGraph.nodes:
-                        if entity['Entity Type'] == 'EntityGroup':
-                            currentScene.addNodeProgrammatic(node, entity['Child UIDs'])
-                        else:
-                            currentScene.addNodeProgrammatic(node)
+                        currentScene.addNodeProgrammatic(node)
+
                 currentScene.rearrangeGraph()
                 self.setStatus('Canvas imported successfully.')
             except KeyError:
-                self.MESSAGEHANDLER.error("Cannot import canvas: One or more nodes in the graph "
+                self.MESSAGEHANDLER.error("Aborted canvas import: One or more nodes in the graph "
                                           "do not exist in the database.", popUp=True)
-                self.setStatus('Canvas import failed.')
+                self.setStatus('Canvas import aborted.')
             except Exception as exc:
                 self.MESSAGEHANDLER.error("Cannot import canvas: " + str(exc), popUp=True)
                 self.setStatus('Canvas import failed.')
