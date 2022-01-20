@@ -222,10 +222,15 @@ class MenuBar(QtWidgets.QMenuBar):
 
         serverMenu.addSeparator()
 
-        createOrOpenProject = QtGui.QAction("Create or Open Project", self,
-                                            statusTip="Create or Open a new Server project.",
-                                            triggered=self.serverOpenOrCreateProject)
-        serverMenu.addAction(createOrOpenProject)
+        createOrOpenProjectAction = QtGui.QAction("Create or Open Project", self,
+                                                  statusTip="Create or Open a new Server project.",
+                                                  triggered=self.serverOpenOrCreateProject)
+        serverMenu.addAction(createOrOpenProjectAction)
+
+        deleteProjectAction = QtGui.QAction("Delete Current Project", self,
+                                            statusTip="Delete the Server project that is currently opened.",
+                                            triggered=self.serverDeleteProject)
+        serverMenu.addAction(deleteProjectAction)
 
         serverMenu.addSeparator()
 
@@ -669,9 +674,8 @@ class MenuBar(QtWidgets.QMenuBar):
     def serverOpenOrCreateProject(self) -> None:
         if self.parent().FCOM.isConnected():
             serverProjectDialog = ServerCreateOrOpenProject(self.parent())
-            createOrOpenProject = serverProjectDialog.exec()
 
-            if createOrOpenProject:
+            if serverProjectDialog.exec():
                 if serverProjectDialog.openProject:
                     self.parent().FCOM.openProject(serverProjectDialog.projectName,
                                                    serverProjectDialog.projectPass)
@@ -681,6 +685,22 @@ class MenuBar(QtWidgets.QMenuBar):
         else:
             self.parent().MESSAGEHANDLER.warning('Not Connected to Server!', popUp=True)
             self.parent().setStatus('Must connect to a server before opening a project.')
+
+    def serverDeleteProject(self) -> None:
+        if self.parent().FCOM.isConnected():
+            current_project = self.parent().SETTINGS.value("Project/Server/Project")
+            if current_project != "":
+                confirmProjectDeleteDialog = DeleteProjectConfirmationDialog(self.parent(), current_project)
+                if confirmProjectDeleteDialog.exec_():
+                    self.parent().MESSAGEHANDLER.info('Deleting server project: ' + current_project)
+                    self.parent().FCOM.deleteProject(current_project)
+            else:
+                self.parent().MESSAGEHANDLER.warning('Cannot Delete Server Project: No Server Project is '
+                                                     'currently open!', popUp=True)
+                self.parent().setStatus('Not connected to a Server Project, nothing to delete.')
+        else:
+            self.parent().MESSAGEHANDLER.warning('Cannot Delete Server Project: Not Connected to Server!', popUp=True)
+            self.parent().setStatus('Not connected to Server, nothing to delete.')
 
     # For canvas stuff, check if canvas name exists.
     def syncCurrentCanvas(self) -> None:
@@ -725,7 +745,7 @@ class MenuBar(QtWidgets.QMenuBar):
         self.parent().uploadFiles()
 
     def downloadFile(self):
-        pass
+        pass  # TODO
 
     def findEntityOrLink(self) -> None:
         self.parent().findEntityOrLinkOnCanvas()
@@ -1189,6 +1209,35 @@ class MenuBar(QtWidgets.QMenuBar):
         self.parent().LENTDB.resetTimeline()
         self.parent().saveProject()
         self.parent().MESSAGEHANDLER.info('Imported tabs from browser successfully.')
+
+
+class DeleteProjectConfirmationDialog(QtWidgets.QDialog):
+
+    def __init__(self, mainWindowObject, currentServerProject: str):
+        super(DeleteProjectConfirmationDialog, self).__init__()
+        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
+        self.setModal(True)
+        self.setLayout(QtWidgets.QVBoxLayout())
+        self.mainWindowObject = mainWindowObject
+        self.setWindowTitle('Delete Server Project')
+
+        resolutionsLabel = QtWidgets.QLabel('Delete Project: "' + currentServerProject + '" ?')
+        resolutionsLabel.setWordWrap(True)
+
+        resolutionsLabel.setAlignment(QtCore.Qt.AlignCenter)
+        self.layout().addWidget(resolutionsLabel)
+
+        buttonsWidget = QtWidgets.QWidget()
+        buttonsWidgetLayout = QtWidgets.QHBoxLayout()
+        buttonsWidget.setLayout(buttonsWidgetLayout)
+        confirmButton = QtWidgets.QPushButton('Confirm')
+        cancelButton = QtWidgets.QPushButton('Cancel')
+        buttonsWidgetLayout.addWidget(cancelButton)
+        buttonsWidgetLayout.addWidget(confirmButton)
+        cancelButton.clicked.connect(self.reject)
+        confirmButton.clicked.connect(self.accept)
+
+        self.layout().addWidget(buttonsWidget)
 
 
 class BrowserImportDialog(QtWidgets.QDialog):

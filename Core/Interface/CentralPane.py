@@ -1464,6 +1464,13 @@ class CanvasScene(QtWidgets.QGraphicsScene):
                                                    'canvas, uid: ' + str(uid))
         return None
 
+    def getVisibleLinkForUID(self, uid: tuple):
+        """
+        Try to get the link on the canvas that the uid corresponds to.
+        """
+        linkStringUID = uid[0] + uid[1]
+        return self.linksDict.get(linkStringUID, None)
+
     def removeGroupNodeLinksForUID(self, groupUID, nodeUID) -> None:
         edgesToDelete = {}
         # Search all links

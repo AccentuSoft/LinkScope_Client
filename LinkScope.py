@@ -879,10 +879,14 @@ class MainWindow(QtWidgets.QMainWindow):
                 if nodeItem is not None:
                     nodeItem.setSelected(True)
             else:
-                for entityItem in item:
-                    nodeItem = currScene.getVisibleNodeForUID(entityItem)
-                    if nodeItem is not None:
-                        nodeItem.setSelected(True)
+                linkItem = currScene.getVisibleLinkForUID(item)
+                if linkItem is not None:
+                    linkItem.setSelected(True)
+                else:
+                    for entityItem in item:
+                        nodeItem = currScene.getVisibleNodeForUID(entityItem)
+                        if nodeItem is not None:
+                            nodeItem.setSelected(True)
         if len(uidList) == 1 and isinstance(uidList[0], str):
             self.centralWidget().tabbedPane.getCurrentView().centerViewportOnNode(uidList[0])
 
@@ -1130,6 +1134,14 @@ class MainWindow(QtWidgets.QMainWindow):
     def receiveProjectCanvasesListListener(self, canvases: list) -> None:
         with self.syncedCanvasesLock:
             self.syncedCanvases = canvases
+
+    def receiveProjectDeleteListener(self, deleted_project: str) -> None:
+        with self.serverProjectsLock:
+            try:
+                self.serverProjects.remove(deleted_project)
+            except ValueError:
+                # If the client doesn't know about the deleted project, nothing to do.
+                pass
 
     def openServerProjectListener(self, project_name: str) -> None:
         self.SETTINGS.setValue("Project/Server/Project", project_name)

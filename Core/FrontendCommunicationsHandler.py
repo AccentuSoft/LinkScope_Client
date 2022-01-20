@@ -49,6 +49,7 @@ class CommunicationsHandler(QtCore.QObject):
     receive_document_summary_signal = QtCore.Signal(str, str)
     remove_server_resolution_from_running_signal = QtCore.Signal(str)
     receive_projects_list_signal = QtCore.Signal(list)
+    delete_server_project_signal = QtCore.Signal(str)
     receive_project_canvases_list_signal = QtCore.Signal(list)
     open_project_signal = QtCore.Signal(str)
     close_project_signal = QtCore.Signal()
@@ -82,6 +83,7 @@ class CommunicationsHandler(QtCore.QObject):
         self.receive_completed_resolution_string_result_signal.connect(self.mainWindow.resolutionSignalListener)
         self.receive_document_summary_signal.connect(self.mainWindow.receiveSummaryOfDocument)
         self.remove_server_resolution_from_running_signal.connect(self.mainWindow.cleanServerResolutionListener)
+        self.delete_server_project_signal.connect(self.mainWindow.receiveProjectDeleteListener)
         self.receive_projects_list_signal.connect(self.mainWindow.receiveProjectsListListener)
         self.receive_project_canvases_list_signal.connect(self.mainWindow.receiveProjectCanvasesListListener)
         self.open_project_signal.connect(self.mainWindow.openServerProjectListener)
@@ -656,7 +658,8 @@ class CommunicationsHandler(QtCore.QObject):
                 self.remove_server_resolution_from_running_signal.emit(resolution_uid)
             elif operation == 'Delete Project':
                 # Remove project from server projects list.
-                pass  # TODO
+                project_name = message.split(': ', 1)[1]
+                self.delete_server_project_signal.emit(project_name)
             elif operation == 'File Upload Abort':
                 file_name = message.split(': ', 1)[1]
                 # Remove file from uploading files list.

@@ -112,8 +112,10 @@ class EntityDetails(QtWidgets.QWidget):
         relationshipsLayout = QtWidgets.QGridLayout()
         relationshipsPanel = QtWidgets.QWidget()
         relationshipsPanel.setLayout(relationshipsLayout)
-        self.relationshipsIncomingTable = RelationshipsTable(self, mainWindow)
-        self.relationshipsOutgoingTable = RelationshipsTable(self, mainWindow)
+        self.relationshipsIncomingTable = RelationshipsTable(self, mainWindow, uidLabel=self.entityPrimaryLabel,
+                                                             incomingOrOutgoing=0)
+        self.relationshipsOutgoingTable = RelationshipsTable(self, mainWindow, uidLabel=self.entityPrimaryLabel,
+                                                             incomingOrOutgoing=1)
         self.relationshipsIncomingTable.setHeaderLabel('Incoming Links')
         self.relationshipsOutgoingTable.setHeaderLabel('Outgoing Links')
         relationshipsLayout.addWidget(self.relationshipsIncomingTable, 0, 0)
@@ -358,21 +360,33 @@ class SingleLinkItem(QtWidgets.QWidget):
 
 class RelationshipsTable(QtWidgets.QTreeWidget):
 
-    def __init__(self, parent, mainWindow):
+    def __init__(self, parent, mainWindow, uidLabel: QtWidgets.QLabel = None, incomingOrOutgoing: int = None):
         super().__init__(parent=parent)
         self.mainWindow = mainWindow
+        self.incomingOrOutgoing = incomingOrOutgoing
+        self.uidLabel = uidLabel
 
     def mousePressEvent(self, event):
         """
         Have the canvas select the clicked item.
         """
+        # The super() call is not technically needed.
+        super().mousePressEvent(event)
         if event.button() == QtGui.Qt.MouseButton.LeftButton:
             itemClicked = self.itemAt(event.pos())
             if itemClicked is None:
                 return
-            self.mainWindow.setCurrentCanvasSelection([itemClicked.entityUID])
-        else:
-            super().mousePressEvent(event)
+            if self.uidLabel is not None:
+                potentialSelectedEntityUID = self.uidLabel.text()
+                if potentialSelectedEntityUID == "":
+                    self.mainWindow.setCurrentCanvasSelection([itemClicked.entityUID])
+                elif self.incomingOrOutgoing is not None:
+                    if self.incomingOrOutgoing == 0:
+                        self.mainWindow.setCurrentCanvasSelection([(itemClicked.entityUID, potentialSelectedEntityUID)])
+                    else:
+                        self.mainWindow.setCurrentCanvasSelection([(potentialSelectedEntityUID, itemClicked.entityUID)])
+            else:
+                self.mainWindow.setCurrentCanvasSelection([itemClicked.entityUID])
 
 
 class LinksTable(QtWidgets.QTreeWidget):
