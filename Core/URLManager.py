@@ -92,7 +92,7 @@ class URLManager:
                 else False
             projectFilesPath = Path(self.mainWindow.SETTINGS.value("Project/FilesDir"))
             # Create a unique path in Project Files
-            saveHash = hexlify(sha3_512(str(urlPath).encode()).digest()).decode()[:8]  # nosec
+            saveHash = hexlify(sha3_512(str(urlPath).encode()).digest()).decode()[:16]  # nosec
             savePath = projectFilesPath / (saveHash + '|' + urlPath.name)
 
             if createSymlink:

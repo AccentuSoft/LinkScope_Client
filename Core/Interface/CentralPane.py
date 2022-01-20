@@ -1719,7 +1719,13 @@ class PropertiesEditor(QtWidgets.QDialog):
             elif key == 'File Path':
                 value = self.itemProperties.itemAt(
                     row, self.itemProperties.FieldRole).widget().text()
-                value = str(Path(value).absolute())
+                projectFilesPath = Path(self.canvas.parent().mainWindow.SETTINGS.value("Project/FilesDir"))
+                newPath = projectFilesPath / value
+                if not newPath.is_relative_to(projectFilesPath):
+                    value = str(self.canvas.parent().mainWindow.URLMANAGER.moveURLToProjectFilesHelperIfNeeded(
+                        Path(value)))
+                elif not newPath.exists():
+                    value = 'None'
             else:
                 value = self.itemProperties.itemAt(
                     row, self.itemProperties.FieldRole).widget().text()

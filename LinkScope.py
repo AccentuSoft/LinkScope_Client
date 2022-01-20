@@ -1354,10 +1354,11 @@ class MainWindow(QtWidgets.QMainWindow):
             itemsToUpload = items
         else:
             materialsEntities = self.RESOURCEHANDLER.getAllEntitiesInCategory('Materials')
+            projectFilesPath = Path(self.SETTINGS.value("Project/FilesDir"))
             for item in self.centralWidget().tabbedPane.getCurrentScene().selectedItems():
                 itemJson = self.LENTDB.getEntity(item.uid)
-                if itemJson.get('Entity Type') in materialsEntities and \
-                        itemJson['File Path'] != "None":
+                itemPath = projectFilesPath / itemJson['File Path']
+                if itemJson.get('Entity Type') in materialsEntities and itemPath.exists() and itemPath.is_file():
                     itemsToUpload.append(itemJson)
 
         if not itemsToUpload:
@@ -1368,7 +1369,7 @@ class MainWindow(QtWidgets.QMainWindow):
             return
 
         for item in itemsToUpload:
-            fileDir = self.SETTINGS.value("Project/FilesDir") / Path(item['File Path'])
+            fileDir = self.SETTINGS.value("Project/FilesDir") / item['File Path']
             file_name = item[list(item)[1]]
             if file_name in [uploadingFileName.getFileName()
                              for uploadingFileName in self.dockbarOne.documentsList.uploadingFileWidgets]:
@@ -1376,9 +1377,9 @@ class MainWindow(QtWidgets.QMainWindow):
             if file_name in [uploadedFileName.getFileName()
                              for uploadedFileName in self.dockbarOne.documentsList.uploadedFileWidgets]:
                 continue
-            if fileDir.exists():
-                self.dockbarOne.documentsList.addUploadingFileToList(item[list(item)[1]])
-                self.FCOM.sendFile(project_name, file_name, fileDir)
+
+            self.dockbarOne.documentsList.addUploadingFileToList(item[list(item)[1]])
+            self.FCOM.sendFile(project_name, file_name, fileDir)
 
     def receiveAbortUploadOfFiles(self, file_name: Union[str, None]):
         """
