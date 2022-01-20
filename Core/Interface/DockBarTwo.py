@@ -157,7 +157,7 @@ class EntityDetails(QtWidgets.QWidget):
         self.nodesTable.setHeaderLabels(["Entity", "Incoming Links", "Outgoing Links"])
         self.linksTable = LinksTable(self, mainWindow)
         self.linksTable.setMaximumHeight(300)
-        self.linksTable.setHeaderLabels(["Parent", "Child"])
+        self.linksTable.setHeaderLabels(["Resolution", "Parent", "Child"])
         multiNodesTableLabelOne = QtWidgets.QLabel("Selected Nodes:")
         layoutMultipleItemsSelected.addWidget(multiNodesTableLabelOne, 0, 0)
         layoutMultipleItemsSelected.addWidget(self.nodesTable, 1, 0)
@@ -289,6 +289,7 @@ class EntityDetails(QtWidgets.QWidget):
         child = self.entityDB.getEntity(uid[1])
         LinksTreeWidgetEntity(self.linksTable,
                               QtGui.QPixmap(self.resourceHandler.getLinkPicture()),
+                              linkJson['Resolution'],
                               parent[list(parent)[1]],
                               child[list(child)[1]],
                               uid)
@@ -412,13 +413,15 @@ class LinksTreeWidgetEntity(QtWidgets.QTreeWidgetItem):
     def __init__(self,
                  parent,
                  icon=None,
+                 resolutionText=None,
                  ent1=None,
                  ent2=None,
                  uid=None):
         super().__init__(parent)
 
-        self.setText(0, str(ent1))
-        self.setText(1, str(ent2))
+        self.setText(0, resolutionText)
+        self.setText(1, str(ent1))
+        self.setText(2, str(ent2))
         self.uid = uid
         self.setIcon(0, icon)
         self.setIcon(1, icon)
