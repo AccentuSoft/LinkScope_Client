@@ -207,17 +207,15 @@ class CommunicationsHandler(QtCore.QObject):
             return None
 
     def transmitMessage(self, messageJson: dict, showErrorOnBrokenPipe: bool = True):
-        # Note that Base64 encoded data is about 4/3 times the size of the original.
-        # 768 * 4/3 = 1024
         print('Sending message:', messageJson)
-        argEncoded = b64encode(str(messageJson).encode())
+        argEncoded = str(messageJson)
         largeMessageUUID = str(uuid4())
         try:
-            for data in range(0, len(argEncoded), 768):
-                partArg = argEncoded[data:data + 768]
-                done = data + 768 >= len(argEncoded)
+            for data in range(0, len(argEncoded), 1024):
+                partArg = argEncoded[data:data + 1024]
+                done = data + 1024 >= len(argEncoded)
                 messageJson = {"uuid": largeMessageUUID,
-                               "message": partArg.decode(),
+                               "message": partArg,
                                "done": done}
                 self.sock.send(self.encryptTransmission(dumps(messageJson)))
         except BrokenPipeError:
@@ -281,8 +279,7 @@ class CommunicationsHandler(QtCore.QObject):
                     else:
                         preInbox[messageID] = receivedMessage
                     if receivedMessage.get("done"):
-                        preInbox[messageID]["message"] = literal_eval(
-                            b64decode(preInbox[messageID]["message"]).decode())
+                        preInbox[messageID]["message"] = literal_eval(preInbox[messageID]["message"])
                         self.inbox.put(preInbox.pop(messageID).get("message"))
 
             except socket.error as socketError:
