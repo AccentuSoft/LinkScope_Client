@@ -115,7 +115,7 @@ class EntitiesDB:
             self.mainWindow.updateEntityNodeLabelsOnCanvases(entity['uid'], entity[list(entity)[1]])
         self.dbLock.release()
         if not fromServer:
-            self.mainWindow.sendLocalDatabaseUpdateToServer(entity, True)
+            self.mainWindow.sendLocalDatabaseUpdateToServer(entity, 1)
         self.mainWindow.populateEntitiesWidget(returnValue, add=True)
 
         if updateTimeline:
@@ -149,7 +149,7 @@ class EntitiesDB:
                 # Update canvases if the node already exists.
                 self.mainWindow.updateEntityNodeLabelsOnCanvases(entity['uid'], entity[list(entity)[1]])
             if not fromServer:
-                self.mainWindow.sendLocalDatabaseUpdateToServer(entity, True)
+                self.mainWindow.sendLocalDatabaseUpdateToServer(entity, 1)
             self.mainWindow.populateEntitiesWidget(entity, add=True)
 
         self.dbLock.release()
@@ -157,10 +157,11 @@ class EntitiesDB:
 
         return returnValue
 
-    def addLink(self, linkJson: dict, fromServer=False):
+    def addLink(self, linkJson: dict, fromServer: bool = False, overwrite: bool = False):
         """
         Add a link between two entities in the database.
 
+        :param overwrite:
         :param linkJson:
         :param fromServer:
         :return:
@@ -180,8 +181,14 @@ class EntitiesDB:
                 newRes = link.get('Resolution')
                 newNotes = link.get('Notes')
                 if newRes and newRes != exists['Resolution']:
-                    link['Resolution'] = exists['Resolution'] + ' | ' + newRes
-                    if newNotes and newNotes != exists['Notes']:
+                    if overwrite:
+                        link['Resolution'] = newRes
+                    else:
+                        link['Resolution'] = exists['Resolution'] + ' | ' + newRes
+                if newNotes and newNotes != exists['Notes'] and newNotes != 'None':
+                    if overwrite:
+                        link['Notes'] = str(newNotes)
+                    else:
                         link['Notes'] = exists['Notes'] + '\n\n' + str(newNotes)
                 exists.update(link)
                 link.update(exists)
@@ -194,7 +201,10 @@ class EntitiesDB:
 
         self.dbLock.release()
         if not fromServer:
-            self.mainWindow.sendLocalDatabaseUpdateToServer(link, True)
+            if overwrite:
+                self.mainWindow.sendLocalDatabaseUpdateToServer(link, 3)
+            else:
+                self.mainWindow.sendLocalDatabaseUpdateToServer(link, 1)
         return link
 
     def getEntity(self, uid: str):
@@ -291,7 +301,7 @@ class EntitiesDB:
         if ent is not None:
             self.mainWindow.handleGroupNodeUpdateAfterEntityDeletion(uid)  # Blocking - locks the db.
             if not fromServer:
-                self.mainWindow.sendLocalDatabaseUpdateToServer(ent, False)
+                self.mainWindow.sendLocalDatabaseUpdateToServer(ent, 2)
             if updateTimeLine:
                 self.updateTimeline(ent, False)
 
@@ -305,7 +315,7 @@ class EntitiesDB:
             self.database.remove_edge(uid[0], uid[1])
         self.dbLock.release()
         if not fromServer:
-            self.mainWindow.sendLocalDatabaseUpdateToServer({"uid": uid}, False)
+            self.mainWindow.sendLocalDatabaseUpdateToServer({"uid": uid}, 2)
 
     def doesEntityExist(self, primaryAttr: str):
         """

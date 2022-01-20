@@ -227,6 +227,11 @@ class MenuBar(QtWidgets.QMenuBar):
                                                   triggered=self.serverOpenOrCreateProject)
         serverMenu.addAction(createOrOpenProjectAction)
 
+        closeCurrentProjectAction = QtGui.QAction("Close Current Project", self,
+                                                  statusTip="Close the Server project that is currently open.",
+                                                  triggered=self.serverCloseProject)
+        serverMenu.addAction(closeCurrentProjectAction)
+
         deleteProjectAction = QtGui.QAction("Delete Current Project", self,
                                             statusTip="Delete the Server project that is currently opened.",
                                             triggered=self.serverDeleteProject)
@@ -685,6 +690,9 @@ class MenuBar(QtWidgets.QMenuBar):
         else:
             self.parent().MESSAGEHANDLER.warning('Not Connected to Server!', popUp=True)
             self.parent().setStatus('Must connect to a server before opening a project.')
+
+    def serverCloseProject(self) -> None:
+        self.parent().closeCurrentServerProject()
 
     def serverDeleteProject(self) -> None:
         if self.parent().FCOM.isConnected():

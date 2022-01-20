@@ -1108,6 +1108,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.RESOLUTIONMANAGER.removeServerResolutions()
             self.dockbarOne.resolutionsPalette.loadAllResolutions()
             self.closeServerProjectListener()
+            with self.serverProjectsLock:
+                self.serverProjects = []
         self.setStatus("Disconnected from server.")
         self.dockbarThree.serverStatus.updateStatus("Not connected to a server")
 
@@ -1139,6 +1141,7 @@ class MainWindow(QtWidgets.QMainWindow):
         with self.serverProjectsLock:
             try:
                 self.serverProjects.remove(deleted_project)
+                self.closeServerProjectListener()
             except ValueError:
                 # If the client doesn't know about the deleted project, nothing to do.
                 pass
@@ -1154,23 +1157,29 @@ class MainWindow(QtWidgets.QMainWindow):
         self.MESSAGEHANDLER.info("Opened Server Project: " + project_name, popUp=True)
 
     def closeCurrentServerProject(self) -> None:
-        current_project = self.SETTINGS.value("Project/Server/Project")
-        if current_project != "":
-            self.FCOM.closeProject(current_project)
+        if self.FCOM.isConnected():
+            current_project = self.SETTINGS.value("Project/Server/Project")
+            if current_project != "":
+                self.FCOM.closeProject(current_project)
+            else:
+                self.MESSAGEHANDLER.warning('No Server Project to close.', popUp=True)
+        else:
+            self.MESSAGEHANDLER.warning('Not connected to a Server.', popUp=True)
 
     def closeServerProjectListener(self) -> None:
         project_name = self.SETTINGS.value("Project/Server/Project")
+        server = self.SETTINGS.value("Project/Server")
         self.SETTINGS.setValue("Project/Server/Project", "")
         self.FCOM.receiveFileAbortAll(project_name)
         self.FCOM.sendFileAbortAll(project_name)
         self.unSyncCanvasByName()
-        self.setStatus("Closed Server project: " + project_name)
-        self.dockbarThree.serverStatus.updateStatus("Connected to server: " +
-                                                    self.SETTINGS.value("Project/Server"))
+        if server is not None:
+            statusMessage = "Closed Server project: " + str(project_name)
+            self.MESSAGEHANDLER.info(statusMessage)
+            self.setStatus(statusMessage)
+            self.dockbarThree.serverStatus.updateStatus("Connected to server: " + server)
 
         self.dockbarOne.documentsList.updateFileListFromServer(None)
-        with self.serverProjectsLock:
-            self.serverProjects = []
         with self.syncedCanvasesLock:
             self.syncedCanvases = []
 
@@ -1233,8 +1242,14 @@ class MainWindow(QtWidgets.QMainWindow):
         if project_name != '':
             self.FCOM.closeCanvas(project_name, canvasName)
         if canvasName is not None:
-            self.setStatus('Stopped syncing Canvas: ' + canvasName)
-            self.MESSAGEHANDLER.info('Stopped syncing Canvas: ' + canvasName)
+            statusMessage = 'Stopped syncing Canvas: ' + canvasName
+            self.setStatus(statusMessage)
+            self.MESSAGEHANDLER.info(statusMessage)
+        else:
+            statusMessage = 'Stopped syncing all Canvases.'
+            self.setStatus(statusMessage)
+            self.MESSAGEHANDLER.info(statusMessage)
+
 
     def receiveSyncCanvasListener(self, canvas_name: str, canvas_nodes: dict, canvas_edges: dict) -> None:
         if canvas_name in self.centralWidget().tabbedPane.canvasTabs:
@@ -1279,7 +1294,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.MESSAGEHANDLER.debug('Received update to canvas: ' + canvas_name + ' for entity / link: ' +
                                   str(entity_or_link_uid))
 
-    def sendLocalDatabaseUpdateToServer(self, entityJson: dict, add: bool) -> None:
+    def sendLocalDatabaseUpdateToServer(self, entityJson: dict, add: int) -> None:
         """
         Called by the database when a local item event occurs.
         If connected to a server, the event is propagated to all other connected clients.
@@ -1292,11 +1307,11 @@ class MainWindow(QtWidgets.QMainWindow):
             self.MESSAGEHANDLER.debug('Sent database update to server: ' + str(entityJson) + ' - Operation: ' +
                                       str(add))
 
-    def receiveServerDatabaseUpdate(self, entityJson, add) -> None:
+    def receiveServerDatabaseUpdate(self, entityJson: dict, add: int) -> None:
         # Check that the JSON received is not empty.
         if entityJson:
             uid = entityJson['uid']
-            if add:
+            if add == 1:
                 # Add item
                 if isinstance(uid, str):
                     # Add Entity
@@ -1304,7 +1319,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 else:
                     # Add Link
                     self.centralWidget().tabbedPane.serverLinkAddHelper(entityJson)
-            else:
+            elif add == 2:
                 # Remove item
                 if isinstance(uid, str):
                     # Remove Entity
@@ -1314,6 +1329,9 @@ class MainWindow(QtWidgets.QMainWindow):
                     # Remove Link
                     self.centralWidget().tabbedPane.linkRemoveAllHelper(uid)
                     self.LENTDB.removeLink(uid, fromServer=True)
+            elif add == 3:
+                # Overwrite existing link
+                self.centralWidget().tabbedPane.serverLinkAddHelper(entityJson, overwrite=True)
 
         self.MESSAGEHANDLER.debug('Received database update from server: ' + str(entityJson) + ' - Operation: ' +
                                   str(add))

@@ -481,14 +481,16 @@ class TabbedPane(QtWidgets.QTabWidget):
                 scene.rearrangeGraph()
                 # self.mainWindow.syncCanvasByName(canvas)
 
-    def serverLinkAddHelper(self, linkJson: dict) -> None:
+    def serverLinkAddHelper(self, linkJson: dict, overwrite: bool = False) -> None:
         """
         Assumes that the 'uid' field is a tuple.
+
+        :param overwrite:
         :param linkJson:
         :return:
         """
         linkUID = linkJson['uid']
-        lJson = self.entityDB.addLink(linkJson, fromServer=True)
+        lJson = self.entityDB.addLink(linkJson, fromServer=True, overwrite=overwrite)
         for canvas in self.canvasTabs:
             if self.canvasTabs[canvas].scene().sceneGraph.nodes.get(linkUID[0]) is not None:
                 if self.canvasTabs[canvas].scene().sceneGraph.nodes.get(linkUID[1]) is None:
@@ -1543,7 +1545,7 @@ class CanvasScene(QtWidgets.QGraphicsScene):
         pEditor = PropertiesEditor(self, linkJSON)
         if pEditor.exec_():
             # Adding link with the same UID just overwrites properties.
-            self.parent().entityDB.addLink(pEditor.objectJson)
+            self.parent().entityDB.addLink(pEditor.objectJson, overwrite=True)
             self.parent().messageHandler.info('Edited link: ' + str(pEditor.objectJson['uid']) + ' | ' +
                                               pEditor.objectJson['Resolution'])
 

@@ -55,7 +55,7 @@ class CommunicationsHandler(QtCore.QObject):
     close_project_signal = QtCore.Signal()
     open_project_canvas_signal = QtCore.Signal(str)
     close_project_canvas_signal = QtCore.Signal(str)
-    receive_project_database_update = QtCore.Signal(dict, bool)
+    receive_project_database_update = QtCore.Signal(dict, int)
     receive_project_canvas_update_node = QtCore.Signal(str, str)
     receive_project_canvas_update_link = QtCore.Signal(str, tuple)
     receive_sync_database = QtCore.Signal(dict, dict)
@@ -88,7 +88,7 @@ class CommunicationsHandler(QtCore.QObject):
         self.receive_project_canvases_list_signal.connect(self.mainWindow.receiveProjectCanvasesListListener)
         self.open_project_signal.connect(self.mainWindow.openServerProjectListener)
         self.open_project_canvas_signal.connect(self.mainWindow.openServerCanvasListener)
-        self.close_project_signal.connect(self.mainWindow.closeCurrentServerProject)
+        self.close_project_signal.connect(self.mainWindow.closeServerProjectListener)
         self.close_project_canvas_signal.connect(self.mainWindow.closeServerCanvasListener)
         self.receive_project_database_update.connect(self.mainWindow.receiveServerDatabaseUpdate)
         self.receive_project_canvas_update_node.connect(self.mainWindow.receiveServerCanvasUpdate)
@@ -150,17 +150,19 @@ class CommunicationsHandler(QtCore.QObject):
 
             self.mainWindow.MESSAGEHANDLER.warning("Server did not reply in the expected manner to "
                                                    "password authentication.", popUp=True)
+        except ConnectionRefusedError:
+            self.mainWindow.MESSAGEHANDLER.error("Did not connect: Server not running.", popUp=True, exc_info=False)
         except Exception as exception:
             self.mainWindow.MESSAGEHANDLER.error("Did not connect: " + str(exception))
 
         try:
             if self.sock is not None:
                 self.sock.shutdown(socket.SHUT_RDWR)
-                self.sock.close()
-                self.sock = None
         except OSError:
-            # This would typically occur if the socket is already closed.
-            self.mainWindow.MESSAGEHANDLER.info('Tried to close socket that was already closed.')
+            # This would typically occur if the socket is already shut down.
+            self.mainWindow.MESSAGEHANDLER.debug('Tried to shutdown socket that was already shut down.')
+        self.sock.close()
+        self.sock = None
 
         return False
 
@@ -447,14 +449,14 @@ class CommunicationsHandler(QtCore.QObject):
     #   to a particular canvas.
     # Being verbose is better than prematurely optimizing for a few kbps of
     #   network traffic.
-    def receiveDatabaseUpdateEvent(self, entity_json: dict, add: bool):
+    def receiveDatabaseUpdateEvent(self, entity_json: dict, add: int):
         try:
             entity_json['Icon'] = QtCore.QByteArray(b64decode(entity_json['Icon']))
         except KeyError:
             pass
         self.receive_project_database_update.emit(entity_json, add)
 
-    def sendDatabaseUpdateEvent(self, project_name: str, entity_json: dict, add: bool):
+    def sendDatabaseUpdateEvent(self, project_name: str, entity_json: dict, add: int):
         try:
             entity_json['Icon'] = entity_json['Icon'].toBase64().data()
         except KeyError:
