@@ -28,7 +28,7 @@ class VirusTotal_File:
         url = "https://www.virustotal.com/api/v3/analyses/"
         for entity in entityJsonList:
             uid = entity['uid']
-            file_path = Path(entity["File Path"])
+            file_path = Path(parameters['Project Files Directory']) / entity['File Path']
             if not (file_path.exists() and file_path.is_file()):
                 continue
             try:

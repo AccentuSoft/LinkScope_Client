@@ -17,6 +17,8 @@ class Nessus_Import:
         for entity in entityJsonList:
             reportUID = entity['uid']
             filePath = Path(parameters['Project Files Directory']) / entity['File Path']
+            if not (filePath.exists() and filePath.is_file()):
+                continue
             root = parse(str(filePath), forbid_dtd=True,
                          forbid_entities=True, forbid_external=True).getroot()
             report = root.find('Report')

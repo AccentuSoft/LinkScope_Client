@@ -15,7 +15,7 @@ class ImageToGeoLocation:
         return_result = []
         for entity in entityJsonList:
             uid = entity['uid']
-            image_path = Path(entity["File Path"])
+            image_path = Path(parameters['Project Files Directory']) / entity['File Path']
             if not (image_path.exists() and image_path.is_file()):
                 continue
             with open(image_path, 'rb') as image_file:
