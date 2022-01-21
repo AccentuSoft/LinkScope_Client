@@ -285,14 +285,15 @@ class MenuBar(QtWidgets.QMenuBar):
         serverMenu.addSeparator()
 
         uploadFilesAction = QtGui.QAction("Upload Selected Files", self,
-                                          statusTip="Upload selected Materials entity files to server",
+                                          statusTip="Upload selected Materials entity files to Server.",
                                           triggered=self.uploadFiles)
         serverMenu.addAction(uploadFilesAction)
 
-        downloadFileAction = QtGui.QAction("Download Files", self,
-                                           statusTip="Download specified files from server",
-                                           triggered=self.downloadFile)
-        serverMenu.addAction(downloadFileAction)
+        downloadFilesAction = QtGui.QAction("Download Files", self,
+                                            statusTip="Download files from the Server that correspond to the selected "
+                                                      "Materials entities.",
+                                            triggered=self.downloadFiles)
+        serverMenu.addAction(downloadFilesAction)
 
     # Use this function to change the labels of functions when necessary.
     # Not very efficient, but much more intuitive than creating a ton of different menus
@@ -752,8 +753,8 @@ class MenuBar(QtWidgets.QMenuBar):
     def uploadFiles(self) -> None:
         self.parent().uploadFiles()
 
-    def downloadFile(self):
-        pass  # TODO
+    def downloadFiles(self):
+        self.parent().downloadFiles()
 
     def findEntityOrLink(self) -> None:
         self.parent().findEntityOrLinkOnCanvas()

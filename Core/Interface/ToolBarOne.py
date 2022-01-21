@@ -147,7 +147,7 @@ class ToolBarOne(QtWidgets.QToolBar):
         self.parent().uploadFiles()
 
     def downloadSelectedFiles(self):
-        self.parent().downloadFile()
+        self.parent().downloadFiles()
 
     def mergeEntities(self):
         self.parent().mergeEntities()

@@ -259,10 +259,6 @@ class DocList(QtWidgets.QTreeWidget):
             newWidget = DocWidget(self, None, fileName)
             self.uploadedFileWidgets.append(newWidget)
 
-    def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
-        super(DocList, self).mousePressEvent(event)
-        # TODO - be able to drag downloaded files onto canvas, and create entities when that happens.
-
 
 class DocWidget(QtWidgets.QTreeWidgetItem):
 

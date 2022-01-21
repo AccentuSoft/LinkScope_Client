@@ -668,14 +668,13 @@ class CommunicationsHandler(QtCore.QObject):
                                                        ' Code: ' + str(status_code) +
                                                        ' On Operation: ' + str(operation))
 
-    def receiveFile(self, project_name: str, file_name: str):
+    def receiveFile(self, project_name: str, file_name: str, saveDir: Path):
         # Do not download files already being downloaded.
         if self.downloadingFiles.get(file_name) is None:
-            saveDir = Path(self.mainWindow.SETTINGS.value("Project/FilesDir")) / file_name
             fileHandler = open(saveDir, "wb")
             self.downloadingFiles[file_name] = fileHandler
 
-            message = {'Operation': 'Download File',
+            message = {'Operation': 'File Download',
                        'Arguments': {
                            'project_name': project_name,
                            'file_name': file_name
@@ -699,10 +698,10 @@ class CommunicationsHandler(QtCore.QObject):
             return
 
         fileHandler.close()
-        self.status_message_signal.emit('Finished downloading file from server: ' + file_name, False)
+        self.status_message_signal.emit('Finished downloading file from server: ' + file_name, True)
 
     def receiveFileAbort(self, project_name: str, file_name: str):
-        messageJson = {"Operation": "Download File Abort",
+        messageJson = {"Operation": "File Download Abort",
                        "Arguments": {
                            'project_name': project_name,
                            'file_name': file_name
@@ -775,7 +774,7 @@ class CommunicationsHandler(QtCore.QObject):
         :return:
         """
         for file_name in self.downloadingFiles:
-            messageJson = {"Operation": "Download File Abort",
+            messageJson = {"Operation": "File Download Abort",
                            "Arguments": {
                                'project_name': project_name,
                                'file_name': file_name

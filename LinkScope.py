@@ -1250,7 +1250,6 @@ class MainWindow(QtWidgets.QMainWindow):
             self.setStatus(statusMessage)
             self.MESSAGEHANDLER.info(statusMessage)
 
-
     def receiveSyncCanvasListener(self, canvas_name: str, canvas_nodes: dict, canvas_edges: dict) -> None:
         if canvas_name in self.centralWidget().tabbedPane.canvasTabs:
             canvasToSync = self.centralWidget().tabbedPane.canvasTabs[canvas_name]
@@ -1362,15 +1361,15 @@ class MainWindow(QtWidgets.QMainWindow):
                     itemsToUpload.append(itemJson)
 
         if not itemsToUpload:
-            self.setStatus('No Materials entities selected to upload to Server.')
-            self.MESSAGEHANDLER.info('To send files to the server, please select any number of entities on the '
+            self.setStatus('No Materials Entities selected to upload to Server.')
+            self.MESSAGEHANDLER.info('To send files to the server, please select any number of Entities on the '
                                      'current canvas. The type of each selected entity has to be one of the types '
-                                     'in the Materials category.', popUp=True)
+                                     'in the "Materials" category.', popUp=True)
             return
 
         for item in itemsToUpload:
-            fileDir = self.SETTINGS.value("Project/FilesDir") / item['File Path']
-            file_name = item[list(item)[1]]
+            fileDir = Path(self.SETTINGS.value("Project/FilesDir")) / item['File Path']
+            file_name = item[self.RESOURCEHANDLER.getPrimaryFieldForEntityType(item['Entity Type'])]
             if file_name in [uploadingFileName.getFileName()
                              for uploadingFileName in self.dockbarOne.documentsList.uploadingFileWidgets]:
                 continue
@@ -1378,7 +1377,7 @@ class MainWindow(QtWidgets.QMainWindow):
                              for uploadedFileName in self.dockbarOne.documentsList.uploadedFileWidgets]:
                 continue
 
-            self.dockbarOne.documentsList.addUploadingFileToList(item[list(item)[1]])
+            self.dockbarOne.documentsList.addUploadingFileToList(file_name)
             self.FCOM.sendFile(project_name, file_name, fileDir)
 
     def receiveAbortUploadOfFiles(self, file_name: Union[str, None]):
@@ -1411,20 +1410,43 @@ class MainWindow(QtWidgets.QMainWindow):
             if project_name != '':
                 self.FCOM.sendFileAbort(project_name, file_name)
 
-    def downloadFile(self, file_name: str) -> None:
-        saveDir = Path(self.SETTINGS.value("Project/FilesDir")) / file_name
-        project_name = self.SETTINGS.value("Project/Server/Project")
+    def downloadFiles(self, items=None) -> None:
         if not self.FCOM.isConnected():
-            self.setStatus("Not Connected to a Server.")
-            self.MESSAGEHANDLER.info('Cannot Download file: Not connected to a Server.', popUp=True)
-        if project_name != '':
-            if saveDir.exists():
-                # Do not overwrite local files.
-                return
-            self.FCOM.receiveFile(project_name, file_name)
+            self.setStatus("Not Connected to Server.")
+            return
+
+        project_name = self.SETTINGS.value("Project/Server/Project")
+        if project_name == "":
+            self.setStatus("No open Server Project, cannot download files.")
+            self.MESSAGEHANDLER.warning("Must create or open a Server Project before downloading files.", popUp=True)
+            return
+
+        self.setStatus('Downloading...')
+
+        itemsToDownload = []
+        if items is not None:
+            itemsToDownload = items
         else:
-            self.setStatus("No currently open Server Project.")
-            self.MESSAGEHANDLER.info('Cannot Download file: Not working on a Server Project.', popUp=True)
+            materialsEntities = self.RESOURCEHANDLER.getAllEntitiesInCategory('Materials')
+            projectFilesPath = Path(self.SETTINGS.value("Project/FilesDir"))
+            for item in self.centralWidget().tabbedPane.getCurrentScene().selectedItems():
+                itemJson = self.LENTDB.getEntity(item.uid)
+                itemPath = projectFilesPath / itemJson['File Path']
+                # Do not download files that already exist.
+                if itemJson.get('Entity Type') in materialsEntities and not itemPath.exists():
+                    itemsToDownload.append(itemJson)
+
+        if not itemsToDownload:
+            self.setStatus('No Materials Entities selected to download from Server.')
+            self.MESSAGEHANDLER.info('To download files from the server, please select any number of Entities on the '
+                                     'current canvas. The type of each selected entity has to be one of the types '
+                                     'in the "Materials" category.', popUp=True)
+            return
+
+        for item in itemsToDownload:
+            fileDir = Path(self.SETTINGS.value("Project/FilesDir")) / item['File Path']
+            file_name = item[self.RESOURCEHANDLER.getPrimaryFieldForEntityType(item['Entity Type'])]
+            self.FCOM.receiveFile(project_name, file_name, fileDir)
 
     def abortDownload(self, file_name: str) -> None:
         if self.FCOM.isConnected():
