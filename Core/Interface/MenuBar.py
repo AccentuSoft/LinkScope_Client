@@ -107,19 +107,25 @@ class MenuBar(QtWidgets.QMenuBar):
                                 statusTip="Edit Logging Settings",
                                 triggered=self.editLogSettings)
 
-        editProject = QtGui.QAction('Project Settings',
-                                    self,
-                                    statusTip="Edit Project Settings",
-                                    triggered=self.editProjectSettings)
-
         editResolution = QtGui.QAction('Resolutions Settings',
                                        self,
                                        statusTip="Edit Resolutions Settings",
                                        triggered=self.editResolutionsSettings)
 
+        editProject = QtGui.QAction('Project Settings',
+                                    self,
+                                    statusTip="Edit Project Settings",
+                                    triggered=self.editProjectSettings)
+
+        editProgram = QtGui.QAction('Program Settings',
+                                    self,
+                                    statusTip="Edit Program Settings",
+                                    triggered=self.editProgramSettings)
+
         editSettingsMenu.addAction(editLog)
         editSettingsMenu.addAction(editResolution)
         editSettingsMenu.addAction(editProject)
+        editSettingsMenu.addAction(editProgram)
 
         exitAction = QtGui.QAction("Exit",
                                    self,
@@ -157,6 +163,23 @@ class MenuBar(QtWidgets.QMenuBar):
         viewMenu.addAction(regexTypeFindAction)
         viewMenu.addSeparator()
 
+        rearrangeGraphAction = QtGui.QAction("Rearrange Graph",
+                                             self,
+                                             statusTip="Rearrange the nodes on the current Canvas to a default "
+                                                       "configuration according to the currently configured graphing "
+                                                       "algorithm.",
+                                             triggered=self.rearrangeGraph)
+        viewMenu.addAction(rearrangeGraphAction)
+
+        rearrangeAsTimelineAction = QtGui.QAction("Rearrange Graph as Timeline",
+                                                  self,
+                                                  statusTip="Rearrange the nodes on the current Canvas to a "
+                                                            "Left-to-Right half-tree according to the entities' "
+                                                            "creation date.",
+                                                  triggered=self.rearrangeGraphToTimeLine)
+        viewMenu.addAction(rearrangeAsTimelineAction)
+        viewMenu.addSeparator()
+
         runningResolutionsAction = QtGui.QAction("&Running Resolutions",
                                                  self,
                                                  statusTip="View Running Resolutions",
@@ -164,6 +187,7 @@ class MenuBar(QtWidgets.QMenuBar):
         runningResolutionsAction.setShortcut("Ctrl+R")
         viewMenu.addAction(runningResolutionsAction)
         viewMenu.addSeparator()
+
         openWebsiteInBrowserTabAction = QtGui.QAction("Open Selected Websites in Browser",
                                                       self,
                                                       statusTip="Open the Selected Website entities in new "
@@ -638,6 +662,9 @@ class MenuBar(QtWidgets.QMenuBar):
     def editProjectSettings(self) -> None:
         self.parent().editProjectSettings()
 
+    def editProgramSettings(self) -> None:
+        self.parent().editProgramSettings()
+
     def editResolutionsSettings(self) -> None:
         self.parent().editResolutionsSettings()
 
@@ -778,6 +805,12 @@ class MenuBar(QtWidgets.QMenuBar):
                         webbrowser.open(itemJSON['URL'], new=0, autoraise=True)
                     except KeyError:
                         continue
+
+    def rearrangeGraph(self) -> None:
+        self.parent().centralWidget().tabbedPane.getCurrentScene().rearrangeGraph()
+
+    def rearrangeGraphToTimeLine(self) -> None:
+        self.parent().centralWidget().tabbedPane.getCurrentScene().rearrangeGraphTimeline()
 
     def importFromBrowser(self) -> None:
         """

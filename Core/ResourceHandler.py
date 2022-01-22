@@ -11,6 +11,7 @@ from pathlib import Path
 from uuid import uuid4
 from ast import literal_eval
 from base64 import b64decode
+from dateutil import parser
 
 from PySide6.QtGui import QIcon
 from PySide6.QtCore import QByteArray
@@ -179,6 +180,12 @@ class ResourceHandler:
         utcNow = datetime.isoformat(datetime.utcnow())
         if eJson['Date Created'] is None:
             eJson['Date Created'] = utcNow
+        else:
+            # Always make sure dates are in ISO format.
+            try:
+                eJson['Date Created'] = parser.parse(str(eJson['Date Created'])).isoformat()
+            except (TypeError, ValueError):
+                eJson['Date Created'] = utcNow
 
         eJson['Date Last Edited'] = utcNow
 
@@ -220,8 +227,14 @@ class ResourceHandler:
         utcNow = datetime.isoformat(datetime.utcnow())
         linkJson['Resolution'] = str(jsonData.get('Resolution'))  # This way, if it is None, it is cast to a string.
         linkJson['Date Created'] = jsonData.get('Date Created')
+        # Make sure that dates are always in ISO format.
         if linkJson['Date Created'] is None:
             linkJson['Date Created'] = utcNow
+        else:
+            try:
+                linkJson['Date Created'] = parser.parse(str(linkJson['Date Created'])).isoformat()
+            except (TypeError, ValueError):
+                linkJson['Date Created'] = utcNow
         linkJson['Date Last Edited'] = utcNow
         linkJson['Notes'] = str(jsonData.get('Notes'))
 

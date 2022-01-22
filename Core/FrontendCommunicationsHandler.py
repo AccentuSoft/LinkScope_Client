@@ -209,7 +209,7 @@ class CommunicationsHandler(QtCore.QObject):
             return None
 
     def transmitMessage(self, messageJson: dict, showErrorOnBrokenPipe: bool = True):
-        print('Sending message:', messageJson)
+        self.mainWindow.MESSAGEHANDLER.debug('Sending Message: ' + str(messageJson))
         argEncoded = str(messageJson)
         largeMessageUUID = str(uuid4())
         try:
@@ -511,7 +511,6 @@ class CommunicationsHandler(QtCore.QObject):
         if not filePath.exists() or not filePath.is_file():
             return
         fileHandler = open(filePath, 'rb')
-        print('Sending file:', filePath)
 
         currThread = threading.currentThread()
         while getattr(currThread, "continue_running", True):
@@ -565,7 +564,7 @@ class CommunicationsHandler(QtCore.QObject):
             if prevMesg == message:
                 # Same message, do not waste time handling.
                 continue
-            print('Message To handle:', message)  # TODO Make this logging.
+            self.mainWindow.MESSAGEHANDLER.debug('Message to handle: ' + str(message))
             operation = message['Operation']
             arguments = message['Arguments']
             if operation == 'Get Server Resolutions':

@@ -21,8 +21,9 @@ class SettingsObject(dict):
 
     def __init__(self):
         super().__init__()
-        self.setValue("Project/Name", "Untitled")
         self.setValue("Program/BaseDir", "Unset")  # dirname(abspath(getsourcefile(lambda:0))) + "/../" )
+        self.setValue("Program/GraphLayout", "dot")
+        self.setValue("Project/Name", "Untitled")
         self.setValue("Project/BaseDir", "")
         self.setValue("Project/FilesDir", "")
         # For any entity with a Path variable, this dictates whether a copy of the original is made or whether a

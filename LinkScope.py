@@ -778,6 +778,24 @@ class MainWindow(QtWidgets.QMainWindow):
             self.MESSAGEHANDLER.changeLogfile(self.SETTINGS.value('Logging/Logfile'))
             self.saveProject()
 
+    def editProgramSettings(self) -> None:
+        settingsDialog = ProgramEditDialog(self.SETTINGS)
+        settingsConfirm = settingsDialog.exec()
+
+        if settingsConfirm:
+            # Save new settings
+            newSettings = settingsDialog.newSettings
+            for key in newSettings:
+                newSettingValue = newSettings[key]
+                if newSettingValue[1]:
+                    # Delete key
+                    self.SETTINGS.pop(key)
+                elif newSettingValue[0] != '':
+                    # Do not allow blank settings.
+                    self.SETTINGS.setValue(key, newSettingValue[0])
+
+            self.saveProject()
+
     def loadModules(self) -> None:
         """
         Loads user-defined modules from the Modules folder in the installation directory.
@@ -2506,6 +2524,87 @@ class MultiChoicePropertyInput(QtWidgets.QGroupBox):
         return valuesSelected
 
 
+class ProgramEditDialog(QtWidgets.QDialog):
+
+    def __init__(self, settingsObject):
+        super(ProgramEditDialog, self).__init__()
+        self.setModal(True)
+        self.setMaximumWidth(850)
+        self.setMinimumWidth(600)
+        self.setMaximumHeight(600)
+        self.setMinimumHeight(400)
+        self.settings = settingsObject
+        self.setStyleSheet(Stylesheets.MENUS_STYLESHEET)
+
+        resolutionsEditDialog = QtWidgets.QGridLayout()
+        self.setLayout(resolutionsEditDialog)
+        scrollArea = QtWidgets.QScrollArea()
+        scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        scrollArea.setWidgetResizable(True)
+        scrollContainer = QtWidgets.QWidget()
+        scrollLayout = QtWidgets.QVBoxLayout()
+        scrollContainer.setLayout(scrollLayout)
+        scrollArea.setWidget(scrollContainer)
+        resolutionsEditDialog.addWidget(scrollArea, 0, 0, 2, 2)
+
+        resolutionCategoryWidget = QtWidgets.QWidget()
+        self.resolutionCategoryLayout = SettingsCategoryLayout()
+        resolutionCategoryWidget.setLayout(self.resolutionCategoryLayout)
+        resolutionCategoryLabel = QtWidgets.QLabel('Program Settings')
+
+        resolutionCategoryLabel.setFont(QtGui.QFont("Times", 13, QtGui.QFont.Bold))
+        resolutionCategoryLabel.setFrameStyle(QtWidgets.QFrame.Raised | QtWidgets.QFrame.Panel)
+
+        resolutionCategoryLabel.setAlignment(QtCore.Qt.AlignCenter)
+        scrollLayout.addWidget(resolutionCategoryLabel)
+        scrollLayout.addWidget(resolutionCategoryWidget)
+
+        confirmButton = QtWidgets.QPushButton('Confirm')
+        confirmButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET_2)
+        confirmButton.clicked.connect(self.accept)
+        resolutionsEditDialog.addWidget(confirmButton, 2, 1, 1, 1)
+        cancelButton = QtWidgets.QPushButton('Cancel')
+        cancelButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET_2)
+        cancelButton.clicked.connect(self.reject)
+        resolutionsEditDialog.addWidget(cancelButton, 2, 0, 1, 1)
+
+        self.settingsTextboxes = []
+        self.newSettings = {}
+        self.settingsSingleChoice = []
+
+        for setting in self.settings:
+            if setting.startswith('Program/'):
+                keyName = setting.split('Program/', 1)[1]
+                if keyName != "BaseDir":  # Don't allow users to mess with this.
+                    # A bit redundant to do it this way, but it'll be cleaner if / when more settings are added.
+                    if keyName == "GraphLayout":
+                        settingSingleChoice = SettingsEditSingleChoice(['dot', 'sfdp', 'neato'],
+                                                                       self.settings.value(setting),
+                                                                       setting)
+                        settingSingleChoice.setStyleSheet(Stylesheets.RADIO_BUTTON_STYLESHEET)
+                        self.settingsSingleChoice.append(settingSingleChoice)
+                        self.resolutionCategoryLayout.addRow(keyName, settingSingleChoice)
+                    else:
+                        settingTextbox = SettingsEditTextBox(self.settings.value(setting), setting)
+                        self.settingsTextboxes.append(settingTextbox)
+                        self.resolutionCategoryLayout.addRow(keyName, settingTextbox)
+
+    def accept(self) -> None:
+        for settingTextbox in self.settingsTextboxes:
+            key = settingTextbox.settingsKey
+            value = settingTextbox.text()
+            isDeleted = settingTextbox.keyDeleted
+            self.newSettings[key] = (value, isDeleted)
+        for settingSingleChoice in self.settingsSingleChoice:
+            key = settingSingleChoice.settingsKey
+            value = [option.text() for option in settingSingleChoice.options if option.isChecked()][0]
+            isDeleted = settingSingleChoice.keyDeleted
+            self.newSettings[key] = (value, isDeleted)
+
+        super(ProgramEditDialog, self).accept()
+
+
 class ResolutionsEditDialog(QtWidgets.QDialog):
 
     def __init__(self, settingsObject):
@@ -2521,7 +2620,7 @@ class ResolutionsEditDialog(QtWidgets.QDialog):
         resolutionsEditDialog = QtWidgets.QGridLayout()
         self.setLayout(resolutionsEditDialog)
         scrollArea = QtWidgets.QScrollArea()
-        scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         scrollArea.setWidgetResizable(True)
         scrollContainer = QtWidgets.QWidget()
@@ -2588,7 +2687,7 @@ class LoggingSettingsDialog(QtWidgets.QDialog):
         loggingSettingsLayout = QtWidgets.QGridLayout()
         self.setLayout(loggingSettingsLayout)
         scrollArea = QtWidgets.QScrollArea()
-        scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         scrollArea.setWidgetResizable(True)
         scrollContainer = QtWidgets.QWidget()
@@ -2657,7 +2756,7 @@ class ProjectEditDialog(QtWidgets.QDialog):
         editDialogLayout = QtWidgets.QGridLayout()
         self.setLayout(editDialogLayout)
         scrollArea = QtWidgets.QScrollArea()
-        scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOn)
+        scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
         scrollArea.setWidgetResizable(True)
         scrollContainer = QtWidgets.QWidget()

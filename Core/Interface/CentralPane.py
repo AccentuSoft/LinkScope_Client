@@ -5,6 +5,7 @@ import json
 import sys
 import threading
 from typing import Union
+from datetime import datetime
 
 import folium
 import networkx as nx
@@ -1336,17 +1337,80 @@ class CanvasScene(QtWidgets.QGraphicsScene):
     def rearrangeGraph(self) -> None:
         # https://gitlab.com/graphviz/graphviz/-/merge_requests/2236
         # No triangulation library on windows yet, so sfdp can't be used there. We can substitute with neato.
-        self.scenePos = nx.nx_pydot.graphviz_layout(self.sceneGraph, 'sfdp')  # 'neato' for Windows for now
+
+        graphAlgorithm = self.parent().mainWindow.SETTINGS.value("Program/GraphLayout", 'dot')
+        try:
+            if graphAlgorithm == 'sfdp':
+                self.scenePos = nx.nx_pydot.graphviz_layout(self.sceneGraph, 'sfdp')
+                xFactor = (0.40 + min(len(self.nodesDict) / 100, 1))
+                yFactor = (0.40 + min(len(self.nodesDict) / 100, 1))
+            elif graphAlgorithm == 'neato':
+                self.scenePos = nx.nx_pydot.graphviz_layout(self.sceneGraph, 'neato')
+                xFactor = (3 + (0.30 + min(len(self.nodesDict) / 100, 1)))
+                yFactor = (3 + (0.30 + min(len(self.nodesDict) / 100, 1)))
+            else:
+                # Fail safe to 'dot' algorithm.
+                pdGraph = nx.drawing.nx_pydot.to_pydot(self.sceneGraph)
+                pdGraph.set_layout('dot')
+                pdGraph.set_rankdir('BT')
+                pdGraphNX = nx.nx_pydot.from_pydot(pdGraph)
+                self.scenePos = nx.drawing.nx_pydot.pydot_layout(pdGraphNX)
+                xFactor = 0.70
+                yFactor = 2.75
+        except Exception:
+            # If something goes wrong (e.g. the selected algorithm isn't found), use the dot algorithm.
+            pdGraph = nx.drawing.nx_pydot.to_pydot(self.sceneGraph)
+            pdGraph.set_layout('dot')
+            pdGraph.set_rankdir('BT')
+            pdGraphNX = nx.nx_pydot.from_pydot(pdGraph)
+            self.scenePos = nx.drawing.nx_pydot.pydot_layout(pdGraphNX)
+            xFactor = 0.70
+            yFactor = 2.75
+
         for node in self.nodesDict:
             if self.sceneGraph.nodes[node].get('groupID') is not None:
                 continue
-            x = self.scenePos[node][0] * (0.30 + min(len(self.nodesDict) / 100, 1))  # Scale graph with number of nodes.
-            y = self.scenePos[node][1] * (0.30 + min(len(self.nodesDict) / 100, 1))
-            # Windows version of the above two lines:
-            # x = self.scenePos[node][0] * (3 + (0.30 + min(len(self.nodesDict) / 100, 1)))
-            # y = self.scenePos[node][1] * (3 + (0.30 + min(len(self.nodesDict) / 100, 1)))
+            # Scale graph with number of nodes.
+            x = self.scenePos[node][0] * xFactor
+            y = self.scenePos[node][1] * yFactor
             self.scenePos[node] = (x, y)
             self.nodesDict[node].setPos(QtCore.QPointF(x, y))
+
+        self.adjustSceneRect()
+
+    def rearrangeGraphTimeline(self) -> None:
+        # Arrange nodes in a half-tree Left to Right graph based on the time they were created.
+        #  -----------
+        #       \         etc...
+        #        -----
+
+        nodesOnCanvas = {}
+        for node in self.sceneGraph.nodes:
+            if self.sceneGraph.nodes[node].get('groupID') is not None:
+                continue
+            try:
+                # Tiny differences in milliseconds are not considered to be significant.
+                entityDate = datetime.fromisoformat(
+                    self.parent().entityDB.getEntity(node)['Date Created']).replace(microsecond=0)
+            except (TypeError, ValueError):
+                # Should never happen, but we will handle it if it does.
+                self.parent().mainWindow.MESSAGEHANDLER.warning('Entity without valid Date Created: ' + str(node))
+                entityDate = datetime.now().replace(microsecond=0)
+            if entityDate not in nodesOnCanvas:
+                nodesOnCanvas[entityDate] = [node]
+            else:
+                nodesOnCanvas[entityDate].append(node)
+        sortedDates = sorted(nodesOnCanvas)
+        xValue = 0
+        yValue = 0
+        for dateIndex in range(len(sortedDates)):
+            for entityUID in nodesOnCanvas[sortedDates[dateIndex]]:
+                self.scenePos[entityUID] = (xValue, yValue)
+                self.nodesDict[entityUID].setPos(QtCore.QPointF(xValue, yValue))
+                yValue += 150
+            yValue = 0
+            xValue += 850
+
         self.adjustSceneRect()
 
     def adjustSceneRect(self) -> None:
