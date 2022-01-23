@@ -73,6 +73,7 @@ class EntityList(QtWidgets.QTreeWidget):
     def __init__(self, entityDB, mainWindow, parent=None):
         super(EntityList, self).__init__(parent=parent)
 
+        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         self.entityDB = entityDB
         self.mainWindow = mainWindow
         self.setDragEnabled(True)
@@ -223,14 +224,14 @@ class DocList(QtWidgets.QTreeWidget):
 
     def __init__(self, resourceHandler, parent=None):
         super(DocList, self).__init__(parent=parent)
+
+        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         self.resourceHandler = resourceHandler
         self.setAlternatingRowColors(False)
         self.setHeaderLabels(['Files Loaded'])
         self.uploadingFileWidgets = []
         self.uploadedFileWidgets = []
         self.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
-        self.menu = QtWidgets.QMenu()
-        self.menu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
 
     def addUploadingFileToList(self, fileName: str):
         newWidget = DocWidget(self,
@@ -280,6 +281,8 @@ class ResolutionList(QtWidgets.QTreeWidget):
                  parent=None):
 
         super(ResolutionList, self).__init__(parent=parent)
+
+        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         self.resolutionManager = resolutionManager
         self.lentDB = entityDatabase
         self.mainWindow = mainWindow
@@ -343,6 +346,8 @@ class NodeList(QtWidgets.QTreeWidget):
 
     def __init__(self, resourceHandler, parent=None):
         super(NodeList, self).__init__(parent=parent)
+
+        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         self.resourceHandler = resourceHandler
         self.setDragEnabled(True)
         self.setHeaderLabels(['Entities'])

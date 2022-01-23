@@ -363,6 +363,8 @@ class RelationshipsTable(QtWidgets.QTreeWidget):
 
     def __init__(self, parent, mainWindow, uidLabel: QtWidgets.QLabel = None, incomingOrOutgoing: int = None):
         super().__init__(parent=parent)
+
+        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         self.mainWindow = mainWindow
         self.incomingOrOutgoing = incomingOrOutgoing
         self.uidLabel = uidLabel
@@ -394,6 +396,8 @@ class LinksTable(QtWidgets.QTreeWidget):
 
     def __init__(self, parent, mainWindow):
         super().__init__(parent=parent)
+
+        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         self.mainWindow = mainWindow
 
     def mousePressEvent(self, event):

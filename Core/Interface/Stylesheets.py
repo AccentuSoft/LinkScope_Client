@@ -15,7 +15,7 @@ TOOLBAR_STYLESHEET = """QToolBar {background-color: rgb(41, 45, 62);
                      """
 
 MAIN_WINDOW_STYLESHEET = """
-                        QWidget, QFileDialog, QDialog{ 
+                        QWidget, QFileDialog, QDialog, QHeaderView{ 
                         background-color: rgb(41, 45, 62);
                          color: rgba(248, 248, 242, 1) !important;
                          font-size: 15px;
@@ -185,11 +185,12 @@ RESOLUTION_WIZARD_STYLESHEET = "background-color: rgb(41, 45, 62);" \
                                "font-family: Segoe UI;" \
                                "font-size: 13px;"
 
-PATH_INPUT_STYLESHEET = "border: 2px solid rgb(44, 49, 58);" \
-                        "border-radius: 25px;" \
-                        "padding: 4px; " \
-                        "background-color: rgb(129, 133, 137);" \
-                        "color: rgba(248, 248, 242, 1) !important;"
+PATH_INPUT_STYLESHEET = """border: 2px solid rgb(44, 49, 58);
+                        border-radius: 25px;
+                        padding: 4px;
+                        background-color: rgb(129, 133, 137);
+                        color: rgba(248, 248, 242, 1) !important;
+                        """
 
 BUTTON_STYLESHEET = """
                         QPushButton {
