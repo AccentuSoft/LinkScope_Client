@@ -53,7 +53,7 @@ class Offshore_Leaks_Addresses:
                     countries_list = countries.split(",")
                     for country in countries_list:
                         if country != "Not identified" and country != " Not identified":
-                            print(country)
+                            # print(country)
                             return_result.append([{'Country Name': country,
                                                    'Entity Type': 'Country'},
                                                   {index_of_child: {'Resolution': 'Linked to', 'Notes': ''}}])

@@ -48,6 +48,5 @@ class VirusTotal_IP_Address:
                                            'Entity Type': 'Autonomous System'},
                                           {uid: {'Resolution': 'VirusTotal IP Scan', 'Notes': ''}}])
                 else:
-                    print('HTTP Error [' + str(vt_api_ip_addresses.get_last_http_error()) + ']')
-                    return_result = []
+                    continue
             return return_result

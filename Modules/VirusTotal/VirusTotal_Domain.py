@@ -28,9 +28,8 @@ class VirusTotal_Domain:
             primary_field = entity[list(entity)[1]].strip()
             try:
                 results = vt_api_domains.get_report(primary_field)
-            except VirusTotalAPIError as err:
-                print(err, err.err_code)
-                return_result = []
+            except VirusTotalAPIError:
+                continue
             else:
                 if vt_api_domains.get_last_http_error() == vt_api_domains.HTTP_OK:
                     results = json.loads(results)

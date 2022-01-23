@@ -37,7 +37,7 @@ class OrgSearch_GitAllSecrets:
             client = docker.from_env()
             with tempfile.TemporaryDirectory() as tempDir:
                 tempPath = Path(tempDir).absolute()
-                print(tempPath, tempPath.exists())
+                # print(tempPath, tempPath.exists())
                 client.containers.run('abhartiya/tools_gitallsecrets:latest',
                                       f'-token={parameters["Token"]} '
                                       f'-org={entity[list(entity)[1]]} -output=/home/out.txt',
@@ -58,8 +58,8 @@ class OrgSearch_GitAllSecrets:
                 if line.startswith('OrgorUser'):
                     orgOrUser.append(line.split(' '))
 
-            print(hogSecret)
-            print(jsonContents)
+            # print(hogSecret)
+            # print(jsonContents)
 
             data = pattern.findall(repoSupervisor)
             for value in data:
@@ -96,7 +96,7 @@ class OrgSearch_GitAllSecrets:
                                                   {index_of_child: {'Resolution': 'GitHub Secret',
                                                                     'Name': 'GitHub Secret',
                                                                     'Notes': ''}}])
-                            print(ansi_escape.sub('', hogSecret[hogIndex]))
+                            # print(ansi_escape.sub('', hogSecret[hogIndex]))
                             hogIndex += 1
                         elif 'Hash' in line:
                             returnResults.append([{'Hash Value': ansi_escape.sub('', line),

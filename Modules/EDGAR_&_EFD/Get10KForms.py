@@ -45,7 +45,7 @@ class Get10KForms:
                 return []
 
             data = r.json()
-            print(data)
+            # print(data)
 
             forms = list(data['facts'].keys())
 

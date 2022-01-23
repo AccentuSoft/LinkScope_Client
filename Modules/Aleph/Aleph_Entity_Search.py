@@ -58,7 +58,7 @@ class Aleph_Entity_Search:
                 response = future.result().json()
             except requests.exceptions.ConnectionError:
                 return "Please check your internet connection"
-            print(response)
+            # print(response)
             for schema in response['results']:
                 index_of_child = len(return_result)
                 try:
@@ -263,7 +263,7 @@ class Aleph_Entity_Search:
                               'Notes': '',
                               'Entity Type': 'Aleph Collection ID'},
                              {index_of_child_of_child: {'Resolution': 'Aleph Entity Search', 'Notes': ''}}])
-                except (TypeError, KeyError) as e:
-                    print(repr(e))
+                except (TypeError, KeyError):
+                    # print(repr(e))
                     continue
         return return_result

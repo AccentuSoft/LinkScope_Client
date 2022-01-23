@@ -43,9 +43,9 @@ class Offshore_Leaks_Entities:
                 return "We couldn't retrieve any results pls try a different search query."
             df = df_list[0]
             df = df.iloc[:]
-            print(df)
+            # print(df)
             for company in range(len(df[:max_results])):
-                print(company)
+                # print(company)
                 index_of_child = len(return_result)
                 return_result.append([{'Company Name': df['Unnamed: 0'][company],
                                        'Entity Type': 'Company'},

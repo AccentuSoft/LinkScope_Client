@@ -73,7 +73,7 @@ class OpenCorporateOfficerOccupation:
                     return "Please check your internet connection"
                 # Rate limited to the Starter API rate.
                 time.sleep(0.02)
-                print(r)
+                # print(r)
                 data = r.json
 
             if r.status_code == 401:

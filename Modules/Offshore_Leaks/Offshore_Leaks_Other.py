@@ -43,7 +43,7 @@ class Offshore_Leaks_Other:
                 return "We couldn't retrieve any results pls try a different search query."
             df = df_list[0]
             df = df.iloc[:]
-            print(df, list(df))
+            # print(df, list(df))
             for organization in range(len(df[:max_results])):
                 index_of_child = len(return_result)
                 return_result.append([{'Organization Name': df['Unnamed: 0'][organization],
@@ -58,7 +58,7 @@ class Offshore_Leaks_Other:
                     countries_list = countries.split(",")
                     for country in countries_list:
                         if country != "Not identified" and country != " Not identified":
-                            print(country)
+                            # print(country)
                             return_result.append([{'Country Name': country,
                                                    'Entity Type': 'Country'},
                                                   {index_of_child: {'Resolution': 'Linked to', 'Notes': ''}}])

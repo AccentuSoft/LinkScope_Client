@@ -72,7 +72,7 @@ class Get3Forms:
                         r = requests.get(anchor, headers=headers)
                         data = (json.dumps(xmltodict.parse(r.text))).replace('null', 'None')
                         data = literal_eval(data)
-                        print(data)
+                        # print(data)
 
                         name = data['ownershipDocument']['reportingOwner']['reportingOwnerId']['rptOwnerName']
                         remarks = \

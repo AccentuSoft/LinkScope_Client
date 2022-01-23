@@ -41,7 +41,7 @@ class Get40FForms:
             search_url = f'https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json'
             time.sleep(1)
             r = requests.get(search_url, headers=headers)
-            print(r.content)
+            # print(r.content)
             if r.status_code != 200:
                 return []
 

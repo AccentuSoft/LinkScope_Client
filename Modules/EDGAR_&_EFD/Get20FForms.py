@@ -38,7 +38,7 @@ class Get20FForms:
                 cik = cik.split('cik')[1]
             if len(cik) != 10:
                 cik = cik.zfill(10)
-            print(cik)
+            # print(cik)
             search_url = f'https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json'
             time.sleep(1)
             r = requests.get(search_url, headers=headers)

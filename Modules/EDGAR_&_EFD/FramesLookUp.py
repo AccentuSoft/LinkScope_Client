@@ -56,12 +56,12 @@ class FramesLookUp:
             if r.status_code != 200:
                 return []
             data = r.json()
-            print(data['data'])
+            # print(data['data'])
             if linkNumbers > len(data['data']):
                 linkNumbers = len(data['data'])
 
             for i in range(linkNumbers):
-                print(data['data'][i])
+                # print(data['data'][i])
                 index_of_child = (len(returnResults))
                 returnResults.append([{'Company Name': data['data'][i]['entityName'],
                                        'Entity Type': 'Company'},

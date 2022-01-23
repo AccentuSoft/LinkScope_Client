@@ -373,11 +373,7 @@ class TabbedPane(QtWidgets.QTabWidget):
                 allEntityPrimaryFieldsAndTypes.append((newNodePrimaryField, newNodeEntityType))
 
         progress.setValue(1)
-        # if progress.wasCanceled():
-        #    progress.setValue(steps)
-        #    self.mainWindow.syncDatabase()
-        #    return
-        for resultListIndex in range(len(resolution_result)):
+        for resultListIndex in range(len(newNodeUIDs)):
             outputEntityUID = newNodeUIDs[resultListIndex]
             parentsDict = resolution_result[resultListIndex][1]
             for parentID in parentsDict:
@@ -402,9 +398,6 @@ class TabbedPane(QtWidgets.QTabWidget):
 
         progress.setValue(2)
 
-        # if not progress.wasCanceled():
-        #    self.addLinksToTabs(links, resolution_name)
-        #    self.mainWindow.syncDatabase()
         self.mainWindow.syncDatabase()
         self.addLinksToTabs(links, resolution_name)
         progress.setValue(3)
@@ -1209,16 +1202,17 @@ class CanvasScene(QtWidgets.QGraphicsScene):
                               if sceneGraphNodes[item].get('groupID') == nodeJSON['uid']]
 
             picture = nodeJSON.get('Icon')
+            try:
+                nodePrimaryAttribute = nodeJSON.get(
+                    self.parent().mainWindow.RESOURCEHANDLER.getPrimaryFieldForEntityType(nodeJSON['Entity Type']), '')
+            except IndexError:
+                nodePrimaryAttribute = ''
 
             if groupItems is None:
-                try:
-                    nodePrimaryAttribute = nodeJSON.get(list(nodeJSON)[1])
-                except IndexError:
-                    nodePrimaryAttribute = ''
                 newNode = Entity.BaseNode(picture, node, nodePrimaryAttribute)
                 self.addNodeToScene(newNode)
             else:
-                newNode = Entity.GroupNode(picture, node)
+                newNode = Entity.GroupNode(picture, node, nodePrimaryAttribute)
                 self.addNodeToScene(newNode)
 
                 newGroupList = newNode.listWidget
@@ -1329,7 +1323,6 @@ class CanvasScene(QtWidgets.QGraphicsScene):
                 del self.sceneGraph.nodes[uid]['groupID']
             else:
                 self.sceneGraph.add_node(uid)
-            self.sceneGraph.add_node(uid)
             self.addEntityLinkCreatorHelper(newNode)
 
         return newNode
@@ -1349,17 +1342,44 @@ class CanvasScene(QtWidgets.QGraphicsScene):
                 xFactor = (3 + (0.30 + min(len(self.nodesDict) / 100, 1)))
                 yFactor = (3 + (0.30 + min(len(self.nodesDict) / 100, 1)))
             else:
-                # Fail safe to 'dot' algorithm.
-                pdGraph = nx.drawing.nx_pydot.to_pydot(self.sceneGraph)
+                # Default algorithm is 'dot', when nothing else is selected.
+
+                # No real 'links' to group nodes by default (links to internal nodes don't count). This means that the
+                #   'dot' algorithm can create odd graphs where group nodes are concerned.
+                # To fix this, we will duplicate the scene graph, add links between the group nodes and the
+                #   outside world, and use that clone for positions.
+                currGraphClone = nx.DiGraph(self.sceneGraph)
+
+                for edgeParentUID, edgeChild in dict(currGraphClone.edges):
+                    potentialGroupIDOne = currGraphClone.nodes[edgeParentUID].get('groupID', edgeParentUID)
+                    potentialGroupIDTwo = currGraphClone.nodes[edgeChild].get('groupID', edgeChild)
+                    # Nothing happens if edge already exists. If not, edge is created.
+                    # These edges will not be visible on the actual graph generated.
+                    currGraphClone.add_edge(potentialGroupIDOne, potentialGroupIDTwo)
+
+                pdGraph = nx.drawing.nx_pydot.to_pydot(currGraphClone)
                 pdGraph.set_layout('dot')
                 pdGraph.set_rankdir('BT')
                 pdGraphNX = nx.nx_pydot.from_pydot(pdGraph)
                 self.scenePos = nx.drawing.nx_pydot.pydot_layout(pdGraphNX)
                 xFactor = 0.70
                 yFactor = 2.75
-        except Exception:
+        except Exception as exc:
+            self.parent().mainWindow.MESSAGEHANDLER.error('Failed drawing graph with selected algorithm, falling back '
+                                                          'to using "dot" algorithm: ' + str(exc), popUp=False)
             # If something goes wrong (e.g. the selected algorithm isn't found), use the dot algorithm.
-            pdGraph = nx.drawing.nx_pydot.to_pydot(self.sceneGraph)
+
+            # See comments for 'dot' algorithm.
+            currGraphClone = nx.DiGraph(self.sceneGraph)
+
+            for edgeParentUID, edgeChild in dict(currGraphClone.edges):
+                potentialGroupIDOne = currGraphClone.nodes[edgeParentUID].get('groupID', edgeParentUID)
+                potentialGroupIDTwo = currGraphClone.nodes[edgeChild].get('groupID', edgeChild)
+                # Nothing happens if edge already exists. If not, edge is created.
+                # These edges will not be visible on the actual graph generated.
+                currGraphClone.add_edge(potentialGroupIDOne, potentialGroupIDTwo)
+
+            pdGraph = nx.drawing.nx_pydot.to_pydot(currGraphClone)
             pdGraph.set_layout('dot')
             pdGraph.set_rankdir('BT')
             pdGraphNX = nx.nx_pydot.from_pydot(pdGraph)
@@ -1368,8 +1388,6 @@ class CanvasScene(QtWidgets.QGraphicsScene):
             yFactor = 2.75
 
         for node in self.nodesDict:
-            if self.sceneGraph.nodes[node].get('groupID') is not None:
-                continue
             # Scale graph with number of nodes.
             x = self.scenePos[node][0] * xFactor
             y = self.scenePos[node][1] * yFactor
@@ -1385,9 +1403,7 @@ class CanvasScene(QtWidgets.QGraphicsScene):
         #        -----
 
         nodesOnCanvas = {}
-        for node in self.sceneGraph.nodes:
-            if self.sceneGraph.nodes[node].get('groupID') is not None:
-                continue
+        for node in self.nodesDict:
             try:
                 # Tiny differences in milliseconds are not considered to be significant.
                 entityDate = datetime.fromisoformat(

@@ -182,9 +182,9 @@ class Amass_Intel:
                             path_to_config = config.name
                             path_to_config = path_to_config.replace(str(tempPath), "")
                             config.seek(0)
-                            print(config.read())
-                            print(path_to_config)
-                            print(entity['Entity Type'])
+                            # print(config.read())
+                            # print(path_to_config)
+                            # print(entity['Entity Type'])
                             if entity['Entity Type'] == "Domain":
                                 container = client.containers.run("caffix/amass:latest",
                                                                   f"intel -src -d {primary_field} -config /.config/amass"
