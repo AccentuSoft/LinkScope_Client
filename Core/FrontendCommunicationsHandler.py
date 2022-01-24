@@ -25,6 +25,12 @@ from cryptography.hazmat.primitives.serialization import load_der_public_key
 from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.exceptions import InvalidTag
 
+# Amount of data to place in each message
+MESSAGE_DATA_SIZE = 8192
+
+# Needs to be a bit bigger than MESSAGE_DATA_SIZE
+RECV_SIZE = MESSAGE_DATA_SIZE + 1024
+
 # All functions use this to run. Checks if the program is closing.
 closeSoftwareLock = threading.Lock()
 closeSoftware = False
@@ -118,7 +124,7 @@ class CommunicationsHandler(QtCore.QObject):
             self.sock.send(private_key.public_key().public_bytes(
                 Encoding.DER,
                 format=PublicFormat.SubjectPublicKeyInfo))
-            peer_public = load_der_public_key(self.sock.recv(5120))
+            peer_public = load_der_public_key(self.sock.recv(RECV_SIZE))
             shared_key = private_key.exchange(ec.ECDH(), peer_public)
             derived_key = HKDF(
                 algorithm=hashes.SHA3_256(),
@@ -134,7 +140,7 @@ class CommunicationsHandler(QtCore.QObject):
             passPad = 16 - (len(password) % 16)
             passMessage = encryptor.update(password.encode() + b"*" * passPad) + encryptor.finalize()
             self.sock.send(passMessage)
-            messageReceived = decrypter.update(self.sock.recv(5120)) + decrypter.finalize()
+            messageReceived = decrypter.update(self.sock.recv(RECV_SIZE)) + decrypter.finalize()
             if messageReceived == b"Passphrase is OK":
                 self.threadInc = threading.Thread(target=self.scanIncoming)
                 self.threadInc.setDaemon(True)
@@ -195,9 +201,7 @@ class CommunicationsHandler(QtCore.QObject):
 
     def encryptTransmission(self, bytesObject):
         encryptor = self.cipher.encryptor()
-        # No need to check for overflows or negative pads - transmitMessage practically ensures that the data
-        #   sent will always be less than or equal to 1280 bytes.
-        padNeeded = 1280 - len(bytesObject)
+        padNeeded = 16 - (len(bytesObject) % 16)
         message = encryptor.update(b'a' * padNeeded + bytesObject) + encryptor.finalize()
         return b64encode(message) + b'\x00\x00\x00'
 
@@ -215,9 +219,9 @@ class CommunicationsHandler(QtCore.QObject):
         argEncoded = str(messageJson)
         largeMessageUUID = str(uuid4())
         try:
-            for data in range(0, len(argEncoded), 1024):
-                partArg = argEncoded[data:data + 1024]
-                done = data + 1024 >= len(argEncoded)
+            for data in range(0, len(argEncoded), MESSAGE_DATA_SIZE):
+                partArg = argEncoded[data:data + MESSAGE_DATA_SIZE]
+                done = data + MESSAGE_DATA_SIZE >= len(argEncoded)
                 messageJson = {"uuid": largeMessageUUID,
                                "message": partArg,
                                "done": done}
@@ -259,7 +263,7 @@ class CommunicationsHandler(QtCore.QObject):
         oldData = b''
         while True:
             try:
-                receivedInfo = self.sock.recv(5120)
+                receivedInfo = self.sock.recv(RECV_SIZE)
                 if receivedInfo == b'':
                     # Socket closed.
                     break
@@ -404,7 +408,7 @@ class CommunicationsHandler(QtCore.QObject):
             message = {"Operation": "Chat",
                        "Arguments": {
                            "project_name": project_name,
-                           "chat_message": chat_message[:1024]}}
+                           "chat_message": chat_message[:1024]}}  # Cap messages to prevent spam.
             self.transmitMessage(message)
 
     def syncDatabase(self, project_name: str, client_project_graph: nx.DiGraph):
