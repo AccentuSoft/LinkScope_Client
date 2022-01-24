@@ -37,7 +37,7 @@ class IPToASN:
                                       'ASN Cidr': results['asn_cidr'],
                                       'Date Created': results['asn_date'],
                                       'Entity Type': 'Autonomous System'},
-                                     {uid: {'Resolution': 'Autonomous System Results', 'Notes': ''}}])
+                                     {uid: {'Resolution': 'Autonomous System of IP', 'Notes': ''}}])
                 returnResult.append(
                     [{'Organization Name': results['asn_registry'], 'Entity Type': 'Organization'},
                      {index_of_child: {'Resolution': 'ASN Registry', 'Notes': ''}}])

@@ -6,10 +6,9 @@ class IPQualityScore_Email:
     description = "Find information about the location of a given IP Address or Validate an Email Address"
     originTypes = {'Email Address'}
     resultTypes = {'Phrase', 'Person', 'Email Address'}
-    parameters = {'IPQualityScore Private Key': {'description': 'Enter your private key under your profile after'
+    parameters = {'IPQualityScore Private Key': {'description': 'Enter your private key under your profile after '
                                                                 'signing up on https://ipqualityscore.com. The limit '
-                                                                'per month is '
-                                                                '5000 lookups',
+                                                                'per month is 5000 lookups.',
                                                  'type': 'String',
                                                  'value': '',
                                                  'global': True}}

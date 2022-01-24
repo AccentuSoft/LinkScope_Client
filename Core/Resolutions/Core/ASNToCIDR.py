@@ -24,11 +24,14 @@ class ASNToCIDR:
 
         for entity in entityJsonList:
             if entity['Entity Type'] == 'Autonomous System':
-                ipWithPrefix = entity[list(entity)[2]]
-                uid = entity['uid']
-                split_string = ipWithPrefix.split("/", 1)
-                ipWithOutPrefix = split_string[0]
-                ASN = entity["AS Number"]
+                try:
+                    ipWithPrefix = entity['ASN Cidr']
+                    uid = entity['uid']
+                    split_string = ipWithPrefix.split("/", 1)
+                    ipWithOutPrefix = split_string[0]
+                    ASN = entity["AS Number"]
+                except Exception:
+                    continue
                 try:
                     net = Net(ipWithOutPrefix)
                 except Exception:

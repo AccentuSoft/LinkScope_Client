@@ -6,13 +6,12 @@ class IPQualityScore_IP:
     description = "Find information about the location of a given IP Address or Validate an Email Address"
     originTypes = {'IP Address'}
     resultTypes = {'Phrase', 'Autonomous System', 'Geocordinates', 'Organization', 'Country', 'City'}
-    parameters = {'IPQualityScore Private Key': {'description': 'Enter your private key under your profile after'
+    parameters = {'IPQualityScore Private Key': {'description': 'Enter your private key under your profile after '
                                                                 'signing up on https://ipqualityscore.com. The limit '
-                                                                'per month is '
-                                                                '5000 lookups',
+                                                                'per month is 5000 lookups.',
                                                  'type': 'String',
-                                                 'value': ''},
-                  'global': True}
+                                                 'value': '',
+                                                 'global': True}}
 
     def resolution(self, entityJsonList, parameters):
         import requests

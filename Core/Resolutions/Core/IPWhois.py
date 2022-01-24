@@ -24,7 +24,7 @@ class IPWhois:
                 return "The Entity Provided isn't a valid IP Address"
             IPobject = IPWhois(primary_field)
             response = IPobject.lookup_whois()
-            return_result.append([{'AS Number': str(response['asn']),
+            return_result.append([{'AS Number': 'AS' + str(response['asn']),
                                    'ASN Cidr': str(response['asn_cidr']),
                                    'Entity Type': 'Autonomous System'},
                                   {uid: {'Resolution': 'IPWhois', 'Notes': ''}}])

@@ -34,7 +34,7 @@ class ShodanIPScan:
                                'Entity Type': 'City'},
                               {uid: {'Resolution': 'Shodan IP City', 'Notes': ''}}])
         if host.get('asn') is not None:
-            return_result.append([{'AS Number': host['asn'],
+            return_result.append([{'AS Number': 'AS' + host['asn'],
                                    'Entity Type': 'Autonomous System'},
                                   {uid: {'Resolution': 'Shodan IP AS Number', 'Notes': ''}}])
         return_result.append([{'Label': host['ip_str'] + " Location",

@@ -6,8 +6,8 @@ class VirusTotal_IP_Address:
     description = "Find information about a IP address using VirusTotal.com"
     originTypes = {"IP Address"}
     resultTypes = {"Country", "Company", "Autonomous System"}
-    parameters = {'VirusTotal API Key': {'description': 'Enter your api key under your profile after'
-                                                        ' signing up on https://virustotal.com. '
+    parameters = {'VirusTotal API Key': {'description': 'Enter your api key under your profile after '
+                                                        'signing up on https://virustotal.com. '
                                                         'Free usage of the API is limited to 1,000 requests '
                                                         'with a rate of 4 per minute.',
                                          'type': 'String',
