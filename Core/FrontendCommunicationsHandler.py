@@ -161,8 +161,10 @@ class CommunicationsHandler(QtCore.QObject):
         except OSError:
             # This would typically occur if the socket is already shut down.
             self.mainWindow.MESSAGEHANDLER.debug('Tried to shutdown socket that was already shut down.')
-        self.sock.close()
-        self.sock = None
+        try:
+            self.sock.close()
+        finally:
+            self.sock = None
 
         return False
 
@@ -265,9 +267,10 @@ class CommunicationsHandler(QtCore.QObject):
                 messages = receivedInfo.split(b'\x00\x00\x00')
                 if not receivedInfo.endswith(b'\x00\x00\x00'):
                     oldData = messages[-1]
-                    messages = messages[:-1]
                 else:
                     oldData = b''
+                # Last message is either blank (i.e. '') or incomplete data, so we ignore it.
+                messages = messages[:-1]
                 for message in messages:
                     message = b64decode(message)
                     decryptedInfo = self.decryptTransmission(message)
