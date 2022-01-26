@@ -56,3 +56,5 @@ docx2python
 exif
 xmltodict
 urllib3
+holehe
+httpx

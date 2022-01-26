@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
 
+"""
+Credits in web_accounts_list.json
+"""
 
 class Whats_My_Name:
     """
@@ -13,7 +16,7 @@ class Whats_My_Name:
     """
 
     name = "Whats My Name"
-    description = "Find information about a persons social media accounts"
+    description = "Find potentially connected social media accounts."
     originTypes = {'Phrase', 'Person'}
     resultTypes = {'Website'}
     parameters = {}

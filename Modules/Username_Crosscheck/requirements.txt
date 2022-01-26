@@ -2,3 +2,5 @@ social-analyzer
 requests_futures
 urllib3
 requests
+holehe
+httpx

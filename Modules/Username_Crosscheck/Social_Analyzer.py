@@ -7,7 +7,7 @@ Note: Creates log files in temp folders in /tmp. Files are only readable by the 
 
 class Social_Analyzer:
     name = "Social Analyzer"
-    description = "Find information about a persons social media accounts"
+    description = "Find potentially connected social media accounts."
     originTypes = {'Phrase'}
     resultTypes = {'Social Media Account'}
     parameters = {'websites': {'description': 'Enter the domain names of the social media websites'
