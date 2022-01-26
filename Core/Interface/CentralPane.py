@@ -1329,7 +1329,7 @@ class CanvasScene(QtWidgets.QGraphicsScene):
 
     def rearrangeGraph(self) -> None:
         # https://gitlab.com/graphviz/graphviz/-/merge_requests/2236
-        # No triangulation library on windows yet, so sfdp can't be used there. We can substitute with neato.
+        # No triangulation library on windows yet, so sfdp can't be used there.
 
         graphAlgorithm = self.parent().mainWindow.SETTINGS.value("Program/GraphLayout", 'dot')
         try:
@@ -1357,6 +1357,13 @@ class CanvasScene(QtWidgets.QGraphicsScene):
                     # These edges will not be visible on the actual graph generated.
                     currGraphClone.add_edge(potentialGroupIDOne, potentialGroupIDTwo)
 
+                # Only use nodes that are represented on the graph, else we can end up with nodes on the
+                #   other side of the world.
+                currGraphClone = nx.DiGraph(self.sceneGraph)
+                for node in dict(currGraphClone.nodes):
+                    if currGraphClone.nodes[node].get('groupID') is not None:
+                        currGraphClone.remove_node(node)
+
                 pdGraph = nx.drawing.nx_pydot.to_pydot(currGraphClone)
                 pdGraph.set_layout('dot')
                 pdGraph.set_rankdir('BT')
@@ -1368,16 +1375,18 @@ class CanvasScene(QtWidgets.QGraphicsScene):
             self.parent().mainWindow.MESSAGEHANDLER.error('Failed drawing graph with selected algorithm, falling back '
                                                           'to using "dot" algorithm: ' + str(exc), popUp=False)
             # If something goes wrong (e.g. the selected algorithm isn't found), use the dot algorithm.
-
             # See comments for 'dot' algorithm.
             currGraphClone = nx.DiGraph(self.sceneGraph)
 
             for edgeParentUID, edgeChild in dict(currGraphClone.edges):
                 potentialGroupIDOne = currGraphClone.nodes[edgeParentUID].get('groupID', edgeParentUID)
                 potentialGroupIDTwo = currGraphClone.nodes[edgeChild].get('groupID', edgeChild)
-                # Nothing happens if edge already exists. If not, edge is created.
-                # These edges will not be visible on the actual graph generated.
                 currGraphClone.add_edge(potentialGroupIDOne, potentialGroupIDTwo)
+
+            currGraphClone = nx.DiGraph(self.sceneGraph)
+            for node in dict(currGraphClone.nodes):
+                if currGraphClone.nodes[node].get('groupID') is not None:
+                    currGraphClone.remove_node(node)
 
             pdGraph = nx.drawing.nx_pydot.to_pydot(currGraphClone)
             pdGraph.set_layout('dot')
