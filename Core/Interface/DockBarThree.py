@@ -96,6 +96,9 @@ class TimeWidget(QtWidgets.QWidget):
         # Rendering best optimized to rgb32 and argb32_premultiplied.
         # Ref: https://doc.qt.io/qtforpython/PySide6/QtGui/QImage.html?highlight=qimage#image-formats
         picture = QtGui.QImage(self.chartView.size(), QtGui.QImage.Format_ARGB32_Premultiplied)
+        # Pictures are initialised with junk data - need to clear it out before painting
+        #   to avoid visual artifacts.
+        picture.fill(QtGui.QColor(0, 0, 0, 0))
         picturePainter = QtGui.QPainter(picture)
         if not transparentBackground:
             picture.fill(QtGui.QColor(61, 61, 61))
@@ -255,7 +258,6 @@ class TimeWidget(QtWidgets.QWidget):
         self.timelineChart.removeAxis(self.timelineChart.axisY(timelineSeries))
 
         yAxis = QtCharts.QValueAxis()
-        yAxis.applyNiceNumbers()
         yAxis.setTickCount(min(maxEntityNum + 1, 4))
 
         xAxis = QtCharts.QBarCategoryAxis()
@@ -280,6 +282,7 @@ class TimeWidget(QtWidgets.QWidget):
             # Just in case.
             self.timescaleSelector.adjustLabelsToSecond()
 
+        yAxis.applyNiceNumbers()
         self.mainWindow.timelineSelectMatchingEntities(timestep)
 
 
