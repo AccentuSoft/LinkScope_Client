@@ -89,16 +89,30 @@ class BaseNode(QGraphicsItemGroup):
         super().mouseDoubleClickEvent(event)
 
     def shape(self) -> QtGui.QPainterPath:
-        return self.iconItem.shape()
+        returnPath = QtGui.QPainterPath()
+        returnPath.addRect(QtCore.QRectF(self.iconItem.x() - 20, self.iconItem.y() - 20, 80, 80))
+        return returnPath
 
     def boundingRect(self) -> QtCore.QRectF:
-        return self.iconItem.boundingRect()
+        return QtCore.QRectF(self.iconItem.x() - 20, self.iconItem.y() - 20, 80, 80)
 
     def childrenBoundingRect(self) -> QtCore.QRectF:
-        return self.iconItem.boundingRect()
+        return QtCore.QRectF(self.iconItem.x() - 20, self.iconItem.y() - 20, 80, 80)
 
     def boundingRegion(self, itemToDeviceTransform: QtGui.QTransform) -> QtGui.QRegion:
         return self.iconItem.boundingRegion(itemToDeviceTransform)
+
+    def paint(self, painter: QtGui.QPainter, option: QtWidgets.QStyleOptionGraphicsItem,
+              widget: Optional[QtWidgets.QWidget] = ...) -> None:
+        painter.setPen(QtCore.Qt.NoPen)
+        if self.isSelected():
+            centerPoint = QtCore.QPointF(self.iconItem.x() + 20, self.iconItem.y() + 20)
+            selectionBackgroundGradient = QtGui.QRadialGradient(centerPoint, 80, centerPoint)
+            selectionBackgroundGradient.setColorAt(0.0, QtGui.QColor(250, 250, 255))
+            selectionBackgroundGradient.setColorAt(0.5, QtGui.QColor(231, 240, 253, 0))
+            painter.setBrush(selectionBackgroundGradient)
+            painter.drawRect(QtCore.QRectF(self.iconItem.x() - 20, self.iconItem.y() - 20, 80, 80))
+        super(BaseNode, self).paint(painter, option, widget)
 
 
 class GroupNode(BaseNode):
