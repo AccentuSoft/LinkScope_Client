@@ -88,6 +88,13 @@ class EntityList(QtWidgets.QTreeWidget):
                                      statusTip="Delete the selected entities from the database.",
                                      triggered=self.deleteSelectedItems)
         self.menu.addAction(actionDelete)
+
+        actionAddToCurrentCanvas = QtGui.QAction('Add Selected Items to Current Canvas',
+                                                 self.menu,
+                                                 statusTip="Add the selected entities to the current canvas.",
+                                                 triggered=self.addItemsToCurrentCanvas)
+        self.menu.addAction(actionAddToCurrentCanvas)
+
         self.menu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
 
         self.entityCategories: dict = {}
@@ -209,6 +216,19 @@ class EntityList(QtWidgets.QTreeWidget):
         itemsToDel = [item.uid for item in self.selectedItems() if isinstance(item, EntityWidget)]
         for itemUID in itemsToDel:
             self.mainWindow.deleteSpecificEntity(itemUID)
+
+    def addItemsToCurrentCanvas(self):
+        currentScene = self.mainWindow.centralWidget().tabbedPane.getCurrentScene()
+        itemsToAdd = [item.uid for item in self.selectedItems() if isinstance(item, EntityWidget) and
+                      item.uid not in currentScene.sceneGraph.nodes]
+        for itemUID in itemsToAdd:
+            if itemUID.endswith('@'):
+                newGroupEntity = self.mainWindow.copyGroupEntity(itemUID, currentScene)
+                if newGroupEntity is not None:
+                    currentScene.addNodeProgrammatic(newGroupEntity['uid'], newGroupEntity['Child UIDs'])
+            else:
+                currentScene.addNodeProgrammatic(itemUID)
+        currentScene.rearrangeGraph()
 
 
 class EntityWidget(QtWidgets.QTreeWidgetItem):
