@@ -2923,8 +2923,9 @@ class FindEntityOnCanvasDialog(QtWidgets.QDialog):
 
         findLayout.addWidget(findLabel, 0, 0, 1, 1)
         findLayout.addWidget(self.findInput, 0, 1, 1, 1)
-        findLayout.addWidget(cancelButton, 1, 0, 1, 1)
+        # Adding the confirm button first so that it's what is activated when someone presses Enter.
         findLayout.addWidget(confirmButton, 1, 1, 1, 1)
+        findLayout.addWidget(cancelButton, 1, 0, 1, 1)
 
 
 class FindEntityOfTypeOnCanvasDialog(QtWidgets.QDialog):
@@ -2974,8 +2975,9 @@ class FindEntityOfTypeOnCanvasDialog(QtWidgets.QDialog):
         findLayout.addWidget(self.typeInput, 0, 1, 1, 1)
         findLayout.addWidget(findLabel, 1, 0, 1, 1)
         findLayout.addWidget(self.findInput, 1, 1, 1, 1)
-        findLayout.addWidget(cancelButton, 2, 0, 1, 1)
+        # Adding the confirm button first so that it's what is activated when someone presses Enter.
         findLayout.addWidget(confirmButton, 2, 1, 1, 1)
+        findLayout.addWidget(cancelButton, 2, 0, 1, 1)
 
         self.changeSelectedType()
 
