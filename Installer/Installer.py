@@ -802,6 +802,7 @@ class InstallWizard(QtWidgets.QWizard):
                                                      stdin=subprocess.PIPE, stdout=subprocess.PIPE,
                                                      stderr=subprocess.PIPE)
                         sudoPrivs.communicate(input=(sudoPassword[0] + "\n").encode())
+                        sys.exit(0)
                     else:
                         sys.exit(-1)
             else:
@@ -841,16 +842,18 @@ class InstallWizard(QtWidgets.QWizard):
 
         # Normally one would use enums to keep track of pages, but the installer crashes if we try, so we
         #   won't be doing that.
+        # We have to create pages here so that fields are registered for us to use, and so we can mark pages
+        #   as commit pages.
         introPage = IntroInstallUninstallPage()
+        shortcutPage = CreateDesktopShortcutPage()
         uninstallPage = LinkScopeUninstallPage()
         uninstallPage.setCommitPage(True)
-        installUpgradePage = LinkScopeInstallLatestPage()
+        installUpgradePage = LinkScopeInstallLatestPage(self.field('Update'), self.field('Shortcut'))
         installUpgradePage.setCommitPage(True)
-        graphvizPage = WindowsGraphVizPage()
 
         self.addPage(introPage)
-        self.addPage(CreateDesktopShortcutPage())
-        self.addPage(graphvizPage)
+        self.addPage(shortcutPage)
+        self.addPage(WindowsGraphVizPage())
         self.addPage(uninstallPage)
         self.addPage(LicensePage())
         self.addPage(installUpgradePage)
@@ -966,6 +969,7 @@ class IntroInstallUninstallPage(QtWidgets.QWizardPage):
                                        'that were installed during the installation of LinkScope will not be removed.\n'
                                        'This is done to prevent destabilizing the system in case other software relies '
                                        'on them.')
+        self.registerField('Update', self.updateRadio)
 
         installUninstallLayout.addWidget(self.installRadio)
         installUninstallLayout.addWidget(self.updateRadio)
@@ -1015,7 +1019,7 @@ class LinkScopeInstallLatestPage(QtWidgets.QWizardPage):
             self.doStuff()
         return True
 
-    def __init__(self):
+    def __init__(self, updateSelected: bool, createShortCut: bool):
         super(LinkScopeInstallLatestPage, self).__init__()
         self.setTitle('Install LinkScope')
         self.setSubTitle('Download and install the latest version of LinkScope')
@@ -1026,7 +1030,7 @@ class LinkScopeInstallLatestPage(QtWidgets.QWizardPage):
         self.installLabel = QtWidgets.QLabel('The installer will now download and install the latest version of '
                                              'LinkScope. Click "Commit" to start the installation.')
 
-        if self.wizard().page(1).shortcutCheckbox.isChecked():
+        if createShortCut:
             self.installLabel.setText('The installer will now download and install the latest version '
                                       'of LinkScope, and create a shortcut for LinkScope on the '
                                       'Desktop. Click "Commit" to start the installation.')
@@ -1048,7 +1052,7 @@ class LinkScopeInstallLatestPage(QtWidgets.QWizardPage):
         installProgressLayout.addWidget(self.installProgressLabel)
         installProgressLayout.addWidget(self.progressBar)
 
-        if self.wizard().page(0).updateRadio.isChecked():
+        if updateSelected:
             self.setTitle('Updating LinkScope Installation')
             self.installProgressLabel.setText('Update Process: ')
 
@@ -1118,6 +1122,8 @@ class CreateDesktopShortcutPage(QtWidgets.QWizardPage):
         self.shortcutCheckbox.setChecked(True)
         desktopShortcutLayout.addWidget(desktopShortcutLabel)
         desktopShortcutLayout.addWidget(self.shortcutCheckbox)
+
+        self.registerField('Shortcut', self.shortcutCheckbox)
 
 
 class LicensePage(QtWidgets.QWizardPage):
