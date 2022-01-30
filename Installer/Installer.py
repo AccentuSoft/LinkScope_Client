@@ -794,17 +794,23 @@ class InstallWizard(QtWidgets.QWizard):
                     newArgs = [str(self.desktopShortcutPath), str(self.graphvizExists), str(self.baseSoftwarePath),
                                str(self.executablePath), str(self.downloadURL), str(self.appPath)]
 
-                    sudoPassword = QtWidgets.QInputDialog.getText(None, 'Sudo Password',
-                                                                  'Installation requires elevated privileges. Please '
-                                                                  'enter your password: ', QtWidgets.QLineEdit.Password)
-                    if sudoPassword[1] and sudoPassword[0] != '':
-                        sudoPrivs = subprocess.Popen(['sudo', '-S', '-H', '-k', sys.executable, *newArgs],
-                                                     stdin=subprocess.PIPE, stdout=subprocess.PIPE,
-                                                     stderr=subprocess.PIPE)
-                        sudoPrivs.communicate(input=(sudoPassword[0] + "\n").encode())
-                        sys.exit(0)
-                    else:
-                        sys.exit(-1)
+                    for _ in range(3):
+                        sudoPassword = QtWidgets.QInputDialog.getText(None, 'Sudo Password',
+                                                                      'Installation requires elevated privileges. '
+                                                                      'Please enter your password: ',
+                                                                      QtWidgets.QLineEdit.Password)
+                        if sudoPassword[1] and sudoPassword[0] != '':
+                            sudoPrivs = subprocess.Popen(['sudo', '-S', '-H', '-k', sys.executable, *newArgs],
+                                                         stdin=subprocess.PIPE, stdout=subprocess.PIPE,
+                                                         stderr=subprocess.PIPE)
+                            stdOut, stdErr = sudoPrivs.communicate(input=(sudoPassword[0] + "\n").encode())
+                            if b'\nsudo: 1 incorrect password attempt\n' in stdErr:
+                                QtWidgets.QMessageBox.warning(None, 'Incorrect Password', 'Incorrect password entered.')
+                                continue
+                            sys.exit(0)
+                        else:
+                            sys.exit(-1)
+                    sys.exit(-1)
             else:
                 QtWidgets.QMessageBox.warning(self, 'Unsupported Operating System',
                                               'Current Operating System is unsupported')
