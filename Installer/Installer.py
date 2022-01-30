@@ -6,9 +6,13 @@
 #   py7zr
 #
 # Compile with:
-#  pyinstaller --clean --noconsole --noconfirm --onefile Installer.py
+#  Linux:
+#    pyinstaller --clean --noconsole --noconfirm --onefile --icon='../Icon.ico' Installer.py
+#  Windows:
+#    pyinstaller --clean --noconsole --noconfirm --onefile --icon='..\Icon.ico' Installer.py
 
 
+import shutil
 import sys
 import ctypes
 import os
@@ -700,7 +704,7 @@ For more information on this, and how to apply and follow the GNU AGPL, see
 
 class InstallWizard(QtWidgets.QWizard):
 
-    # INSTALLATION PATHS:
+    # INSTALLER PATHS:
     #
     # Uninstall
     #   0 -> 3 -> 6 -> -1
@@ -769,8 +773,9 @@ class InstallWizard(QtWidgets.QWizard):
                             self.downloadURL = 'https://github.com' + urlPart
                             break
 
-                    newArgs = [str(self.desktopShortcutPath), str(self.graphvizExists), str(self.baseSoftwarePath),
-                               str(self.executablePath), str(self.downloadURL)]
+                    newArgs = ['"' + str(self.desktopShortcutPath) + '"', str(self.graphvizExists),
+                               '"' + str(self.baseSoftwarePath) + '"', '"' + str(self.executablePath) + '"',
+                               '"' + str(self.downloadURL) + '"']
                     ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(newArgs), None, 1)
                     sys.exit(0)
             elif self.currentOS == 'Linux':
@@ -791,9 +796,12 @@ class InstallWizard(QtWidgets.QWizard):
                             urlPart = textPart.split('"')[1].strip()
                             self.downloadURL = 'https://github.com' + urlPart
                             break
+
+                    # No need to wrap these in quotes
                     newArgs = [str(self.desktopShortcutPath), str(self.graphvizExists), str(self.baseSoftwarePath),
                                str(self.executablePath), str(self.downloadURL), str(self.appPath)]
 
+                    shortcutExistsBefore = self.desktopShortcutPath.exists()
                     for _ in range(3):
                         sudoPassword = QtWidgets.QInputDialog.getText(None, 'Sudo Password',
                                                                       'Installation requires elevated privileges. '
@@ -807,6 +815,15 @@ class InstallWizard(QtWidgets.QWizard):
                             if b'\nsudo: 1 incorrect password attempt\n' in stdErr:
                                 QtWidgets.QMessageBox.warning(None, 'Incorrect Password', 'Incorrect password entered.')
                                 continue
+
+                            if not shortcutExistsBefore and self.desktopShortcutPath.exists():
+                                subprocess.run(
+                                    ['dbus-launch', 'gio', 'set', str(self.desktopShortcutPath), "metadata::trusted",
+                                     'true'])
+                                subprocess.run(
+                                    ["dbus-send --type=method_call --dest=org.gnome.Shell /org/gnome/Shell "
+                                     "org.gnome.Shell.Eval string:'global.reexec_self()'"],
+                                    shell=True)
                             sys.exit(0)
                         else:
                             sys.exit(-1)
@@ -820,7 +837,7 @@ class InstallWizard(QtWidgets.QWizard):
             self.graphvizExists = True if sys.argv[2] == 'True' else False
             self.baseSoftwarePath = Path(sys.argv[3])
             self.executablePath = Path(sys.argv[4])
-            self.downloadURL = Path(sys.argv[5])
+            self.downloadURL = sys.argv[5]
             if self.currentOS == 'Windows':
                 try:
                     if ctypes.windll.shell32.IsUserAnAdmin() == 0:
@@ -854,7 +871,7 @@ class InstallWizard(QtWidgets.QWizard):
         shortcutPage = CreateDesktopShortcutPage()
         uninstallPage = LinkScopeUninstallPage()
         uninstallPage.setCommitPage(True)
-        installUpgradePage = LinkScopeInstallLatestPage(self.field('Update'), self.field('Shortcut'))
+        installUpgradePage = LinkScopeInstallLatestPage()
         installUpgradePage.setCommitPage(True)
 
         self.addPage(introPage)
@@ -869,20 +886,32 @@ class InstallWizard(QtWidgets.QWizard):
 
         self.show()
 
+    def removeFileHelper(self, pathToRemove: Path):
+        if pathToRemove.exists():
+            pathToRemove.chmod(0o777)
+            if pathToRemove.is_dir():
+                for dirpath, dirnames, filenames in os.walk(pathToRemove):
+                    Path(dirpath).chmod(0o777)
+                    filenames.extend(dirnames)
+                    for filename in filenames:
+                        filePath = Path(dirpath) / filename
+                        filePath.chmod(0o777)
+                shutil.rmtree(pathToRemove)
+            else:
+                pathToRemove.unlink(missing_ok=True)
+
     def createShortcut(self):
+        self.removeFileHelper(self.desktopShortcutPath)
         if self.currentOS == 'Linux':
             QtCore.QFile.link(str(self.appPath), str(self.desktopShortcutPath))
-            subprocess.run(['dbus-launch', 'gio', 'set', str(self.desktopShortcutPath), '"metadata::trusted"', 'true'])
-            subprocess.run(['dbus-send', '--type=method_call', '--print-reply', '--dest=org.gnome.Shell',
-                            '/org/gnome/Shell', 'org.gnome.Shell.Eval', "string:'global.reexec_self()'"])
         elif self.currentOS == 'Windows':
             QtCore.QFile.link(str(self.executablePath), str(self.desktopShortcutPath))
 
     def uninstall(self):
-        self.desktopShortcutPath.unlink(missing_ok=True)
-        self.baseSoftwarePath.unlink(missing_ok=True)
+        self.removeFileHelper(self.desktopShortcutPath)
         if self.currentOS == 'Linux':
-            self.appPath.unlink(missing_ok=True)
+            self.removeFileHelper(self.appPath)
+        self.removeFileHelper(self.baseSoftwarePath)
 
     def downloadClient(self):
         if not isinstance(self.downloadURL, str) or self.downloadURL == "":
@@ -933,15 +962,11 @@ class InstallWizard(QtWidgets.QWizard):
                 if command.returncode != 0:
                     raise ValueError('Installing new packages failed, cannot continue installation.')
 
-            try:
-                with open(self.appPath, 'w') as desktopApplicationFile:
-                    desktopApplicationFile.write(LINUX_DESKTOP_FILE_ENTRY)
-                # Mark desktop file as executable
-                self.appPath.chmod(self.appPath.stat().st_mode | 0o111)
-            except OSError:
-                # No sense in trying to delete the .desktop file, if we can't create it or
-                #   change permissions then we can't delete.
-                raise ValueError('Creating .desktop file failed, cannot continue installation.')
+            self.removeFileHelper(self.appPath)
+            with open(self.appPath, 'w') as desktopApplicationFile:
+                desktopApplicationFile.write(LINUX_DESKTOP_FILE_ENTRY)
+            # Mark desktop file as executable
+            self.appPath.chmod(self.appPath.stat().st_mode | 0o111)
         elif self.currentOS == 'Windows':
             # Assume the user has installed / will install Graphviz.
             # We don't actually need to do anything here. Maybe in the future, register application in registry?
@@ -949,7 +974,18 @@ class InstallWizard(QtWidgets.QWizard):
 
 
 class IntroInstallUninstallPage(QtWidgets.QWizardPage):
-    
+
+    def validatePage(self) -> bool:
+        if self.updateRadio.isChecked():
+            self.wizard().page(5).setTitle('Updating LinkScope Installation')
+            self.wizard().page(5).installProgressLabel.setText('Update Process: ')
+            self.wizard().page(5).updateSelected = True
+        else:
+            self.wizard().page(5).setTitle('Install LinkScope')
+            self.wizard().page(5).installProgressLabel.setText('Installation Process: ')
+            self.wizard().page(5).updateSelected = False
+        return True
+
     def __init__(self):
         super(IntroInstallUninstallPage, self).__init__()
         self.setTitle('LinkScope Installer')
@@ -975,7 +1011,6 @@ class IntroInstallUninstallPage(QtWidgets.QWizardPage):
                                        'that were installed during the installation of LinkScope will not be removed.\n'
                                        'This is done to prevent destabilizing the system in case other software relies '
                                        'on them.')
-        self.registerField('Update', self.updateRadio)
 
         installUninstallLayout.addWidget(self.installRadio)
         installUninstallLayout.addWidget(self.updateRadio)
@@ -1003,29 +1038,35 @@ class LinkScopeInstallLatestPage(QtWidgets.QWizardPage):
 
     def doStuff(self):
         # Graphviz is installed by default as we install the software on linux.
-        if not self.wizard().graphvizExists and self.wizard().currentOS == 'Windows':
-            self.progressBar.setValue(1)
-            self.wizard().downloadGraphviz()
-        self.progressBar.setValue(2)
-        if self.wizard().currentOS == 'Linux':
-            self.wizard().appPath.unlink(missing_ok=True)
-        self.wizard().install()
-        self.progressBar.setValue(4)
-        self.wizard().downloadClient()
-        self.progressBar.setValue(8)
-        if self.stuffToDo[1]:
-            self.desktopShortcutPath.unlink(missing_ok=True)
-        self.progressBar.setValue(9)
-        if self.stuffToDo[0]:
-            self.wizard().createShortcut()
-        self.progressBar.setValue(10)
+        try:
+            self.installProgressWidget.setEnabled(True)
+            self.installProgressWidget.setDisabled(False)
+            if not self.wizard().graphvizExists and self.wizard().currentOS == 'Windows':
+                self.progressBar.setValue(1)
+                self.wizard().downloadGraphviz()
+            self.progressBar.setValue(2)
+            self.wizard().install()
+            self.downloadingLabel.setVisible(True)
+            self.downloadingLabel.setHidden(False)
+            self.progressBar.setValue(4)
+            self.wizard().downloadClient()
+            self.progressBar.setValue(8)
+            shortcutExists = self.wizard().desktopShortcutPath.exists()
+            self.progressBar.setValue(9)
+            if self.createShortcut or (self.updateSelected and shortcutExists):
+                self.wizard().createShortcut()
+            self.progressBar.setValue(10)
+        except Exception as e:
+            self.wizard().page(6).doneLabel.setText('Error occurred during installation: ' +
+                                                    str(e) + '\nThe installation cannot continue.')
+            self.progressBar.setValue(10)
 
     def validatePage(self) -> bool:
         if self.progressBar.value() != 10:
             self.doStuff()
         return True
 
-    def __init__(self, updateSelected: bool, createShortCut: bool):
+    def __init__(self):
         super(LinkScopeInstallLatestPage, self).__init__()
         self.setTitle('Install LinkScope')
         self.setSubTitle('Download and install the latest version of LinkScope')
@@ -1036,13 +1077,8 @@ class LinkScopeInstallLatestPage(QtWidgets.QWizardPage):
         self.installLabel = QtWidgets.QLabel('The installer will now download and install the latest version of '
                                              'LinkScope. Click "Commit" to start the installation.')
 
-        if createShortCut:
-            self.installLabel.setText('The installer will now download and install the latest version '
-                                      'of LinkScope, and create a shortcut for LinkScope on the '
-                                      'Desktop. Click "Commit" to start the installation.')
-        else:
-            self.installLabel.setText('The installer will now download and install the latest version '
-                                      'of LinkScope. Click "Commit" to start the installation.')
+        self.createShortcut = False
+        self.updateSelected = False
 
         self.installLabel.setWordWrap(True)
         self.installLabel.setAlignment(QtCore.Qt.AlignCenter)
@@ -1058,11 +1094,15 @@ class LinkScopeInstallLatestPage(QtWidgets.QWizardPage):
         installProgressLayout.addWidget(self.installProgressLabel)
         installProgressLayout.addWidget(self.progressBar)
 
-        if updateSelected:
-            self.setTitle('Updating LinkScope Installation')
-            self.installProgressLabel.setText('Update Process: ')
+        self.downloadingLabel = QtWidgets.QLabel('Downloading files. This may take some time...')
+        self.downloadingLabel.setWordWrap(True)
+        self.downloadingLabel.setAlignment(QtCore.Qt.AlignCenter)
+        self.downloadingLabel.setVisible(False)
 
         installLayout.addWidget(self.installProgressWidget)
+        self.installProgressWidget.setEnabled(False)
+        self.installProgressWidget.setDisabled(True)
+        installLayout.addWidget(self.downloadingLabel)
 
 
 class LinkScopeUninstallPage(QtWidgets.QWizardPage):
@@ -1071,10 +1111,10 @@ class LinkScopeUninstallPage(QtWidgets.QWizardPage):
         self.progressBar.setValue(3)
         try:
             self.wizard().uninstall()
-        except AttributeError:
-            pass
+        except Exception as e:
+            self.wizard().page(6).doneLabel.setText('Error occurred during uninstallation: ' +
+                                                    str(e) + '\nThe uninstallation process cannot continue.')
         self.progressBar.setValue(10)
-        return
 
     def validatePage(self) -> bool:
         if self.progressBar.value() != 10:
@@ -1113,7 +1153,26 @@ class LinkScopeUninstallPage(QtWidgets.QWizardPage):
 
 
 class CreateDesktopShortcutPage(QtWidgets.QWizardPage):
-    
+
+    def validatePage(self) -> bool:
+        if self.shortcutCheckbox.isChecked():
+            self.wizard().page(5).installLabel.setText('The installer will now download and install the latest version '
+                                                       'of LinkScope, and create a shortcut for LinkScope on the '
+                                                       'Desktop. Click "Commit" to start the installation.')
+            self.wizard().page(5).createShortcut = True
+            if self.wizard().currentOS == 'Linux':
+                self.wizard().page(6).doneLabel.setText('Thank you for using LinkScope!\nClick "Finish" to exit the '
+                                                        'installer.\nNOTE: On some Desktops, you may see the display '
+                                                        'refresh. This is done to "activate" the desktop shortcut.')
+        else:
+            self.wizard().page(5).installLabel.setText('The installer will now download and install the latest version '
+                                                       'of LinkScope. Click "Commit" to start the installation.')
+            self.wizard().page(5).createShortcut = False
+            if self.wizard().currentOS == 'Linux':
+                self.wizard().page(6).doneLabel.setText('Thank you for using LinkScope!\nClick "Finish" to exit the '
+                                                        'installer.')
+        return True
+
     def __init__(self):
         super(CreateDesktopShortcutPage, self).__init__()
         self.setTitle('Desktop Shortcut')
@@ -1128,8 +1187,6 @@ class CreateDesktopShortcutPage(QtWidgets.QWizardPage):
         self.shortcutCheckbox.setChecked(True)
         desktopShortcutLayout.addWidget(desktopShortcutLabel)
         desktopShortcutLayout.addWidget(self.shortcutCheckbox)
-
-        self.registerField('Shortcut', self.shortcutCheckbox)
 
 
 class LicensePage(QtWidgets.QWizardPage):
@@ -1174,10 +1231,10 @@ class DonePage(QtWidgets.QWizardPage):
 
         doneLayout = QtWidgets.QVBoxLayout()
         self.setLayout(doneLayout)
-        doneLabel = QtWidgets.QLabel('Thank you for using LinkScope!\nClick "Finish" to exit the installer.')
-        doneLabel.setWordWrap(True)
-        doneLabel.setAlignment(QtCore.Qt.AlignCenter)
-        doneLayout.addWidget(doneLabel)
+        self.doneLabel = QtWidgets.QLabel('Thank you for using LinkScope!\nClick "Finish" to exit the installer.')
+        self.doneLabel.setWordWrap(True)
+        self.doneLabel.setAlignment(QtCore.Qt.AlignCenter)
+        doneLayout.addWidget(self.doneLabel)
 
 
 if __name__ == '__main__':
