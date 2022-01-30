@@ -182,9 +182,11 @@ class EntityList(QtWidgets.QTreeWidget):
         if event.button() == QtGui.Qt.MouseButton.NoButton:
             itemDragged = self.itemAt(event.pos())
 
-            if itemDragged is None or \
-                    itemDragged.text(0) in self.entityTypes.keys() or \
-                    itemDragged.text(0) in self.entityCategories.keys():
+            # Categories & entity names don't have uids.
+            try:
+                if itemDragged.uid is None:
+                    return
+            except Exception:
                 return
 
             self.setCurrentItem(itemDragged)
@@ -233,7 +235,7 @@ class EntityList(QtWidgets.QTreeWidget):
 
 class EntityWidget(QtWidgets.QTreeWidgetItem):
 
-    def __init__(self, parent, uid, icon=None, text=""):
+    def __init__(self, parent, uid=None, icon=None, text=""):
         super(EntityWidget, self).__init__(parent, [text])
         self.uid = uid
         if icon is not None:
