@@ -374,19 +374,22 @@ class MainWindow(QtWidgets.QMainWindow):
             self.centralWidget().toggleLayout()
 
     def toggleLinkingMode(self) -> None:
-        if self.centralWidget().tabbedPane.getCurrentScene().appendingToGroup:
-            self.setStatus('Cannot create manual link at this moment: Currently adding entities to group.')
+        currentScene = self.centralWidget().tabbedPane.getCurrentScene()
+        if currentScene.appendingToGroup:
+            message = 'Cannot create manual link at this moment: Currently adding entities to group.'
+            self.MESSAGEHANDLER.info(message, popUp=True)
+            self.setStatus(message)
             return
         if self.linkingNodes:
             self.centralWidget().tabbedPane.enableAllTabs()
-            self.centralWidget().tabbedPane.getCurrentScene().linking = False
+            currentScene.linking = False
             self.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
             self.linkingNodes = False
         else:
             self.centralWidget().tabbedPane.disableAllTabsExceptCurrent()
-            self.centralWidget().tabbedPane.getCurrentScene().linking = True
-            self.centralWidget().tabbedPane.getCurrentScene().itemsToLink = []
-            self.centralWidget().tabbedPane.getCurrentScene().clearSelection()
+            currentScene.linking = True
+            currentScene.itemsToLink = []
+            currentScene.clearSelection()
             self.setCursor(QtGui.QCursor(QtCore.Qt.CrossCursor))
             self.linkingNodes = True
 
@@ -413,6 +416,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def setGroupAppendMode(self, enable: bool) -> None:
         if self.centralWidget().tabbedPane.getCurrentScene().linking:
+            message = 'Cannot append to group: Currently creating new link.'
+            self.setStatus(message)
+            self.MESSAGEHANDLER.info(message, popUp=True)
             return
         if enable:
             self.centralWidget().tabbedPane.disableAllTabsExceptCurrent()
@@ -542,27 +548,27 @@ class MainWindow(QtWidgets.QMainWindow):
         if findPrompt.exec():
             uidsToSelect = []
             findText = findPrompt.findInput.text()
+            if findText != "":
+                if regex:
+                    expression = re.compile(findText)
+                    for item in entityPrimaryFields:
+                        if expression.match(item):
+                            # Add the elements in each index to uidsToSelect instead of the sets themselves.
+                            uidsToSelect.extend(entityPrimaryFields[item])
 
-            if regex:
-                expression = re.compile(findText)
-                for item in entityPrimaryFields:
-                    if expression.match(item):
-                        # Add the elements in each index to uidsToSelect instead of the sets themselves.
-                        uidsToSelect.extend(entityPrimaryFields[item])
+                else:
+                    for item in entityPrimaryFields:
+                        if item.startswith(findText):
+                            # Add the elements in each index to uidsToSelect instead of the sets themselves.
+                            uidsToSelect.extend(entityPrimaryFields[item])
 
-            else:
-                for item in entityPrimaryFields:
-                    if item.startswith(findText):
-                        # Add the elements in each index to uidsToSelect instead of the sets themselves.
-                        uidsToSelect.extend(entityPrimaryFields[item])
-
-            currentScene.clearSelection()
-            for item in [linkOrEntity for linkOrEntity in currentScene.items()
-                         if isinstance(linkOrEntity, BaseNode) or isinstance(linkOrEntity, BaseConnector)]:
-                if str(item.uid) in uidsToSelect:
-                    item.setSelected(True)
-            if len(uidsToSelect) == 1 and ',' not in uidsToSelect[0]:
-                self.centralWidget().tabbedPane.getCurrentView().centerViewportOnNode(uidsToSelect[0])
+                currentScene.clearSelection()
+                for item in [linkOrEntity for linkOrEntity in currentScene.items()
+                             if isinstance(linkOrEntity, BaseNode) or isinstance(linkOrEntity, BaseConnector)]:
+                    if str(item.uid) in uidsToSelect:
+                        item.setSelected(True)
+                if len(uidsToSelect) == 1 and ',' not in uidsToSelect[0]:
+                    self.centralWidget().tabbedPane.getCurrentView().centerViewportOnNode(uidsToSelect[0])
 
     def findEntityOfTypeOnCanvas(self, regex: bool = False) -> None:
         currentScene = self.centralWidget().tabbedPane.getCurrentScene()
@@ -586,27 +592,27 @@ class MainWindow(QtWidgets.QMainWindow):
             uidsToSelect = []
             findText = findPrompt.findInput.text()
             findType = findPrompt.typeInput.currentText()
+            if findText != "":
+                if regex:
+                    expression = re.compile(findText)
+                    for item in entityTypesOnCanvas[findType]:
+                        if expression.match(item):
+                            # Add the elements in each index to uidsToSelect instead of the sets themselves.
+                            uidsToSelect.extend(entityTypesOnCanvas[findType][item])
 
-            if regex:
-                expression = re.compile(findText)
-                for item in entityTypesOnCanvas[findType]:
-                    if expression.match(item):
-                        # Add the elements in each index to uidsToSelect instead of the sets themselves.
-                        uidsToSelect.extend(entityTypesOnCanvas[findType][item])
+                else:
+                    for item in entityTypesOnCanvas[findType]:
+                        if item.startswith(findText):
+                            # Add the elements in each index to uidsToSelect instead of the sets themselves.
+                            uidsToSelect.extend(entityTypesOnCanvas[findType][item])
 
-            else:
-                for item in entityTypesOnCanvas[findType]:
-                    if item.startswith(findText):
-                        # Add the elements in each index to uidsToSelect instead of the sets themselves.
-                        uidsToSelect.extend(entityTypesOnCanvas[findType][item])
-
-            currentScene.clearSelection()
-            for item in [sceneEntity for sceneEntity in currentScene.items()
-                         if isinstance(sceneEntity, BaseNode)]:
-                if item.uid in uidsToSelect:
-                    item.setSelected(True)
-            if len(uidsToSelect) == 1:
-                self.centralWidget().tabbedPane.getCurrentView().centerViewportOnNode(uidsToSelect[0])
+                currentScene.clearSelection()
+                for item in [sceneEntity for sceneEntity in currentScene.items()
+                             if isinstance(sceneEntity, BaseNode)]:
+                    if item.uid in uidsToSelect:
+                        item.setSelected(True)
+                if len(uidsToSelect) == 1:
+                    self.centralWidget().tabbedPane.getCurrentView().centerViewportOnNode(uidsToSelect[0])
 
     def mergeEntities(self) -> None:
         """
@@ -1568,6 +1574,13 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Set the main window title and show it to the user.
         self.setWindowTitle("LinkScope - " + self.SETTINGS.get('Project/Name', 'Untitled'))
+        try:
+            iconPath = Path(self.SETTINGS.get('Program/BaseDir')) / 'Icon.ico'
+            if iconPath.exists():
+                appIcon = QtGui.QIcon(str(iconPath))
+                self.setWindowIcon(appIcon)
+        except Exception:
+            pass
 
         self.dockbarOne.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         self.dockbarTwo.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)

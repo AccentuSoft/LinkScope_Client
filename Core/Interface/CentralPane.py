@@ -1106,13 +1106,13 @@ class CanvasScene(QtWidgets.QGraphicsScene):
                 self.parent().mainWindow.setStatus('Too many items selected to link, please only choose a total of 2.')
             elif len(self.itemsToLink) == 2:
                 potentialUID = (self.itemsToLink[0].uid, self.itemsToLink[1].uid)
-                self.parent().mainWindow.toggleLinkingMode()
                 if not self.parent().entityDB.isLink(potentialUID):
-                    linkUID = (self.itemsToLink[0].uid, self.itemsToLink[1].uid)
-                    self.parent().entityDB.addLink({"uid": linkUID})
+                    self.parent().entityDB.addLink({"uid": potentialUID})
                     self.addLinkDragDrop(self.itemsToLink[0],
                                          self.itemsToLink[1])
-                    self.editLinkProperties(linkUID)
+                    self.editLinkProperties(potentialUID)
+                self.parent().mainWindow.toggleLinkingMode()
+
         elif self.appendingToGroup:
             selectedGroupItems = [item for item in self.selectedItems()
                                   if isinstance(item, Entity.GroupNode)]
