@@ -31,15 +31,12 @@ class BaseNode(QGraphicsItemGroup):
         else:
             self.iconItem = QGraphicsPixmapItem(self.pixmapItem)
 
-        self.iconItem.setCacheMode(self.iconItem.DeviceCoordinateCache, QtCore.QSize(40, 40))
-
         self.labelItem = QGraphicsSimpleTextItem('')
         self.addToGroup(self.iconItem)
         self.addToGroup(self.labelItem)
         self.labelItem.setFont(TEXTFONT)
 
         self.updateLabel(primaryAttribute)
-        self.labelItem.setCacheMode(self.labelItem.DeviceCoordinateCache)
 
         self.uid = uid
         self.setFlag(QGraphicsItem.ItemIsMovable, True)
