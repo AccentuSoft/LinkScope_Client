@@ -15,4 +15,20 @@
             Currency.svg
         </Icon>
     </Currency>
+    <Shares>
+        <Attributes>
+            Ticker,Amount
+        </Attributes>
+        <Icon>
+            Share.svg
+        </Icon>
+    </Shares>
+    <Portfolio>
+        <Attributes>
+            Label
+        </Attributes>
+        <Icon>
+            Portfolio.svg
+        </Icon>
+    </Portfolio>
 </Financials>

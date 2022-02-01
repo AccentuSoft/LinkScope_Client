@@ -46,8 +46,8 @@
     <Icon>
       IPv6_Address.svg
     </Icon>
-</IPv6_Address>
-<Autonomous_System>
+  </IPv6_Address>
+  <Autonomous_System>
     <Attributes>
       AS Number,ASN Cidr
     </Attributes>
@@ -84,4 +84,12 @@
       WebInfrastructure.svg
     </Icon>
   </Website_Infrastructure>
+  <Web_Certificate>
+    <Attributes>
+      Subdomain,Authority
+    </Attributes>
+    <Icon>
+      Web_Certificate.svg
+    </Icon>
+  </Web_Certificate>
 </Infrastructure>
