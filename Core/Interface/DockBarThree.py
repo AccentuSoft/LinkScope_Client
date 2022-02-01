@@ -4,7 +4,6 @@ from PySide6 import QtWidgets, QtCore, QtCharts, QtGui
 from Core.Interface import Stylesheets
 from datetime import datetime
 from getpass import getuser
-from time import sleep
 import networkx as nx
 import queue
 

@@ -77,6 +77,7 @@ class MainWindow(QtWidgets.QMainWindow):
     # What happens when the software is closed
     def closeEvent(self, event) -> None:
         self.dockbarThree.logViewerUpdateThread.endLogging = True
+        self.saveTimer.stop()
         # Save the window settings
         self.SETTINGS.setValue("MainWindow/Geometry", self.saveGeometry().data())
         self.SETTINGS.setValue("MainWindow/WindowState", self.saveState().data())
@@ -91,7 +92,6 @@ class MainWindow(QtWidgets.QMainWindow):
         super(MainWindow, self).closeEvent(event)
 
     def saveProject(self) -> None:
-        # noinspection PyBroadException
         try:
             self.SETTINGS.save()
             self.LENTDB.save()
@@ -103,7 +103,15 @@ class MainWindow(QtWidgets.QMainWindow):
             self.MESSAGEHANDLER.error(errorMessage, exc_info=True)
             self.setStatus("Failed Saving Project.", 3000)
             self.MESSAGEHANDLER.info("Failed Saving Project " + self.SETTINGS.value("Project/Name", 'Untitled'))
-            raise e
+
+    def autoSaveProject(self):
+        try:
+            self.SETTINGS.save()
+            self.LENTDB.save()
+            self.centralWidget().tabbedPane.save()
+            self.setStatus("Project Autosaved.", 3000)
+        except Exception:
+            self.setStatus("Failed Autosaving Project " + self.SETTINGS.value("Project/Name", 'Untitled'))
 
     def saveAsProject(self) -> None:
         if len(self.resolutions) > 0:
@@ -1586,6 +1594,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dockbarTwo.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         self.dockbarThree.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
 
+        # Autosave approximately once every ten minutes.
+        # Margin of error: 500 ms.
+        self.saveTimer.start(600000)
+
         self.show()
 
         # Moved this here so the software doesn't crash if there are a ton of nodes.
@@ -1654,6 +1666,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.URLMANAGER = URLManager.URLManager(self)
         self.RESOLUTIONMANAGER = ResolutionManager.ResolutionManager(self, self.MESSAGEHANDLER)
         self.FCOM = FrontendCommunicationsHandler.CommunicationsHandler(self)
+
+        # Have the project auto-save on regular intervals by default.
+        self.saveTimer = QtCore.QTimer(self)
+        self.saveTimer.timeout.connect(self.autoSaveProject)
+        self.saveTimer.setSingleShot(False)
+        self.saveTimer.setTimerType(QtCore.Qt.VeryCoarseTimer)
 
         self.syncedCanvases = []
         self.syncedCanvasesLock = threading.Lock()
@@ -2290,7 +2308,7 @@ class ResolutionExecutorThread(QtCore.QThread):
         self.uid = uid
         self.done = False
 
-    def run(self):
+    def run(self) -> None:
         try:
             ret = self.mainWindow.RESOLUTIONMANAGER.executeResolution(self.resolution,
                                                                       self.resolutionArgument,
