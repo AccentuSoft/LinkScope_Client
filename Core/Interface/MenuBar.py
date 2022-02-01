@@ -393,10 +393,19 @@ class MenuBar(QtWidgets.QMenuBar):
                                 for line in importFile:
                                     lineValue = line.strip()
                                     if lineValue:
-                                        newEntityJSON = {primary_field: lineValue.strip(),
+                                        primaryAttr = lineValue.strip()
+                                        newEntityJSON = {primary_field: primaryAttr,
                                                          'Entity Type': selectedEntityType}
                                         if newEntityJSON not in newNodes:
-                                            newNodes.append(newEntityJSON)
+                                            existingEntity = self.parent().LENTDB.getEntityOfType(primaryAttr,
+                                                                                                  selectedEntityType)
+                                            if existingEntity is None:
+                                                newNodes.append(newEntityJSON)
+                                            else:
+                                                existingEntity.update(newEntityJSON)
+                                                # We'll refresh the timeline later.
+                                                self.parent().LENTDB.addEntity(existingEntity, updateTimeline=False)
+
                     elif importDialog.CSVFileChoice.isChecked():
                         csvDF = pd.read_csv(fileDirectory)
 
@@ -432,7 +441,17 @@ class MenuBar(QtWidgets.QMenuBar):
                                                  for key in range(len(attributeRows))}
                                 newEntityJSON['Entity Type'] = entityTypeToImportAs
                                 if newEntityJSON not in newNodes:
-                                    newNodes.append(newEntityJSON)
+                                    primaryAttr = newEntityJSON[
+                                        self.parent().RESOURCEHANDLER.getPrimaryFieldForEntityType(
+                                            entityTypeToImportAs)]
+                                    existingEntity = self.parent().LENTDB.getEntityOfType(
+                                        primaryAttr, entityTypeToImportAs)
+                                    if existingEntity is None:
+                                        newNodes.append(newEntityJSON)
+                                    else:
+                                        existingEntity.update(newEntityJSON)
+                                        # We'll refresh the timeline later.
+                                        self.parent().LENTDB.addEntity(existingEntity, updateTimeline=False)
 
                     elif importDialog.CSVFileChoiceLinks.isChecked():
                         csvDF = pd.read_csv(fileDirectory)
@@ -535,9 +554,12 @@ class MenuBar(QtWidgets.QMenuBar):
                                             newEntityJSON['Entity Type'] = entityTypeToImportAs
                                             newNode = self.parent().LENTDB.getEntityOfType(
                                                 newEntityJSON[newEntityPrimaryAttribute], entityTypeToImportAs)
-                                            if not newNode:
+                                            if newNode is None:
                                                 newNode = self.parent().LENTDB.addEntity(newEntityJSON,
                                                                                          updateTimeline=False)
+                                            else:
+                                                newNode.update(newEntityJSON)
+                                                self.parent().LENTDB.addEntity(newNode, updateTimeline=False)
 
                                             linkJSONOne['uid'] = (entityOneJSON['uid'], newNode['uid'])
                                             linkJSONTwo['uid'] = (newNode['uid'], entityTwoJSON['uid'])
