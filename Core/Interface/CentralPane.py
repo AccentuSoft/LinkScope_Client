@@ -1335,12 +1335,12 @@ class CanvasScene(QtWidgets.QGraphicsScene):
         try:
             if graphAlgorithm == 'sfdp':
                 self.scenePos = nx.nx_pydot.graphviz_layout(self.sceneGraph, 'sfdp')
-                xFactor = (0.40 + min(len(self.nodesDict) / 100, 1))
-                yFactor = (0.40 + min(len(self.nodesDict) / 100, 1))
+                xFactor = (0.40 + min(len(self.nodesDict) / 100, 10))
+                yFactor = (0.40 + min(len(self.nodesDict) / 100, 10))
             elif graphAlgorithm == 'neato':
                 self.scenePos = nx.nx_pydot.graphviz_layout(self.sceneGraph, 'neato')
-                xFactor = (3 + (0.30 + min(len(self.nodesDict) / 100, 1)))
-                yFactor = (3 + (0.30 + min(len(self.nodesDict) / 100, 1)))
+                xFactor = (3 + (0.30 + min(len(self.nodesDict) / 100, 10)))
+                yFactor = (3 + (0.30 + min(len(self.nodesDict) / 100, 10)))
             else:
                 # Default algorithm is 'dot', when nothing else is selected.
 
