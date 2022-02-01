@@ -267,7 +267,7 @@ class BaseConnector(QGraphicsItemGroup):
         self.update()
 
     def boundingRect(self) -> QtCore.QRectF:
-        extra = (self.pen.width() + 20) / 2.0
+        extra = self.pen.width() + 20
         p1 = self.line.p1()
         p2 = self.line.p2()
         return QtCore.QRectF(p1, QtCore.QSizeF(p2.x() - p1.x(), p2.y() - p1.y())
