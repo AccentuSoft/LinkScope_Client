@@ -195,13 +195,11 @@ class BaseConnector(QGraphicsItemGroup):
 
     def __init__(self, origin, destination, name: str = 'None', uid=None, parent=None) -> None:
         super(BaseConnector, self).__init__(parent)
-        self.setCacheMode(self.ItemCoordinateCache)
 
         self.myStartItem = origin
         self.myEndItem = destination
 
         self.labelItem = QGraphicsSimpleTextItem('')
-        self.labelItem.setCacheMode(self.labelItem.ItemCoordinateCache)
         self.addToGroup(self.labelItem)
         self.labelItem.setFont(TEXTFONT)
 
