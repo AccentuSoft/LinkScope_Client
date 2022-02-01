@@ -126,13 +126,13 @@ class EntityDetails(QtWidgets.QWidget):
         oneLinkRelPanel = QtWidgets.QWidget()
         oneLinkRelPanel.setMaximumHeight(150)
         oneLinkRelPanel.setLayout(oneLinkRelLayout)
-        self.linkParent = SingleLinkItem(self, mainWindow)  # QtWidgets.QLabel("")
+        self.linkParent = SingleLinkItem(self, mainWindow)
         self.linkParent.setStyleSheet(Stylesheets.DOCK_BAR_TWO_LINK)
         self.linkIcon = QtWidgets.QLabel("")
         self.linkIcon.setMaximumHeight(90)
         self.linkIcon.setStyleSheet(Stylesheets.DOCK_BAR_TWO_LINK)
         self.linkIcon.setAlignment(QtCore.Qt.AlignCenter)
-        self.linkChild = SingleLinkItem(self, mainWindow)  # QtWidgets.QLabel("")
+        self.linkChild = SingleLinkItem(self, mainWindow)
         self.linkChild.setStyleSheet(Stylesheets.DOCK_BAR_TWO_LINK)
         oneLinkRelLayout.addWidget(self.linkParent)
         oneLinkRelLayout.addWidget(self.linkIcon)
@@ -158,11 +158,11 @@ class EntityDetails(QtWidgets.QWidget):
         self.linksTable = LinksTable(self, mainWindow)
         self.linksTable.setMaximumHeight(300)
         self.linksTable.setHeaderLabels(["Resolution", "Parent", "Child"])
-        multiNodesTableLabelOne = QtWidgets.QLabel("Selected Nodes:")
-        layoutMultipleItemsSelected.addWidget(multiNodesTableLabelOne, 0, 0)
+        self.multiNodesTableLabelOne = QtWidgets.QLabel("Selected Nodes:")
+        layoutMultipleItemsSelected.addWidget(self.multiNodesTableLabelOne, 0, 0)
         layoutMultipleItemsSelected.addWidget(self.nodesTable, 1, 0)
-        multiNodesTableLabelTwo = QtWidgets.QLabel("Selected Links:")
-        layoutMultipleItemsSelected.addWidget(multiNodesTableLabelTwo, 2, 0)
+        self.multiNodesTableLabelTwo = QtWidgets.QLabel("Selected Links:")
+        layoutMultipleItemsSelected.addWidget(self.multiNodesTableLabelTwo, 2, 0)
         layoutMultipleItemsSelected.addWidget(self.linksTable, 3, 0)
 
         self.setMinimumWidth(475)
@@ -200,11 +200,18 @@ class EntityDetails(QtWidgets.QWidget):
             else:
                 self.populateOneLinkRelationshipHelper(entity['uid'])
         else:
+            nodesNumber = 0
+            linksNumber = 0
             for item in jsonDicts:
-                if item.get('Entity Type') is not None:
+                if isinstance(item['uid'], str):
                     self.populateMultiRelationshipHelperNode(item)
+                    nodesNumber += 1
                 else:
                     self.populateMultiRelationshipHelperLink(item)
+                    linksNumber += 1
+            self.multiNodesTableLabelOne.setText('Selected Nodes:   ' + str(nodesNumber))
+            self.multiNodesTableLabelTwo.setText('Selected Links:   ' + str(linksNumber))
+
         self.switchLayoutHelper(numberOfItems, isNode)
 
     # Display helper functions
@@ -261,6 +268,7 @@ class EntityDetails(QtWidgets.QWidget):
                                        nodePixmap,
                                        edgeJson[list(edgeJson)[1]],
                                        uid)
+        self.relationshipsIncomingTable.setHeaderLabel('Incoming Links:   ' + str(len(inc)))
         for edge in out:
             uid = edge[1]
             edgeJson = self.entityDB.getEntity(uid)
@@ -270,6 +278,7 @@ class EntityDetails(QtWidgets.QWidget):
                                        nodePixmap,
                                        edgeJson[list(edgeJson)[1]],
                                        uid)
+        self.relationshipsOutgoingTable.setHeaderLabel('Outgoing Links:   ' + str(len(out)))
 
     def populateMultiRelationshipHelperNode(self, nodeJson) -> None:
         inc = len(self.entityDB.getIncomingLinks(nodeJson['uid']))
