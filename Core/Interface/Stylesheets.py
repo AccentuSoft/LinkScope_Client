@@ -15,11 +15,12 @@ TOOLBAR_STYLESHEET = """QToolBar {background-color: rgb(41, 45, 62);
                      """
 
 MAIN_WINDOW_STYLESHEET = """
-                        QWidget, QFileDialog, QDialog, QHeaderView{ 
+                        QObject{ 
                         background-color: rgb(41, 45, 62);
-                         color: rgba(248, 248, 242, 1) !important;
-                         font-size: 15px;
-                         }
+                        border-width: 0px;
+                        color: rgba(248, 248, 242, 1) !important;
+                        font-size: 15px;
+                        }
                         QScrollBar:vertical {         
                         background:rgb(44, 49, 58);
                         width:7px;    
@@ -39,7 +40,6 @@ MAIN_WINDOW_STYLESHEET = """
                             background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
                             stop: 0 rgb(103, 110, 149), stop: 0.5 rgb(103, 110, 149), stop:1 rgb(103, 110, 149));
                         }
-
                         QMenuBar { 
                           color: #ffffff;
                           background-color: rgb(33, 37, 43);
@@ -70,8 +70,20 @@ MAIN_WINDOW_STYLESHEET = """
                         border-radius: 3px;
                         min-height: 3ex;
                         }
+                        QTabWidget {
+                        border-style: outset;
+                        border-color: rgba(248, 248, 242, 1);
+                        border-width: 0.5px;
+                        }
+                        QToolBar {
+                        border-style: outset;
+                        border-color: rgba(75, 75, 75, 1);
+                        border-width: 1px;
+                        border-left-width: 0px;
+                        border-right-width: 0px;
+                        }
                         
-                        QTabBar::tab:selected {background: rgb(41, 45, 62);
+                        QTabBar::tab:selected {background: rgb(51, 55, 95);
                         border: 2px solid rgb(41, 45, 62);
                         min-height: 2.5ex;
                         border-radius: 3px;
