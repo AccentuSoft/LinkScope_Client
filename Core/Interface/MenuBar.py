@@ -518,9 +518,19 @@ class MenuBar(QtWidgets.QMenuBar):
                                             if mapping == 'Entity One':
                                                 entityOneJSON = self.parent().LENTDB.getEntityOfType(column,
                                                                                                      entityOneType)
+                                                # Add the entity if it doesn't exist.
+                                                if entityOneJSON is None:
+                                                    entityOneJSON = self.parent().LENTDB.addEntity({
+                                                        self.parent().RESOURCEHANDLER.getPrimaryFieldForEntityType(
+                                                            entityOneType): column, 'Entity Type': entityOneType})
                                             elif mapping == 'Entity Two':
                                                 entityTwoJSON = self.parent().LENTDB.getEntityOfType(column,
                                                                                                      entityTwoType)
+                                                # Add the entity if it doesn't exist.
+                                                if entityTwoJSON is None:
+                                                    entityTwoJSON = self.parent().LENTDB.addEntity({
+                                                        self.parent().RESOURCEHANDLER.getPrimaryFieldForEntityType(
+                                                            entityTwoType): column, 'Entity Type': entityTwoType})
                                             elif mapping == 'Notes':
                                                 notes = column
                                             elif mapping == 'Resolution ID':
@@ -529,8 +539,9 @@ class MenuBar(QtWidgets.QMenuBar):
                                                 linkJSON[mapping] = column
                                             count += 1
 
+                                        # We still need to check if both nodes exist, since errors may have occurred
+                                        #   during their creation.
                                         if (entityOneJSON is not None) and (entityTwoJSON is not None):
-                                            # linkJSON['uid'] = (entityOneJSON['uid'], entityTwoJSON['uid'])
                                             linkJSON['Notes'] = notes
                                             if importLinksCSVDialog.randAsIs.isChecked():
                                                 linkJSON['Resolution'] = resolutionID
