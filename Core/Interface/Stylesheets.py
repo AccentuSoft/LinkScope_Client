@@ -15,9 +15,8 @@ TOOLBAR_STYLESHEET = """QToolBar {background-color: rgb(41, 45, 62);
                      """
 
 MAIN_WINDOW_STYLESHEET = """
-                        QObject{ 
+                        QWidget{ 
                         background-color: rgb(41, 45, 62);
-                        border-width: 0px;
                         color: rgba(248, 248, 242, 1) !important;
                         font-size: 15px;
                         }

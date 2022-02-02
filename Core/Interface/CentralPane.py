@@ -1010,7 +1010,8 @@ class CanvasView(QtWidgets.QGraphicsView):
             #   to avoid visual artifacts.
             picture.fill(QtGui.QColor(0, 0, 0, 0))
             picturePainter = QtGui.QPainter(picture)
-            tempBrush = self.scene().backgroundBrush()
+            # The scene's background brush is transparent by default (for now at least, 2022/2/2)
+            tempBrush = self.backgroundBrush()
             if transparentBackground:
                 self.scene().setBackgroundBrush(QtGui.QBrush(QtGui.QColor.fromRgba64(0, 0, 0, 0)))
             self.scene().render(picturePainter, QtCore.QRectF(0, 0, rectToPrint.width(), rectToPrint.height()),

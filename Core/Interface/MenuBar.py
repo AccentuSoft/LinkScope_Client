@@ -670,10 +670,14 @@ class MenuBar(QtWidgets.QMenuBar):
 
         if canvasSaveDialogAccept and fileDirectory != '':
             canvas = canvasSaveDialog.chosenCanvasDropdown.currentText()
-            transparentBackground = False
-            justViewport = True
+            if canvasSaveDialog.justViewportChoice.isChecked():
+                justViewport = True
+            else:
+                justViewport = False
             if canvasSaveDialog.transparentChoice.isChecked():
                 transparentBackground = True
+            else:
+                transparentBackground = False
             picture = self.parent().getPictureOfCanvas(canvas, justViewport, transparentBackground)
             picture.save(fileDirectory, "PNG")
 
@@ -2073,14 +2077,31 @@ class CanvasPictureDialog(QtWidgets.QDialog):
         self.fileDirectoryButton = QtWidgets.QPushButton("Select directory...")
         self.fileDirectoryLine = QtWidgets.QLineEdit()
         self.fileDirectoryLine.setReadOnly(True)
+
+        self.backgroundButtonsGroup = QtWidgets.QButtonGroup()
+        self.canvasViewportButtonsGroup = QtWidgets.QButtonGroup()
+
         self.transparentChoice = QtWidgets.QRadioButton('Transparent')
+        self.backgroundButtonsGroup.addButton(self.transparentChoice)
         self.transparentChoice.setChecked(True)
         self.withBackgroundChoice = QtWidgets.QRadioButton('With Background')
+        self.backgroundButtonsGroup.addButton(self.withBackgroundChoice)
+        self.justViewportChoice = QtWidgets.QRadioButton('Just Viewport')
+        self.justViewportChoice.setToolTip('Save a picture of only the contents of the scene that are currently '
+                                           'visible (through the viewport).')
+        self.justViewportChoice.setChecked(True)
+        self.canvasViewportButtonsGroup.addButton(self.justViewportChoice)
+        self.entireCanvasChoice = QtWidgets.QRadioButton('Entire Canvas')
+        self.entireCanvasChoice.setToolTip('Save a picture of the entire contents of the canvas, not just the current '
+                                           'viewport contents.')
+        self.canvasViewportButtonsGroup.addButton(self.entireCanvasChoice)
 
         dialogLayout.addWidget(self.fileDirectoryLine, 1, 0, 1, 2)
         dialogLayout.addWidget(self.fileDirectoryButton, 2, 0, 1, 2)
         dialogLayout.addWidget(self.transparentChoice, 3, 0, 1, 1)
         dialogLayout.addWidget(self.withBackgroundChoice, 3, 1, 1, 1)
+        dialogLayout.addWidget(self.justViewportChoice, 4, 0, 1, 1)
+        dialogLayout.addWidget(self.entireCanvasChoice, 4, 1, 1, 1)
 
         canvasLabel = QtWidgets.QLabel('Canvas:')
         canvasLabel.setWordWrap(False)
@@ -2113,6 +2134,8 @@ class CanvasPictureDialog(QtWidgets.QDialog):
         saveAsDialog.setViewMode(QtWidgets.QFileDialog.List)
         saveAsDialog.setNameFilter("Image (*.png)")
         saveAsDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+        saveAsDialog.setDirectory(str(Path.home()))
+        saveAsDialog.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         saveAsDialog.exec()
         self.fileDirectory = saveAsDialog.selectedFiles()[0]
         if self.fileDirectory != '':
