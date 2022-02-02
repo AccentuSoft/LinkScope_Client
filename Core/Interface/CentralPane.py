@@ -1584,7 +1584,7 @@ class CanvasScene(QtWidgets.QGraphicsScene):
                 self.removeEdge(self.linksDict[edgeToDelete])
 
     def removeUIDFromLink(self, linkUIDToRemove: tuple) -> None:
-        for link in self.linksDict:
+        for link in dict(self.linksDict):
             if linkUIDToRemove in self.linksDict[link].uid:
                 self.linksDict[link].uid.remove(linkUIDToRemove)
 

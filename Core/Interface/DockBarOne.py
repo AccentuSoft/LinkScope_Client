@@ -262,7 +262,7 @@ class DocList(QtWidgets.QTreeWidget):
 
     def finishUploadingFile(self, fileName: str):
         # Remove uploading file. Server will send updated file list.
-        for doc in self.uploadingFileWidgets:
+        for doc in list(self.uploadingFileWidgets):
             if doc.getFileName() == fileName:
                 self.takeTopLevelItem(self.indexOfTopLevelItem(doc))
                 self.uploadingFileWidgets.remove(doc)

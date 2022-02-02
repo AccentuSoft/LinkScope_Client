@@ -759,7 +759,7 @@ class CommunicationsHandler(QtCore.QObject):
         :param project_name:
         :return:
         """
-        for file_name in self.uploadingFiles:
+        for file_name in dict(self.uploadingFiles):
             try:
                 uploadToAbort = self.uploadingFiles.pop(file_name)
                 uploadToAbort.continue_running = False
@@ -779,7 +779,7 @@ class CommunicationsHandler(QtCore.QObject):
         :param project_name:
         :return:
         """
-        for file_name in self.downloadingFiles:
+        for file_name in dict(self.downloadingFiles):
             messageJson = {"Operation": "File Download Abort",
                            "Arguments": {
                                'project_name': project_name,

@@ -1090,7 +1090,7 @@ class MainWindow(QtWidgets.QMainWindow):
         Clean out old non-server resolutions.
         :return:
         """
-        for resolutionThread in self.resolutions:
+        for resolutionThread in list(self.resolutions):
             if resolutionThread[0].isFinished() and resolutionThread[1] is False:
                 self.resolutions.remove(resolutionThread)
 
@@ -1155,7 +1155,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.FCOM.runRemoteResolution(resolution_name, resolution_entities, resolution_parameters, resolution_uid)
 
     def cleanServerResolutionListener(self, resolution_uid: str) -> None:
-        for resolutionThread in self.resolutions:
+        for resolutionThread in list(self.resolutions):
             if resolutionThread[0].uid == resolution_uid and resolutionThread[1] is True:
                 if resolutionThread[0].isFinished():
                     self.resolutions.remove(resolutionThread)
@@ -1423,7 +1423,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if file_name is not None:
             self.dockbarOne.documentsList.finishUploadingFile(file_name)
         else:
-            for uploadingFile in self.dockbarOne.documentsList.uploadingFileWidgets:
+            for uploadingFile in list(self.dockbarOne.documentsList.uploadingFileWidgets):
                 self.dockbarOne.documentsList.takeTopLevelItem(
                     self.dockbarOne.documentsList.indexOfTopLevelItem(uploadingFile))
                 self.dockbarOne.documentsList.uploadingFileWidgets.remove(uploadingFile)
