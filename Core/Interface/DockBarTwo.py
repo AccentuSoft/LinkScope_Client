@@ -187,32 +187,39 @@ class EntityDetails(QtWidgets.QWidget):
         if None in jsonDicts:
             self.mainWindow.MESSAGEHANDLER.error('Received None value when trying to display widget details.',
                                                  popUp=False)
+            self.layout().setCurrentIndex(0)
             return
         self.clearDetailsHelper()
         isNode = None
-        if numberOfItems == 1:
-            entity = jsonDicts[0]
-            isNode = self.entityDB.isNode(entity['uid'])
-            self.populateOneSummaryHelper(entity, isNode)
-            self.populateOneDetailsHelper(entity)
-            if isNode:
-                self.populateOneRelationshipHelper(entity['uid'])
-            else:
-                self.populateOneLinkRelationshipHelper(entity['uid'])
-        else:
-            nodesNumber = 0
-            linksNumber = 0
-            for item in jsonDicts:
-                if isinstance(item['uid'], str):
-                    self.populateMultiRelationshipHelperNode(item)
-                    nodesNumber += 1
+        try:
+            if numberOfItems == 1:
+                entity = jsonDicts[0]
+                isNode = self.entityDB.isNode(entity['uid'])
+                self.populateOneSummaryHelper(entity, isNode)
+                self.populateOneDetailsHelper(entity)
+                if isNode:
+                    self.populateOneRelationshipHelper(entity['uid'])
                 else:
-                    self.populateMultiRelationshipHelperLink(item)
-                    linksNumber += 1
-            self.multiNodesTableLabelOne.setText('Selected Nodes:   ' + str(nodesNumber))
-            self.multiNodesTableLabelTwo.setText('Selected Links:   ' + str(linksNumber))
+                    self.populateOneLinkRelationshipHelper(entity['uid'])
+            else:
+                nodesNumber = 0
+                linksNumber = 0
+                for item in jsonDicts:
+                    if isinstance(item['uid'], str):
+                        self.populateMultiRelationshipHelperNode(item)
+                        nodesNumber += 1
+                    else:
+                        self.populateMultiRelationshipHelperLink(item)
+                        linksNumber += 1
+                self.multiNodesTableLabelOne.setText('Selected Nodes:   ' + str(nodesNumber))
+                self.multiNodesTableLabelTwo.setText('Selected Links:   ' + str(linksNumber))
 
-        self.switchLayoutHelper(numberOfItems, isNode)
+            self.switchLayoutHelper(numberOfItems, isNode)
+        except Exception as exc:
+            # If an error is thrown at some point during the process, show the default nothing selected screen.
+            self.layout().setCurrentIndex(0)
+            self.mainWindow.MESSAGEHANDLER.error('Error occurred while trying to display the details of the selected '
+                                                 'nodes: ' + str(exc), popUp=False, exc_info=False)
 
     # Display helper functions
     def clearDetailsHelper(self) -> None:
