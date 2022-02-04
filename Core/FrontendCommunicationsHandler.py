@@ -248,11 +248,13 @@ class CommunicationsHandler(QtCore.QObject):
             try:
                 if self.sock is not None:
                     self.sock.shutdown(socket.SHUT_RDWR)
-                    self.sock.close()
-                    self.sock = None
             except OSError:
                 # This would typically occur if the socket is already closed.
                 pass
+            try:
+                self.sock.close()
+            finally:
+                self.sock = None
 
     def scanIncoming(self):
         """
@@ -625,8 +627,11 @@ class CommunicationsHandler(QtCore.QObject):
         :return:
         """
         if status_code != 200:
-            self.status_message_signal.emit('Operation ' + operation + ' failed with status code ' +
-                                            str(status_code) + ': ' + message, True)
+            if status_code == 404 and message == 'No project with the specified name exists!':
+                self.close_project_signal.emit()
+            else:
+                self.status_message_signal.emit('Operation ' + operation + ' failed with status code ' +
+                                                str(status_code) + ': ' + message, True)
         else:
             if operation == 'Create Project':
                 # No need to do anything here. Creating a new project also opens it.

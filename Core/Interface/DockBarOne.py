@@ -178,33 +178,30 @@ class EntityList(QtWidgets.QTreeWidget):
         """
         Handle dragging of entities onto canvas.
         """
-        # No, I have no idea why this is the case: v
-        if event.button() == QtGui.Qt.MouseButton.NoButton:
-            itemDragged = self.itemAt(event.pos())
+        itemDragged = self.itemAt(event.pos())
 
-            # Categories & entity names don't have uids.
-            try:
-                if itemDragged.uid is None:
-                    return
-            except Exception:
+        # Categories & entity names don't have uids.
+        try:
+            if itemDragged.uid is None:
                 return
+        except Exception:
+            return
 
-            self.setCurrentItem(itemDragged)
-            drag = QtGui.QDrag(self)
-            mimeData = QtCore.QMimeData()
+        self.setCurrentItem(itemDragged)
+        drag = QtGui.QDrag(self)
+        mimeData = QtCore.QMimeData()
 
-            mimeData.setText(dumps({'uid': itemDragged.uid}))
-            drag.setMimeData(mimeData)
+        mimeData.setText(dumps({'uid': itemDragged.uid}))
+        drag.setMimeData(mimeData)
 
-            # All Entities should have icons, but you never know.
-            pixmap = None
-            if itemDragged.icon(0) is not None:
-                pixmap = itemDragged.icon(0).pixmap(40, 40)
-                drag.setPixmap(pixmap)
-            drag.setHotSpot(QtCore.QPoint(pixmap.rect().width() / 2, pixmap.rect().height() / 2))
-            drag.exec_()
-        else:
-            super().mouseMoveEvent(event)
+        # All Entities should have icons, but you never know.
+        pixmap = None
+        if itemDragged.icon(0) is not None:
+            pixmap = itemDragged.icon(0).pixmap(40, 40)
+            drag.setPixmap(pixmap)
+        drag.setHotSpot(QtCore.QPoint(pixmap.rect().width() // 2, pixmap.rect().height() // 2))
+        drag.exec_()
+        super().mouseMoveEvent(event)
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
         super(EntityList, self).mousePressEvent(event)
@@ -416,7 +413,7 @@ class NodeList(QtWidgets.QTreeWidget):
             if itemDragged.icon(0) is not None:
                 pixmap = itemDragged.icon(0).pixmap(40, 40)
                 drag.setPixmap(pixmap)
-            drag.setHotSpot(QtCore.QPoint(pixmap.rect().width() / 2, pixmap.rect().height() / 2))
+            drag.setHotSpot(QtCore.QPoint(pixmap.rect().width() // 2, pixmap.rect().height() // 2))
             drag.exec_()
         else:
             # This should never happen.

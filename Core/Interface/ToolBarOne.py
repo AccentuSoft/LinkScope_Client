@@ -120,14 +120,6 @@ class ToolBarOne(QtWidgets.QToolBar):
     def addCanvas(self):
         self.parent().addCanvas()
 
-    def configureProxySettings(self):
-        pass
-
-    ###
-    def publishCanvas(self):
-        pass
-
-    ###
     def selectLeafNodes(self):
         self.parent().selectLeafNodes()
 

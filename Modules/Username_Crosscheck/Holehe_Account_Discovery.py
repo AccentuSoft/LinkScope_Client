@@ -13,7 +13,12 @@ class Holehe_Account_Discovery:
     description = "Find information about a persons social media accounts"
     originTypes = {'Email Address'}
     resultTypes = {'Email Address', 'Phone Number', 'Phrase', 'Date', 'Domain'}
-    parameters = {'Use Password Recovery Methods': {'description': 'TODO',
+    parameters = {'Use Password Recovery Methods': {'description': 'This option dictates whether the module checks '
+                                                                   'for the existence for an account in services where '
+                                                                   'the way to determine if an account was registered '
+                                                                   'is to attempt password recovery. This may, in '
+                                                                   'certain cases, have a chance of alerting the '
+                                                                   'owner of the account.',
                                                     'type': 'SingleChoice',
                                                     'value': {'Yes', 'No'}
                                                     }}

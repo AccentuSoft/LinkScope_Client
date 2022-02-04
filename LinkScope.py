@@ -1206,10 +1206,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.FCOM.sendFileAbortAll(project_name)
         self.unSyncCanvasByName()
         if server is not None:
-            statusMessage = "Closed Server project: " + str(project_name)
-            self.MESSAGEHANDLER.info(statusMessage)
-            self.setStatus(statusMessage)
             self.dockbarThree.serverStatus.updateStatus("Connected to server: " + server)
+            if project_name != "":
+                statusMessage = "Closed Server project: " + str(project_name)
+                self.MESSAGEHANDLER.info(statusMessage)
+                self.setStatus(statusMessage)
 
         self.dockbarOne.documentsList.updateFileListFromServer(None)
         with self.syncedCanvasesLock:
