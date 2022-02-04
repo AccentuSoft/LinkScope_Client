@@ -111,7 +111,7 @@ class CommunicationsHandler(QtCore.QObject):
         self.threadInb = None
         self.sock = None
 
-    def beginCommunications(self, password: str, server: str, port: int = 3777):
+    def beginCommunications(self, password: str, server: str, port: int = 3777) -> bool:
         global closeSoftwareLock
         global closeSoftware
         with closeSoftwareLock:  # Not strictly necessary, but might as well just in case.
@@ -174,7 +174,7 @@ class CommunicationsHandler(QtCore.QObject):
 
         return False
 
-    def isConnected(self):
+    def isConnected(self) -> bool:
         """
         Check if socket is in a working state.
         """
@@ -182,7 +182,7 @@ class CommunicationsHandler(QtCore.QObject):
             return True
         return False
 
-    def close(self):
+    def close(self) -> None:
         global closeSoftwareLock
         global closeSoftware
         with closeSoftwareLock:
@@ -199,13 +199,13 @@ class CommunicationsHandler(QtCore.QObject):
         self.downloadingFiles = {}
         self.uploadingFiles = {}
 
-    def encryptTransmission(self, bytesObject):
+    def encryptTransmission(self, bytesObject) -> bytes:
         encryptor = self.cipher.encryptor()
         padNeeded = 16 - (len(bytesObject) % 16)
         message = encryptor.update(b'a' * padNeeded + bytesObject) + encryptor.finalize()
         return b64encode(message) + b'\x00\x00\x00'
 
-    def decryptTransmission(self, bytesObject):
+    def decryptTransmission(self, bytesObject) -> Union[bytes, None]:
         decrypter = self.cipher.decryptor()
         try:
             message = decrypter.update(bytesObject) + decrypter.finalize()
@@ -214,7 +214,7 @@ class CommunicationsHandler(QtCore.QObject):
             # If the ciphertext cannot be decrypted to a valid message, return None.
             return None
 
-    def transmitMessage(self, messageJson: dict, showErrorOnBrokenPipe: bool = True):
+    def transmitMessage(self, messageJson: dict, showErrorOnBrokenPipe: bool = True) -> None:
         self.mainWindow.MESSAGEHANDLER.debug('Sending Message: ' + str(messageJson))
         argEncoded = str(messageJson)
         largeMessageUUID = str(uuid4())
@@ -231,7 +231,7 @@ class CommunicationsHandler(QtCore.QObject):
                 self.mainWindow.MESSAGEHANDLER.error("Disconnected from server!", popUp=True, exc_info=False)
                 self.mainWindow.disconnectFromServer()
 
-    def closeSocket(self):
+    def closeSocket(self) -> None:
         """
         Called by the close function in this class when communications with the server are to be ended.
         :return:
@@ -256,7 +256,7 @@ class CommunicationsHandler(QtCore.QObject):
             finally:
                 self.sock = None
 
-    def scanIncoming(self):
+    def scanIncoming(self) -> None:
         """
         This function listens for incoming data, and puts it in the queue if
         it exists.
@@ -309,16 +309,16 @@ class CommunicationsHandler(QtCore.QObject):
                 # They will be reconstructed eventually, once all the pieces get here.
                 continue
 
-    def askServerForResolutions(self):
+    def askServerForResolutions(self) -> None:
         message = {"Operation": "Get Server Resolutions",
                    "Arguments": {}}
         self.transmitMessage(message)
 
-    def receiveResolutions(self, server_resolutions):
+    def receiveResolutions(self, server_resolutions) -> None:
         self.receive_resolutions_signal.emit(server_resolutions)
 
     def runRemoteResolution(self, resolution_name: str, resolution_entities: list, resolution_parameters: dict,
-                            resolution_uid: str):
+                            resolution_uid: str) -> None:
         resolution_entities_to_send = []
         for entity in resolution_entities:
             try:
@@ -338,14 +338,15 @@ class CommunicationsHandler(QtCore.QObject):
                    }}
         self.transmitMessage(message)
 
-    def receiveResolutionResult(self, resolution_name: str, resolution_result: Union[list, str], resolution_uid: str):
+    def receiveResolutionResult(self, resolution_name: str, resolution_result: Union[list, str],
+                                resolution_uid: str) -> None:
         if isinstance(resolution_result, str):
             self.receive_completed_resolution_string_result_signal.emit(resolution_name, resolution_result)
         else:
             self.receive_completed_resolution_result_signal.emit(resolution_name, resolution_result)
         self.remove_server_resolution_from_running_signal.emit(resolution_uid)
 
-    def abortResolution(self, resolution_name: str, resolution_uid: str):
+    def abortResolution(self, resolution_name: str, resolution_uid: str) -> None:
         message = {'Operation': 'Abort Resolution',
                    'Arguments': {
                        'resolution_name': resolution_name,
@@ -353,42 +354,43 @@ class CommunicationsHandler(QtCore.QObject):
                    }}
         self.transmitMessage(message)
 
-    def askProjectsList(self):
+    def askProjectsList(self) -> None:
         message = {'Operation': 'Get Projects List',
                    'Arguments': {}}
         self.transmitMessage(message)
 
-    def receiveProjectsList(self, projects: list):
+    def receiveProjectsList(self, projects: list) -> None:
         self.receive_projects_list_signal.emit(projects)
 
-    def createProject(self, projectName: str, projectPassword: str):
+    def createProject(self, projectName: str, projectPassword: str) -> None:
         if self.isConnected():
             message = {'Operation': 'Create Project',
                        'Arguments': {'project_name': projectName, 'password': projectPassword}}
             self.transmitMessage(message)
 
-    def openProject(self, project_name: str, projectPassword: str):
+    def openProject(self, project_name: str, projectPassword: str) -> None:
         if self.isConnected():
             message = {'Operation': 'Open Project',
                        'Arguments': {'project_name': project_name, 'password': projectPassword}}
             self.transmitMessage(message)
 
-    def closeProject(self, project_name: str):
+    def closeProject(self, project_name: str) -> None:
         if self.isConnected():
             message = {'Operation': 'Close Project',
                        'Arguments': {'project_name': project_name}}
             self.transmitMessage(message)
 
-    def askProjectCanvasesList(self, project_name: str):
+    def askProjectCanvasesList(self, project_name: str) -> None:
         if self.isConnected():
             message = {'Operation': 'List Synced Canvases',
                        'Arguments': {'project_name': project_name}}
             self.transmitMessage(message)
 
-    def receiveProjectCanvasesList(self, canvases: list):
+    def receiveProjectCanvasesList(self, canvases: list) -> None:
         self.receive_project_canvases_list_signal.emit(canvases)
 
-    def askQuestion(self, project_name: str, question: str, reader_value: int, retriever_value: int, answer_count: int):
+    def askQuestion(self, project_name: str, question: str, reader_value: int, retriever_value: int,
+                    answer_count: int) -> None:
         if self.isConnected():
             message = {"Operation": "Ask Question",
                        "Arguments": {
@@ -399,13 +401,13 @@ class CommunicationsHandler(QtCore.QObject):
                            'answer_count': answer_count}}
             self.transmitMessage(message)
 
-    def receiveQuestionAnswer(self, answer: list):
+    def receiveQuestionAnswer(self, answer: list) -> None:
         self.receive_question_answer.emit(answer)
 
-    def receiveTextMessage(self, chat_message: str):
+    def receiveTextMessage(self, chat_message: str) -> None:
         self.receive_chat_message.emit(chat_message)
 
-    def sendTextMessage(self, project_name: str, chat_message: str):
+    def sendTextMessage(self, project_name: str, chat_message: str) -> None:
         if self.isConnected():
             message = {"Operation": "Chat",
                        "Arguments": {
@@ -413,7 +415,7 @@ class CommunicationsHandler(QtCore.QObject):
                            "chat_message": chat_message[:1024]}}  # Cap messages to prevent spam.
             self.transmitMessage(message)
 
-    def syncDatabase(self, project_name: str, client_project_graph: nx.DiGraph):
+    def syncDatabase(self, project_name: str, client_project_graph: nx.DiGraph) -> None:
         message = {'Operation': 'Sync Database',
                    'Arguments': {
                        'project_name': project_name,
@@ -422,16 +424,16 @@ class CommunicationsHandler(QtCore.QObject):
                    }}
         self.transmitMessage(message)
 
-    def receiveSyncDatabase(self, database: str):
+    def receiveSyncDatabase(self, database: str) -> None:
         database_nodes, database_edges = self.mainWindow.RESOURCEHANDLER.reconstructGraphFromString(database)
         self.receive_sync_database.emit(database_nodes, database_edges)
 
-    def askServerForFileList(self, project_name: str):
+    def askServerForFileList(self, project_name: str) -> None:
         message = {"Operation": "Get File List",
                    "Arguments": {'project_name': project_name}}
         self.transmitMessage(message)
 
-    def syncCanvasSend(self, project_name: str, canvas_name: str, canvas_graph: nx.DiGraph):
+    def syncCanvasSend(self, project_name: str, canvas_name: str, canvas_graph: nx.DiGraph) -> None:
         if self.isConnected():
             message = {'Operation': "Sync Canvas",
                        'Arguments': {
@@ -440,11 +442,11 @@ class CommunicationsHandler(QtCore.QObject):
                            "canvas_graph": str(self.mainWindow.RESOURCEHANDLER.deconstructGraph(canvas_graph))}}
             self.transmitMessage(message)
 
-    def receiveSyncCanvas(self, canvas_name: str, canvas_graph: str):
+    def receiveSyncCanvas(self, canvas_name: str, canvas_graph: str) -> None:
         graph_nodes, graph_edges = self.mainWindow.RESOURCEHANDLER.reconstructGraphFromString(canvas_graph)
         self.receive_sync_canvas_signal.emit(canvas_name, graph_nodes, graph_edges)
 
-    def closeCanvas(self, project_name: str, canvas_name: str):
+    def closeCanvas(self, project_name: str, canvas_name: str) -> None:
         if self.isConnected():
             message = {'Operation': 'Close Canvas',
                        'Arguments': {'project_name': project_name,
@@ -458,14 +460,14 @@ class CommunicationsHandler(QtCore.QObject):
     #   to a particular canvas.
     # Being verbose is better than prematurely optimizing for a few kbps of
     #   network traffic.
-    def receiveDatabaseUpdateEvent(self, entity_json: dict, add: int):
+    def receiveDatabaseUpdateEvent(self, entity_json: dict, add: int) -> None:
         try:
             entity_json['Icon'] = QtCore.QByteArray(b64decode(entity_json['Icon']))
         except KeyError:
             pass
         self.receive_project_database_update.emit(entity_json, add)
 
-    def sendDatabaseUpdateEvent(self, project_name: str, entity_json: dict, add: int):
+    def sendDatabaseUpdateEvent(self, project_name: str, entity_json: dict, add: int) -> None:
         try:
             entity_json['Icon'] = entity_json['Icon'].toBase64().data()
         except KeyError:
@@ -477,13 +479,14 @@ class CommunicationsHandler(QtCore.QObject):
                        "add": add}}
         self.transmitMessage(message)
 
-    def receiveCanvasUpdateEvent(self, canvas_name: str, entity_or_link_uid: Union[str, tuple]):
+    def receiveCanvasUpdateEvent(self, canvas_name: str, entity_or_link_uid: Union[str, tuple]) -> None:
         if isinstance(entity_or_link_uid, str):
             self.receive_project_canvas_update_node.emit(canvas_name, entity_or_link_uid)
         else:
             self.receive_project_canvas_update_link.emit(canvas_name, entity_or_link_uid)
 
-    def sendCanvasUpdateEvent(self, project_name: str, canvas_name: str, entity_or_link_uid: Union[str, tuple]):
+    def sendCanvasUpdateEvent(self, project_name: str, canvas_name: str,
+                              entity_or_link_uid: Union[str, tuple]) -> None:
         message = {"Operation": "Update Canvas Entities",
                    "Arguments": {
                        'project_name': project_name,
@@ -491,10 +494,10 @@ class CommunicationsHandler(QtCore.QObject):
                        "entity_or_link_uid": entity_or_link_uid}}
         self.transmitMessage(message)
 
-    def receiveFileList(self, file_list: list):
+    def receiveFileList(self, file_list: list) -> None:
         self.receive_project_file_list.emit(file_list)
 
-    def sendFile(self, project_name: str, file_name: str, filePath: Path):
+    def sendFile(self, project_name: str, file_name: str, filePath: Path) -> None:
         """
         Starts a thread, calling sendFileHelper to send the file specified.
 
@@ -508,7 +511,7 @@ class CommunicationsHandler(QtCore.QObject):
         self.uploadingFiles[file_name] = sendHelperThread
         sendHelperThread.start()
 
-    def sendFileHelper(self, project_name: str, file_name: str, filePath: Path):
+    def sendFileHelper(self, project_name: str, file_name: str, filePath: Path) -> None:
         """
         Sends file in chunks to avoid loading the entire thing in memory.
 
@@ -541,7 +544,7 @@ class CommunicationsHandler(QtCore.QObject):
             self.transmitMessage(messageJson)
         fileHandler.close()
 
-    def sendFileAbort(self, project_name: str, file_name: str):
+    def sendFileAbort(self, project_name: str, file_name: str) -> None:
         try:
             uploadToAbort = self.uploadingFiles.pop(file_name)
             uploadToAbort.continue_running = False
@@ -554,7 +557,7 @@ class CommunicationsHandler(QtCore.QObject):
         except KeyError:
             pass
 
-    def scanInbox(self):
+    def scanInbox(self) -> None:
         """
         This function checks if there is anything in the inbox, and if
         there is, calls the appropriate functions.
@@ -611,7 +614,7 @@ class CommunicationsHandler(QtCore.QObject):
                                                        ' On Operation: ' + str(operation))
             prevMesg = message
 
-    def handleStatusMessage(self, operation: str, message: str, status_code: int):
+    def handleStatusMessage(self, operation: str, message: str, status_code: int) -> None:
         """
         Operations that are completely server-side, or do not conform to the query - response model,
         send status messages to inform the client of what is going on.
@@ -679,7 +682,7 @@ class CommunicationsHandler(QtCore.QObject):
                                                        ' Code: ' + str(status_code) +
                                                        ' On Operation: ' + str(operation))
 
-    def receiveFile(self, project_name: str, file_name: str, saveDir: Path):
+    def receiveFile(self, project_name: str, file_name: str, saveDir: Path) -> None:
         # Do not download files already being downloaded.
         if self.downloadingFiles.get(file_name) is None:
             fileHandler = open(saveDir, "wb")
@@ -692,7 +695,7 @@ class CommunicationsHandler(QtCore.QObject):
                        }}
             self.transmitMessage(message)
 
-    def receiveFileListener(self, file_name: str, file_contents: bytes):
+    def receiveFileListener(self, file_name: str, file_contents: bytes) -> None:
         try:
             fileHandler = self.downloadingFiles.get(file_name)
             fileHandler.write(file_contents)
@@ -701,7 +704,7 @@ class CommunicationsHandler(QtCore.QObject):
             self.mainWindow.MESSAGEHANDLER.warning('Received data for file: ' + file_name +
                                                    ' but no valid file handler exists for this file.')
 
-    def receiveFileDoneListener(self, file_name: str):
+    def receiveFileDoneListener(self, file_name: str) -> None:
         fileHandler = self.downloadingFiles.pop(file_name)
         if fileHandler is None:
             self.mainWindow.MESSAGEHANDLER.warning('Received file: ' + file_name +
@@ -711,7 +714,7 @@ class CommunicationsHandler(QtCore.QObject):
         fileHandler.close()
         self.status_message_signal.emit('Finished downloading file from server: ' + file_name, True)
 
-    def receiveFileAbort(self, project_name: str, file_name: str):
+    def receiveFileAbort(self, project_name: str, file_name: str) -> None:
         messageJson = {"Operation": "File Download Abort",
                        "Arguments": {
                            'project_name': project_name,
@@ -725,23 +728,23 @@ class CommunicationsHandler(QtCore.QObject):
         abortedPath = Path(self.mainWindow.SETTINGS.value("Project/FilesDir")) / file_name
         abortedPath.unlink(missing_ok=True)
 
-    def deleteProject(self, project_name: str):
+    def deleteProject(self, project_name: str) -> None:
         message = {"Operation": "Delete Project",
                    "Arguments": {
                        'project_name': project_name}}
         self.transmitMessage(message)
 
-    def askServerForFileSummary(self, project_name: str, document_name: str):
+    def askServerForFileSummary(self, project_name: str, document_name: str) -> None:
         message = {"Operation": "Get File Summary",
                    "Arguments": {
                        'project_name': project_name,
                        'document_name': document_name}}
         self.transmitMessage(message)
 
-    def receiveFileSummaryListener(self, document_name: str, summary: str):
+    def receiveFileSummaryListener(self, document_name: str, summary: str) -> None:
         self.receive_document_summary_signal.emit(document_name, summary)
 
-    def receiveFileUploadAbort(self, file_name: str):
+    def receiveFileUploadAbort(self, file_name: str) -> None:
         """
         If we are told by the server to stop uploading a file,
         we should do so (i.e. because no space left on server),
@@ -757,7 +760,7 @@ class CommunicationsHandler(QtCore.QObject):
         except KeyError:
             pass
 
-    def sendFileAbortAll(self, project_name: str):
+    def sendFileAbortAll(self, project_name: str) -> None:
         """
         Abort the sending of all files currently being transmitted.
 
@@ -777,7 +780,7 @@ class CommunicationsHandler(QtCore.QObject):
             except KeyError:
                 pass
 
-    def receiveFileAbortAll(self, project_name: str):
+    def receiveFileAbortAll(self, project_name: str) -> None:
         """
         Abort the downloading of all files currently being transmitted.
 

@@ -15,7 +15,7 @@ class EntitiesDB:
     links on a project-wide scale.
     """
 
-    def __init__(self, mainWindow, messageHandler, resourceHandler):
+    def __init__(self, mainWindow, messageHandler, resourceHandler) -> None:
         self.messageHandler = messageHandler
         self.resourceHandler = resourceHandler
         self.mainWindow = mainWindow
@@ -25,7 +25,7 @@ class EntitiesDB:
         self.loadDatabase()
         self.resetTimeline()
 
-    def loadDatabase(self):
+    def loadDatabase(self) -> None:
         """
         Load DiGraph from LinkScope Database file - msgpack dumped object.
         """
@@ -49,7 +49,7 @@ class EntitiesDB:
         finally:
             self.dbLock.release()
 
-    def resetTimeline(self):
+    def resetTimeline(self) -> None:
         """
         Reset the timeline on dockBarThree to reflect the current state of the entities database.
         """
@@ -58,7 +58,7 @@ class EntitiesDB:
             self.mainWindow.resetTimeline(self.database)
         self.dbLock.release()
 
-    def updateTimeline(self, node, added: bool, updateGraph: bool = True):
+    def updateTimeline(self, node, added: bool, updateGraph: bool = True) -> None:
         """
         Update the timeline on dockBarThree to reflect the newest change of the entities database.
         """
@@ -66,7 +66,7 @@ class EntitiesDB:
         self.mainWindow.updateTimeline(node, added, updateGraph)
         self.dbLock.release()
 
-    def save(self):
+    def save(self) -> None:
         """
         Saves the graph to the specified file.
         """
@@ -84,7 +84,7 @@ class EntitiesDB:
         self.messageHandler.info('Database Saved.')
         self.dbLock.release()
 
-    def addEntity(self, entJson: dict, fromServer: bool = False, updateTimeline: bool = True):
+    def addEntity(self, entJson: dict, fromServer: bool = False, updateTimeline: bool = True) -> Union[dict, None]:
         """
         Adds the entity represented by the json dictionary to the database.
         :param updateTimeline:
@@ -126,7 +126,7 @@ class EntitiesDB:
 
         return returnValue
 
-    def addEntities(self, entsJsonList: Union[list, set, tuple], fromServer: bool = False):
+    def addEntities(self, entsJsonList: Union[list, set, tuple], fromServer: bool = False) -> list:
         self.dbLock.acquire()
         returnValue = []
 
@@ -157,7 +157,7 @@ class EntitiesDB:
 
         return returnValue
 
-    def addLink(self, linkJson: dict, fromServer: bool = False, overwrite: bool = False):
+    def addLink(self, linkJson: dict, fromServer: bool = False, overwrite: bool = False) -> Union[dict, None]:
         """
         Add a link between two entities in the database.
 
@@ -174,7 +174,9 @@ class EntitiesDB:
             #   either tries really hard or gets really unlucky.
             # Caused by deleting a node faster than the link can be created.
             self.messageHandler.error("Attempted to add Link with "
-                                      "no uid to database.")
+                                      "no uid to database.", popUp=True)
+            self.dbLock.release()
+            return None
         else:
             linkUID = link['uid']
             if exists:
@@ -207,7 +209,7 @@ class EntitiesDB:
                 self.mainWindow.sendLocalDatabaseUpdateToServer(link, 1)
         return link
 
-    def getEntity(self, uid: str):
+    def getEntity(self, uid: str) -> Union[dict, None]:
         """
         Returns the attributes of the given entity uid as a dict.
         """
@@ -222,7 +224,7 @@ class EntitiesDB:
             self.dbLock.release()
             return returnValue
 
-    def getAllEntities(self):
+    def getAllEntities(self) -> Union[None, list]:
         """
         Returns a list containing the Json representation of every entity in the database.
         """
@@ -239,7 +241,7 @@ class EntitiesDB:
             self.dbLock.release()
             return returnValue
 
-    def getAllLinks(self):
+    def getAllLinks(self) -> Union[None, list]:
         """
         Returns a list containing the Json representation of every link in the database.
         :return:
@@ -257,7 +259,7 @@ class EntitiesDB:
             self.dbLock.release()
             return returnValue
 
-    def getEntityNoLock(self, uid: str):
+    def getEntityNoLock(self, uid: str) -> Union[None, dict]:
         """
         Returns the attributes of the given entity uid as a dict.
 
@@ -272,7 +274,7 @@ class EntitiesDB:
         finally:
             return returnValue
 
-    def getLink(self, uid):
+    def getLink(self, uid) -> Union[None, dict]:
         """
         Returns the attributes of the given link uid as a dict.
         """
@@ -287,7 +289,7 @@ class EntitiesDB:
             self.dbLock.release()
             return returnValue
 
-    def removeEntity(self, uid: str, fromServer=False, updateTimeLine=True):
+    def removeEntity(self, uid: str, fromServer=False, updateTimeLine=True) -> None:
         """
         Removes the entity with the given uid, if it exists.
         """
@@ -305,7 +307,7 @@ class EntitiesDB:
             if updateTimeLine:
                 self.updateTimeline(ent, False)
 
-    def removeLink(self, uid, fromServer=False):
+    def removeLink(self, uid, fromServer=False) -> None:
         """
         Removes the link with the given uid (in string or tuple form),
         if it exists.
@@ -317,7 +319,7 @@ class EntitiesDB:
         if not fromServer:
             self.mainWindow.sendLocalDatabaseUpdateToServer({"uid": uid}, 2)
 
-    def doesEntityExist(self, primaryAttr: str):
+    def doesEntityExist(self, primaryAttr: str) -> bool:
         """
         Checks if an entity with the specified primary attribute exists.
         """
@@ -331,7 +333,7 @@ class EntitiesDB:
         self.dbLock.release()
         return result
 
-    def getEntityOfType(self, primaryAttr: str, entityType: str):
+    def getEntityOfType(self, primaryAttr: str, entityType: str) -> Union[dict, None]:
         """
         Checks if an entity with the specified primary attribute exists, and if it does, return it.
         """
@@ -348,7 +350,7 @@ class EntitiesDB:
         self.dbLock.release()
         return result
 
-    def getLinkIfExists(self, uid):
+    def getLinkIfExists(self, uid) -> Union[None, dict]:
         """
         Returns the attributes of the given link uid as a dict.
         Does not create an error if the link does not exist.
@@ -385,7 +387,7 @@ class EntitiesDB:
         self.dbLock.release()
         return returnValue
 
-    def isNode(self, uid: Union[str, list, tuple]):
+    def isNode(self, uid: Union[str, list, tuple]) -> bool:
         """
         Returns True if the uid (primary attribute) given exists as
         an entity, and False otherwise.
@@ -397,7 +399,7 @@ class EntitiesDB:
         self.dbLock.release()
         return returnValue
 
-    def isNodeNoLock(self, uid: str):
+    def isNodeNoLock(self, uid: str) -> bool:
         """
         Returns True if the uid (primary attribute) given exists as
         an entity, and False otherwise.
@@ -408,7 +410,7 @@ class EntitiesDB:
             return True
         return False
 
-    def isLink(self, uid: Union[str, list, tuple]):
+    def isLink(self, uid: Union[str, list, tuple]) -> bool:
         """
         Returns True if the uid given exists as a link, and False otherwise.
         """
@@ -429,7 +431,7 @@ class EntitiesDB:
             return self.database.edges[uid]
         return False
 
-    def getEntityType(self, uid: str):
+    def getEntityType(self, uid: str) -> Union[None, dict]:
         self.dbLock.acquire()
         returnValue = None
         try:
@@ -440,7 +442,7 @@ class EntitiesDB:
             self.dbLock.release()
             return returnValue
 
-    def mergeDatabases(self, newDB_nodes: dict, newDB_edges: dict, fromServer=True):
+    def mergeDatabases(self, newDB_nodes: dict, newDB_edges: dict, fromServer=True) -> None:
         """
         Merges the existing database with the one provided.
         

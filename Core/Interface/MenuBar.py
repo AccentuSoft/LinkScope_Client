@@ -575,16 +575,17 @@ class MenuBar(QtWidgets.QMenuBar):
                                             linkJSONOne['uid'] = (entityOneJSON['uid'], newNode['uid'])
                                             linkJSONTwo['uid'] = (newNode['uid'], entityTwoJSON['uid'])
                                             linkJSONThree['uid'] = (entityOneJSON['uid'], entityTwoJSON['uid'])
-                                            self.parent().LENTDB.addLink(linkJSONOne)
-                                            self.parent().LENTDB.addLink(linkJSONTwo)
-                                            self.parent().LENTDB.addLink(linkJSONThree)
 
-                                            newLinks.append((entityOneJSON['uid'], newNode['uid'],
-                                                             linkJSONOne['Resolution']))
-                                            newLinks.append((newNode['uid'], entityTwoJSON['uid'],
-                                                             linkJSONTwo['Resolution']))
-                                            newLinks.append((entityOneJSON['uid'], entityTwoJSON['uid'],
-                                                             linkJSONThree['Resolution']))
+                                            if self.parent().LENTDB.addLink(linkJSONOne) is not None:
+                                                newLinks.append((entityOneJSON['uid'], newNode['uid'],
+                                                                 linkJSONOne['Resolution']))
+                                            if self.parent().LENTDB.addLink(linkJSONTwo) is not None:
+                                                newLinks.append((newNode['uid'], entityTwoJSON['uid'],
+                                                                 linkJSONTwo['Resolution']))
+
+                                            if self.parent().LENTDB.addLink(linkJSONThree) is not None:
+                                                newLinks.append((entityOneJSON['uid'], entityTwoJSON['uid'],
+                                                                 linkJSONThree['Resolution']))
 
                             else:
                                 entityOneType = importLinksCSVDialog.entityOneTypeChoiceDropdown.currentText()
@@ -627,9 +628,9 @@ class MenuBar(QtWidgets.QMenuBar):
                                         if not linkJSON.get('Resolution'):
                                             linkJSON['Resolution'] = str(uuid4())
 
-                                        self.parent().LENTDB.addLink(linkJSON)
-                                        newLinks.append((entityOneJSON['uid'], entityTwoJSON['uid'],
-                                                         linkJSON['Resolution']))
+                                        if self.parent().LENTDB.addLink(linkJSON) is not None:
+                                            newLinks.append((entityOneJSON['uid'], entityTwoJSON['uid'],
+                                                             linkJSON['Resolution']))
 
                     newNodeUIDs = [newEntity['uid'] for newEntity in self.parent().LENTDB.addEntities(newNodes)]
 

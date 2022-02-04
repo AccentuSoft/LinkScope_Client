@@ -7,7 +7,7 @@ from PySide6 import QtWidgets, QtCore, QtGui
 
 class DockBarOne(QtWidgets.QDockWidget):
 
-    def initialiseLayout(self):
+    def initialiseLayout(self) -> None:
         childWidget = QtWidgets.QTabWidget()
         nodeTabChildWidget = QtWidgets.QWidget()
         docsTabChildWidget = QtWidgets.QWidget()
@@ -31,7 +31,7 @@ class DockBarOne(QtWidgets.QDockWidget):
                  resolutionManager,
                  resourceHandler,
                  entityDatabase,
-                 title="DockBar One"):
+                 title="DockBar One") -> None:
         super(DockBarOne, self).__init__(parent=mainWindow)
         self.resolutionManager = resolutionManager
         self.resourceHandler = resourceHandler
@@ -57,13 +57,13 @@ class DockBarOne(QtWidgets.QDockWidget):
 
 class ToggleWorldDocButton(QtWidgets.QPushButton):
 
-    def __init__(self, parent=None, mainWindow=None):
+    def __init__(self, parent=None, mainWindow=None) -> None:
         super(ToggleWorldDocButton, self).__init__(parent=parent)
         self.mainWindow = mainWindow
         self.setText("Toggle Detailed View")
         self.clicked.connect(self.buttonPressed)
 
-    def buttonPressed(self):
+    def buttonPressed(self) -> None:
         if self.mainWindow is not None:
             self.mainWindow.toggleWorldDoc()
 
@@ -101,7 +101,7 @@ class EntityList(QtWidgets.QTreeWidget):
         self.entityTypes: dict = {}
         self.loadEntities()
 
-    def loadEntities(self):
+    def loadEntities(self) -> None:
         self.clear()
         self.entityCategories = {}
         self.entityTypes = {}
@@ -137,7 +137,7 @@ class EntityList(QtWidgets.QTreeWidget):
             if childrenHidden == self.entityCategories[category].childCount():
                 self.entityCategories[category].setHidden(True)
 
-    def addEntity(self, entityJson):
+    def addEntity(self, entityJson) -> None:
         primaryAttr = entityJson[list(entityJson)[1]]
         entityTypeItem = self.entityTypes[entityJson['Entity Type']]
         for entityNo in range(entityTypeItem.childCount()):
@@ -156,7 +156,7 @@ class EntityList(QtWidgets.QTreeWidget):
             entityTypeItem.setHidden(False)
             entityTypeItem.parent().setHidden(False)
 
-    def removeEntity(self, entityJson):
+    def removeEntity(self, entityJson) -> None:
         entityType = self.entityTypes[entityJson['Entity Type']]
         for entityNo in range(entityType.childCount()):
             child = entityType.child(entityNo)
@@ -174,7 +174,7 @@ class EntityList(QtWidgets.QTreeWidget):
                             break
                 break
 
-    def mouseMoveEvent(self, event):
+    def mouseMoveEvent(self, event) -> None:
         """
         Handle dragging of entities onto canvas.
         """
@@ -211,12 +211,12 @@ class EntityList(QtWidgets.QTreeWidget):
             if isinstance(itemDragged, EntityWidget):
                 self.menu.exec(QtGui.QCursor.pos())
 
-    def deleteSelectedItems(self):
+    def deleteSelectedItems(self) -> None:
         itemsToDel = [item.uid for item in self.selectedItems() if isinstance(item, EntityWidget)]
         for itemUID in itemsToDel:
             self.mainWindow.deleteSpecificEntity(itemUID)
 
-    def addItemsToCurrentCanvas(self):
+    def addItemsToCurrentCanvas(self) -> None:
         currentScene = self.mainWindow.centralWidget().tabbedPane.getCurrentScene()
         itemsToAdd = [item.uid for item in self.selectedItems() if isinstance(item, EntityWidget) and
                       item.uid not in currentScene.sceneGraph.nodes]
@@ -232,7 +232,7 @@ class EntityList(QtWidgets.QTreeWidget):
 
 class EntityWidget(QtWidgets.QTreeWidgetItem):
 
-    def __init__(self, parent, uid=None, icon=None, text=""):
+    def __init__(self, parent, uid=None, icon=None, text="") -> None:
         super(EntityWidget, self).__init__(parent, [text])
         self.uid = uid
         if icon is not None:
@@ -241,7 +241,7 @@ class EntityWidget(QtWidgets.QTreeWidgetItem):
 
 class DocList(QtWidgets.QTreeWidget):
 
-    def __init__(self, resourceHandler, parent=None):
+    def __init__(self, resourceHandler, parent=None) -> None:
         super(DocList, self).__init__(parent=parent)
 
         self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
@@ -252,12 +252,12 @@ class DocList(QtWidgets.QTreeWidget):
         self.uploadedFileWidgets = []
         self.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
 
-    def addUploadingFileToList(self, fileName: str):
+    def addUploadingFileToList(self, fileName: str) -> None:
         newWidget = DocWidget(self,
                               QtGui.QIcon(self.resourceHandler.getIcon("uploading")), fileName)
         self.uploadingFileWidgets.append(newWidget)
 
-    def finishUploadingFile(self, fileName: str):
+    def finishUploadingFile(self, fileName: str) -> None:
         # Remove uploading file. Server will send updated file list.
         for doc in list(self.uploadingFileWidgets):
             if doc.getFileName() == fileName:
@@ -265,7 +265,7 @@ class DocList(QtWidgets.QTreeWidget):
                 self.uploadingFileWidgets.remove(doc)
                 break
 
-    def updateFileListFromServer(self, fileList):
+    def updateFileListFromServer(self, fileList) -> None:
         # If disconnected from server, or project has an empty file list, clear the widget.
         if not fileList:
             self.clear()
@@ -282,12 +282,12 @@ class DocList(QtWidgets.QTreeWidget):
 
 class DocWidget(QtWidgets.QTreeWidgetItem):
 
-    def __init__(self, parent, icon=None, text=""):
+    def __init__(self, parent, icon=None, text="") -> None:
         super(DocWidget, self).__init__(parent, [text])
         if icon is not None:
             self.setIcon(0, icon)
 
-    def getFileName(self):
+    def getFileName(self) -> str:
         return self.text(0)
 
 
@@ -297,7 +297,7 @@ class ResolutionList(QtWidgets.QTreeWidget):
                  resolutionManager,
                  entityDatabase,
                  mainWindow,
-                 parent=None):
+                 parent=None) -> None:
 
         super(ResolutionList, self).__init__(parent=parent)
 
@@ -312,7 +312,7 @@ class ResolutionList(QtWidgets.QTreeWidget):
 
         self.loadAllResolutions()
 
-    def loadAllResolutions(self):
+    def loadAllResolutions(self) -> None:
         self.clear()
         for category in self.resolutionManager.getResolutionCategories():
             resTreeItem = QtWidgets.QTreeWidgetItem(self, [category])
@@ -320,7 +320,7 @@ class ResolutionList(QtWidgets.QTreeWidget):
             for res in resolutions:
                 ResolutionWidget(resTreeItem, text=res)
 
-    def loadResolutionsForSelected(self, selected):
+    def loadResolutionsForSelected(self, selected) -> None:
         self.clear()
         if len(selected) == 0:
             self.loadAllResolutions()
@@ -339,7 +339,7 @@ class ResolutionList(QtWidgets.QTreeWidget):
                 for resolution in resolutions:
                     ResolutionWidget(resTreeItem, text=resolution)
 
-    def mouseDoubleClickEvent(self, event):
+    def mouseDoubleClickEvent(self, event) -> None:
         super(ResolutionList, self).mouseDoubleClickEvent(event)
         resItem = self.itemAt(event.pos())
         if resItem is None or not isinstance(resItem, ResolutionWidget):
@@ -355,7 +355,7 @@ class ResolutionList(QtWidgets.QTreeWidget):
 
 class ResolutionWidget(QtWidgets.QTreeWidgetItem):
 
-    def __init__(self, parent, icon=None, text=""):
+    def __init__(self, parent, icon=None, text="") -> None:
         super(ResolutionWidget, self).__init__(parent, [text])
         if icon is not None:
             self.setIcon(0, icon)
@@ -363,7 +363,7 @@ class ResolutionWidget(QtWidgets.QTreeWidgetItem):
 
 class NodeList(QtWidgets.QTreeWidget):
 
-    def __init__(self, resourceHandler, parent=None):
+    def __init__(self, resourceHandler, parent=None) -> None:
         super(NodeList, self).__init__(parent=parent)
 
         self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
@@ -375,7 +375,7 @@ class NodeList(QtWidgets.QTreeWidget):
 
         self.loadEntities()
 
-    def loadEntities(self):
+    def loadEntities(self) -> None:
         self.clear()
         self.allEntities = []
         for category in self.resourceHandler.getEntityCategories():
@@ -390,7 +390,7 @@ class NodeList(QtWidgets.QTreeWidget):
 
         self.allEntities = self.resourceHandler.getAllEntities()
 
-    def mouseMoveEvent(self, event):
+    def mouseMoveEvent(self, event) -> None:
         """
         Handle dragging of entities onto canvas.
         """
@@ -422,7 +422,7 @@ class NodeList(QtWidgets.QTreeWidget):
 
 class NodeWidget(QtWidgets.QTreeWidgetItem):
 
-    def __init__(self, parent, icon=None, name="", entityJsonText=""):
+    def __init__(self, parent, icon=None, name="", entityJsonText="") -> None:
         super(NodeWidget, self).__init__(parent, [name])
         if icon is not None:
             self.setIcon(0, icon)

@@ -391,10 +391,11 @@ class TabbedPane(QtWidgets.QTabWidget):
                             linkJson['Notes'] += '\nConnection also produced by Resolution: ' + resolutionName
                             self.entityDB.addLink(linkJson, fromServer=True)
                     else:
-                        self.entityDB.addLink({'uid': newLinkUID, 'Resolution': resolutionName,
-                                               'Notes': parentsDict[parentID]['Notes']}, fromServer=True)
-                        links.append((parentUID, outputEntityUID, resolutionName))
-                        allLinks.append(newLinkUID)
+                        newLink = self.entityDB.addLink({'uid': newLinkUID, 'Resolution': resolutionName,
+                                                         'Notes': parentsDict[parentID]['Notes']}, fromServer=True)
+                        if newLink is not None:
+                            links.append((parentUID, outputEntityUID, resolutionName))
+                            allLinks.append(newLinkUID)
 
         progress.setValue(2)
 
@@ -485,13 +486,15 @@ class TabbedPane(QtWidgets.QTabWidget):
         """
         linkUID = linkJson['uid']
         lJson = self.entityDB.addLink(linkJson, fromServer=True, overwrite=overwrite)
-        for canvas in self.canvasTabs:
-            if self.canvasTabs[canvas].scene().sceneGraph.nodes.get(linkUID[0]) is not None:
-                if self.canvasTabs[canvas].scene().sceneGraph.nodes.get(linkUID[1]) is None:
-                    self.canvasTabs[canvas].scene().addNodeProgrammatic(linkUID[1], fromServer=True)
-                elif self.canvasTabs[canvas].scene().sceneGraph.edges.get(linkUID) is None:
-                    self.canvasTabs[canvas].scene().addLinkProgrammatic(linkUID, lJson['Resolution'], fromServer=True)
-                self.canvasTabs[canvas].scene().rearrangeGraph()
+        if lJson is not None:
+            for canvas in self.canvasTabs:
+                if self.canvasTabs[canvas].scene().sceneGraph.nodes.get(linkUID[0]) is not None:
+                    if self.canvasTabs[canvas].scene().sceneGraph.nodes.get(linkUID[1]) is None:
+                        self.canvasTabs[canvas].scene().addNodeProgrammatic(linkUID[1], fromServer=True)
+                    elif self.canvasTabs[canvas].scene().sceneGraph.edges.get(linkUID) is None:
+                        self.canvasTabs[canvas].scene().addLinkProgrammatic(linkUID, lJson['Resolution'],
+                                                                            fromServer=True)
+                    self.canvasTabs[canvas].scene().rearrangeGraph()
 
     def nodeRemoveAllHelper(self, nodeUID: str) -> None:
         for canvas in self.canvasTabs:
@@ -1108,10 +1111,10 @@ class CanvasScene(QtWidgets.QGraphicsScene):
             elif len(self.itemsToLink) == 2:
                 potentialUID = (self.itemsToLink[0].uid, self.itemsToLink[1].uid)
                 if not self.parent().entityDB.isLink(potentialUID):
-                    self.parent().entityDB.addLink({"uid": potentialUID})
-                    self.addLinkDragDrop(self.itemsToLink[0],
-                                         self.itemsToLink[1])
-                    self.editLinkProperties(potentialUID)
+                    if self.parent().entityDB.addLink({"uid": potentialUID}) is not None:
+                        self.addLinkDragDrop(self.itemsToLink[0],
+                                             self.itemsToLink[1])
+                        self.editLinkProperties(potentialUID)
                 self.parent().mainWindow.toggleLinkingMode()
 
         elif self.appendingToGroup:
