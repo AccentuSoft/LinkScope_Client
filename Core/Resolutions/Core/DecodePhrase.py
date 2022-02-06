@@ -3,7 +3,7 @@ class DecodePhrase:
     name = "Decode Phrase"
 
     # A string that describes this resolution.
-    description = "Returns decoded phrase"
+    description = "Decode encoded phrases."
 
     # A set of entities that this resolution can be ran on.
     originTypes = {'Phrase'}

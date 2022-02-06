@@ -4,6 +4,7 @@ import importlib
 import sys
 from os import listdir
 from pathlib import Path
+from typing import Union
 
 
 class ResolutionManager:
@@ -56,13 +57,20 @@ class ResolutionManager:
             return parameters
         return None
 
-    def getResolutionOriginTypes(self, resolutionNameString):
+    def getResolutionOriginTypes(self, resolutionNameString: str) -> Union[list, None]:
         for category in self.resolutions:
             if resolutionNameString in self.resolutions[category]:
                 originTypes = self.resolutions[category][resolutionNameString]['originTypes']
                 if '*' in originTypes:
                     originTypes = self.mainWindow.RESOURCEHANDLER.getAllEntities()
                 return originTypes
+        return None
+
+    def getResolutionDescription(self, resolutionNameString: str) -> Union[str, None]:
+        for category in self.resolutions:
+            if resolutionNameString in self.resolutions[category]:
+                resolutionDescription = self.resolutions[category][resolutionNameString].get('description', '')
+                return resolutionDescription
         return None
 
     def loadResolutionsFromServer(self, serverRes):

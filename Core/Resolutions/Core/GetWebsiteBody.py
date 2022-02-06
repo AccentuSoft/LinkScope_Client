@@ -6,7 +6,7 @@ class GetWebsiteBody:
     name = "Get Website Body"
 
     # A string that describes this resolution.
-    description = "Returns body of websites"
+    description = "Returns the contents of the body tag of the selected websites."
 
     originTypes = {'Website'}
 

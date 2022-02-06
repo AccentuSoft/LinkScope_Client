@@ -3,7 +3,7 @@ class IPToASN:
     name = "Get ASN From IP"
 
     # A string that describes this resolution.
-    description = "IP to ASN"
+    description = "Get the Autonomous System Number that the selected IP Addresses belong to."
 
     # A set of entities that this resolution can be ran on.
     originTypes = {'IP Address'}

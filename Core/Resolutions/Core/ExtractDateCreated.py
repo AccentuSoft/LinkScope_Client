@@ -3,7 +3,7 @@
 
 class ExtractDateCreated:
     name = "Extract Date Created"
-    description = "Extract the Date Created field of selected entities"
+    description = "Extract the date in the Date Created field of the selected entities."
     originTypes = {'*'}
     resultTypes = {'Date'}
     parameters = {}

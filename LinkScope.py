@@ -1021,15 +1021,17 @@ class MainWindow(QtWidgets.QMainWindow):
             selectEntityList = None
             uidAndPrimaryFields: list = []
             acceptableOriginTypes = None
+            resolutionDescription = None
             if len(items) == 0:
                 acceptableOriginTypes = self.RESOLUTIONMANAGER.getResolutionOriginTypes(resolution)
                 uidAndPrimaryFields = [(entity['uid'], entity[list(entity)[1]])
                                        for entity in self.LENTDB.getAllEntities()
                                        if entity['Entity Type'] in acceptableOriginTypes]
                 selectEntityList = [entity[1] for entity in uidAndPrimaryFields]
+                resolutionDescription = self.RESOLUTIONMANAGER.getResolutionDescription(resolution)
 
             parameterSelector = ResolutionParametersSelector(
-                resolutionUnspecifiedParameterValues, selectEntityList, acceptableOriginTypes)
+                resolutionUnspecifiedParameterValues, selectEntityList, acceptableOriginTypes, resolutionDescription)
             parameterSelectorConfirm = parameterSelector.exec()
 
             if not parameterSelectorConfirm:
@@ -2334,7 +2336,8 @@ class ResolutionExecutorThread(QtCore.QThread):
 
 class ResolutionParametersSelector(QtWidgets.QDialog):
 
-    def __init__(self, properties: dict, includeEntitySelector: list = None, originTypes: list = None):
+    def __init__(self, properties: dict, includeEntitySelector: list = None, originTypes: list = None,
+                 resolutionDescription: str = None) -> None:
         super(ResolutionParametersSelector, self).__init__()
 
         self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
@@ -2355,8 +2358,12 @@ class ResolutionParametersSelector(QtWidgets.QDialog):
         if includeEntitySelector is not None and originTypes is not None:
             entitySelectTab = QtWidgets.QWidget()
             entitySelectTab.setLayout(QtWidgets.QVBoxLayout())
-            entitySelectTabLabel = QtWidgets.QLabel('Select the entities to use for this resolution. Accepted Origin '
-                                                    'Types: ' + ', '.join(originTypes))
+            labelText = ""
+            if resolutionDescription is not None:
+                labelText += resolutionDescription + "\n\n"
+            labelText += 'Select the entities to use for this resolution. Accepted Origin Types: ' + \
+                         ', '.join(originTypes)
+            entitySelectTabLabel = QtWidgets.QLabel(labelText)
             entitySelectTabLabel.setWordWrap(True)
             entitySelectTabLabel.setMaximumWidth(600)
 

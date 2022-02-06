@@ -2,7 +2,7 @@
 
 class PhraseSimilarity:
     name = "String Similarity Check"
-    description = "Find the ration of similarity between two strings"
+    description = "Find the ratio of similarity between two strings."
     originTypes = {'*'}
     resultTypes = {'Phrase'}
     parameters = {'Primary field or Notes': {'description': 'Choose Either Primary field or Notes',

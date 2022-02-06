@@ -3,7 +3,7 @@ class ASNToCIDR:
     name = "Get CIDR from ASN"
 
     # A string that describes this resolution.
-    description = "ASN to CIDR"
+    description = "Get network information for an Autonomous System Number."
 
     # A set of entities that this resolution can be ran on.
     originTypes = {'Autonomous System'}

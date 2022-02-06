@@ -3,7 +3,7 @@
 
 class WordCounter:
     name = "Get Number Of Words"
-    description = "Find the number of words in a given phrase"
+    description = "Count the number of words in a given phrase."
     originTypes = {'Phrase'}
     resultTypes = {'Phrase'}
     parameters = {'Primary field or Notes': {'description': 'Choose Either Primary field or Notes',

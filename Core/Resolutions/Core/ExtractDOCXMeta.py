@@ -6,7 +6,7 @@ class ExtractDOCXMeta:
     name = "Get DOCX Metadata"
 
     # A string that describes this resolution.
-    description = "Returns a set of nodes that contain all the metadata info of the file."
+    description = "Returns a set of nodes that contain all the metadata info of a docx file."
 
     originTypes = {'Document', 'Archive'}
 

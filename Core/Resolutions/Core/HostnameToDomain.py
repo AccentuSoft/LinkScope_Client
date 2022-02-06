@@ -3,7 +3,7 @@
 
 class HostnameToDomain:
     name = "Hostname to Domain"
-    description = "Find the domain of any given hostname"
+    description = "Find the domain of any given hostname."
     originTypes = {'Domain', 'Website'}
     resultTypes = {'Domain'}
     parameters = {}

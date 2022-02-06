@@ -6,7 +6,7 @@ class ExtractPDFMeta:
     name = "Get PDF Metadata"
 
     # A string that describes this resolution.
-    description = "Returns Nodes of contact info for websites"
+    description = "Returns a set of nodes that contain all the metadata info of pdf files."
 
     originTypes = {'Document'}
 

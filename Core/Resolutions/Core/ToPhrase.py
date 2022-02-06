@@ -3,7 +3,7 @@
 
 class ToPhrase:
     name = "Convert To Phrase"
-    description = "Convert the entity in question to a Phrase entity. Uses only the primary field."
+    description = "Convert the primary field of selected entities to a Phrase entity."
     originTypes = {'*'}
     resultTypes = {'Phrase'}
 

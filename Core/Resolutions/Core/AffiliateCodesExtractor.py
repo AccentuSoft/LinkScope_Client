@@ -14,7 +14,7 @@ class AffiliateCodesExtractor:
     name = "Extract Affiliate Codes"
 
     # A string that describes this resolution.
-    description = "Returns Nodes of facebook and amazon affiliate codes for websites"
+    description = "Returns Facebook and Amazon affiliate codes found in websites."
 
     originTypes = {'Domain', 'Website'}
 
