@@ -27,26 +27,12 @@ Some notable features of LinkScope include:
 ### Supported Platforms
 Currently, Linux (Ubuntu, but most Debian derivatives should work) and Windows 10 are supported.
 
-The versions differ slightly because a graph-related library is not available for Windows. This means that the Windows and the Linux build and code differ slightly from each other - where Linux uses SFDP graph layout, Windows uses Neato. Practically, the difference should not be noticable. Windows has a few more visual bugs than Linux, but both versions should function the same.
-
-This repository has the code for the Linux version, with the Windows alternative code commented out where applicable.
+Note that the SFDP graph layout does not function on Windows, as an essential graph related library is not available on that platform. Windows also has a few more visual bugs than Linux, which are currently being worked on.
 
 ### Installing the software
-#### Linux
-An installer is provided for Ubuntu 20.04 and derivatives.
-To download the installer and install the software, run the following commands in a terminal:
-
-`wget https://raw.githubusercontent.com/AccentuSoft/LinkScope_Client/main/LinuxInstaller.sh`
-
-`bash LinuxInstaller.sh install`
-
-#### Windows
-
-Windows users need to download and install graphviz from: https://www.graphviz.org/download/
-
-The most recent version of the software can be found at the Releases page (most recent one on the top): https://github.com/AccentuSoft/LinkScope_Client/releases
-
-Simply download the most recent release for Windows, unpack, and double-click the 'LinkScope.exe' executable to run the software.
+Since Version 1.0.0, installers are provided for Windows 10 and Linux (Ubuntu) platforms.
+Download the latest installer for your platform from the Releases page, and run it to install the software:
+https://github.com/AccentuSoft/LinkScope_Client/releases/tag/v1.0.0
 
 ### Running from source
 One could also clone the repository and run the software as-is.
