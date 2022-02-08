@@ -4,7 +4,11 @@
 </p>
 
 ## Description
-This is the repository for the LinkScope Client Online Investigation software. LinkScope allows you to perform online investigations by representing information as discrete pieces of data, called Entities. These Entities can then be explored through Resolutions, which take the attributes of Entities as input, and resolve them to different, but connected, pieces of information. In such a way, one can create a knowledge graph (or abstract art) for any particular domain, which should help investigators easily discover answers and insights that otherwise might have been hard to extract.
+This is the repository for the LinkScope Client Online Investigation software. LinkScope allows you to perform online investigations by representing information as discrete pieces of data, called Entities.
+
+These Entities can then be explored through Resolutions, which take the attributes of Entities as input, and resolve them to different, but connected, pieces of information.
+
+In that way, one can create a knowledge graph (or abstract art) for any particular domain, which should help investigators easily discover answers and insights that otherwise might have been hard to extract.
 
 ## Features
 Some notable features of LinkScope include:
@@ -31,6 +35,7 @@ Note that the SFDP graph layout does not function on Windows, as an essential gr
 
 ### Installing the software
 Since Version 1.0.0, installers are provided for Windows 10 and Linux (Ubuntu) platforms.
+
 Download the latest installer for your platform from the Releases page, and run it to install the software:
 https://github.com/AccentuSoft/LinkScope_Client/releases/tag/v1.0.0
 
@@ -49,8 +54,6 @@ Some dependencies need to be installed in order for the software to work properl
    - `playwright install`
    
 The software comes packaged in a 7zip archive. Uncompress the archive, and double-click the executable to start the software. On Windows, the executable should be named 'LinkScope.exe'. On Linux, it should be named 'LinkScope'.
-
-Then, the Linux-specific functions need to be changed to the Windows version. Currently, this is just the 'rearrangeGraph' function in Core/Interface/CentralPane. The comments at that location indicate the required changes.
 
 
 ## Extending the software
