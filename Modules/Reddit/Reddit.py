@@ -56,27 +56,34 @@ class Reddit:
                 response = future.result().json()
             except requests.exceptions.ConnectionError:
                 return "Please check your internet connection"
-            # print(response)
             for value in response['data']:
                 index_of_child = len(return_result)
                 return_result.append([{'Subreddit': value['subreddit'],
                                        'Entity Type': 'Reddit Subreddit'},
                                       {uid: {'Resolution': 'Reddit Subreddit', 'Notes': ''}}])
+                resolution_name = value.get('permalink', None)
+                if resolution_name is None:
+                    resolution_name = 'Link ID: ' + value.get('link_id', 'N/A')
+                else:
+                    resolution_name = 'https://reddit.com' + resolution_name
+
                 if submission_endpoint in future.result().url:
                     return_result.append([{'Full Name': value['author'],
                                            'Entity Type': 'Person'},
-                                          {index_of_child: {'Resolution': str(value['full_link']), 'Notes': ''}}])
+                                          {index_of_child: {'Resolution': resolution_name, 'Notes': ''}}])
                 elif comments_endpoint in future.result().url:
                     index_of_child_of_child = len(return_result)
                     return_result.append([{'Full Name': value['author'],
                                            'Entity Type': 'Person'},
-                                          {index_of_child: {'Resolution': f"https://reddit.com{value['permalink']}",
+                                          {index_of_child: {'Resolution': resolution_name,
                                                             'Notes': ''}}])
-                    comment = hashlib.md5(value['body'].encode())  # nosec
+
+                    comment_resolution = 'Reddit Comment Hashed'
+                    comment = hashlib.md5(value.get('body', 'N/A').encode())  # nosec
                     comment = hexlify(comment.digest()).decode()
                     return_result.append([{'Comment': comment,
-                                           'Notes': value['body'],
+                                           'Notes': value.get('body', 'N/A'),
                                            'Entity Type': 'Reddit Comment'},
-                                          {index_of_child_of_child: {'Resolution': 'Reddit Comment Hashed',
+                                          {index_of_child_of_child: {'Resolution': comment_resolution,
                                                                      'Notes': ''}}])
         return return_result
