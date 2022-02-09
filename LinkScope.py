@@ -1067,6 +1067,7 @@ class MainWindow(QtWidgets.QMainWindow):
         resolutionThread = ResolutionExecutorThread(
             resolution, resArgument, resolutionParameterValues, self, resolutionUID)
         resolutionThread.sig.connect(self.resolutionSignalListener)
+        resolutionThread.sigError.connect(self.resolutionErrorSignalListener)
         self.MESSAGEHANDLER.info('Running Resolution: ' + resolution)
         resolutionThread.start()
         self.resolutions.append((resolutionThread, category == 'Server Resolutions'))
@@ -1086,6 +1087,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.cleanUpLocalFinishedResolutions()
         self.setStatus("Resolution: " + resolution_name + " completed.")
+
+    def resolutionErrorSignalListener(self, error_message: str):
+        self.MESSAGEHANDLER.error(error_message, popUp=True)
 
     def cleanUpLocalFinishedResolutions(self) -> None:
         """
@@ -2299,6 +2303,7 @@ class NewOrOpenWidget(QtWidgets.QDialog):
 
 class ResolutionExecutorThread(QtCore.QThread):
     sig = QtCore.Signal(str, dict)
+    sigError = QtCore.Signal(str)
 
     def __init__(self, resolution: str, resolutionArgument: list, resolutionParameters: dict,
                  mainWindowObject: MainWindow, uid: str):
@@ -2318,14 +2323,12 @@ class ResolutionExecutorThread(QtCore.QThread):
                                                                       self.resolutionParameters,
                                                                       self.uid)
             if ret is None:
-                self.mainWindow.MESSAGEHANDLER.error('Resolution ' + self.resolution + ' failed during run.',
-                                                     popUp=True)
+                self.sigError.emit('Resolution ' + self.resolution + ' failed during run.')
             elif isinstance(ret, bool):
                 # Resolution is running on the server, we do not have results right now.
                 ret = None
         except Exception as e:
-            self.mainWindow.MESSAGEHANDLER.error('Resolution ' + self.resolution + ' failed during run: ' +
-                                                 str(e), popUp=True)
+            self.sigError.emit('Resolution ' + self.resolution + ' failed during run: ' + str(e))
             ret = None
 
         # If the resolution is ran on the server or there is a problem, don't emit signal.
