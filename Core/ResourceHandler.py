@@ -110,12 +110,12 @@ class ResourceHandler:
                 eList.append(entity)
         return eList
 
-    def addRecognisedEntityTypes(self, entityFile) -> bool:
+    def addRecognisedEntityTypes(self, entityFile: Path) -> bool:
         try:
             tree = parse(entityFile, forbid_dtd=True, forbid_entities=True, forbid_external=True)
         except Exception as exc:
-            self.mainWindow.MESSAGEHANDLER.warning('Error occured when loading entities from '
-                                                   + entityFile + ': ' + str(exc) + ', skipping.')
+            self.mainWindow.MESSAGEHANDLER.warning('Error occurred when loading entities from '
+                                                   + str(entityFile) + ': ' + str(exc) + ', skipping.')
             return False
 
         root = tree.getroot()
