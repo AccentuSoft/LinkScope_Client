@@ -11,10 +11,11 @@ class Reddit:
                                                        "look for posts by users in subreddits.",
                                         'type': 'MultiChoice',
                                         'value': {'comments', 'submission'}},
-                  'Number of results': {'description': 'Creating a lot of nodes could slow down the software. Please '
+                  'Number of results': {'description': 'Enter the maximum number of results you want returned. '
+                                                       'Creating a lot of nodes could slow down the software. Please '
                                                        'be mindful of the value you enter.',
                                         'type': 'String',
-                                        'value': 'Enter the number of results you want returned',
+                                        'value': '',
                                         'default': '10'}}
 
     def resolution(self, entityJsonList, parameters):
@@ -68,13 +69,13 @@ class Reddit:
                     resolution_name = 'https://reddit.com' + resolution_name
 
                 if submission_endpoint in future.result().url:
-                    return_result.append([{'Full Name': value['author'],
-                                           'Entity Type': 'Person'},
+                    return_result.append([{'User Name': value['author'],
+                                           'Entity Type': 'Social Media Handle'},
                                           {index_of_child: {'Resolution': resolution_name, 'Notes': ''}}])
                 elif comments_endpoint in future.result().url:
                     index_of_child_of_child = len(return_result)
-                    return_result.append([{'Full Name': value['author'],
-                                           'Entity Type': 'Person'},
+                    return_result.append([{'User Name': value['author'],
+                                           'Entity Type': 'Social Media Handle'},
                                           {index_of_child: {'Resolution': resolution_name,
                                                             'Notes': ''}}])
 

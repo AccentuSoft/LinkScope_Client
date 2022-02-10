@@ -17,7 +17,7 @@ class Whats_My_Name:
 
     name = "Whats My Name"
     description = "Find potentially connected social media accounts."
-    originTypes = {'Phrase', 'Person'}
+    originTypes = {'Phrase', 'Person', 'Social Media Handle'}
     resultTypes = {'Website'}
     parameters = {}
 

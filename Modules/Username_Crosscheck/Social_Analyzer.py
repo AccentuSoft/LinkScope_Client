@@ -8,8 +8,8 @@ Note: Creates log files in temp folders in /tmp. Files are only readable by the 
 class Social_Analyzer:
     name = "Social Analyzer"
     description = "Find potentially connected social media accounts."
-    originTypes = {'Phrase'}
-    resultTypes = {'Social Media Account'}
+    originTypes = {'Phrase', 'Social Media Handle'}
+    resultTypes = {'Social Media Handle'}
     parameters = {'websites': {'description': 'Enter the domain names of the social media websites'
                                               ' to check or "all" (no quotes) to check all available websites.'
                                               ' Note that some of the results could be false positives.',
@@ -77,7 +77,7 @@ class Social_Analyzer:
             # Have to keep re-importing so that it works for entities beyond the first.
             SocialAnalyzer = import_module("social-analyzer").SocialAnalyzer(silent=True)
             uid = entity['uid']
-            social_field = entity[list(entity)[1]].strip()
+            social_field = entity[list(entity)[1]].strip().lower()
             results = SocialAnalyzer.run_as_object(
                 username=social_field, silent=True, output="json", filter='good', metadata=False, logs_dir='',
                 websites=websites, mode='fast', timeout=10, profiles='detected')

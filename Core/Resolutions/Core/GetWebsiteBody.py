@@ -26,7 +26,7 @@ class GetWebsiteBody:
         for entity in entityJsonList:
             uid = entity['uid']
 
-            primaryField = entity[list(entity)[1]]
+            primaryField = entity['URL']
 
             if primaryField.startswith('http://') or primaryField.startswith('https://'):
                 url = primaryField
