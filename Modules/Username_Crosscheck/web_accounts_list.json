@@ -21,7 +21,7 @@
        "known_accounts" : [ "john", "jbob"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Artists & Clients",
@@ -33,7 +33,7 @@
        "known_accounts" : ["luluc0", "MuraArts"],
        "category" : "art",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Ameblo",
@@ -45,7 +45,7 @@
        "known_accounts" : ["ereko-blog", "senpai"],
        "category" : "blog",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Aminoapps",
@@ -57,7 +57,7 @@
        "known_accounts" : ["Ace143", "dottovuu"],
        "category" : "blog",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Anilist",
@@ -69,7 +69,7 @@
        "known_accounts" : ["APotato", "happysynthesis"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "AnimePlanet",
@@ -81,7 +81,7 @@
        "known_accounts" : ["zala", "lindapearl"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Apex Legends",
@@ -93,7 +93,7 @@
        "known_accounts" : ["tttcheekyttt", "RollsRoyce_Dawn"],
        "category" : "gaming",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "asciinema",
@@ -105,7 +105,7 @@
        "known_accounts" : ["john", "red"],
        "category" : "coding",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Audiojungle",
@@ -117,7 +117,7 @@
        "known_accounts" : ["john", "reds"],
        "category" : "music",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Avid Community",
@@ -129,7 +129,7 @@
        "known_accounts" : ["Thayne", "Admin"],
        "category" : "music",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "BiggerPockets",
@@ -141,7 +141,7 @@
        "known_accounts" : ["john", "bob"],
        "category" : "finance",
        "valid" : "False",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Bookcrossing",
@@ -153,7 +153,7 @@
        "known_accounts" : ["john", "bob"],
        "category" : "hobby",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "buymeacoffee",
@@ -165,7 +165,7 @@
        "known_accounts" : ["freebird", "robinwong"],
        "category" : "finance",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "carrd.co",
@@ -177,7 +177,7 @@
        "known_accounts" : ["liam", "peter"],
        "category" : "business",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "CastingCallClub",
@@ -189,7 +189,7 @@
        "known_accounts" : ["Lindz", "Danye"],
        "category" : "hobby",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "championat",
@@ -201,7 +201,7 @@
        "known_accounts" : ["john", "bob"],
        "category" : "news",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Cloudflare",
@@ -213,7 +213,7 @@
        "known_accounts" : ["bob", "john"],
        "category" : "tech",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "cnet",
@@ -225,7 +225,7 @@
        "known_accounts" : ["john", "bob"],
        "category" : "news",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "coroflot",
@@ -237,7 +237,7 @@
        "known_accounts" : ["john", "blue"],
        "category" : "art",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Codewars",
@@ -249,7 +249,7 @@
        "known_accounts" : ["john", "reds"],
        "category" : "coding",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Coderwall",
@@ -261,7 +261,7 @@
        "known_accounts" : ["john", "test"],
        "category" : "coding",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "crevado",
@@ -273,7 +273,7 @@
        "known_accounts" : ["john", "red"],
        "category" : "images",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Cytoid",
@@ -285,7 +285,7 @@
        "known_accounts" : ["nyala", "speedymlg7"],
        "category" : "gaming",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Dating.ru",
@@ -297,7 +297,7 @@
        "known_accounts" : ["john", "blue"],
        "category" : "dating",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Designspriation",
@@ -309,7 +309,7 @@
        "known_accounts" : ["sam", "smith"],
        "category" : "art",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "dev.to",
@@ -321,7 +321,7 @@
        "known_accounts" : ["john", "bob"],
        "category" : "coding",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Duolingo",
@@ -334,7 +334,7 @@
        "known_accounts" : ["sdfsdf", "duolingo"],
        "category" : "hobby",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Ello.co",
@@ -346,7 +346,7 @@
        "known_accounts" : ["john", "bob"],
        "category" : "art",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Eyeem",
@@ -358,7 +358,7 @@
        "known_accounts" : ["john", "bob"],
        "category" : "art",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Gab",
@@ -371,7 +371,7 @@
        "known_accounts" : ["RealMarjorieGreene", "LaurenBoebert"],
        "category" : "political",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "gumroad",
@@ -383,7 +383,7 @@
        "known_accounts" : ["ellietalksmoney", "reallyniceimages"],
        "category" : "shopping",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Hackernoon",
@@ -395,7 +395,7 @@
        "known_accounts" : ["john", "alex"],
        "category" : "tech",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "issuu",
@@ -407,7 +407,7 @@
        "known_accounts" : ["john", "smith"],
        "category" : "shopping",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "JSFiddle",
@@ -419,7 +419,7 @@
        "known_accounts" : ["john", "alex"],
        "category" : "coding",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Kickstarter",
@@ -431,7 +431,7 @@
        "known_accounts" : ["john", "bob"],
        "category" : "shopping",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Ko-Fi",
@@ -443,7 +443,7 @@
        "known_accounts" : ["frank", "marcmakescomics"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Linktree",
@@ -455,7 +455,7 @@
        "known_accounts" : ["anne", "alex"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "linux.org.ru",
@@ -467,7 +467,7 @@
        "known_accounts" : ["john", "bob"],
        "category" : "tech",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "lobste.rs",
@@ -479,7 +479,7 @@
        "known_accounts" : ["john", "bob"],
        "category" : "tech",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "mastodon",
@@ -491,7 +491,7 @@
        "known_accounts" : ["john", "alex"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "MyAnimeList",
@@ -503,7 +503,7 @@
        "known_accounts" : ["test", "admin"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Newgrounds",
@@ -515,7 +515,7 @@
        "known_accounts" : ["john", "bob"],
        "category" : "gaming",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "ok.ru",
@@ -527,7 +527,7 @@
        "known_accounts" : ["john", "aleksandrvasillev"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Opencollective",
@@ -539,7 +539,7 @@
        "known_accounts" : ["john", "bob"],
        "category" : "finance",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Orbys",
@@ -551,7 +551,7 @@
        "known_accounts" : ["txmustang302"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "PCPartPicker",
@@ -563,7 +563,7 @@
        "known_accounts" : ["john", "bob"],
        "category" : "tech",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Poll Everywhere",
@@ -576,7 +576,7 @@
        "known_accounts" : ["josh", "jsmith"],
        "category" : "tech",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "pokemonshowdown",
@@ -588,7 +588,7 @@
        "known_accounts" : ["red", "blue"],
        "category" : "gaming",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Pokerstrategy",
@@ -600,7 +600,7 @@
        "known_accounts" : ["john", "bob"],
        "category" : "gaming",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "promodj",
@@ -612,7 +612,7 @@
        "known_accounts" : ["john", "bob"],
        "category" : "music",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "redbubble",
@@ -624,7 +624,7 @@
        "known_accounts" : ["john", "blue"],
        "category" : "shopping",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Shanii Writes",
@@ -637,7 +637,7 @@
        "known_accounts" : ["chococarmela", "wolfgamergirl37"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "shopify",
@@ -649,7 +649,7 @@
        "known_accounts" : ["john", "daniel"],
        "category" : "shopping",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "shutterstock",
@@ -661,7 +661,7 @@
        "known_accounts" : ["john", "bob"],
        "category" : "images",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "SmugMug",
@@ -673,7 +673,7 @@
        "known_accounts" : ["wow", "jill"],
        "category" : "images",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "steemit",
@@ -685,7 +685,7 @@
        "known_accounts" : ["petlover", "zalat"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "taskrabbit",
@@ -697,7 +697,7 @@
        "known_accounts" : ["john", "sam"],
        "category" : "business",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Teamtreehouse",
@@ -709,7 +709,7 @@
        "known_accounts" : ["john"],
        "category" : "coding",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "themeforest",
@@ -721,7 +721,7 @@
        "known_accounts" : ["john", "bob"],
        "category" : "art",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "trakt",
@@ -733,7 +733,7 @@
        "known_accounts" : ["john", "anne"],
        "category" : "video",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "unsplash",
@@ -745,7 +745,7 @@
        "known_accounts" : ["john", "alex"],
        "category" : "images",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "vsco",
@@ -757,7 +757,7 @@
        "known_accounts" : ["sam", "becca"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "weibo",
@@ -769,7 +769,7 @@
        "known_accounts" : ["chentingni", "fbb0916"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Wowhead",
@@ -781,7 +781,7 @@
        "known_accounts" : ["Ashelia", "Zizarz"],
        "category" : "gaming",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "about.me",
@@ -793,7 +793,7 @@
        "known_accounts" : ["john", "jill"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "aNobii",
@@ -806,7 +806,7 @@
        "known_accounts" : ["albertoricci", "trynyty01"],
        "category" : "hobby",
        "valid" : "False",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "ask.fm",
@@ -818,7 +818,7 @@
        "known_accounts" : ["test", "bob"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "authorSTREAM",
@@ -830,7 +830,7 @@
        "known_accounts" : ["test", "john"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Bandcamp",
@@ -842,7 +842,7 @@
        "known_accounts" : ["alice", "bob"],
        "category" : "music",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Bandlab",
@@ -855,7 +855,7 @@
        "known_accounts" : ["rave_flawless", "delutaya"],
        "category" : "music",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Behance",
@@ -867,7 +867,7 @@
        "known_accounts" : ["alice", "john"],
        "category" : "business",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Bitbucket",
@@ -879,7 +879,7 @@
        "known_accounts" : ["test", "WebBreacher"],
        "category" : "coding",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "BLIP.fm",
@@ -891,7 +891,7 @@
        "known_accounts" : ["john", "walnuts"],
        "category" : "music",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Blogmarks",
@@ -903,7 +903,7 @@
        "known_accounts" : ["test", "mike"],
        "category" : "misc",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Blogspot",
@@ -915,7 +915,7 @@
        "known_accounts" : ["test"],
        "category" : "blog",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "BodyBuilding.com",
@@ -928,7 +928,7 @@
        "known_accounts" : ["mike"],
        "category" : "health",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Bugcrowd",
@@ -940,7 +940,7 @@
        "known_accounts" : ["bitquark", "mert"],
        "category" : "tech",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "BuzzFeed",
@@ -952,7 +952,7 @@
        "known_accounts" : ["janelytvynenko", "RobertK"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Buzznet",
@@ -964,7 +964,7 @@
        "known_accounts" : ["carolinegawlik"],
        "category" : "news",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "cash.app",
@@ -976,7 +976,7 @@
        "known_accounts" : ["Jill", "john"],
        "category" : "finance",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "cHEEZburger",
@@ -988,7 +988,7 @@
        "known_accounts" : ["john"],
        "category" : "hobby",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Chess.com",
@@ -1000,7 +1000,7 @@
        "known_accounts" : ["john", "peter", "josh"],
        "category" : "gaming",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Codecademy",
@@ -1012,7 +1012,7 @@
        "known_accounts" : ["doctypeme", "jon_morris"],
        "category" : "coding",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "codementor",
@@ -1024,7 +1024,7 @@
        "known_accounts" : ["e4c5"],
        "category" : "coding",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Codepen",
@@ -1036,7 +1036,7 @@
        "known_accounts" : ["danwilson", "loficodes", "_niikhil"],
        "category" : "tech",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "COLOURlovers",
@@ -1048,7 +1048,7 @@
        "known_accounts" : ["amorremanet", "bezzalopoly"],
        "category" : "hobby",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Dailymotion",
@@ -1060,7 +1060,7 @@
        "known_accounts" : ["WeHappyKids", "john"],
        "category" : "video",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Destructoid",
@@ -1072,7 +1072,7 @@
        "known_accounts" : ["john", "alice", "bob"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "DeviantArt",
@@ -1084,7 +1084,7 @@
        "known_accounts" : ["test", "john"],
        "category" : "images",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "devRant",
@@ -1096,7 +1096,7 @@
        "known_accounts" : ["dfox", "trogus"],
        "category" : "coding",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "diigo",
@@ -1109,7 +1109,7 @@
        "known_accounts" : ["whoami", "johndoe"],
        "category" : "images",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Discogs",
@@ -1121,7 +1121,7 @@
        "known_accounts" : ["7jlong", "venetian-guy"],
        "category" : "music",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Discourse",
@@ -1134,7 +1134,7 @@
        "known_accounts" : ["ndalliard", "gerhard"],
        "category" : "misc",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "discuss.elastic.co",
@@ -1146,7 +1146,7 @@
        "known_accounts" : ["whoami", "johndoe"],
        "category" : "tech",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Disqus",
@@ -1158,7 +1158,7 @@
        "known_accounts" : ["Aristotelian1", "50calibercat"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "DockerHub",
@@ -1170,7 +1170,7 @@
        "known_accounts" : ["soxoj", "torvalds"],
        "category" : "coding",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Dribbble",
@@ -1182,7 +1182,7 @@
        "known_accounts" : ["UI8", "keeplegend"],
        "category" : "art",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Droners",
@@ -1194,7 +1194,7 @@
        "known_accounts" : ["chriskahn", "swilken"],
        "category" : "hobby",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "easyen",
@@ -1206,7 +1206,7 @@
        "known_accounts" : ["wd"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "eBay",
@@ -1218,7 +1218,7 @@
        "known_accounts" : ["the_gqs", "johnny"],
        "category" : "shopping",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Engadget",
@@ -1230,7 +1230,7 @@
        "known_accounts" : ["devindra-hardawar", "kris-holt"],
        "category" : "tech",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "EPORNER",
@@ -1242,7 +1242,7 @@
        "known_accounts" : ["enron456", "Jomat999", "hicnobu"],
        "category" : "XXXPORNXXX",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Etsy",
@@ -1254,7 +1254,7 @@
        "known_accounts" : ["david", "happiness"],
        "category" : "shopping",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "F3",
@@ -1266,7 +1266,7 @@
        "known_accounts" : ["nick", "john"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "fanpop",
@@ -1278,7 +1278,7 @@
        "known_accounts" : ["test", "johndoe"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Fiverr",
@@ -1290,7 +1290,7 @@
        "known_accounts" : ["yellowdd", "samanvay"],
        "category" : "shopping",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Flickr",
@@ -1302,7 +1302,7 @@
        "known_accounts" : ["glaciernps", "test"],
        "category" : "images",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Flipboard",
@@ -1314,7 +1314,7 @@
        "known_accounts" : ["cosmopolitan", "Mashable"],
        "category" : "tech",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Fodors Forum",
@@ -1326,7 +1326,7 @@
        "known_accounts" : ["mms", "gooster"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Foursquare",
@@ -1338,7 +1338,7 @@
        "known_accounts" : ["john", "ncyp23"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "freelancer",
@@ -1350,7 +1350,7 @@
        "known_accounts" : ["mikehurley"],
        "category" : "business",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "freesound",
@@ -1362,7 +1362,7 @@
        "known_accounts" : ["test", "JohnDoe"],
        "category" : "music",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "FriendFinder",
@@ -1374,7 +1374,7 @@
        "known_accounts" : ["alex56", "john"],
        "category" : "dating",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "FriendFinder-X",
@@ -1386,7 +1386,7 @@
        "known_accounts" : ["john"],
        "category" : "dating",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "FurAffinity",
@@ -1398,7 +1398,7 @@
        "known_accounts" : ["test"],
        "category" : "XXXPORNXXX",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Furiffic",
@@ -1410,7 +1410,7 @@
        "known_accounts" : ["furiffic", "test", "admin"],
        "category" : "XXXPORNXXX",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Gamespot",
@@ -1422,7 +1422,7 @@
        "known_accounts" : ["alice", "bob"],
        "category" : "gaming",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Garmin connect",
@@ -1434,7 +1434,7 @@
        "known_accounts" : ["danielebarison", "cderalow"],
        "category" : "health",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Geocaching",
@@ -1446,7 +1446,7 @@
        "known_accounts" : ["moun10bike", "niraD"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Giphy",
@@ -1458,7 +1458,7 @@
        "known_accounts" : ["buzz", "test"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "GitHub",
@@ -1470,7 +1470,7 @@
        "known_accounts" : ["test", "WebBreacher"],
        "category" : "coding",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "GitLab",
@@ -1482,7 +1482,7 @@
        "known_accounts" : ["skennedy", "KennBro", "alex", "bob"],
        "category" : "coding",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "gitee",
@@ -1494,7 +1494,7 @@
        "known_accounts" : ["maxim"],
        "category" : "coding",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "gpodder.net",
@@ -1506,7 +1506,7 @@
        "known_accounts" : ["blue", "red"],
        "category" : "music",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Gravatar",
@@ -1519,7 +1519,7 @@
        "known_accounts" : ["test"],
        "category" : "images",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Hacker News",
@@ -1531,7 +1531,7 @@
        "known_accounts" : ["mubix", "egypt"],
        "category" : "tech",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "HackerOne",
@@ -1543,7 +1543,7 @@
        "known_accounts" : ["yashrs", "ameerpornillos"],
        "category" : "tech",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "HubPages",
@@ -1555,7 +1555,7 @@
        "known_accounts" : ["greeneyes1607", "lmmartin"],
        "category" : "blog",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "IFTTT",
@@ -1567,7 +1567,7 @@
        "known_accounts" : ["nr9992", "sss90"],
        "category" : "misc",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "ImageShack",
@@ -1579,7 +1579,7 @@
        "known_accounts" : ["test"],
        "category" : "images",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "imgur",
@@ -1592,7 +1592,7 @@
        "known_accounts" : ["OliverClothesoff70", "DadOnTheInternet"],
        "category" : "images",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "InkBunny",
@@ -1604,7 +1604,7 @@
        "known_accounts" : ["AdminBunny", "test"],
        "category" : "XXXPORNXXX",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "InsaneJournal",
@@ -1616,7 +1616,7 @@
        "known_accounts" : ["test", "pint-sized", "acroamatica"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "instructables",
@@ -1628,7 +1628,7 @@
        "known_accounts" : ["davidandora", "test"],
        "category" : "hobby",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Internet Archive Account",
@@ -1640,7 +1640,7 @@
        "known_accounts" : ["webbreacher", "jason_scott"],
        "category" : "misc",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Internet Archive User Search",
@@ -1652,7 +1652,7 @@
        "known_accounts" : ["test", "mubix"],
        "category" : "misc",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "interpals",
@@ -1664,19 +1664,7 @@
        "known_accounts" : ["test"],
        "category" : "dating",
        "valid" : "True",
-         "requires_javascript" : "False"
-     },
-     {
-       "name" : "Kaggle",
-       "check_uri" : "https://www.kaggle.com/{account}",
-       "account_existence_code" : "200",
-       "account_existence_string" : "ProfileContainerReact",
-       "account_missing_string" : "NotFound",
-       "account_missing_code" : "404",
-       "known_accounts" : ["administrator"],
-       "category" : "coding",
-       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Keybase",
@@ -1688,7 +1676,7 @@
        "known_accounts" : ["test", "mubix"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Kongregate",
@@ -1700,7 +1688,7 @@
        "known_accounts" : ["test"],
        "category" : "gaming",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Last.fm",
@@ -1712,7 +1700,7 @@
        "known_accounts" : ["test"],
        "category" : "music",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "LibraryThing",
@@ -1724,7 +1712,7 @@
        "known_accounts" : ["test", "john"],
        "category" : "hobby",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "LINE",
@@ -1736,7 +1724,7 @@
        "known_accounts" : [ "roseareal", "yoasobi" ],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Livejournal",
@@ -1749,7 +1737,7 @@
        "allowed_types" : ["String","Person","WebAccount","Username"],
        "category" : "blog",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Martech",
@@ -1761,7 +1749,7 @@
        "known_accounts" : ["mani-karthik", "james-green"],
        "category" : "business",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Marshmallow",
@@ -1773,7 +1761,7 @@
        "known_accounts" : ["yuino_fox", "momo"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "MCUUID (Minecraft)",
@@ -1786,7 +1774,7 @@
        "known_accounts" : ["smithy", "bob"],
        "category" : "gaming",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Medium",
@@ -1798,7 +1786,7 @@
        "known_accounts" : ["zulie", "jessicalexicus"],
        "category" : "news",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "meet me",
@@ -1810,7 +1798,7 @@
        "known_accounts" : ["john", "marsha"],
        "category" : "dating",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Microsoft Technet Community",
@@ -1822,7 +1810,7 @@
        "known_accounts" : ["john", "test"],
        "category" : "tech",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Minecraft List",
@@ -1834,7 +1822,7 @@
        "known_accounts" : ["fear837", "dream"],
        "category" : "gaming",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Mix",
@@ -1846,7 +1834,7 @@
        "known_accounts" : ["test", "mixpicks"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Mixlr",
@@ -1859,7 +1847,7 @@
        "known_accounts" : ["test", "john"],
        "category" : "music",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Mod DB",
@@ -1871,7 +1859,7 @@
        "known_accounts" : ["sprinklesoup", "emargy"],
        "category" : "gaming",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Muck Rack",
@@ -1883,7 +1871,7 @@
        "known_accounts" : ["john"],
        "category" : "news",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "MyBuilder.com",
@@ -1895,7 +1883,7 @@
        "known_accounts" : ["blue", "john"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "MyFitnessPal",
@@ -1907,7 +1895,7 @@
        "known_accounts" : ["mike"],
        "category" : "health",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "MyLot",
@@ -1919,7 +1907,7 @@
        "known_accounts" : ["Tampa_girl7"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "MySpace",
@@ -1931,7 +1919,7 @@
        "known_accounts" : ["alice", "bob"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "NameMC",
@@ -1943,7 +1931,7 @@
        "known_accounts" : ["alice", "bob"],
        "category" : "gaming",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "netvibes",
@@ -1955,7 +1943,7 @@
        "known_accounts" : ["nebkacrea#Createur_site_internet", "cdiljda#AP_2nde"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "NotABug",
@@ -1967,7 +1955,7 @@
        "known_accounts" : ["notabug", "hp", "zPlus"],
        "category" : "coding",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Onlyfans",
@@ -1979,7 +1967,7 @@
        "known_accounts" : ["madmaxx", "katie123"],
        "category" : "XXXPORNXXX",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "OpenStreetMap",
@@ -1991,7 +1979,7 @@
        "known_accounts" : ["kemkim"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "PatientsLikeMe",
@@ -2003,7 +1991,7 @@
        "known_accounts" : ["thjuland", "Pedro0703", "Hydropioneer"],
        "category" : "health",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Pastebin",
@@ -2015,7 +2003,7 @@
        "known_accounts" : ["test", "john"],
        "category" : "tech",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Patreon",
@@ -2027,7 +2015,7 @@
        "known_accounts" : ["mubix", "doughboys"],
        "category" : "finance",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Periscope",
@@ -2039,7 +2027,7 @@
        "known_accounts" : ["john", "test"],
        "category" : "video",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
       "name" : "Photoblog",
@@ -2051,7 +2039,7 @@
       "known_accounts" : ["hatsumi", "pdsdville"],
       "category" : "images",
       "valid" : "False",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "PhotoBucket",
@@ -2063,7 +2051,7 @@
        "known_accounts" : ["Sonorlite18", "awelch"],
        "category" : "images",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "PinkBike",
@@ -2075,7 +2063,7 @@
        "known_accounts" : ["whistlermountainbikepark", "paulhanson"],
        "category" : "hobby",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Pinterest",
@@ -2087,7 +2075,7 @@
        "known_accounts" : ["test123", "frickcollection"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Plurk",
@@ -2099,7 +2087,7 @@
        "known_accounts" : ["test"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Pornhub Porn Stars",
@@ -2111,7 +2099,7 @@
        "known_accounts" : ["riley-reid", "alex-adams"],
        "category" : "XXXPORNXXX",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Pornhub Users",
@@ -2123,7 +2111,7 @@
        "known_accounts" : ["test123"],
        "category" : "XXXPORNXXX",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Reddit",
@@ -2136,7 +2124,7 @@
        "known_accounts" : ["koavf", "alabasterheart"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "scratch",
@@ -2148,7 +2136,7 @@
        "known_accounts" : ["griffpatch"],
        "category" : "coding",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "SEOClerks",
@@ -2160,7 +2148,7 @@
        "known_accounts" : ["Vfmseo", "gokudadon"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "setlist.fm",
@@ -2172,7 +2160,7 @@
        "known_accounts" : ["bendobrin", "michi"],
        "category" : "music",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
       "name" : "skeb",
@@ -2184,7 +2172,7 @@
       "known_accounts" : ["eipuru_", "sime064"],
       "category" : "art",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Skyrock",
@@ -2196,7 +2184,7 @@
        "known_accounts" : ["alice", "bob"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "slideshare",
@@ -2208,7 +2196,7 @@
        "known_accounts" : ["test"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "slides",
@@ -2220,7 +2208,7 @@
        "known_accounts" : ["arunthomas"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "SmashRun",
@@ -2232,7 +2220,7 @@
        "known_accounts" : ["john.young"],
        "category" : "health",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "smule",
@@ -2244,7 +2232,7 @@
        "known_accounts" : ["smul"],
        "category" : "music",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "SoundCloud",
@@ -2256,7 +2244,7 @@
        "known_accounts" : ["test123"],
        "category" : "music",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Soup",
@@ -2268,7 +2256,7 @@
        "known_accounts" : ["john", "cristina"],
        "category" : "blog",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Sourceforge",
@@ -2280,7 +2268,7 @@
        "known_accounts" : ["alice", "bob"],
        "category" : "coding",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Speaker Deck",
@@ -2292,7 +2280,7 @@
        "known_accounts" : ["petecheslock", "turbosmart45"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "sporcle",
@@ -2304,7 +2292,7 @@
        "known_accounts" : ["Test", "lolshortee"],
        "category" : "gaming",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Steam",
@@ -2316,7 +2304,7 @@
        "known_accounts" : ["test"],
        "category" : "gaming",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "StoryCorps",
@@ -2328,7 +2316,7 @@
        "known_accounts" : ["jthorstad", "paul-swider"],
        "category" : "blog",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "sukebei.nyaa.si",
@@ -2340,7 +2328,7 @@
        "known_accounts" : ["kouhy76", "Rektr0"],
        "category" : "video",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Suzuri",
@@ -2352,7 +2340,7 @@
        "known_accounts" : ["itochanxxx", "alex"],
        "category" : "business",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "TamTam",
@@ -2364,7 +2352,7 @@
        "known_accounts" : ["blue", "John"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Taringa",
@@ -2376,7 +2364,7 @@
        "known_accounts" : ["jocaxav", "engendrometal"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Telegram",
@@ -2388,7 +2376,7 @@
        "known_accounts" : ["alice", "giovanni"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "TF2 Backpack Examiner",
@@ -2400,7 +2388,7 @@
        "known_accounts" : ["test"],
        "category" : "gaming",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "theguardian",
@@ -2412,7 +2400,7 @@
        "known_accounts" : ["minna-salami", "johnnaughton"],
        "category" : "news",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Teknik",
@@ -2424,7 +2412,7 @@
        "known_accounts" : ["red", "bob"],
        "category" : "tech",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Tinder",
@@ -2436,7 +2424,7 @@
        "known_accounts" : ["Alexey", "peter", "john"],
        "category" : "dating",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Trello",
@@ -2449,7 +2437,7 @@
        "known_accounts" : ["naranjasan", "jane"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "tripadvisor",
@@ -2461,7 +2449,7 @@
        "known_accounts" : ["john", "peter"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "tumblr",
@@ -2473,7 +2461,7 @@
        "known_accounts" : ["test", "test1"],
        "category" : "images",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Twitcasting",
@@ -2485,7 +2473,7 @@
        "known_accounts" : ["yuno___nico", "2_t0_"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Twitter",
@@ -2498,7 +2486,7 @@
        "known_accounts" : ["webbreacher", "chrishemsworth"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "twpro",
@@ -2510,7 +2498,7 @@
        "known_accounts" : ["wsise47", "tsukiusa630"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Udemy",
@@ -2522,7 +2510,7 @@
        "known_accounts" : ["stephane-maarek", "lizbrown3"],
        "category" : "tech",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "untappd",
@@ -2534,7 +2522,7 @@
        "known_accounts" : ["test", "phil"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "uSTREAM",
@@ -2546,7 +2534,7 @@
        "known_accounts" : ["wukf", "johndoe"],
        "category" : "video",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Venmo",
@@ -2558,7 +2546,7 @@
        "known_accounts" : ["john", "liam"],
        "category" : "finance",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "viddler",
@@ -2570,7 +2558,7 @@
        "known_accounts" : ["GamingParodies", "planphilly"],
        "category" : "video",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Vimeo",
@@ -2582,7 +2570,7 @@
        "known_accounts" : ["john", "alice"],
        "category" : "video",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Vine",
@@ -2595,7 +2583,7 @@
        "known_accounts" : ["TomHarlock", "Seks"],
        "category" : "video",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Vivino",
@@ -2607,7 +2595,7 @@
        "known_accounts" : ["test", "admin"],
        "category" : "video",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "VK",
@@ -2619,7 +2607,7 @@
        "known_accounts" : ["ches_ches", "mike.kidlazy"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Voice123",
@@ -2632,7 +2620,7 @@
        "known_accounts" : ["dottovuu", "maheshsaha1992"],
        "category" : "hobby",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Voices.com",
@@ -2644,7 +2632,7 @@
        "known_accounts" : ["briankirchoff", "bryankopta"],
        "category" : "business",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Wanelo",
@@ -2656,7 +2644,7 @@
        "known_accounts" : ["lisandrareyes"],
        "category" : "shopping",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "wattpad",
@@ -2669,7 +2657,7 @@
        "known_accounts" : ["newadult", "Test123"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Weasyl",
@@ -2681,7 +2669,7 @@
        "known_accounts" : ["weasyl", "test"],
        "category" : "images",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "weheartit",
@@ -2693,7 +2681,7 @@
        "known_accounts" : ["alice", "bob"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "wishlistr",
@@ -2705,7 +2693,7 @@
        "known_accounts" : ["test"],
        "category" : "shopping",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Wikipedia",
@@ -2717,7 +2705,7 @@
        "known_accounts" : ["Mcd51", "W._Frank"],
        "category" : "news",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "WordPress",
@@ -2729,7 +2717,7 @@
        "known_accounts" : ["test"],
        "category" : "blog",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "WordPress Support",
@@ -2741,7 +2729,7 @@
        "known_accounts" : ["test"],
        "category" : "blog",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Xanga",
@@ -2753,7 +2741,7 @@
        "known_accounts" : ["john"],
        "category" : "blog",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Xbox Gamertag",
@@ -2765,7 +2753,7 @@
        "known_accounts" : ["Spiken8", "john"],
        "category" : "gaming",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "xHamster",
@@ -2777,7 +2765,7 @@
        "known_accounts" : ["john", "tonystark85"],
        "category" : "XXXPORNXXX",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "XVIDEOS-models",
@@ -2789,7 +2777,7 @@
        "known_accounts" : ["vvalencourt3", "tiffany-tyler"],
        "category" : "XXXPORNXXX",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "XVIDEOS-profiles",
@@ -2801,7 +2789,7 @@
        "known_accounts" : ["nympho-nailer", "dpadicto", "bkg"],
        "category" : "XXXPORNXXX",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Yahoo! JAPAN Auction",
@@ -2813,7 +2801,7 @@
        "known_accounts" : ["fltr14502003"],
        "category" : "shopping",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "YouTube",
@@ -2825,7 +2813,7 @@
        "known_accounts" : ["test"],
        "category" : "video",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Xing",
@@ -2837,7 +2825,7 @@
        "known_accounts" : ["Andy_Hausmann", "Ramona_Hapke"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Zomato",
@@ -2849,7 +2837,7 @@
        "known_accounts" : ["john", "jess"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Tagged",
@@ -2861,7 +2849,7 @@
        "known_accounts" : ["Samantha", "Robert"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "CaringBridge",
@@ -2873,7 +2861,7 @@
        "known_accounts" : ["robertherring"],
        "category" : "health",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Fark",
@@ -2885,7 +2873,7 @@
        "known_accounts" : ["bob", "bobby"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "FatSecret",
@@ -2897,7 +2885,7 @@
        "known_accounts" : ["bob", "bobby"],
        "category" : "health",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Yelp",
@@ -2909,7 +2897,7 @@
        "known_accounts" : ["j5CYhsvD2yrunyyoZvSvKA", "GHoG4X4FY8D8L563zzPX5w"],
        "category" : "shopping",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Vero",
@@ -2921,7 +2909,7 @@
        "known_accounts" : ["alex", "johnny"],
        "category" : "art",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "TikTok",
@@ -2933,7 +2921,7 @@
        "known_accounts" : ["gordonramsayofficial", "pookiebear73"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Mixi",
@@ -2945,7 +2933,7 @@
        "known_accounts" : ["2854333", "19123"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Blogger",
@@ -2957,7 +2945,7 @@
        "known_accounts" : ["07333944864481878697", "05941544278367416980"],
        "category" : "blog",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "ArmorGames",
@@ -2969,7 +2957,7 @@
        "known_accounts" : ["john", "sammy"],
        "category" : "gaming",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Fandom",
@@ -2981,7 +2969,7 @@
        "known_accounts" : ["EJacobs94", "Drew_Dietsch"],
        "category" : "gaming",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Zillow",
@@ -2993,7 +2981,7 @@
        "known_accounts" : ["JOHN-L-SULLIVAN", "Maggie-Alegria"],
        "category" : "shopping",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Poshmark",
@@ -3005,7 +2993,7 @@
        "known_accounts" : ["alice", "bob"],
        "category" : "shopping",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Fabswingers",
@@ -3017,7 +3005,7 @@
        "known_accounts" : ["naughty_nymphomaniac", "hellfireclub", "fabswingers.com"],
        "category" : "dating",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Magix",
@@ -3029,7 +3017,7 @@
        "known_accounts" : ["baywolfmusic", "johnebaker"],
        "category" : "music",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Tunefind",
@@ -3041,7 +3029,7 @@
        "known_accounts" : ["baywolfmusic", "mrcerny18"],
        "category" : "music",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Appian",
@@ -3053,7 +3041,7 @@
        "known_accounts" : ["mikec", "varunkumarb0001"],
        "category" : "tech",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Digitalspy",
@@ -3065,7 +3053,7 @@
        "known_accounts" : ["JeffG1", "Maxatoria"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Moneysavingexpert",
@@ -3077,7 +3065,7 @@
        "known_accounts" : ["Heathermck", "MallyGirl"],
        "category" : "finance",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Thetattooforum",
@@ -3089,7 +3077,7 @@
        "known_accounts" : ["mixdop", "modifyielts"],
        "category" : "art",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Quora",
@@ -3101,7 +3089,7 @@
        "known_accounts" : ["John-Galan-5", "Alex-Clay"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Raidforums",
@@ -3113,7 +3101,7 @@
        "known_accounts" : ["Zeroxx", "blakereed"],
        "category" : "tech",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Bentbox",
@@ -3125,7 +3113,7 @@
        "known_accounts" : ["brockdoom", "witchhouse", "hotoptics"],
        "category" : "XXXPORNXXX",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Wireclub",
@@ -3137,7 +3125,7 @@
        "known_accounts" : ["deae", "cheerfulsarcasm", "braydenskiresort"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Snapchat",
@@ -3150,7 +3138,7 @@
        "known_accounts" : ["billy23", "mrbean", "alexis4"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "AmericanThinker",
@@ -3162,7 +3150,7 @@
        "known_accounts" : ["terrypaulding", "monicashowalter"],
        "category" : "political",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Minds",
@@ -3174,7 +3162,7 @@
        "known_accounts" : ["Willieleev1971", "john"],
        "category" : "political",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "NaturalNews",
@@ -3186,7 +3174,7 @@
        "known_accounts" : ["jdheyes", "healthranger"],
        "category" : "political",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "thegatewaypundit",
@@ -3198,7 +3186,7 @@
        "known_accounts" : ["patti", "joehoft"],
        "category" : "political",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Wimkin-PublicProfile",
@@ -3210,7 +3198,7 @@
        "known_accounts" : ["alex", "smith", "boomer"],
        "category" : "political",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "SaraCarterShow",
@@ -3222,7 +3210,7 @@
        "known_accounts" : ["douglasbraff", "annaliese"],
        "category" : "political",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Bitchute",
@@ -3234,7 +3222,7 @@
        "known_accounts" : ["simon_parkes", "americafloats", "daindor"],
        "category" : "political",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "RumbleUser",
@@ -3246,7 +3234,7 @@
        "known_accounts" : ["SimonParkes", "djmrmusic"],
        "category" : "political",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "RumbleChannel",
@@ -3258,7 +3246,7 @@
        "known_accounts" : ["HodgeTwins", "SeanHannity"],
        "category" : "political",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Dissenter",
@@ -3270,7 +3258,7 @@
        "known_accounts" : ["pryerlee", "archdukeofevil"],
        "category" : "political",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "TrackmaniaLadder",
@@ -3282,7 +3270,7 @@
        "known_accounts" : ["bob", "jill"],
        "category" : "gaming",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "3DNews",
@@ -3294,7 +3282,7 @@
        "known_accounts" : ["bob", "red"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "igromania",
@@ -3306,7 +3294,7 @@
        "known_accounts" : ["bob", "blue"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "akniga",
@@ -3318,7 +3306,7 @@
        "known_accounts" : ["bob", "blue"],
        "category" : "hobby",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "allmylinks",
@@ -3330,7 +3318,7 @@
        "known_accounts" : ["blue", "beccaturner"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Naver",
@@ -3342,7 +3330,7 @@
        "known_accounts" : ["bob", "blue"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Booth",
@@ -3354,7 +3342,7 @@
        "known_accounts" : ["monoliorder", "hasya"],
        "category" : "shopping",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Carbonmade",
@@ -3366,7 +3354,7 @@
        "known_accounts" : ["jenny", "bob"],
        "category" : "hobby",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Career.habr",
@@ -3378,7 +3366,7 @@
        "known_accounts" : ["alex", "bob"],
        "category" : "business",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "echo.msk",
@@ -3390,7 +3378,7 @@
        "known_accounts" : ["john", "blue"],
        "category" : "news",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Facenama",
@@ -3402,7 +3390,7 @@
        "known_accounts" : ["john", "blue"],
        "category" : "social",
        "valid" : "False",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Hackaday",
@@ -3414,7 +3402,7 @@
        "known_accounts" : ["john", "adam"],
        "category" : "hobby",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Hubski",
@@ -3426,7 +3414,7 @@
        "known_accounts" : ["john", "blue"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Dojoverse",
@@ -3438,7 +3426,7 @@
        "known_accounts" : ["eric", "danielrivera10927"],
        "category" : "hobby",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Massage Anywhere",
@@ -3450,7 +3438,7 @@
        "known_accounts" : ["lorilmccluskey", "LomiNYC"],
        "category" : "health",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "MapMyTracks",
@@ -3462,7 +3450,7 @@
        "known_accounts" : ["ulirad", "CBSloan"],
        "category" : "health",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "21buttons",
@@ -3474,7 +3462,7 @@
        "known_accounts" : ["teedawod", "ginamariahoffmann"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Instagram",
@@ -3487,7 +3475,7 @@
        "known_accounts" : ["katyperry", "kirbstr"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Skypli",
@@ -3499,7 +3487,7 @@
        "known_accounts" : ["toni.hung", "hadi.awad"],
        "category" : "social",
        "valid" : "False",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "AllTrails",
@@ -3511,7 +3499,7 @@
        "known_accounts" : ["breckt", "rdoghartwig"],
        "category" : "health",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Cracked",
@@ -3523,7 +3511,7 @@
        "known_accounts" : ["mbattagl","Hatchback"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "ScoutWiki",
@@ -3535,7 +3523,7 @@
        "known_accounts" : ["Mlh_nl", "Benjism89"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "LoveHomePorn",
@@ -3547,7 +3535,7 @@
        "known_accounts" : ["boerni46", "heylena"],
        "category" : "XXXPORNXXX",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Seneporno",
@@ -3559,7 +3547,7 @@
        "known_accounts" : ["Kalsobbc", "Boymariste"],
        "category" : "XXXPORNXXX",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "ilovegrowingmarijuana",
@@ -3571,7 +3559,7 @@
        "known_accounts" : ["ILGM.Stacy", "Mosaicmind9x"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Ruby Dating",
@@ -3583,7 +3571,7 @@
        "known_accounts" : ["Ute1833", "Jessika4922"],
        "category" : "dating",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "PCGamer",
@@ -3595,7 +3583,7 @@
        "known_accounts" : ["volley.302", "cjmariani.94198", "cholidsnake.2334"],
        "category" : "gaming",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Justforfans",
@@ -3607,7 +3595,7 @@
        "known_accounts" : ["devinfrancoxxx", "RileyChaux"],
        "category" : "XXXPORNXXX",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "zhihu",
@@ -3619,7 +3607,7 @@
        "known_accounts" : ["lushnis", "kan-shu-jiao-hua-shai-tai-yang"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Roblox",
@@ -3631,7 +3619,7 @@
        "known_accounts" : ["LeetPawn", "elephant459"],
        "category" : "gaming",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Gettr",
@@ -3643,7 +3631,7 @@
        "known_accounts" : ["qellyanon", "djerod"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Stripchat",
@@ -3655,7 +3643,7 @@
        "known_accounts" : ["DulcieRichard", "Selenaneshy"],
        "category" : "XXXPORNXXX",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Cults3D",
@@ -3667,7 +3655,7 @@
        "known_accounts" : ["Bstar3Dart", "john"],
        "category" : "hobby",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "USA Life",
@@ -3679,7 +3667,7 @@
        "known_accounts" : ["abaynes79", "not1face"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "MAGA-CHAT",
@@ -3691,7 +3679,7 @@
        "known_accounts" : ["Rich", "RjosephJr"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Our Freedom Book",
@@ -3703,7 +3691,7 @@
        "known_accounts" : ["DaveLipsky", "StarlaJene"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "MAGABOOK",
@@ -3715,7 +3703,7 @@
        "known_accounts" : ["PamelaElliott62", "eric"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "SoliKick",
@@ -3727,7 +3715,7 @@
        "known_accounts" : ["milehighed", "Edmundus"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Parler",
@@ -3739,7 +3727,7 @@
        "known_accounts" : ["DineshDsouza", "SeanHannity"],
        "category" : "social",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "Elftown",
@@ -3751,7 +3739,7 @@
        "known_accounts" : ["marhiah", "adnama"],
        "category" : "social",
        "valid" : "False",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
        "name" : "osu!",
@@ -3763,7 +3751,7 @@
        "known_accounts" : ["stretches", "spiken8"],
        "category" : "gaming",
        "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
      },
      {
       "name": "fotka",
@@ -3776,7 +3764,7 @@
       "known_accounts": ["test", "test2"],
       "category": "social",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "Albicla",
@@ -3789,7 +3777,7 @@
       "known_accounts": ["GazetaPolska", "GPCodziennie"],
       "category": "social",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "QUEER",
@@ -3801,7 +3789,7 @@
       "known_accounts": ["test", "kowalski"],
       "category": "social",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "Ultras Diary",
@@ -3813,7 +3801,7 @@
       "known_accounts": ["janek", "kowal"],
       "category": "hobby",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "Wolni Słowianie",
@@ -3825,7 +3813,7 @@
       "known_accounts": ["janek", "kowal"],
       "category": "social",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "Wykop",
@@ -3837,7 +3825,7 @@
       "known_accounts": ["test", "test2"],
       "category": "social",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "Chomikuj.pl",
@@ -3849,7 +3837,7 @@
       "known_accounts": ["test", "test2"],
       "category": "misc",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "Filmweb",
@@ -3861,7 +3849,7 @@
       "known_accounts": ["test", "test2"],
       "category": "hobby",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "Salon24",
@@ -3873,7 +3861,7 @@
       "known_accounts": ["test", "test2"],
       "category": "blog",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "blogi.pl",
@@ -3885,7 +3873,7 @@
       "known_accounts": ["naukowa", "izkpaw"],
       "category": "blog",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "Zbiornik",
@@ -3897,7 +3885,7 @@
       "known_accounts": ["69uzytkownik69", "Soif"],
       "category": "XXXPORNXXX",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "zmarsa.com",
@@ -3909,7 +3897,7 @@
       "known_accounts": ["janek", "test"],
       "category": "XXXPORNXXX",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "olx",
@@ -3921,7 +3909,7 @@
       "known_accounts": ["janek", "test"],
       "category": "shopping",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "Joe Monster",
@@ -3933,7 +3921,7 @@
       "known_accounts": ["bober", "coldseed"],
       "category": "misc",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "Joe Monster",
@@ -3945,7 +3933,7 @@
       "known_accounts": ["dandris", "lasior"],
       "category": "misc",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "kwejk.pl",
@@ -3957,7 +3945,7 @@
       "known_accounts": ["test", "janek"],
       "category": "images",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "JBZD",
@@ -3969,7 +3957,7 @@
       "known_accounts": ["test", "janek"],
       "category": "images",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "Mistrzowie",
@@ -3981,7 +3969,7 @@
       "known_accounts": ["test", "janek"],
       "category": "images",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "Demotywatory",
@@ -3993,7 +3981,7 @@
       "known_accounts": ["test", "test2"],
       "category": "images",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "Faktopedia",
@@ -4005,7 +3993,7 @@
       "known_accounts": ["janek", "ania"],
       "category": "images",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "Pewex",
@@ -4017,7 +4005,7 @@
       "known_accounts": ["test", "ania"],
       "category": "misc",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "Motokiller",
@@ -4029,7 +4017,7 @@
       "known_accounts": ["test", "janek"],
       "category": "images",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "Kotburger",
@@ -4041,7 +4029,7 @@
       "known_accounts": ["ania", "janek"],
       "category": "images",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "Piekielni",
@@ -4053,7 +4041,7 @@
       "known_accounts": ["test", "janek"],
       "category": "misc",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "Chamsko",
@@ -4065,7 +4053,7 @@
       "known_accounts": ["test", "janek"],
       "category": "images",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "Tanuki.pl",
@@ -4077,7 +4065,7 @@
       "known_accounts": ["ania", "avellana"],
       "category": "hobby",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "Polchat.pl",
@@ -4089,7 +4077,7 @@
       "known_accounts": ["test","admin"],
       "category": "social",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "SFD",
@@ -4101,7 +4089,7 @@
       "known_accounts": ["janek", "admin"],
       "category": "health",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "cda.pl",
@@ -4113,7 +4101,7 @@
       "known_accounts": ["test2", "janek"],
       "category": "video",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "prv.pl",
@@ -4125,7 +4113,7 @@
       "known_accounts": ["test", "test2"],
       "category": "tech",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "medyczka.pl",
@@ -4137,7 +4125,7 @@
       "known_accounts": ["test", "janek"],
       "category": "health",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "karab.in",
@@ -4149,7 +4137,7 @@
       "known_accounts": ["ernest", "puszkapandory"],
       "category": "social",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "101010.pl",
@@ -4161,7 +4149,7 @@
       "known_accounts": ["szekspir", "xaphanpl"],
       "category": "social",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "pol.social",
@@ -4173,7 +4161,7 @@
       "known_accounts": ["ftdl", "ducensor"],
       "category": "social",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "fedi.lewactwo.pl",
@@ -4185,7 +4173,7 @@
       "known_accounts": ["lewactwo", "queereen"],
       "category": "social",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "rigcz.club",
@@ -4197,7 +4185,7 @@
       "known_accounts": ["blazej", "adam"],
       "category": "social",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "ipolska.pl",
@@ -4209,7 +4197,7 @@
       "known_accounts": ["maciek", "varden"],
       "category": "social",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "tfl.net.pl",
@@ -4221,7 +4209,7 @@
       "known_accounts": ["jaczad", "manies"],
       "category": "social",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "quitter.pl",
@@ -4233,7 +4221,7 @@
       "known_accounts": ["divmod", "panoptykon"],
       "category": "social",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "soc.citizen4.eu",
@@ -4245,7 +4233,7 @@
       "known_accounts": ["admin", "miklo"],
       "category": "social",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "szmer.info",
@@ -4257,7 +4245,7 @@
       "known_accounts": ["przeczzpreczem", "Xavier"],
       "category": "social",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "forumprawne.org",
@@ -4269,7 +4257,7 @@
       "known_accounts": ["test", "test2"],
       "category": "misc",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "gloria.tv",
@@ -4281,7 +4269,7 @@
       "known_accounts": ["test", "test2"],
       "category": "social",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "Szeroki Kadr",
@@ -4293,7 +4281,7 @@
       "known_accounts": ["kowal", "janek"],
       "category": "hobby",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "oglaszamy24h.pl",
@@ -4305,7 +4293,7 @@
       "known_accounts": ["kowal", "janek"],
       "category": "shopping",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "jeja.pl",
@@ -4317,7 +4305,7 @@
       "known_accounts": ["kowal", "janek"],
       "category": "misc",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "lowcygier.pl",
@@ -4329,7 +4317,7 @@
       "known_accounts": ["armin", "janek"],
       "category": "gaming",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "zatrybi.pl",
@@ -4341,7 +4329,7 @@
       "known_accounts": ["Berlinek", "fenrek"],
       "category": "tech",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "vizjer.pl",
@@ -4353,7 +4341,7 @@
       "known_accounts": ["janek", "tomek"],
       "category": "video",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "ulub.pl",
@@ -4365,7 +4353,7 @@
       "known_accounts": ["janek", "test"],
       "category": "misc",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "watchmemore.com",
@@ -4377,7 +4365,7 @@
       "known_accounts": ["medroxy", "arax123"],
       "category": "XXXPORNXXX",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "megamodels.pl",
@@ -4389,7 +4377,7 @@
       "known_accounts": ["ania", "janek"],
       "category": "social",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "policja2009",
@@ -4401,7 +4389,7 @@
       "known_accounts": ["Pvwel", "janek"],
       "category": "misc",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name": "CD-Action",
@@ -4413,7 +4401,7 @@
       "known_accounts": ["saczuan", "cormac"],
       "category": "gaming",
       "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
     },
     {
       "name" : "Twitch.tv",
@@ -4425,7 +4413,7 @@
       "known_accounts" : ["summit1g", "cohhcarnage"],
       "category" : "gaming",
       "valid" : "False",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
       },
       {
         "name" : "fansly",
@@ -4438,7 +4426,7 @@
         "known_accounts" : ["Mikomin","test"],
         "category" : "XXXPORNXXX",
         "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
         },
         {
           "name" : "mym.fans",
@@ -4450,7 +4438,7 @@
           "known_accounts" : ["Djelizamay","Andysparkles"],
           "category" : "social",
           "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
         },
         {
           "name" : "SpankPay",
@@ -4462,7 +4450,7 @@
           "known_accounts" : ["Medroxy","Anna"],
           "category" : "finance",
           "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
         },
         {
           "name" : "datezone",
@@ -4474,7 +4462,7 @@
           "known_accounts" : ["xkarola","zorro3330"],
           "category" : "XXXPORNXXX",
           "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
         },
         {
           "name" : "FanCentro",
@@ -4486,7 +4474,7 @@
           "known_accounts" : ["medroxy","miaaamador"],
           "category" : "XXXPORNXXX",
           "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
         },
         {
           "name" : "bitcoin forum",
@@ -4498,7 +4486,7 @@
           "known_accounts" : ["alex", "boss"],
           "category" : "finance",
           "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
         },
         {
           "name" : "Fortnite Tracker",
@@ -4510,7 +4498,7 @@
           "known_accounts" : ["steph", "sam"],
           "category" : "gaming",
           "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
         },
         {
           "name" : "Tellonym",
@@ -4522,7 +4510,7 @@
           "known_accounts" : ["jane", "jimmy"],
           "category" : "social",
           "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
         },
         {
           "name" : "uid",
@@ -4534,7 +4522,7 @@
           "known_accounts" : ["john", "peter"],
           "category" : "social",
           "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
         },
         {
           "name" : "Jeuxvideo",
@@ -4546,7 +4534,7 @@
           "known_accounts" : ["jane", "alex"],
           "category" : "gaming",
           "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
         },
         {
           "name" : "Wikidot",
@@ -4558,7 +4546,7 @@
           "known_accounts" : ["jack", "allen"],
           "category" : "social",
           "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
         },
         {
           "name" : "Chaos",
@@ -4570,7 +4558,7 @@
           "known_accounts" : ["alice", "sam"],
           "category" : "social",
           "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
         },
         {
           "name" : "Arduino",
@@ -4582,7 +4570,7 @@
           "known_accounts" : ["peter", "john"],
           "category" : "tech",
           "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
         },
         {
           "name" : "hackerearth",
@@ -4594,7 +4582,7 @@
           "known_accounts" : ["peter", "liam"],
           "category" : "coding",
           "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
         },
         {
           "name" : "Independent academia",
@@ -4606,7 +4594,7 @@
           "known_accounts" : ["peter", "LiamM"],
           "category" : "hobby",
           "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
         },
         {
           "name" : "Houzz",
@@ -4618,7 +4606,7 @@
           "known_accounts" : ["liam", "alex"],
           "category" : "hobby",
           "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
         },
         {
           "name" : "Hubski",
@@ -4630,7 +4618,7 @@
           "known_accounts" : ["kleinbl00", "peter"],
           "category" : "hobby",
           "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
         },
         {
           "name" : "crowdin",
@@ -4642,7 +4630,7 @@
           "known_accounts" : ["alex", "peter"],
           "category" : "hobby",
           "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
         },
         {
           "name" : "warriorforum",
@@ -4654,7 +4642,7 @@
           "known_accounts" : ["alex", "peter"],
           "category" : "hobby",
           "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
         },
         {
           "name" : "Producthunt",
@@ -4666,7 +4654,7 @@
           "known_accounts" : ["alex", "jack"],
           "category" : "business",
           "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
         },
         {
         "name" : "Parler archived profile",
@@ -4679,7 +4667,7 @@
         "known_accounts" : ["JoePags", "dineshdsouza"],
         "category" : "archived",
         "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
       },
       {
         "name" : "Parler archived posts",
@@ -4692,7 +4680,7 @@
         "known_accounts" : ["JoePags", "dineshdsouza"],
         "category" : "archived",
         "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
       },
       {
         "name" : "Twitter archived profile",
@@ -4705,7 +4693,7 @@
         "known_accounts" : ["jack", "dineshdsouza"],
         "category" : "archived",
         "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
       },
       {
         "name" : "Twitter archived tweets",
@@ -4718,7 +4706,7 @@
         "known_accounts" : ["jack", "dineshdsouza"],
         "category" : "archived",
         "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
       },
       {
           "name" : "Pinkbike",
@@ -4730,7 +4718,7 @@
           "known_accounts" : ["dani", "annie"],
           "category" : "health",
           "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
         },
         {
           "name" : "Researchgate",
@@ -4742,7 +4730,7 @@
           "known_accounts" : ["Tafara-Mwareya", "Jose-Roberto-Rasi"],
           "category" : "hobby",
           "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
         },
         {
           "name" : "polygon",
@@ -4754,7 +4742,7 @@
           "known_accounts" : ["nicodeyo", "Nicole_Clark"],
           "category" : "gaming",
           "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
         },
         {
           "name" : "nairaland",
@@ -4766,7 +4754,7 @@
           "known_accounts" : ["amakaone", "seun"],
           "category" : "news",
           "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
         },
         {
           "name" : "tradingview",
@@ -4778,7 +4766,7 @@
           "known_accounts" : ["liam", "john"],
           "category" : "finance",
           "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
         },
         {
           "name" : "wordnik",
@@ -4790,7 +4778,7 @@
           "known_accounts" : ["elle", "john"],
           "category" : "gaming",
           "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
         },
         {
           "name" : "slant",
@@ -4802,7 +4790,7 @@
           "known_accounts" : ["bob", "john"],
           "category" : "shopping",
           "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
         },
         {
           "name" : "memrise",
@@ -4814,7 +4802,7 @@
           "known_accounts" : ["alice", "john"],
           "category" : "hobby",
           "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
         },
         {
           "name" : "kaggle",
@@ -4826,7 +4814,7 @@
           "known_accounts" : ["babyoda", "residentmario"],
           "category" : "coding",
           "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
         },
         {
           "name" : "hackster",
@@ -4838,7 +4826,7 @@
           "known_accounts" : ["ian", "bob"],
           "category" : "coding",
           "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
         },
         {
           "name" : "anonup",
@@ -4850,7 +4838,7 @@
           "known_accounts" : ["john", "peter"],
           "category" : "social",
           "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
         },
         {
           "name" : "wego",
@@ -4862,7 +4850,7 @@
           "known_accounts" : ["mmish2", "Lisa_M_S"],
           "category" : "political",
           "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
         },
         {
           "name" : "kik",
@@ -4874,9 +4862,24 @@
           "known_accounts" : ["adam", "smith", "jones"],
           "category" : "social",
           "valid" : "True",
-         "requires_javascript" : "False"
+       "requires_javascript" : "False"
         },
         {
+          "name": "Patronite",
+          "check_uri": "https://patronite.pl/{account}",
+          "account_existence_code": "200",
+          "account_existence_string": "Zostań Patronem",
+          "account_missing_string": "Nie znaleźliśmy strony której szukasz.",
+          "account_missing_code": "404",
+          "known_accounts": [
+            "radio357",
+            "radionowyswiat"
+          ],
+          "category": "finance",
+          "valid" : "True",
+       "requires_javascript" : "False"
+        },
+    {
         "name" : "Rarible",
         "check_uri" : "https://rarible.com/{account}",
         "account_existence_code" : "200",
