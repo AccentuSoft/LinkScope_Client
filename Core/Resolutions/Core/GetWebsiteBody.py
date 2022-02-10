@@ -39,5 +39,5 @@ class GetWebsiteBody:
             returnResults.append([{'Phrase': 'Website Body: ' + primaryField,
                                    'Notes': doc,
                                    'Entity Type': 'Phrase'},
-                                  {uid: {'Resolution': 'Website Body', 'Name': 'Website Body', 'Notes': ''}}])
+                                  {uid: {'Resolution': 'Website Body', 'Notes': ''}}])
         return returnResults
