@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+from pathlib import Path
+import magic
 from PySide6 import QtWidgets, QtCore, QtGui
 from Core.Interface import Stylesheets
 
@@ -13,10 +15,11 @@ class DockBarTwo(QtWidgets.QDockWidget):
 
         scrollAreaWidget.setWidget(self.entDetails)
         scrollAreaWidget.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        scrollAreaWidget.setMinimumWidth(485)
 
         childWidget.addTab(scrollAreaWidget, 'Entity Details')
         childWidget.addTab(self.oracle, 'Oracle')
-        self.setMaximumWidth(500)
+        self.setMaximumWidth(600)
         self.resize(self.height(), 500)
 
     def __init__(self,
@@ -65,17 +68,17 @@ class EntityDetails(QtWidgets.QWidget):
         self.detailsLayout = QtWidgets.QStackedLayout()
         self.setLayout(self.detailsLayout)
 
-        layoutNothingSelected = QtWidgets.QGridLayout()
+        layoutNothingSelected = QtWidgets.QVBoxLayout()
         widgetNothing = QtWidgets.QWidget()
         widgetNothing.setLayout(layoutNothingSelected)
         self.detailsLayout.addWidget(widgetNothing)
 
-        layoutOneNodeSelected = QtWidgets.QGridLayout()
+        layoutOneNodeSelected = QtWidgets.QVBoxLayout()
         widgetOneNode = QtWidgets.QWidget()
         widgetOneNode.setLayout(layoutOneNodeSelected)
         self.detailsLayout.addWidget(widgetOneNode)
 
-        layoutMultipleItemsSelected = QtWidgets.QGridLayout()
+        layoutMultipleItemsSelected = QtWidgets.QVBoxLayout()
         widgetMultiItems = QtWidgets.QWidget()
         widgetMultiItems.setLayout(layoutMultipleItemsSelected)
         self.detailsLayout.addWidget(widgetMultiItems)
@@ -93,7 +96,7 @@ class EntityDetails(QtWidgets.QWidget):
         summaryLayout = QtWidgets.QGridLayout()
         summaryPanel = QtWidgets.QWidget()
         summaryPanel.setLayout(summaryLayout)
-        self.summaryIcon = QtWidgets.QLabel("")  # QtGui.QIcon(None)
+        self.summaryIcon = QtWidgets.QLabel("")
         self.entityTypeLabel = QtWidgets.QLabel("")
         self.entityUIDLabel = QtWidgets.QLabel("")
         self.entityPrimaryLabel = QtWidgets.QLabel("")
@@ -101,15 +104,15 @@ class EntityDetails(QtWidgets.QWidget):
         summaryLayout.addWidget(self.entityTypeLabel, 0, 1, 1, 3)
         summaryLayout.addWidget(self.entityPrimaryLabel, 1, 1)
         summaryLayout.addWidget(self.entityUIDLabel, 2, 1)
-        layoutOneNodeSelected.addWidget(summaryPanel, 0, 0)
+        layoutOneNodeSelected.addWidget(summaryPanel, 1)
 
         # ~~ Part 2
         self.nodeLinkL = QtWidgets.QStackedLayout()
         nodeLinkSwitcher = QtWidgets.QWidget()
         nodeLinkSwitcher.setLayout(self.nodeLinkL)
-        layoutOneNodeSelected.addWidget(nodeLinkSwitcher, 1, 0)
+        layoutOneNodeSelected.addWidget(nodeLinkSwitcher, 1)
 
-        relationshipsLayout = QtWidgets.QGridLayout()
+        relationshipsLayout = QtWidgets.QVBoxLayout()
         relationshipsPanel = QtWidgets.QWidget()
         relationshipsPanel.setLayout(relationshipsLayout)
         self.relationshipsIncomingTable = RelationshipsTable(self, mainWindow, uidLabel=self.entityPrimaryLabel,
@@ -118,9 +121,11 @@ class EntityDetails(QtWidgets.QWidget):
                                                              incomingOrOutgoing=1)
         self.relationshipsIncomingTable.setHeaderLabel('Incoming Links')
         self.relationshipsOutgoingTable.setHeaderLabel('Outgoing Links')
-        relationshipsLayout.addWidget(self.relationshipsIncomingTable, 0, 0)
-        relationshipsLayout.addWidget(self.relationshipsOutgoingTable, 1, 0)
+        relationshipsLayout.addWidget(self.relationshipsIncomingTable)
+        relationshipsLayout.addWidget(self.relationshipsOutgoingTable)
         self.nodeLinkL.addWidget(relationshipsPanel)
+        self.relationshipsIncomingTable.setMinimumHeight(125)
+        self.relationshipsOutgoingTable.setMinimumHeight(125)
 
         oneLinkRelLayout = QtWidgets.QHBoxLayout()
         oneLinkRelPanel = QtWidgets.QWidget()
@@ -142,32 +147,31 @@ class EntityDetails(QtWidgets.QWidget):
         # ~~ Part 3
         scroll = QtWidgets.QScrollArea()
 
-        self.detailsLayoutOneNode = QtWidgets.QFormLayout()
+        self.detailsLayoutOneNode = QtWidgets.QGridLayout()
         detailsLayoutOneNodePanel = QtWidgets.QWidget()
         detailsLayoutOneNodePanel.setLayout(self.detailsLayoutOneNode)
         scroll.setWidget(detailsLayoutOneNodePanel)
         scroll.setWidgetResizable(True)
         scroll.setMinimumHeight(200)
-        # scroll.setMaximumHeight(400)
-        layoutOneNodeSelected.addWidget(scroll, 2, 0)
+        layoutOneNodeSelected.addWidget(scroll, 10)
 
         # ~ Multiple Links/Nodes Selected Layout
         self.nodesTable = RelationshipsTable(self, mainWindow)
-        self.nodesTable.setMaximumHeight(300)
+        self.nodesTable.setMaximumHeight(500)
         self.nodesTable.setHeaderLabels(["Entity", "Incoming Links", "Outgoing Links"])
         self.linksTable = LinksTable(self, mainWindow)
-        self.linksTable.setMaximumHeight(300)
+        self.linksTable.setMaximumHeight(500)
         self.linksTable.setHeaderLabels(["Resolution", "Parent", "Child"])
         self.multiNodesTableLabelOne = QtWidgets.QLabel("Selected Nodes:")
-        layoutMultipleItemsSelected.addWidget(self.multiNodesTableLabelOne, 0, 0)
-        layoutMultipleItemsSelected.addWidget(self.nodesTable, 1, 0)
+        self.multiNodesTableLabelOne.setMaximumHeight(20)
+        layoutMultipleItemsSelected.addWidget(self.multiNodesTableLabelOne)
+        layoutMultipleItemsSelected.addWidget(self.nodesTable)
         self.multiNodesTableLabelTwo = QtWidgets.QLabel("Selected Links:")
-        layoutMultipleItemsSelected.addWidget(self.multiNodesTableLabelTwo, 2, 0)
-        layoutMultipleItemsSelected.addWidget(self.linksTable, 3, 0)
+        self.multiNodesTableLabelTwo.setMaximumHeight(20)
+        layoutMultipleItemsSelected.addWidget(self.multiNodesTableLabelTwo)
+        layoutMultipleItemsSelected.addWidget(self.linksTable)
 
-        self.setMinimumWidth(475)
-        self.setMaximumWidth(475)
-        self.setMaximumHeight(550)
+        self.setFixedWidth(475)
 
         self.currentlyShown = []
 
@@ -182,12 +186,12 @@ class EntityDetails(QtWidgets.QWidget):
         self.currentlyShown = jsonDicts
         numberOfItems = len(jsonDicts)
         if numberOfItems == 0:
-            self.layout().setCurrentIndex(0)
+            self.detailsLayout.setCurrentIndex(0)
             return
         if None in jsonDicts:
             self.mainWindow.MESSAGEHANDLER.error('Received None value when trying to display widget details.',
                                                  popUp=False)
-            self.layout().setCurrentIndex(0)
+            self.detailsLayout.setCurrentIndex(0)
             return
         self.clearDetailsHelper()
         isNode = None
@@ -217,7 +221,7 @@ class EntityDetails(QtWidgets.QWidget):
             self.switchLayoutHelper(numberOfItems, isNode)
         except Exception as exc:
             # If an error is thrown at some point during the process, show the default nothing selected screen.
-            self.layout().setCurrentIndex(0)
+            self.detailsLayout.setCurrentIndex(0)
             self.mainWindow.MESSAGEHANDLER.error('Error occurred while trying to display the details of the selected '
                                                  'nodes: ' + str(exc), popUp=False, exc_info=False)
 
@@ -226,9 +230,12 @@ class EntityDetails(QtWidgets.QWidget):
         """
         Clear tree widget items from tree widgets.
         """
-        rows = self.detailsLayoutOneNode.rowCount()
-        for row in range(rows):
-            self.detailsLayoutOneNode.removeRow(0)
+        itemToRemove = self.detailsLayoutOneNode.takeAt(0)
+        while itemToRemove is not None:
+            itemToRemove.widget().deleteLater()
+            del itemToRemove
+            itemToRemove = self.detailsLayoutOneNode.takeAt(0)
+
         self.relationshipsIncomingTable.clear()
         self.relationshipsOutgoingTable.clear()
         self.nodesTable.clear()
@@ -237,15 +244,32 @@ class EntityDetails(QtWidgets.QWidget):
     def populateOneDetailsHelper(self, jsonDict) -> None:
         if jsonDict is None or jsonDict == []:
             return
+        rowCount = 0
         for key in jsonDict:
             if key == "uid" or key == "Child UIDs" or key == "Icon":
                 continue
             elif key == "Notes":
                 notesTextArea = QtWidgets.QPlainTextEdit(jsonDict[key])
                 notesTextArea.setReadOnly(True)
-                self.detailsLayoutOneNode.addRow(key, notesTextArea)
+                self.detailsLayoutOneNode.addWidget(QtWidgets.QLabel(key), rowCount, 0)
+                self.detailsLayoutOneNode.addWidget(notesTextArea, rowCount, 1, 10, 1)
+                rowCount += 9
             else:
-                self.detailsLayoutOneNode.addRow(key, QtWidgets.QLabel(str(jsonDict[key])))
+                self.detailsLayoutOneNode.addWidget(QtWidgets.QLabel(key), rowCount, 0)
+                self.detailsLayoutOneNode.addWidget(QtWidgets.QLabel(str(jsonDict[key])), rowCount, 1)
+            rowCount += 1
+        filePath = jsonDict.get('File Path')
+        if filePath is not None:
+            fullFilePath = Path(self.mainWindow.SETTINGS.value('Project/FilesDir')) / filePath
+            if fullFilePath.exists() and fullFilePath.is_file():
+                magicType = magic.from_file(str(fullFilePath), mime=True)
+                if magicType.split('/')[0] == 'image':
+                    previewImage = QtGui.QImage(fullFilePath)
+                    previewPixmap = QtGui.QPixmap(previewImage)
+                    previewLabel = QtWidgets.QLabel()
+                    previewLabel.setPixmap(previewPixmap.scaled(250, 250, QtCore.Qt.KeepAspectRatio))
+                    self.detailsLayoutOneNode.addWidget(QtWidgets.QLabel('Preview:'), rowCount, 0)
+                    self.detailsLayoutOneNode.addWidget(previewLabel, rowCount, 1, 10, 1)
 
     def populateOneLinkRelationshipHelper(self, uid) -> None:
         first = uid[0]
