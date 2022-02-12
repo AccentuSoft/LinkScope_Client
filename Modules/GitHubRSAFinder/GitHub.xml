@@ -1,37 +1,27 @@
 <GitHub>
-    <Gist_URL>
-        <Attributes>
-            Gist URL
-        </Attributes>
-    </Gist_URL>
     <GitHub_Repository>
         <Attributes>
-            Repository Name
+            <Attribute default="Github Repository Name" check="String" primary="True">Repository Name</Attribute>
         </Attributes>
     </GitHub_Repository>
-    <GitHub_User>
-        <Attributes>
-            Username
-        </Attributes>
-    </GitHub_User>
     <GitHub_Organisation>
         <Attributes>
-            Organisation Name
+            <Attribute default="Github Org Name" check="String" primary="True">Organisation Name</Attribute>
         </Attributes>
     </GitHub_Organisation>
     <GitHub_FilePath>
         <Attributes>
-            Filepath
+            <Attribute default="Github FilePath" check="String" primary="True">Filepath</Attribute>
         </Attributes>
     </GitHub_FilePath>
     <GitHub_Secret>
         <Attributes>
-            Secret
+            <Attribute default="Github Secret" check="String" primary="True">Secret</Attribute>
         </Attributes>
     </GitHub_Secret>
     <GitHub_Branch>
         <Attributes>
-            Branch
+            <Attribute default="Github Repository Branch" check="String" primary="True">Branch</Attribute>
         </Attributes>
     </GitHub_Branch>
 </GitHub>

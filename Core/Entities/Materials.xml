@@ -1,7 +1,8 @@
 <Materials>
   <Document>
     <Attributes>
-      Document Name,File Path
+      <Attribute default="Document" check="String" primary="True">Document Name</Attribute>
+      <Attribute default="DefaultFilePath" check="String" primary="False">File Path</Attribute>
     </Attributes>
     <Icon>
       Document.svg
@@ -9,7 +10,8 @@
   </Document>
   <Image>
     <Attributes>
-      Image Name,File Path
+      <Attribute default="Image" check="String" primary="True">Image Name</Attribute>
+      <Attribute default="DefaultFilePath" check="String" primary="False">File Path</Attribute>
     </Attributes>
     <Icon>
       Image.svg
@@ -17,7 +19,8 @@
   </Image>
   <Video>
     <Attributes>
-      Video Name,File Path
+      <Attribute default="Video" check="String" primary="True">Video Name</Attribute>
+      <Attribute default="DefaultFilePath" check="String" primary="False">File Path</Attribute>
     </Attributes>
     <Icon>
       Video.svg
@@ -25,7 +28,8 @@
   </Video>
   <Archive>
     <Attributes>
-      Archive Name,File Path
+      <Attribute default="Archive" check="String" primary="True">Archive Name</Attribute>
+      <Attribute default="DefaultFilePath" check="String" primary="False">File Path</Attribute>
     </Attributes>
     <Icon>
       Archive.svg
@@ -33,7 +37,8 @@
   </Archive>
   <Disk>
     <Attributes>
-      Disk Name,File Path
+      <Attribute default="Disk" check="String" primary="True">Disk Name</Attribute>
+      <Attribute default="DefaultFilePath" check="String" primary="False">File Path</Attribute>
     </Attributes>
     <Icon>
       HardDisk.svg

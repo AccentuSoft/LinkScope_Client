@@ -1,12 +1,15 @@
 <Nessus>
     <Finding>
         <Attributes>
-            Issue Synopsis,Solution,CVSS2 Score,CVSS2 Vector
+            <Attribute default="Issue Synopsis" check="String" primary="True">Issue Synopsis</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Solution</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">CVSS2 Score</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">CVSS2 Vector</Attribute>
         </Attributes>
     </Finding>
     <CVE>
         <Attributes>
-            CVE
+            <Attribute default="Unassigned CVE" check="String" primary="True">CVE</Attribute>
         </Attributes>
     </CVE>
 </Nessus>

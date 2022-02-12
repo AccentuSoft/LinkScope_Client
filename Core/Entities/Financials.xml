@@ -1,7 +1,9 @@
 <Financials>
     <Bank_Account>
         <Attributes>
-            Account Number,Bank Name,Branch Number
+            <Attribute default="Account Number" check="String" primary="True">Account Number</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Bank Name</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Branch Number</Attribute>
         </Attributes>
         <Icon>
             Bank_Account.svg
@@ -9,7 +11,8 @@
     </Bank_Account>
     <Currency>
         <Attributes>
-            Amount,Currency Type
+            <Attribute default="Money Amount" check="String" primary="True">Amount</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Currency Type</Attribute>
         </Attributes>
         <Icon>
             Currency.svg
@@ -17,7 +20,8 @@
     </Currency>
     <Shares>
         <Attributes>
-            Ticker,Amount
+            <Attribute default="Ticker ID" check="String" primary="True">Ticker</Attribute>
+            <Attribute default="0.0" check="Float" primary="False">Amount</Attribute>
         </Attributes>
         <Icon>
             Share.svg
@@ -25,7 +29,7 @@
     </Shares>
     <Portfolio>
         <Attributes>
-            Label
+            <Attribute default="Portfolio Name" check="String" primary="True">Label</Attribute>
         </Attributes>
         <Icon>
             Portfolio.svg

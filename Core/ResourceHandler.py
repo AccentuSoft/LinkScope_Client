@@ -4,6 +4,7 @@
 from typing import Union
 
 import networkx as nx
+import re
 from defusedxml.ElementTree import parse
 from datetime import datetime
 from os import listdir
@@ -59,6 +60,26 @@ class ResourceHandler:
                       "rearrange": str(Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) /
                                        "Resources" / "Icons" / "RearrangeGraph.png"),
                       }
+        # These are not meant to be strict - just restrictive enough such that users don't put in utter nonsense.
+        # Note that regex isn't always the best way of validating fields, but it should be good enough for our
+        #   purposes.
+        self.checks = {'Email': re.compile(r"""(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])"""),
+                       'Phonenumber': re.compile(r"""^(\+|00)?[0-9\(\) \-]{3,32}$"""),
+                       'String': re.compile(r""".+"""),
+                       'URL': re.compile(r"""^https?://(\S(?<!\.)){1,63}(\.(\S(?<!\.)){1,63})+$"""),
+                       'Domain': re.compile(r"""^(\S(?<!\.)(?!/)(?<!/)){1,63}(\.(\S(?<!\.)(?!/)(?<!/)){1,63})+$"""),
+                       'Float': re.compile(r"""^([-+])?(\d|\.(?=\d))+$"""),
+                       'WordString': re.compile(r"""^\D+$"""),
+                       'Numbers': re.compile(r"""^\d+$"""),
+                       'IPv4': re.compile(r"""^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)(\.(?!$)|$)){4}$"""),
+                       'IPv6': re.compile(r"""^(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]+|::(ffff(:0{1,4})?:)?((25[0-5]|(2[0-4]|1?[0-9])?[0-9])\.){3}(25[0-5]|(2[0-4]|1?[0-9])?[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1?[0-9])?[0-9])\.){3}(25[0-5]|(2[0-4]|1?[0-9])?[0-9]))$"""),
+                       'MAC': re.compile(r"""^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$"""),
+                       'ASN': re.compile(r"""^(AS)?\d+$"""),
+                       'CUSIP': re.compile(r"""^[a-zA-Z0-9]{9}$"""),
+                       'EIN': re.compile(r"""^\d{2}-?\d{7}$"""),
+                       'LEIID': re.compile(r"""^[a-zA-Z0-9]{20}$"""),
+                       'ISINID': re.compile(r"""^[a-zA-Z0-9]{2}-?[a-zA-Z0-9]{9}-?[a-zA-Z0-9]$"""),
+                       'SIC/NAICS': re.compile(r"""^[0-9]{4,6}$""")}
 
         self.loadCoreEntities()
 
@@ -100,6 +121,12 @@ class ResourceHandler:
             eList.append(entity)
         return eList
 
+    def getCategoryOfEntityType(self, entityType: Union[str, None]):
+        for category in self.entityCategoryList:
+            if entityType in self.entityCategoryList[category]:
+                return category
+        return None
+
     def getAllEntities(self) -> list:
         """
         Get all recognised Entity Types.
@@ -109,6 +136,37 @@ class ResourceHandler:
             for entity in self.getAllEntitiesInCategory(category):
                 eList.append(entity)
         return eList
+
+    def validateAttributesOfEntity(self, entityJSON: dict) -> (bool, str):
+        try:
+            entityType = entityJSON['Entity Type']
+            entityCategory = self.getCategoryOfEntityType(entityType)
+            # Attributes that become part of the entity after merging are not checked.
+            # This is fine, because resolutions (by default) don't assume that any extra fields will be present.
+            entityBaseAttributes = self.getEntityAttributes(entityType)
+            if entityCategory is not None:
+                for attribute in self.entityCategoryList[entityCategory][entityType]['Attributes']:
+                    if attribute in entityBaseAttributes:
+                        attrValue = entityJSON.get(attribute)
+                        if attrValue is None or not self.runCheckOnAttribute(
+                                attrValue,
+                                self.entityCategoryList[entityCategory][entityType]['Attributes'][attribute][1]):
+                            return 'Bad value: ' + str(attrValue)
+        except Exception:
+            return False
+        return True
+
+    def runCheckOnAttribute(self, attribute: str, check: str) -> bool:
+        """
+        Check that the attribute value given matches the regex of the category 'check'.
+        """
+        attrCheck = self.checks.get(check)
+        if attrCheck is None:
+            return False
+        result = attrCheck.findall(attribute)
+        if len(result) == 1:
+            return True
+        return False
 
     def addRecognisedEntityTypes(self, entityFile: Path) -> bool:
         try:
@@ -122,18 +180,44 @@ class ResourceHandler:
 
         category = root.tag.replace('_', ' ')
         for entity in list(root):
-            entityName = entity.tag.replace('_', ' ')
-            attributes = entity.find('Attributes').text.strip().split(',')
-            icon = entity.find('Icon')
-            if icon is not None:
-                icon = icon.text.strip()
-            elif icon is None or icon == '':
-                icon = 'Default.svg'
-            if self.entityCategoryList.get(category) is None:
-                self.entityCategoryList[category] = {}
-            self.entityCategoryList[category][entityName] = {
-                'Attributes': attributes,
-                'Icon': str(Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) / "Resources" / "Icons" / icon)}
+            try:
+                entityName = entity.tag.replace('_', ' ')
+                attributes = entity.find('Attributes')
+                attributesDict = {}
+                primaryCount = 0
+                for attribute in list(attributes):
+                    attributeName = attribute.text
+                    defaultValue = attribute.attrib['default']
+                    valueCheck = attribute.attrib['check']
+                    isPrimary = True if attribute.attrib['primary'] == 'True' else False
+                    if isPrimary:
+                        if primaryCount > 0:
+                            raise AttributeError('Malformed Entity: ' + entityName + ' - too many primary fields')
+                        else:
+                            primaryCount += 1
+                    if self.runCheckOnAttribute(defaultValue, valueCheck):
+                        attributesDict[attributeName] = [attribute.attrib['default'], attribute.attrib['check'],
+                                                         isPrimary]
+                    else:
+                        raise AttributeError('Malformed Entity: ' + entityName + ' - default values do not conform to '
+                                             'their corresponding checks.')
+                if primaryCount != 1:
+                    raise AttributeError('Malformed Entity: ' + entityName + ' - invalid number of primary fields '
+                                                                             'specified.')
+                icon = entity.find('Icon')
+                if icon is not None:
+                    icon = icon.text.strip()
+                elif icon is None or icon == '':
+                    icon = 'Default.svg'
+                if self.entityCategoryList.get(category) is None:
+                    self.entityCategoryList[category] = {}
+                self.entityCategoryList[category][entityName] = {
+                    'Attributes': attributesDict,
+                    'Icon': str(Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) / "Resources" / "Icons" / icon)}
+            except (KeyError, AttributeError) as err:
+                # Ignore malformed entities
+                self.messageHandler.error('Error: ' + str(err), popUp=False)
+                continue
         return True
 
     def loadCoreEntities(self) -> None:
@@ -158,7 +242,7 @@ class ResourceHandler:
             for category in self.entityCategoryList:
                 if entityType in self.entityCategoryList[category]:
                     for attribute in self.entityCategoryList[category][entityType]['Attributes']:
-                        eJson[attribute] = str(None)
+                        eJson[attribute] = self.entityCategoryList[category][entityType]['Attributes'][attribute][0]
                     break
         except KeyError:
             self.messageHandler.error("Attempted to get attributes for "
@@ -195,19 +279,21 @@ class ResourceHandler:
         try:
             for category in self.entityCategoryList:
                 if entityType in self.entityCategoryList[category]:
-                    return self.entityCategoryList[category][entityType]['Attributes'][0]
+                    for attribute in self.entityCategoryList[category][entityType]['Attributes']:
+                        if self.entityCategoryList[category][entityType]['Attributes'][attribute][2]:
+                            return attribute
         except KeyError:
             self.messageHandler.error("Attempted to get primary attribute for "
                                       "malformed entity type: " + str(entityType), True)
-            return None
+        return None
 
-    def getBareBonesEntityJson(self, entityType) -> Union[dict, None]:
+    def getBareBonesEntityJson(self, entityType: str) -> Union[dict, None]:
         eJson = {}
         try:
             for category in self.entityCategoryList:
                 if entityType in self.entityCategoryList[category]:
                     for attribute in self.entityCategoryList[category][entityType]['Attributes']:
-                        eJson[attribute] = str(None)
+                        eJson[attribute] = self.entityCategoryList[category][entityType]['Attributes'][attribute][0]
                     break
         except KeyError:
             self.messageHandler.error("Attempted to get attributes for "

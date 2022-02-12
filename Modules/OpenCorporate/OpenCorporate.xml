@@ -1,7 +1,14 @@
 <Collectives>
     <Open_Corporate_Company>
         <Attributes>
-            Company Name,Company Number,Jurisdiction Code,Current Status,Incorporation Date,Dissolution Date,Company Type,Registry URL,Entity Type
+            <Attribute default="Company Name" check="String" primary="True">Company Name</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Company Number</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Jurisdiction Code</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Current Status</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Incorporation Date</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Dissolution Date</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Company Type</Attribute>
+            <Attribute default="https://example.com" check="URL" primary="False">Registry URL</Attribute>
         </Attributes>
         <Icon>
             Company.svg

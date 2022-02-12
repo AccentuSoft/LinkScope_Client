@@ -1,7 +1,7 @@
 <Reddit>
   <Reddit_Subreddit>
     <Attributes>
-      Subreddit
+      <Attribute default="Subreddit" check="String" primary="True">Subreddit</Attribute>
     </Attributes>
     <Icon>
       Default.svg
@@ -9,7 +9,7 @@
   </Reddit_Subreddit>
   <Reddit_Comment>
     <Attributes>
-      Comment
+      <Attribute default="Comment" check="String" primary="True">Comment</Attribute>
     </Attributes>
     <Icon>
       Default.svg

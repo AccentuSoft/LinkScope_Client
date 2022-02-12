@@ -1,7 +1,7 @@
 <ExampleEntities>
   <Example>
     <Attributes>
-      ExampleLabel
+      <Attribute default="Default value for ExampleLabel attribute" check="String" primary="True">ExampleLabel</Attribute>
     </Attributes>
     <Icon>
       Default.svg

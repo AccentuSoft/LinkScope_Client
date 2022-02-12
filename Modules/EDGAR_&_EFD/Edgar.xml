@@ -1,82 +1,129 @@
 <Edgar>
     <Edgar_ID>
         <Attributes>
-            CIK
+            <Attribute default="000000000000" check="Numbers" primary="True">CIK</Attribute>
         </Attributes>
     </Edgar_ID>
     <Form_Field>
         <Attributes>
-            Field Name,Account Number,Fiscal Year,Fiscal Period,Value,Unit,Taxonomy
+            <Attribute default="Form Field" check="String" primary="True">Field Name</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Account Number</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Fiscal Year</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Fiscal Period</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Value</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Unit</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Taxonomy</Attribute>
         </Attributes>
     </Form_Field>
     <Form13F>
         <Attributes>
-            Name Of Issuer,Title Of Class,CUSIP,Value,Number Of Shares,Ssh Prnamt Type,Investment Discretion
+            <Attribute default="Form Field" check="String" primary="True">Name Of Issuer</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Title Of Class</Attribute>
+            <Attribute default="000000000" check="CUSIP" primary="False">CUSIP</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Value</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Number Of Shares</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Ssh Prnamt Type</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Investment Discretion</Attribute>
         </Attributes>
     </Form13F>
     <Form4>
         <Attributes>
-            Security Title,Deemed Execution Date,Equity Swap Involved,Transaction Timeliness,Transaction Shares,Transaction Price Per Share,Shares Owned Following Transaction,Direct Or Indirect Ownership
+            <Attribute default="Security Title" check="String" primary="True">Security Title</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Deemed Execution Date</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Equity Swap Involved</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Transaction Timeliness</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Transaction Shares</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Transaction Price Per Share</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Shares Owned Following Transaction</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Direct Or Indirect Ownership</Attribute>
         </Attributes>
     </Form4>
     <Form3>
         <Attributes>
-            Security Title,Shares Owned Following Transaction,Direct Or Indirect Ownership,Nature Of Ownership
+            <Attribute default="Security Title" check="String" primary="True">Security Title</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Shares Owned Following Transaction</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Direct Or Indirect Ownership</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Nature Of Ownership</Attribute>
         </Attributes>
     </Form3>
     <FormD>
         <Attributes>
-            Company Name,Industry Group Type,Investment Fund Type,Aggregate Net Asset Value Range,Duration Of Offering,Types Of Securities Offered,Business Combination Transaction,Minimum Investment Accepted,Total Offering Amount,Total Amount Sold,Total Amount Remaining,Has Non Accredited Investors,Total Number Already Invested,Sales Commissions,Finders Fees,Gross Proceeds Used
+            <Attribute default="Company Name" check="String" primary="True">Company Name</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Industry Group Type</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Investment Fund Type</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Aggregate Net Asset Value Range</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Duration Of Offering</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Types Of Securities Offered</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Business Combination Transaction</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Minimum Investment Accepted</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Total Offering Amount</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Total Amount Sold</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Total Amount Remaining</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Has Non Accredited Investors</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Total Number Already Invested</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Sales Commissions</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Finders Fees</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Gross Proceeds Used</Attribute>
         </Attributes>
     </FormD>
     <Tickers>
         <Attributes>
-            Ticker Name
+            <Attribute default="Ticker Name" check="String" primary="True">Ticker Name</Attribute>
         </Attributes>
     </Tickers>
     <Exchanges>
         <Attributes>
-            Exchange Name
+            <Attribute default="Exchange Name" check="String" primary="True">Exchange Name</Attribute>
         </Attributes>
     </Exchanges>
     <SIC>
         <Attributes>
-            SIC,Description
+            <Attribute default="0000" check="SIC/NAICS" primary="True">SIC</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Description</Attribute>
         </Attributes>
     </SIC>
     <EIN>
         <Attributes>
-            EIN
+            <Attribute default="00-0000000" check="EIN" primary="True">EIN</Attribute>
         </Attributes>
     </EIN>
     <CUSIP>
         <Attributes>
-            CUSIP
+            <Attribute default="000000000" check="CUSIP" primary="True">CUSIP</Attribute>
         </Attributes>
     </CUSIP>
     <LEIID>
         <Attributes>
-            LEIID
+            <Attribute default="00000000000000000000" check="LEIID" primary="True">LEIID</Attribute>
         </Attributes>
     </LEIID>
     <ISINID>
         <Attributes>
-            ISINID
+            <Attribute default="000000000000" check="ISINID" primary="True">ISINID</Attribute>
         </Attributes>
     </ISINID>
     <Shares>
         <Attributes>
-            Amount
+            <Attribute default="0" check="String" primary="True">Amount</Attribute>
         </Attributes>
     </Shares>
     <FormNMFP2>
         <Attributes>
-            Field Name,Friday 1,Friday 2,Friday 3,Friday 4,Friday 5
+            <Attribute default="NMFP2 Form Field" check="String" primary="True">Field Name</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Friday 1</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Friday 2</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Friday 3</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Friday 4</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Friday 5</Attribute>
         </Attributes>
     </FormNMFP2>
     <Collateral_Issuer>
         <Attributes>
-            Name,Coupon or Yield,Principal Amount,Value of Collateral,Ctgry Investments Rprsnts Collateral
+            <Attribute default="Issuer Name" check="String" primary="True">Name</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Coupon or Yield</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Principal Amount</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Value of Collateral</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Ctgry Investments Rprsnts Collateral</Attribute>
         </Attributes>
     </Collateral_Issuer>
 </Edgar>

@@ -1,7 +1,8 @@
 <Devices>
     <Mobile_Phone>
         <Attributes>
-            Device UID,Brand
+            <Attribute default="a:b:c:d:e:f" check="String" primary="True">Device UID</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Brand</Attribute>
         </Attributes>
         <Icon>
             Mobile_Device.svg
@@ -9,7 +10,8 @@
     </Mobile_Phone>
     <Computer>
         <Attributes>
-            Hostname,Brand
+            <Attribute default="User Workstation" check="String" primary="True">Hostname</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Brand</Attribute>
         </Attributes>
         <Icon>
             Computer.svg
@@ -17,7 +19,8 @@
     </Computer>
     <Camera>
         <Attributes>
-            Device UID,Brand
+            <Attribute default="a:b:c:d:e:f" check="String" primary="True">Device UID</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Brand</Attribute>
         </Attributes>
         <Icon>
             Camera.svg

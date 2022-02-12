@@ -1,7 +1,7 @@
 <LittleSis>
     <Little_Sis_ID>
         <Attributes>
-            ID
+            <Attribute default="LS:DefaultValue" check="String" primary="True">ID</Attribute>
         </Attributes>
         <Icon>
             Default.svg

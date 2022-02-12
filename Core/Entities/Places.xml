@@ -1,7 +1,9 @@
 <Places>
   <GeoCoordinates>
     <Attributes>
-      Label,Latitude,Longitude
+      <Attribute default="Location Label" check="String" primary="True">Label</Attribute>
+      <Attribute default="0.0" check="Float" primary="False">Latitude</Attribute>
+      <Attribute default="0.0" check="Float" primary="False">Longitude</Attribute>
     </Attributes>
     <Icon>
       Geolocation.svg
@@ -9,7 +11,10 @@
   </GeoCoordinates>
   <Address>
     <Attributes>
-      Street Address,Locality,Postal Code,Country
+      <Attribute default="Street Address" check="String" primary="True">Street Address</Attribute>
+      <Attribute default="Unknown" check="String" primary="False">Locality</Attribute>
+      <Attribute default="Unknown" check="String" primary="False">Postal Code</Attribute>
+      <Attribute default="Unknown" check="String" primary="False">Country</Attribute>
     </Attributes>
     <Icon>
       Address.svg
@@ -17,7 +22,7 @@
   </Address>
   <Country>
     <Attributes>
-      Country Name
+      <Attribute default="Country Name" check="String" primary="True">Country Name</Attribute>
     </Attributes>
     <Icon>
       Country.svg
@@ -25,7 +30,7 @@
   </Country>
   <City>
     <Attributes>
-      City Name
+      <Attribute default="City Name" check="String" primary="True">City Name</Attribute>
     </Attributes>
     <Icon>
       City.svg
@@ -33,7 +38,10 @@
   </City>
   <Circular_Area>
     <Attributes>
-      Label,Latitude,Longitude,Radius
+      <Attribute default="Area Label" check="String" primary="True">Label</Attribute>
+      <Attribute default="0.0" check="Float" primary="False">Latitude</Attribute>
+      <Attribute default="0.0" check="Float" primary="False">Longitude</Attribute>
+      <Attribute default="Unknown" check="String" primary="False">Radius</Attribute>
     </Attributes>
     <Icon>
       GeoArea.svg

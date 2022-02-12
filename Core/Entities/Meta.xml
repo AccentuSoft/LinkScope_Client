@@ -1,7 +1,8 @@
 <Meta>
   <EntityGroup>
     <Attributes>
-      Group Name,Child UIDs
+      <Attribute default="Entity Group" check="String" primary="True">Group Name</Attribute>
+      <Attribute default="[]" check="String" primary="False">Child UIDs</Attribute>
     </Attributes>
     <Icon>
       GroupNode.svg

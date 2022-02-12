@@ -1,7 +1,8 @@
 <Social>
     <Social_Media_Group>
         <Attributes>
-            Group Name,Social Media Site
+            <Attribute default="Guest Group" check="String" primary="True">Group Name</Attribute>
+            <Attribute default="Unknown / Multiple" check="String" primary="False">Social Media Site</Attribute>
         </Attributes>
         <Icon>
             Social_Media_Group.svg
@@ -9,7 +10,7 @@
     </Social_Media_Group>
     <Social_Media_Handle>
         <Attributes>
-            User Name
+            <Attribute default="Guest123" check="String" primary="True">User Name</Attribute>
         </Attributes>
         <Icon>
             Social_Media_Account.svg

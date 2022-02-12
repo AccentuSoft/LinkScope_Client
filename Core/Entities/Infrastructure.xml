@@ -1,7 +1,7 @@
 <Infrastructure>
   <Operating_System>
     <Attributes>
-      OS Name
+      <Attribute default="Operating System" check="String" primary="True">OS Name</Attribute>
     </Attributes>
     <Icon>
       OperatingSystem.svg
@@ -9,7 +9,8 @@
   </Operating_System>
   <Network>
     <Attributes>
-      IP Address,Range
+      <Attribute default="127:0:0:1" check="String" primary="True">IP Address</Attribute>
+      <Attribute default="Unknown" check="String" primary="False">Range</Attribute>
     </Attributes>
     <Icon>
       Network.svg
@@ -17,7 +18,7 @@
   </Network>
   <Website>
     <Attributes>
-      URL
+      <Attribute default="https://example.com" check="URL" primary="True">URL</Attribute>
     </Attributes>
     <Icon>
       Website.svg
@@ -25,7 +26,7 @@
   </Website>
   <Domain>
     <Attributes>
-      Domain Name
+      <Attribute default="example.com" check="Domain" primary="True">Domain Name</Attribute>
     </Attributes>
     <Icon>
       Domain.svg
@@ -33,7 +34,7 @@
   </Domain>
   <IP_Address>
     <Attributes>
-      IP Address
+      <Attribute default="127.0.0.1" check="IPv4" primary="True">IP Address</Attribute>
     </Attributes>
     <Icon>
       IP_Address.svg
@@ -41,7 +42,7 @@
   </IP_Address>
   <IPv6_Address>
     <Attributes>
-      IPv6 Address
+      <Attribute default="::1" check="IPv6" primary="True">IPv6 Address</Attribute>
     </Attributes>
     <Icon>
       IPv6_Address.svg
@@ -49,7 +50,8 @@
   </IPv6_Address>
   <Autonomous_System>
     <Attributes>
-      AS Number,ASN Cidr
+      <Attribute default="AS0" check="ASN" primary="True">AS Number</Attribute>
+      <Attribute default="Unknown" check="String" primary="False">ASN Cidr</Attribute>
     </Attributes>
     <Icon>
       AutonomousSystem.svg
@@ -57,7 +59,7 @@
   </Autonomous_System>
   <Port>
     <Attributes>
-      Port
+      <Attribute default="https://example.com:443" check="String" primary="True">Port</Attribute>
     </Attributes>
     <Icon>
       Port.svg
@@ -65,20 +67,15 @@
   </Port>
   <MAC_Address>
     <Attributes>
-      MAC Address
+      <Attribute default="AA:AA:AA:AA:AA:AA" check="MAC" primary="True">MAC Address</Attribute>
     </Attributes>
     <Icon>
       MAC_Address.svg
     </Icon>
   </MAC_Address>
-  <Network>
-    <Attributes>
-      IP Address,Range
-    </Attributes>
-  </Network>
   <Website_Infrastructure>
     <Attributes>
-      Infrastructure
+      <Attribute default="Infrastructure" check="String" primary="True">Infrastructure</Attribute>
     </Attributes>
     <Icon>
       WebInfrastructure.svg
@@ -86,7 +83,8 @@
   </Website_Infrastructure>
   <Web_Certificate>
     <Attributes>
-      Subdomain,Authority
+      <Attribute default="Subdomain" check="String" primary="True">Subdomain</Attribute>
+      <Attribute default="Unknown" check="String" primary="False">Authority</Attribute>
     </Attributes>
     <Icon>
       Web_Certificate.svg

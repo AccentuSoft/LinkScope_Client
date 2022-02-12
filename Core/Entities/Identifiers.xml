@@ -1,7 +1,7 @@
 <Identifiers>
     <Identification_Number>
         <Attributes>
-            ID Number
+            <Attribute default="ID Number" check="String" primary="True">ID Number</Attribute>
         </Attributes>
         <Icon>
             ID_Number.svg
@@ -9,7 +9,7 @@
     </Identification_Number>
     <Passport_Number>
         <Attributes>
-            Passport Number
+            <Attribute default="Passport Number" check="String" primary="True">Passport Number</Attribute>
         </Attributes>
         <Icon>
             Passport.svg
@@ -17,7 +17,7 @@
     </Passport_Number>
     <Vehicle_Registration>
         <Attributes>
-            Registration Number
+            <Attribute default="Vehicle Registration Number" check="String" primary="True">Registration Number</Attribute>
         </Attributes>
         <Icon>
             VehicleRegistration.svg
@@ -25,7 +25,8 @@
     </Vehicle_Registration>
     <Flight_Number>
         <Attributes>
-            Flight Number,Airline
+            <Attribute default="Flight Number" check="String" primary="True">Flight Number</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Airline</Attribute>
         </Attributes>
         <Icon>
             Flight_Number.svg

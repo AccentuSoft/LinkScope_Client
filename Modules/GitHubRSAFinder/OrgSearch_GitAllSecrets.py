@@ -74,7 +74,7 @@ class OrgSearch_GitAllSecrets:
                                              'Name': 'Tool: repo-supervisor',
                                              'Notes': ''}}])
 
-                child_of_child = (len(returnResults))
+                child_of_child = len(returnResults)
                 returnResults.append([{'Repository Name': userOrg[3],
                                        'Entity Type': 'GitHub Repository'},
                                       {index_of_child: {'Resolution': 'Repository of Organisation',

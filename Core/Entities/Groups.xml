@@ -1,7 +1,8 @@
 <Collectives>
     <Company>
         <Attributes>
-            Company Name,Registration Number
+            <Attribute default="Company Name" check="String" primary="True">Company Name</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Registration Number</Attribute>
         </Attributes>
         <Icon>
             Company.svg
@@ -9,7 +10,8 @@
     </Company>
     <Organization>
         <Attributes>
-            Organization Name,Registration Number
+            <Attribute default="Organization Name" check="String" primary="True">Organization Name</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Registration Number</Attribute>
         </Attributes>
         <Icon>
             Organization.svg
@@ -17,7 +19,8 @@
     </Organization>
     <Cult>
         <Attributes>
-            Cult Name,Ideology
+            <Attribute default="Default Cult" check="String" primary="True">Cult Name</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Ideology</Attribute>
         </Attributes>
         <Icon>
             Cult.svg
@@ -25,7 +28,8 @@
     </Cult>
     <Terrorist_Group>
         <Attributes>
-            Group Name,Ideology
+            <Attribute default="Terror Cell Name" check="String" primary="True">Group Name</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Ideology</Attribute>
         </Attributes>
         <Icon>
             Terrorists.svg
@@ -33,7 +37,7 @@
     </Terrorist_Group>
     <Family>
         <Attributes>
-            Family Surname
+            <Attribute default="Mr. and Mrs. Smith" check="String" primary="True">Family Surname</Attribute>
         </Attributes>
         <Icon>
             Family.svg

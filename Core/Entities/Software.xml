@@ -1,7 +1,7 @@
 <Software>
     <Application>
         <Attributes>
-            Application Name
+            <Attribute default="Application Name" check="String" primary="True">Application Name</Attribute>
         </Attributes>
         <Icon>
             Software.svg
@@ -9,7 +9,8 @@
     </Application>
     <Hash>
         <Attributes>
-            Hash Value,Hash Algorithm
+            <Attribute default="Hash Digest Value" check="String" primary="True">Hash Value</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Hash Algorithm</Attribute>
         </Attributes>
         <Icon>
             Hash.svg

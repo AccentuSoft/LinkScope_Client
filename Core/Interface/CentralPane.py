@@ -803,8 +803,12 @@ class CanvasView(QtWidgets.QGraphicsView):
                                     pos.y() - 20
                                 )
                                 break
-                if len(entityJson) > 1 and entityJson[list(entityJson)[1]] == "None":
-                    self.scene().editEntityProperties(entityJson['uid'])
+                if len(nodeJson) > 1:
+                    primaryField = self.tabbedPane.resourceHandler.getPrimaryFieldForEntityType(
+                        entityJson['Entity Type'])
+                    defaultJSON = self.tabbedPane.resourceHandler.getBareBonesEntityJson(entityJson['Entity Type'])
+                    if defaultJSON[primaryField] == entityJson[primaryField]:
+                        self.scene().editEntityProperties(entityJson['uid'])
 
         # If multiple nodes are dropped in
         else:
@@ -1599,7 +1603,7 @@ class CanvasScene(QtWidgets.QGraphicsScene):
     def editEntityProperties(self, entityUID) -> None:
         # Dereference existing json object before potentially re-adding.
         entityJSON = dict(self.parent().entityDB.getEntity(entityUID))
-        pEditor = PropertiesEditor(self, entityJSON)
+        pEditor = PropertiesEditor(self, entityJSON, True)
         if pEditor.exec_():
             # Adding entity with the same UID just overwrites properties.
             # No need to update the label manually here - Since we re-added the entity to the database,
@@ -1635,7 +1639,7 @@ class CanvasScene(QtWidgets.QGraphicsScene):
                                                  'the selected connector represents only one link.', popUp=True)
             return
         linkJSON = self.parent().entityDB.getLink(linkUID)
-        pEditor = PropertiesEditor(self, linkJSON)
+        pEditor = PropertiesEditor(self, linkJSON, False)
         if pEditor.exec_():
             # Adding link with the same UID just overwrites properties.
             self.parent().entityDB.addLink(pEditor.objectJson, overwrite=True)
@@ -1762,9 +1766,10 @@ class CanvasScene(QtWidgets.QGraphicsScene):
 
 
 class PropertiesEditor(QtWidgets.QDialog):
-    def __init__(self, canvas, objectJson):
+    def __init__(self, canvas, objectJson, isNode: True):
         super().__init__()
         self.setModal(True)
+        self.isEditingNode = isNode
 
         # self.setLayout(QtWidgets.QGridLayout())
         self.setWindowTitle("Properties Editor")
@@ -1825,7 +1830,22 @@ class PropertiesEditor(QtWidgets.QDialog):
             # The last row is the Cancel / Accept buttons.
             if key != "Cancel":
                 self.objectJson[key] = value
-        super().accept()
+
+        # Now that we've assigned all the values, validate them.
+        # Less efficient than doing that as we go, but it doesn't really matter; there's unlikely to be entities
+        #   with enough fields for this to matter.
+        if self.isEditingNode:
+            isValid = self.canvas.parent().mainWindow.RESOURCEHANDLER.validateAttributesOfEntity(self.objectJson)
+            if isValid is True:
+                super().accept()
+            elif isinstance(isValid, str):
+                self.canvas.parent().mainWindow.MESSAGEHANDLER.error('Entity fields contain invalid values: ' + isValid,
+                                                                     exc_info=False)
+            else:
+                self.canvas.parent().mainWindow.MESSAGEHANDLER.error('Error occurred when checking validity of entity '
+                                                                     'field values.')
+        else:
+            super().accept()
 
 
 class PropertiesEditorFilePathField(QtWidgets.QLineEdit):

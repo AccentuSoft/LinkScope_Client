@@ -1,7 +1,10 @@
 <Individuals>
   <Person>
     <Attributes>
-      Full Name,Gender,Occupation,Date of Birth
+      <Attribute default="John Smith" check="String" primary="True">Full Name</Attribute>
+      <Attribute default="Unknown" check="String" primary="False">Gender</Attribute>
+      <Attribute default="Unknown" check="String" primary="False">Occupation</Attribute>
+      <Attribute default="Unknown" check="String" primary="False">Date of Birth</Attribute>
     </Attributes>
     <Icon>
       Person.svg
@@ -9,7 +12,10 @@
   </Person>
   <Politically_Exposed_Person>
     <Attributes>
-      Full Name,Gender,Occupation,Date of Birth
+      <Attribute default="John Smith" check="String" primary="True">Full Name</Attribute>
+      <Attribute default="Unknown" check="String" primary="False">Gender</Attribute>
+      <Attribute default="Unknown" check="String" primary="False">Occupation</Attribute>
+      <Attribute default="Unknown" check="String" primary="False">Date of Birth</Attribute>
     </Attributes>
     <Icon>
       Person.svg
@@ -17,7 +23,7 @@
   </Politically_Exposed_Person>
   <Phrase>
     <Attributes>
-      Phrase
+      <Attribute default="Phrase" check="String" primary="True">Phrase</Attribute>
     </Attributes>
     <Icon>
       Phrase.svg
@@ -25,7 +31,7 @@
   </Phrase>
   <Sentiment>
     <Attributes>
-      Sentiment
+      <Attribute default="Positive" check="String" primary="True">Sentiment</Attribute>
     </Attributes>
     <Icon>
       Sentiment.svg
@@ -33,7 +39,7 @@
   </Sentiment>
   <Email_Address>
     <Attributes>
-      Email Address
+      <Attribute default="example@example.com" check="Email" primary="True">Email Address</Attribute>
     </Attributes>
     <Icon>
       Email.svg
@@ -41,7 +47,7 @@
   </Email_Address>
   <Phone_Number>
     <Attributes>
-      Phone Number
+      <Attribute default="911" check="Phonenumber" primary="True">Phone Number</Attribute>
     </Attributes>
     <Icon>
       Phone_Number.svg
@@ -49,7 +55,7 @@
   </Phone_Number>
   <Date>
     <Attributes>
-      Date
+      <Attribute default="1997/1/1" check="String" primary="True">Date</Attribute>
     </Attributes>
     <Icon>
       Date.svg

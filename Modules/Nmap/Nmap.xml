@@ -1,27 +1,36 @@
 <Nmap>
     <Port_Service>
         <Attributes>
-            Service Product,Service Name,Method,Configuration
+            <Attribute default="Service ID" check="String" primary="True">Service Product</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Service Name</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Method</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Configuration</Attribute>
         </Attributes>
     </Port_Service>
     <Port_Script>
         <Attributes>
-            Key,Output,ID
+            <Attribute default="Port Script Key" check="String" primary="True">Key</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Output</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">ID</Attribute>
         </Attributes>
     </Port_Script>
     <TCP_Sequence>
         <Attributes>
-            Index,Difficulty,Values
+            <Attribute default="TCP Sequence" check="String" primary="True">Index</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Difficulty</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Values</Attribute>
         </Attributes>
     </TCP_Sequence>
     <IP_ID_Sequence>
         <Attributes>
-            Class,Values
+            <Attribute default="IP ID Sequence" check="String" primary="True">Class</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Values</Attribute>
         </Attributes>
     </IP_ID_Sequence>
     <TCP_TS_Sequence>
         <Attributes>
-            Class,Values
+            <Attribute default="TCP TS Sequence" check="String" primary="True">Class</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Values</Attribute>
         </Attributes>
     </TCP_TS_Sequence>
 </Nmap>
