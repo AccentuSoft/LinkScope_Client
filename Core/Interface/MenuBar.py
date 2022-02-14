@@ -15,6 +15,8 @@ import magic
 import lz4.block
 import pandas as pd
 import webbrowser
+import tldextract
+
 from typing import Union
 from urllib import parse
 from pathlib import Path
@@ -88,12 +90,12 @@ class MenuBar(QtWidgets.QMenuBar):
         canvasPictureAction = QtGui.QAction("Save Picture of Canvas", self,
                                             statusTip="Save a picture of your canvas",
                                             triggered=self.savePic)
-        GraphMLCanvas = QtGui.QAction('To GraphML - Canvas ',
+        GraphMLCanvas = QtGui.QAction('To GraphML - Canvas',
                                       self,
                                       statusTip="Export Canvas to GraphML",
                                       triggered=self.parent().exportCanvasToGraphML)
 
-        GraphMLDatabase = QtGui.QAction('To GraphML - Database ',
+        GraphMLDatabase = QtGui.QAction('To GraphML - Database',
                                         self,
                                         statusTip="Export Database to GraphML",
                                         triggered=self.parent().exportDatabaseToGraphML)
@@ -222,6 +224,29 @@ class MenuBar(QtWidgets.QMenuBar):
                                                             statusTip="Toggle the visibility of the Primary Toolbar",
                                                             triggered=self.togglePrimaryToolbarVisibility)
         toolbarVisibilityMenu.addAction(self.primaryToolbarVisibilityAction)
+
+        nodeOperationsMenu = self.addMenu("Node Operations")
+        nodeOperationsMenu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
+
+        downloadWebsitesAction = QtGui.QAction("Download Selected Websites",
+                                               self,
+                                               statusTip="Download a full copy of the websites pointed to by the URLs "
+                                                         "of the selected 'Website' nodes.",
+                                               triggered=self.downloadWebsites)
+        nodeOperationsMenu.addAction(downloadWebsitesAction)
+
+        screenshotWebsitesAction = QtGui.QAction("Screenshot Selected Websites",
+                                                 self,
+                                                 statusTip="Take a screenshot of the websites pointed to by the URLs "
+                                                           "of the selected 'Website' nodes.",
+                                                 triggered=self.screenshotWebsites)
+        nodeOperationsMenu.addAction(screenshotWebsitesAction)
+
+        notesToTextFilesAction = QtGui.QAction("Save Notes Fields to Text Files",
+                                               self,
+                                               statusTip="Save the 'Notes' fields of the selected nodes as text files.",
+                                               triggered=self.entityNotesToTextFile)
+        nodeOperationsMenu.addAction(notesToTextFilesAction)
 
         modulesMenu = self.addMenu("Modules")
         modulesMenu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
@@ -850,6 +875,166 @@ class MenuBar(QtWidgets.QMenuBar):
     def rearrangeGraphToTimeLine(self) -> None:
         self.parent().centralWidget().tabbedPane.getCurrentScene().rearrangeGraphTimeline()
 
+    def downloadWebsites(self) -> None:
+        websiteEntities = []
+
+        currentScene = self.parent().centralWidget().tabbedPane.getCurrentScene()
+        for item in currentScene.selectedItems():
+            if isinstance(item, BaseNode):
+                itemJSON = self.parent().LENTDB.getEntity(item.uid)
+                if itemJSON.get('Entity Type') == 'Website':
+                    try:
+                        websiteEntities.append((itemJSON['uid'], itemJSON['URL']))
+                    except KeyError:
+                        continue
+
+        if len(websiteEntities) == 0:
+            self.parent().MESSAGEHANDLER.warning('Please select the "Website" nodes that correspond to the sites that '
+                                                 'you wish to download, and re-run the Download Selected Websites '
+                                                 'operation.',
+                                                 popUp=True)
+            return
+
+        newNodes = []
+        baseFilesPath = Path(self.parent().SETTINGS.value('Project/FilesDir'))
+        currTempDir = Path.home()
+
+        steps = len(websiteEntities)
+        progress = QtWidgets.QProgressDialog('Downloading websites, please wait...',
+                                             'Abort', 0, steps, self.parent())
+        progress.setWindowModality(QtCore.Qt.WindowModal)
+        progressValue = 0
+
+        def handle_response(response):
+            try:
+                if response.ok:
+                    filename = os.path.basename(response.url)
+                    if filename == '':
+                        filename = tldextract.extract(response.url).fqdn + ' ' + str(time.time_ns()) + '.html'
+                    f = open(currTempDir / filename, "wb")
+                    f.write(response.body())
+                    f.close()
+            except Exception:
+                pass
+
+        with sync_playwright() as p:
+            browser = p.firefox.launch()
+            context = browser.new_context(
+                viewport={'width': 1920, 'height': 1080},
+                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:96.0) Gecko/20100101 Firefox/96.0'
+            )
+            page = context.new_page()
+            page.on("response", handle_response)
+
+            for websiteEntity in websiteEntities:
+                website = websiteEntity[1]
+                with tempfile.TemporaryDirectory() as tempDir:
+                    currTempDir = Path(tempDir)
+                    archiveDir = baseFilesPath / (tldextract.extract(website).fqdn + ' Snapshot ' + str(time.time_ns()))
+
+                    for _ in range(3):
+                        try:
+                            page.goto(website)
+                            page.keyboard.press("End")
+                            page.wait_for_load_state("networkidle")
+                            break
+                        except TimeoutError:
+                            pass
+                    progressValue += 1
+                    progress.setValue(progressValue)
+                    if progress.wasCanceled():
+                        break
+
+                    newNodeName = Path(shutil.make_archive(str(archiveDir), 'zip', currTempDir)).relative_to(
+                        baseFilesPath)
+                    newNodes.append([{'Archive Name': str(newNodeName),
+                                      'File Path': str(newNodeName),
+                                      'Entity Type': 'Archive'},
+                                     {websiteEntity[0]: {'Resolution': 'Website Snapshot', 'Notes': ''}}])
+            context.close()
+            browser.close()
+        self.parent().centralWidget().tabbedPane.facilitateResolution('Download Websites', newNodes)
+
+    def screenshotWebsites(self):
+        baseFilesPath = Path(self.parent().SETTINGS.value('Project/FilesDir'))
+        websiteEntities = []
+
+        currentScene = self.parent().centralWidget().tabbedPane.getCurrentScene()
+        for item in currentScene.selectedItems():
+            if isinstance(item, BaseNode):
+                itemJSON = self.parent().LENTDB.getEntity(item.uid)
+                if itemJSON.get('Entity Type') == 'Website':
+                    try:
+                        websiteEntities.append((itemJSON['uid'], itemJSON['URL']))
+                    except KeyError:
+                        continue
+
+        steps = len(websiteEntities)
+        progress = QtWidgets.QProgressDialog('Screenshotting websites, please wait...',
+                                             'Abort', 0, steps, self.parent())
+        progress.setWindowModality(QtCore.Qt.WindowModal)
+        progressValue = 0
+
+        newNodes = []
+
+        with sync_playwright() as p:
+            browser = p.firefox.launch()
+            context = browser.new_context(
+                viewport={'width': 1920, 'height': 1080},
+                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:96.0) Gecko/20100101 Firefox/96.0'
+            )
+            page = context.new_page()
+            for websiteEntity in websiteEntities:
+                website = websiteEntity[1]
+                screenshotName = tldextract.extract(website).fqdn + ' Screenshot ' + str(time.time_ns()) + '.png'
+                currFileName = baseFilesPath / screenshotName
+
+                for _ in range(3):
+                    try:
+                        page.goto(website)
+                        page.wait_for_load_state("networkidle")
+                        page.screenshot(path=str(currFileName), full_page=True)
+                        break
+                    except TimeoutError:
+                        pass
+                progressValue += 1
+                progress.setValue(progressValue)
+                if progress.wasCanceled():
+                    break
+
+                newNodes.append([{'Image Name': screenshotName,
+                                  'File Path': screenshotName,
+                                  'Entity Type': 'Image'},
+                                 {websiteEntity[0]: {'Resolution': 'Website Screenshot', 'Notes': ''}}])
+
+            context.close()
+            browser.close()
+        self.parent().centralWidget().tabbedPane.facilitateResolution('Screenshot Websites', newNodes)
+
+    def entityNotesToTextFile(self):
+        baseFilesPath = Path(self.parent().SETTINGS.value('Project/FilesDir'))
+        currentScene = self.parent().centralWidget().tabbedPane.getCurrentScene()
+
+        newNodes = []
+        for item in currentScene.selectedItems():
+            if isinstance(item, BaseNode):
+                itemJSON = self.parent().LENTDB.getEntity(item.uid)
+                itemJSONNotes = itemJSON.get('Notes', '').strip()
+                if itemJSONNotes != '':
+                    itemPrimaryField = itemJSON[self.parent().RESOURCEHANDLER.getPrimaryFieldForEntityType(
+                        itemJSON['Entity Type'])]
+                    fileName = itemPrimaryField + ' | ' + itemJSON.get('Date Last Edited', str(time.time_ns())) + '.txt'
+                    fileName = fileName.replace('/', '+')
+                    fileName = fileName.replace('\\', '+')
+                    f = open(baseFilesPath / fileName, "w")
+                    f.write(itemJSONNotes)
+                    f.close()
+                    newNodes.append([{'Document Name': fileName,
+                                      'File Path': fileName,
+                                      'Entity Type': 'Document'},
+                                     {itemJSON['uid']: {'Resolution': 'Notes to Text File', 'Notes': ''}}])
+        self.parent().centralWidget().tabbedPane.facilitateResolution('Notes to Text File', newNodes)
+
     def importFromBrowser(self) -> None:
         """
         Import session tabs to canvas. Optionally, also take a screenshot of them.
@@ -1017,6 +1202,7 @@ class MenuBar(QtWidgets.QMenuBar):
                                             timeNow = str(datetime.now().timestamp() * 1000000).split('.')[0]
                                             screenshotSavePath = str(urlSaveDir / (
                                                     actualURL.replace('/', '+') + ' ' + timeNow + ' screenshot.png'))
+                                            screenshotSavePath = screenshotSavePath.replace('\\', '+')
                                             page.screenshot(path=screenshotSavePath, full_page=True)
 
                                             returnResults.append(
@@ -1171,6 +1357,7 @@ class MenuBar(QtWidgets.QMenuBar):
                                             timeNow = str(datetime.now().timestamp() * 1000000).split('.')[0]
                                             screenshotSavePath = str(urlSaveDir / (
                                                     tabURL.replace('/', '+') + ' ' + timeNow + ' screenshot.png'))
+                                            screenshotSavePath = screenshotSavePath.replace('\\', '+')
                                             page.screenshot(path=screenshotSavePath, full_page=True)
 
                                             returnResults.append(
