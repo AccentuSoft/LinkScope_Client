@@ -58,3 +58,4 @@ xmltodict
 urllib3
 holehe
 httpx
+snscrape

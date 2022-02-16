@@ -382,7 +382,7 @@ class TabbedPane(QtWidgets.QTabWidget):
                     parentUID = newNodeUIDs[parentUID]
                 # Sanity check: Check that the node that was used for this resolution still exists.
                 if parentUID in allEntityUIDs:
-                    resolutionName = parentsDict[parentID]['Resolution']
+                    resolutionName = parentsDict[parentID].get('Resolution', 'Link')
                     newLinkUID = (parentUID, outputEntityUID)
                     # Avoid creating more links between the same two entities.
                     if newLinkUID in allLinks:
@@ -392,7 +392,8 @@ class TabbedPane(QtWidgets.QTabWidget):
                             self.entityDB.addLink(linkJson, fromServer=True)
                     else:
                         newLink = self.entityDB.addLink({'uid': newLinkUID, 'Resolution': resolutionName,
-                                                         'Notes': parentsDict[parentID]['Notes']}, fromServer=True)
+                                                         'Notes': parentsDict[parentID].get('Notes', '')},
+                                                        fromServer=True)
                         if newLink is not None:
                             links.append((parentUID, outputEntityUID, resolutionName))
                             allLinks.append(newLinkUID)
