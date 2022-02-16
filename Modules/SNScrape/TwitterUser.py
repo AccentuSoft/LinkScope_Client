@@ -50,10 +50,11 @@ class TwitterUser:
                                   'type': 'String',
                                   'default': '100'},
                   'Start Date': {'description': 'Please specify the earliest date to retrieve results from.\nThe date '
-                                                'format is flexible, but the best formatting for input is: '
-                                                'YYYY/MM/DD HH:mm:SS Z.\nIf you do not wish to specify a date, enter '
+                                                'format is flexible, but the best formatting for input is:\n'
+                                                'YYYY-MM-DD HH:mm:SS Z\nIf you do not wish to specify a date, enter '
                                                 '"NONE" (without quotes) in the input box.\nPlease be careful not to '
-                                                'use ambiguous formats such as: 1/2/10.',
+                                                'use ambiguous formatting such as "1/2/10" or "2022", as the '
+                                                'assumptions made by the software may not be what you expect.',
                                  'type': 'String',
                                  'default': 'NONE'}
                   }
@@ -62,6 +63,7 @@ class TwitterUser:
         import argparse
         import logging
         import requests
+        import pytz
         import snscrape.base
         import snscrape.modules
         import snscrape.version
@@ -96,6 +98,8 @@ class TwitterUser:
         if parameters['Start Date'] != 'NONE':
             try:
                 sinceDate = parse(parameters['Start Date'])
+                if sinceDate.tzinfo is None:
+                    sinceDate = sinceDate.replace(tzinfo=pytz.UTC)
                 arguments.since = sinceDate
             except ValueError:
                 return 'Invalid date specified for "Start Date" parameter.'
