@@ -6,7 +6,7 @@
               "Creative Commons, PO Box 1866, Mountain View, CA 94042, USA."],
   "authors" : ["WebBreacher","Munchko","L0r3m1p5um","lehuff","janbinx","bcoles","Sector035",
               "arnydo","mccartney","salaheldinaz","camhoff","jocephus","swedishmike","soxoj",
-              "jspinel","ef1500","zewen","jocejocejoe", "P3run"],
+              "jspinel","ef1500","zewen","jocejocejoe", "P3run", "seintpl"],
   "categories" : ["archived","art","blog","business","coding","dating","finance","gaming","health",
                 "hobby","images","misc","music","news","political","search","shopping","social",
                 "tech","video","XXXPORNXXX"],
@@ -20,8 +20,7 @@
        "account_missing_code" : "404",
        "known_accounts" : [ "john", "jbob"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Artists & Clients",
@@ -32,8 +31,7 @@
        "account_missing_string" : "The page you requested wasn't there when we tried to get it for you. What a bother!",
        "known_accounts" : ["luluc0", "MuraArts"],
        "category" : "art",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Ameblo",
@@ -44,8 +42,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["ereko-blog", "senpai"],
        "category" : "blog",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Aminoapps",
@@ -56,8 +53,7 @@
        "account_missing_string" : "Ooops, this content does not exist.",
        "known_accounts" : ["Ace143", "dottovuu"],
        "category" : "blog",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Anilist",
@@ -68,8 +64,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["APotato", "happysynthesis"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "AnimePlanet",
@@ -80,8 +75,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["zala", "lindapearl"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Apex Legends",
@@ -92,8 +86,7 @@
        "account_missing_string" : "PLAYER NOT FOUND",
        "known_accounts" : ["tttcheekyttt", "RollsRoyce_Dawn"],
        "category" : "gaming",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "asciinema",
@@ -104,8 +97,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john", "red"],
        "category" : "coding",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Audiojungle",
@@ -116,8 +108,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john", "reds"],
        "category" : "music",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Avid Community",
@@ -128,8 +119,7 @@
        "account_missing_string" : "The user you requested cannot be found.",
        "known_accounts" : ["Thayne", "Admin"],
        "category" : "music",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "BiggerPockets",
@@ -140,8 +130,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john", "bob"],
        "category" : "finance",
-       "valid" : "False",
-       "requires_javascript" : "False"
+       "valid" : false
      },
      {
        "name" : "Bookcrossing",
@@ -152,8 +141,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john", "bob"],
        "category" : "hobby",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "buymeacoffee",
@@ -164,8 +152,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["freebird", "robinwong"],
        "category" : "finance",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "carrd.co",
@@ -176,8 +163,7 @@
        "account_missing_string" : "Sorry, the requested page could not be found.",
        "known_accounts" : ["liam", "peter"],
        "category" : "business",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "CastingCallClub",
@@ -188,8 +174,7 @@
        "account_missing_string" : "404: This is not the page you were looking for. In the future, our AI robot overlords will be able to better predict exactly what you were looking for.",
        "known_accounts" : ["Lindz", "Danye"],
        "category" : "hobby",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "championat",
@@ -200,8 +185,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john", "bob"],
        "category" : "news",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Cloudflare",
@@ -212,8 +196,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["bob", "john"],
        "category" : "tech",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "cnet",
@@ -224,8 +207,7 @@
        "account_missing_code" : "301",
        "known_accounts" : ["john", "bob"],
        "category" : "news",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "coroflot",
@@ -236,8 +218,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john", "blue"],
        "category" : "art",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Codewars",
@@ -248,8 +229,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john", "reds"],
        "category" : "coding",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Coderwall",
@@ -260,8 +240,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john", "test"],
        "category" : "coding",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "crevado",
@@ -272,8 +251,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john", "red"],
        "category" : "images",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Cytoid",
@@ -284,8 +262,7 @@
        "account_missing_string" : "Profile not found",
        "known_accounts" : ["nyala", "speedymlg7"],
        "category" : "gaming",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Dating.ru",
@@ -296,8 +273,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john", "blue"],
        "category" : "dating",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Designspriation",
@@ -308,8 +284,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["sam", "smith"],
        "category" : "art",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "dev.to",
@@ -320,8 +295,7 @@
        "account_missing_code" : "301",
        "known_accounts" : ["john", "bob"],
        "category" : "coding",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Duolingo",
@@ -333,8 +307,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["sdfsdf", "duolingo"],
        "category" : "hobby",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Ello.co",
@@ -345,8 +318,7 @@
        "account_missing_code" : "301",
        "known_accounts" : ["john", "bob"],
        "category" : "art",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Eyeem",
@@ -357,8 +329,7 @@
        "account_missing_code" : "301",
        "known_accounts" : ["john", "bob"],
        "category" : "art",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Gab",
@@ -370,8 +341,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["RealMarjorieGreene", "LaurenBoebert"],
        "category" : "political",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "gumroad",
@@ -382,8 +352,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["ellietalksmoney", "reallyniceimages"],
        "category" : "shopping",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Hackernoon",
@@ -394,8 +363,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["john", "alex"],
        "category" : "tech",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "issuu",
@@ -406,8 +374,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john", "smith"],
        "category" : "shopping",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "JSFiddle",
@@ -418,8 +385,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john", "alex"],
        "category" : "coding",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Kickstarter",
@@ -430,8 +396,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john", "bob"],
        "category" : "shopping",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Ko-Fi",
@@ -442,8 +407,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["frank", "marcmakescomics"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Linktree",
@@ -454,8 +418,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["anne", "alex"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "linux.org.ru",
@@ -466,8 +429,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john", "bob"],
        "category" : "tech",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "lobste.rs",
@@ -478,8 +440,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john", "bob"],
        "category" : "tech",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "mastodon",
@@ -490,8 +451,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john", "alex"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "MyAnimeList",
@@ -502,8 +462,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["test", "admin"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Newgrounds",
@@ -514,8 +473,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john", "bob"],
        "category" : "gaming",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "ok.ru",
@@ -526,8 +484,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john", "aleksandrvasillev"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Opencollective",
@@ -538,8 +495,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["john", "bob"],
        "category" : "finance",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Orbys",
@@ -550,8 +506,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["txmustang302"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "PCPartPicker",
@@ -562,8 +517,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john", "bob"],
        "category" : "tech",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Poll Everywhere",
@@ -575,8 +529,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["josh", "jsmith"],
        "category" : "tech",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "pokemonshowdown",
@@ -587,8 +540,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["red", "blue"],
        "category" : "gaming",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Pokerstrategy",
@@ -599,8 +551,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john", "bob"],
        "category" : "gaming",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "promodj",
@@ -611,8 +562,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john", "bob"],
        "category" : "music",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "redbubble",
@@ -623,8 +573,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john", "blue"],
        "category" : "shopping",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Shanii Writes",
@@ -636,8 +585,7 @@
        "account_missing_string" : "The requested URL or resource could not be found.",
        "known_accounts" : ["chococarmela", "wolfgamergirl37"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "shopify",
@@ -648,8 +596,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john", "daniel"],
        "category" : "shopping",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "shutterstock",
@@ -660,8 +607,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john", "bob"],
        "category" : "images",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "SmugMug",
@@ -672,8 +618,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["wow", "jill"],
        "category" : "images",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "steemit",
@@ -684,8 +629,7 @@
        "account_missing_code" : "301",
        "known_accounts" : ["petlover", "zalat"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "taskrabbit",
@@ -696,8 +640,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["john", "sam"],
        "category" : "business",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Teamtreehouse",
@@ -708,8 +651,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john"],
        "category" : "coding",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "themeforest",
@@ -720,8 +662,7 @@
        "account_missing_code" : "301",
        "known_accounts" : ["john", "bob"],
        "category" : "art",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "trakt",
@@ -732,8 +673,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john", "anne"],
        "category" : "video",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "unsplash",
@@ -744,8 +684,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john", "alex"],
        "category" : "images",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "vsco",
@@ -756,8 +695,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["sam", "becca"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "weibo",
@@ -768,8 +706,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["chentingni", "fbb0916"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Wowhead",
@@ -780,8 +717,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["Ashelia", "Zizarz"],
        "category" : "gaming",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "about.me",
@@ -792,8 +728,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john", "jill"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "aNobii",
@@ -805,8 +740,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["albertoricci", "trynyty01"],
        "category" : "hobby",
-       "valid" : "False",
-       "requires_javascript" : "False"
+       "valid" : false
      },
      {
        "name" : "ask.fm",
@@ -817,8 +751,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["test", "bob"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "authorSTREAM",
@@ -829,8 +762,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["test", "john"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Bandcamp",
@@ -841,8 +773,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["alice", "bob"],
        "category" : "music",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Bandlab",
@@ -854,8 +785,7 @@
        "account_missing_string" : "Couldn't find any matching element, it might be deleted",
        "known_accounts" : ["rave_flawless", "delutaya"],
        "category" : "music",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Behance",
@@ -866,8 +796,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["alice", "john"],
        "category" : "business",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Bitbucket",
@@ -878,8 +807,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["test", "WebBreacher"],
        "category" : "coding",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "BLIP.fm",
@@ -890,8 +818,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john", "walnuts"],
        "category" : "music",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Blogmarks",
@@ -902,8 +829,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["test", "mike"],
        "category" : "misc",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Blogspot",
@@ -914,8 +840,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["test"],
        "category" : "blog",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "BodyBuilding.com",
@@ -927,8 +852,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["mike"],
        "category" : "health",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Bugcrowd",
@@ -939,8 +863,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["bitquark", "mert"],
        "category" : "tech",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "BuzzFeed",
@@ -951,8 +874,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["janelytvynenko", "RobertK"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Buzznet",
@@ -963,8 +885,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["carolinegawlik"],
        "category" : "news",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "cash.app",
@@ -975,8 +896,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["Jill", "john"],
        "category" : "finance",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "cHEEZburger",
@@ -987,8 +907,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["john"],
        "category" : "hobby",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Chess.com",
@@ -999,8 +918,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john", "peter", "josh"],
        "category" : "gaming",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Codecademy",
@@ -1011,8 +929,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["doctypeme", "jon_morris"],
        "category" : "coding",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "codementor",
@@ -1023,8 +940,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["e4c5"],
        "category" : "coding",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Codepen",
@@ -1035,8 +951,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["danwilson", "loficodes", "_niikhil"],
        "category" : "tech",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "COLOURlovers",
@@ -1047,8 +962,7 @@
        "account_missing_code" : "410",
        "known_accounts" : ["amorremanet", "bezzalopoly"],
        "category" : "hobby",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Dailymotion",
@@ -1059,8 +973,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["WeHappyKids", "john"],
        "category" : "video",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Destructoid",
@@ -1071,8 +984,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["john", "alice", "bob"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "DeviantArt",
@@ -1083,8 +995,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["test", "john"],
        "category" : "images",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "devRant",
@@ -1095,8 +1006,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["dfox", "trogus"],
        "category" : "coding",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "diigo",
@@ -1108,8 +1018,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["whoami", "johndoe"],
        "category" : "images",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Discogs",
@@ -1120,8 +1029,7 @@
        "account_missing_string" : "We couldn't find that page.",
        "known_accounts" : ["7jlong", "venetian-guy"],
        "category" : "music",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Discourse",
@@ -1133,8 +1041,7 @@
        "account_missing_string" : "The requested URL or resource could not be found.",
        "known_accounts" : ["ndalliard", "gerhard"],
        "category" : "misc",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "discuss.elastic.co",
@@ -1145,8 +1052,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["whoami", "johndoe"],
        "category" : "tech",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Disqus",
@@ -1157,8 +1063,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["Aristotelian1", "50calibercat"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "DockerHub",
@@ -1169,8 +1074,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["soxoj", "torvalds"],
        "category" : "coding",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Dribbble",
@@ -1181,8 +1085,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["UI8", "keeplegend"],
        "category" : "art",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Droners",
@@ -1193,8 +1096,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["chriskahn", "swilken"],
        "category" : "hobby",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "easyen",
@@ -1205,8 +1107,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["wd"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "eBay",
@@ -1217,8 +1118,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["the_gqs", "johnny"],
        "category" : "shopping",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Engadget",
@@ -1229,8 +1129,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["devindra-hardawar", "kris-holt"],
        "category" : "tech",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "EPORNER",
@@ -1241,8 +1140,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["enron456", "Jomat999", "hicnobu"],
        "category" : "XXXPORNXXX",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Etsy",
@@ -1253,8 +1151,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["david", "happiness"],
        "category" : "shopping",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "F3",
@@ -1265,8 +1162,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["nick", "john"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "fanpop",
@@ -1277,8 +1173,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["test", "johndoe"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Fiverr",
@@ -1289,8 +1184,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["yellowdd", "samanvay"],
        "category" : "shopping",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Flickr",
@@ -1301,8 +1195,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["glaciernps", "test"],
        "category" : "images",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Flipboard",
@@ -1313,8 +1206,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["cosmopolitan", "Mashable"],
        "category" : "tech",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Fodors Forum",
@@ -1325,8 +1217,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["mms", "gooster"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Foursquare",
@@ -1337,8 +1228,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["john", "ncyp23"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "freelancer",
@@ -1349,8 +1239,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["mikehurley"],
        "category" : "business",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "freesound",
@@ -1361,8 +1250,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["test", "JohnDoe"],
        "category" : "music",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "FriendFinder",
@@ -1373,8 +1261,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["alex56", "john"],
        "category" : "dating",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "FriendFinder-X",
@@ -1385,8 +1272,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["john"],
        "category" : "dating",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "FurAffinity",
@@ -1397,8 +1283,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["test"],
        "category" : "XXXPORNXXX",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Furiffic",
@@ -1409,8 +1294,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["furiffic", "test", "admin"],
        "category" : "XXXPORNXXX",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Gamespot",
@@ -1421,8 +1305,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["alice", "bob"],
        "category" : "gaming",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Garmin connect",
@@ -1433,8 +1316,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["danielebarison", "cderalow"],
        "category" : "health",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Geocaching",
@@ -1445,8 +1327,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["moun10bike", "niraD"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Giphy",
@@ -1457,8 +1338,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["buzz", "test"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "GitHub",
@@ -1469,8 +1349,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["test", "WebBreacher"],
        "category" : "coding",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "GitLab",
@@ -1481,8 +1360,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["skennedy", "KennBro", "alex", "bob"],
        "category" : "coding",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "gitee",
@@ -1493,8 +1371,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["maxim"],
        "category" : "coding",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "gpodder.net",
@@ -1505,8 +1382,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["blue", "red"],
        "category" : "music",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Gravatar",
@@ -1518,8 +1394,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["test"],
        "category" : "images",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Hacker News",
@@ -1530,8 +1405,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["mubix", "egypt"],
        "category" : "tech",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "HackerOne",
@@ -1542,8 +1416,7 @@
        "account_missing_code" : "301",
        "known_accounts" : ["yashrs", "ameerpornillos"],
        "category" : "tech",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "HubPages",
@@ -1554,8 +1427,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["greeneyes1607", "lmmartin"],
        "category" : "blog",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "IFTTT",
@@ -1566,8 +1438,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["nr9992", "sss90"],
        "category" : "misc",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "ImageShack",
@@ -1578,8 +1449,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["test"],
        "category" : "images",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "imgur",
@@ -1591,8 +1461,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["OliverClothesoff70", "DadOnTheInternet"],
        "category" : "images",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "InkBunny",
@@ -1603,8 +1472,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["AdminBunny", "test"],
        "category" : "XXXPORNXXX",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "InsaneJournal",
@@ -1615,8 +1483,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["test", "pint-sized", "acroamatica"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "instructables",
@@ -1627,8 +1494,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["davidandora", "test"],
        "category" : "hobby",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Internet Archive Account",
@@ -1639,8 +1505,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["webbreacher", "jason_scott"],
        "category" : "misc",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Internet Archive User Search",
@@ -1651,8 +1516,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["test", "mubix"],
        "category" : "misc",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "interpals",
@@ -1663,8 +1527,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["test"],
        "category" : "dating",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Keybase",
@@ -1675,8 +1538,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["test", "mubix"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Kongregate",
@@ -1687,8 +1549,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["test"],
        "category" : "gaming",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Last.fm",
@@ -1699,8 +1560,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["test"],
        "category" : "music",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "LibraryThing",
@@ -1711,8 +1571,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["test", "john"],
        "category" : "hobby",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "LINE",
@@ -1723,8 +1582,7 @@
        "account_missing_string" : "404 Not Found",
        "known_accounts" : [ "roseareal", "yoasobi" ],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Livejournal",
@@ -1736,8 +1594,7 @@
        "known_accounts" : ["jill", "john"],
        "allowed_types" : ["String","Person","WebAccount","Username"],
        "category" : "blog",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Martech",
@@ -1748,8 +1605,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["mani-karthik", "james-green"],
        "category" : "business",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Marshmallow",
@@ -1760,8 +1616,7 @@
        "account_missing_string" : "For compensation, here are cats for you.",
        "known_accounts" : ["yuino_fox", "momo"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "MCUUID (Minecraft)",
@@ -1773,8 +1628,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["smithy", "bob"],
        "category" : "gaming",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Medium",
@@ -1785,8 +1639,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["zulie", "jessicalexicus"],
        "category" : "news",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "meet me",
@@ -1797,8 +1650,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["john", "marsha"],
        "category" : "dating",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Microsoft Technet Community",
@@ -1809,8 +1661,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john", "test"],
        "category" : "tech",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Minecraft List",
@@ -1821,8 +1672,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["fear837", "dream"],
        "category" : "gaming",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Mix",
@@ -1833,8 +1683,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["test", "mixpicks"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Mixlr",
@@ -1846,8 +1695,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["test", "john"],
        "category" : "music",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Mod DB",
@@ -1858,8 +1706,7 @@
        "account_missing_code" : "403",
        "known_accounts" : ["sprinklesoup", "emargy"],
        "category" : "gaming",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Muck Rack",
@@ -1870,8 +1717,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john"],
        "category" : "news",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "MyBuilder.com",
@@ -1882,8 +1728,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["blue", "john"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "MyFitnessPal",
@@ -1894,8 +1739,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["mike"],
        "category" : "health",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "MyLot",
@@ -1906,8 +1750,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["Tampa_girl7"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "MySpace",
@@ -1918,8 +1761,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["alice", "bob"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "NameMC",
@@ -1930,8 +1772,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["alice", "bob"],
        "category" : "gaming",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "netvibes",
@@ -1942,8 +1783,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["nebkacrea#Createur_site_internet", "cdiljda#AP_2nde"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "NotABug",
@@ -1954,8 +1794,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["notabug", "hp", "zPlus"],
        "category" : "coding",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Onlyfans",
@@ -1966,8 +1805,7 @@
        "account_missing_string" : "this page is not available",
        "known_accounts" : ["madmaxx", "katie123"],
        "category" : "XXXPORNXXX",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "OpenStreetMap",
@@ -1978,8 +1816,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["kemkim"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "PatientsLikeMe",
@@ -1990,8 +1827,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["thjuland", "Pedro0703", "Hydropioneer"],
        "category" : "health",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Pastebin",
@@ -2002,8 +1838,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["test", "john"],
        "category" : "tech",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Patreon",
@@ -2014,8 +1849,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["mubix", "doughboys"],
        "category" : "finance",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Periscope",
@@ -2026,8 +1860,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john", "test"],
        "category" : "video",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
       "name" : "Photoblog",
@@ -2038,8 +1871,7 @@
       "account_missing_code" : "404",
       "known_accounts" : ["hatsumi", "pdsdville"],
       "category" : "images",
-      "valid" : "False",
-       "requires_javascript" : "False"
+      "valid" : false
      },
      {
        "name" : "PhotoBucket",
@@ -2050,8 +1882,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["Sonorlite18", "awelch"],
        "category" : "images",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "PinkBike",
@@ -2062,8 +1893,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["whistlermountainbikepark", "paulhanson"],
        "category" : "hobby",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Pinterest",
@@ -2074,8 +1904,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["test123", "frickcollection"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Plurk",
@@ -2086,8 +1915,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["test"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Pornhub Porn Stars",
@@ -2098,8 +1926,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["riley-reid", "alex-adams"],
        "category" : "XXXPORNXXX",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Pornhub Users",
@@ -2110,8 +1937,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["test123"],
        "category" : "XXXPORNXXX",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Reddit",
@@ -2123,8 +1949,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["koavf", "alabasterheart"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "scratch",
@@ -2135,8 +1960,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["griffpatch"],
        "category" : "coding",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "SEOClerks",
@@ -2147,8 +1971,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["Vfmseo", "gokudadon"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "setlist.fm",
@@ -2159,8 +1982,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["bendobrin", "michi"],
        "category" : "music",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
       "name" : "skeb",
@@ -2171,8 +1993,7 @@
       "account_missing_string" : "Skeb - Request Box",
       "known_accounts" : ["eipuru_", "sime064"],
       "category" : "art",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid" : true
      },
      {
        "name" : "Skyrock",
@@ -2183,8 +2004,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["alice", "bob"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "slideshare",
@@ -2195,8 +2015,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["test"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "slides",
@@ -2207,8 +2026,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["arunthomas"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "SmashRun",
@@ -2219,8 +2037,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john.young"],
        "category" : "health",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "smule",
@@ -2231,8 +2048,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["smul"],
        "category" : "music",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "SoundCloud",
@@ -2243,8 +2059,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["test123"],
        "category" : "music",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Soup",
@@ -2255,8 +2070,7 @@
        "account_missing_code" : "301",
        "known_accounts" : ["john", "cristina"],
        "category" : "blog",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Sourceforge",
@@ -2267,8 +2081,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["alice", "bob"],
        "category" : "coding",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Speaker Deck",
@@ -2279,8 +2092,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["petecheslock", "turbosmart45"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "sporcle",
@@ -2291,8 +2103,7 @@
        "account_missing_code" : "301",
        "known_accounts" : ["Test", "lolshortee"],
        "category" : "gaming",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Steam",
@@ -2303,8 +2114,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["test"],
        "category" : "gaming",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "StoryCorps",
@@ -2315,8 +2125,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["jthorstad", "paul-swider"],
        "category" : "blog",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "sukebei.nyaa.si",
@@ -2327,8 +2136,7 @@
        "account_missing_string" : "404 Not Found",
        "known_accounts" : ["kouhy76", "Rektr0"],
        "category" : "video",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Suzuri",
@@ -2339,8 +2147,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["itochanxxx", "alex"],
        "category" : "business",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "TamTam",
@@ -2351,8 +2158,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["blue", "John"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Taringa",
@@ -2363,8 +2169,7 @@
        "account_missing_code" : "301",
        "known_accounts" : ["jocaxav", "engendrometal"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Telegram",
@@ -2375,8 +2180,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["alice", "giovanni"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "TF2 Backpack Examiner",
@@ -2387,8 +2191,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["test"],
        "category" : "gaming",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "theguardian",
@@ -2399,8 +2202,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["minna-salami", "johnnaughton"],
        "category" : "news",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Teknik",
@@ -2411,8 +2213,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["red", "bob"],
        "category" : "tech",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Tinder",
@@ -2423,8 +2224,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["Alexey", "peter", "john"],
        "category" : "dating",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Trello",
@@ -2436,8 +2236,7 @@
        "account_missing_string" : "Oh no! 404!",
        "known_accounts" : ["naranjasan", "jane"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid": true
      },
      {
        "name" : "tripadvisor",
@@ -2448,8 +2247,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john", "peter"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "tumblr",
@@ -2460,8 +2258,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["test", "test1"],
        "category" : "images",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Twitcasting",
@@ -2472,8 +2269,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["yuno___nico", "2_t0_"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Twitter",
@@ -2485,8 +2281,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["webbreacher", "chrishemsworth"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "twpro",
@@ -2497,8 +2292,7 @@
        "account_missing_string" : "をご確認ください。",
        "known_accounts" : ["wsise47", "tsukiusa630"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Udemy",
@@ -2509,8 +2303,7 @@
        "account_missing_code" : "301",
        "known_accounts" : ["stephane-maarek", "lizbrown3"],
        "category" : "tech",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "untappd",
@@ -2521,8 +2314,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["test", "phil"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "uSTREAM",
@@ -2533,8 +2325,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["wukf", "johndoe"],
        "category" : "video",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Venmo",
@@ -2545,8 +2336,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john", "liam"],
        "category" : "finance",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "viddler",
@@ -2557,8 +2347,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["GamingParodies", "planphilly"],
        "category" : "video",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Vimeo",
@@ -2569,8 +2358,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john", "alice"],
        "category" : "video",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Vine",
@@ -2582,8 +2370,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["TomHarlock", "Seks"],
        "category" : "video",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Vivino",
@@ -2594,8 +2381,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["test", "admin"],
        "category" : "video",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "VK",
@@ -2606,8 +2392,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["ches_ches", "mike.kidlazy"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Voice123",
@@ -2619,8 +2404,7 @@
        "account_missing_string" : "[]",
        "known_accounts" : ["dottovuu", "maheshsaha1992"],
        "category" : "hobby",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Voices.com",
@@ -2631,8 +2415,7 @@
        "account_missing_code" : "301",
        "known_accounts" : ["briankirchoff", "bryankopta"],
        "category" : "business",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Wanelo",
@@ -2643,8 +2426,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["lisandrareyes"],
        "category" : "shopping",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "wattpad",
@@ -2656,8 +2438,7 @@
        "account_missing_code" : "400",
        "known_accounts" : ["newadult", "Test123"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Weasyl",
@@ -2668,8 +2449,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["weasyl", "test"],
        "category" : "images",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "weheartit",
@@ -2680,8 +2460,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["alice", "bob"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "wishlistr",
@@ -2692,8 +2471,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["test"],
        "category" : "shopping",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Wikipedia",
@@ -2704,8 +2482,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["Mcd51", "W._Frank"],
        "category" : "news",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "WordPress",
@@ -2716,8 +2493,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["test"],
        "category" : "blog",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "WordPress Support",
@@ -2728,8 +2504,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["test"],
        "category" : "blog",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Xanga",
@@ -2740,8 +2515,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["john"],
        "category" : "blog",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Xbox Gamertag",
@@ -2752,8 +2526,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["Spiken8", "john"],
        "category" : "gaming",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "xHamster",
@@ -2764,8 +2537,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john", "tonystark85"],
        "category" : "XXXPORNXXX",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "XVIDEOS-models",
@@ -2776,8 +2548,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["vvalencourt3", "tiffany-tyler"],
        "category" : "XXXPORNXXX",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "XVIDEOS-profiles",
@@ -2788,8 +2559,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["nympho-nailer", "dpadicto", "bkg"],
        "category" : "XXXPORNXXX",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Yahoo! JAPAN Auction",
@@ -2800,8 +2570,7 @@
        "account_missing_string" : "Yahoo! JAPAN IDが無効です。",
        "known_accounts" : ["fltr14502003"],
        "category" : "shopping",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "YouTube",
@@ -2812,8 +2581,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["test"],
        "category" : "video",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Xing",
@@ -2824,8 +2592,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["Andy_Hausmann", "Ramona_Hapke"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Zomato",
@@ -2836,8 +2603,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john", "jess"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Tagged",
@@ -2848,8 +2614,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["Samantha", "Robert"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "CaringBridge",
@@ -2860,8 +2625,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["robertherring"],
        "category" : "health",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Fark",
@@ -2872,8 +2636,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["bob", "bobby"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "FatSecret",
@@ -2884,8 +2647,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["bob", "bobby"],
        "category" : "health",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Yelp",
@@ -2896,8 +2658,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["j5CYhsvD2yrunyyoZvSvKA", "GHoG4X4FY8D8L563zzPX5w"],
        "category" : "shopping",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Vero",
@@ -2908,8 +2669,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["alex", "johnny"],
        "category" : "art",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "TikTok",
@@ -2920,8 +2680,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["gordonramsayofficial", "pookiebear73"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Mixi",
@@ -2932,8 +2691,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["2854333", "19123"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Blogger",
@@ -2944,8 +2702,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["07333944864481878697", "05941544278367416980"],
        "category" : "blog",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "ArmorGames",
@@ -2956,8 +2713,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["john", "sammy"],
        "category" : "gaming",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Fandom",
@@ -2968,8 +2724,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["EJacobs94", "Drew_Dietsch"],
        "category" : "gaming",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Zillow",
@@ -2980,8 +2735,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["JOHN-L-SULLIVAN", "Maggie-Alegria"],
        "category" : "shopping",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Poshmark",
@@ -2992,8 +2746,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["alice", "bob"],
        "category" : "shopping",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Fabswingers",
@@ -3004,8 +2757,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["naughty_nymphomaniac", "hellfireclub", "fabswingers.com"],
        "category" : "dating",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Magix",
@@ -3016,8 +2768,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["baywolfmusic", "johnebaker"],
        "category" : "music",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Tunefind",
@@ -3028,8 +2779,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["baywolfmusic", "mrcerny18"],
        "category" : "music",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Appian",
@@ -3040,8 +2790,7 @@
        "account_missing_code" : "301",
        "known_accounts" : ["mikec", "varunkumarb0001"],
        "category" : "tech",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Digitalspy",
@@ -3052,8 +2801,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["JeffG1", "Maxatoria"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Moneysavingexpert",
@@ -3064,8 +2812,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["Heathermck", "MallyGirl"],
        "category" : "finance",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Thetattooforum",
@@ -3076,8 +2823,7 @@
        "account_missing_code" : "500",
        "known_accounts" : ["mixdop", "modifyielts"],
        "category" : "art",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Quora",
@@ -3088,8 +2834,7 @@
        "account_missing_code" : "301",
        "known_accounts" : ["John-Galan-5", "Alex-Clay"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Raidforums",
@@ -3100,8 +2845,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["Zeroxx", "blakereed"],
        "category" : "tech",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Bentbox",
@@ -3112,8 +2856,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["brockdoom", "witchhouse", "hotoptics"],
        "category" : "XXXPORNXXX",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Wireclub",
@@ -3124,8 +2867,7 @@
        "account_missing_code" : "301",
        "known_accounts" : ["deae", "cheerfulsarcasm", "braydenskiresort"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Snapchat",
@@ -3137,8 +2879,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["billy23", "mrbean", "alexis4"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "AmericanThinker",
@@ -3149,8 +2890,7 @@
        "account_missing_code" : "301",
        "known_accounts" : ["terrypaulding", "monicashowalter"],
        "category" : "political",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Minds",
@@ -3161,8 +2901,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["Willieleev1971", "john"],
        "category" : "political",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "NaturalNews",
@@ -3173,8 +2912,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["jdheyes", "healthranger"],
        "category" : "political",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "thegatewaypundit",
@@ -3185,8 +2923,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["patti", "joehoft"],
        "category" : "political",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Wimkin-PublicProfile",
@@ -3197,8 +2934,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["alex", "smith", "boomer"],
        "category" : "political",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "SaraCarterShow",
@@ -3209,8 +2945,7 @@
        "account_missing_code" : "301",
        "known_accounts" : ["douglasbraff", "annaliese"],
        "category" : "political",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Bitchute",
@@ -3221,8 +2956,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["simon_parkes", "americafloats", "daindor"],
        "category" : "political",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "RumbleUser",
@@ -3233,8 +2967,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["SimonParkes", "djmrmusic"],
        "category" : "political",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "RumbleChannel",
@@ -3245,8 +2978,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["HodgeTwins", "SeanHannity"],
        "category" : "political",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Dissenter",
@@ -3257,8 +2989,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["pryerlee", "archdukeofevil"],
        "category" : "political",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "TrackmaniaLadder",
@@ -3269,8 +3000,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["bob", "jill"],
        "category" : "gaming",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "3DNews",
@@ -3281,8 +3011,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["bob", "red"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "igromania",
@@ -3293,8 +3022,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["bob", "blue"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "akniga",
@@ -3305,8 +3033,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["bob", "blue"],
        "category" : "hobby",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "allmylinks",
@@ -3317,8 +3044,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["blue", "beccaturner"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Naver",
@@ -3329,8 +3055,7 @@
        "account_missing_code" : "500",
        "known_accounts" : ["bob", "blue"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Booth",
@@ -3341,8 +3066,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["monoliorder", "hasya"],
        "category" : "shopping",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Carbonmade",
@@ -3353,8 +3077,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["jenny", "bob"],
        "category" : "hobby",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Career.habr",
@@ -3365,8 +3088,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["alex", "bob"],
        "category" : "business",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "echo.msk",
@@ -3377,8 +3099,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john", "blue"],
        "category" : "news",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Facenama",
@@ -3389,8 +3110,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["john", "blue"],
        "category" : "social",
-       "valid" : "False",
-       "requires_javascript" : "False"
+       "valid" : false
      },
      {
        "name" : "Hackaday",
@@ -3401,8 +3121,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["john", "adam"],
        "category" : "hobby",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Hubski",
@@ -3413,8 +3132,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["john", "blue"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Dojoverse",
@@ -3425,8 +3143,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["eric", "danielrivera10927"],
        "category" : "hobby",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Massage Anywhere",
@@ -3437,8 +3154,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["lorilmccluskey", "LomiNYC"],
        "category" : "health",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "MapMyTracks",
@@ -3449,8 +3165,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["ulirad", "CBSloan"],
        "category" : "health",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "21buttons",
@@ -3461,8 +3176,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["teedawod", "ginamariahoffmann"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Instagram",
@@ -3474,8 +3188,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["katyperry", "kirbstr"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Skypli",
@@ -3486,8 +3199,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["toni.hung", "hadi.awad"],
        "category" : "social",
-       "valid" : "False",
-       "requires_javascript" : "False"
+       "valid" : false
      },
      {
        "name" : "AllTrails",
@@ -3498,8 +3210,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["breckt", "rdoghartwig"],
        "category" : "health",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Cracked",
@@ -3510,8 +3221,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["mbattagl","Hatchback"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "ScoutWiki",
@@ -3522,8 +3232,7 @@
        "account_missing_code" : "301",
        "known_accounts" : ["Mlh_nl", "Benjism89"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "LoveHomePorn",
@@ -3534,8 +3243,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["boerni46", "heylena"],
        "category" : "XXXPORNXXX",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Seneporno",
@@ -3546,8 +3254,7 @@
        "account_missing_code" : "301",
        "known_accounts" : ["Kalsobbc", "Boymariste"],
        "category" : "XXXPORNXXX",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "ilovegrowingmarijuana",
@@ -3558,8 +3265,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["ILGM.Stacy", "Mosaicmind9x"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Ruby Dating",
@@ -3570,8 +3276,7 @@
        "account_missing_code" : "410",
        "known_accounts" : ["Ute1833", "Jessika4922"],
        "category" : "dating",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "PCGamer",
@@ -3582,8 +3287,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["volley.302", "cjmariani.94198", "cholidsnake.2334"],
        "category" : "gaming",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Justforfans",
@@ -3594,8 +3298,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["devinfrancoxxx", "RileyChaux"],
        "category" : "XXXPORNXXX",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "zhihu",
@@ -3606,8 +3309,7 @@
        "account_missing_code" : "400",
        "known_accounts" : ["lushnis", "kan-shu-jiao-hua-shai-tai-yang"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Roblox",
@@ -3618,8 +3320,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["LeetPawn", "elephant459"],
        "category" : "gaming",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Gettr",
@@ -3630,8 +3331,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["qellyanon", "djerod"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Stripchat",
@@ -3642,8 +3342,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["DulcieRichard", "Selenaneshy"],
        "category" : "XXXPORNXXX",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Cults3D",
@@ -3654,8 +3353,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["Bstar3Dart", "john"],
        "category" : "hobby",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "USA Life",
@@ -3666,8 +3364,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["abaynes79", "not1face"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "MAGA-CHAT",
@@ -3678,8 +3375,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["Rich", "RjosephJr"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Our Freedom Book",
@@ -3690,8 +3386,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["DaveLipsky", "StarlaJene"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "MAGABOOK",
@@ -3702,8 +3397,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["PamelaElliott62", "eric"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "SoliKick",
@@ -3714,8 +3408,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["milehighed", "Edmundus"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Parler",
@@ -3726,8 +3419,7 @@
        "account_missing_code" : "302",
        "known_accounts" : ["DineshDsouza", "SeanHannity"],
        "category" : "social",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
        "name" : "Elftown",
@@ -3738,8 +3430,7 @@
        "account_missing_code" : "200",
        "known_accounts" : ["marhiah", "adnama"],
        "category" : "social",
-       "valid" : "False",
-       "requires_javascript" : "False"
+       "valid" : false
      },
      {
        "name" : "osu!",
@@ -3750,8 +3441,7 @@
        "account_missing_code" : "404",
        "known_accounts" : ["stretches", "spiken8"],
        "category" : "gaming",
-       "valid" : "True",
-       "requires_javascript" : "False"
+       "valid" : true
      },
      {
       "name": "fotka",
@@ -3763,8 +3453,7 @@
       "account_missing_code": "200",
       "known_accounts": ["test", "test2"],
       "category": "social",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "Albicla",
@@ -3776,8 +3465,7 @@
       "account_missing_code": "200",
       "known_accounts": ["GazetaPolska", "GPCodziennie"],
       "category": "social",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "QUEER",
@@ -3788,8 +3476,7 @@
       "account_missing_code": "404",
       "known_accounts": ["test", "kowalski"],
       "category": "social",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "Ultras Diary",
@@ -3800,8 +3487,7 @@
       "account_missing_code": "404",
       "known_accounts": ["janek", "kowal"],
       "category": "hobby",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "Wolni Słowianie",
@@ -3812,8 +3498,7 @@
       "account_missing_code": "404",
       "known_accounts": ["janek", "kowal"],
       "category": "social",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "Wykop",
@@ -3824,8 +3509,7 @@
       "account_missing_code": "404",
       "known_accounts": ["test", "test2"],
       "category": "social",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "Chomikuj.pl",
@@ -3836,8 +3520,7 @@
       "account_missing_code": "404",
       "known_accounts": ["test", "test2"],
       "category": "misc",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "Filmweb",
@@ -3848,8 +3531,7 @@
       "account_missing_code": "200",
       "known_accounts": ["test", "test2"],
       "category": "hobby",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "Salon24",
@@ -3860,8 +3542,7 @@
       "account_missing_code": "200",
       "known_accounts": ["test", "test2"],
       "category": "blog",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "blogi.pl",
@@ -3872,8 +3553,7 @@
       "account_missing_code": "200",
       "known_accounts": ["naukowa", "izkpaw"],
       "category": "blog",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "Zbiornik",
@@ -3884,8 +3564,7 @@
       "account_missing_code": "200",
       "known_accounts": ["69uzytkownik69", "Soif"],
       "category": "XXXPORNXXX",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "zmarsa.com",
@@ -3896,8 +3575,7 @@
       "account_missing_code": "500",
       "known_accounts": ["janek", "test"],
       "category": "XXXPORNXXX",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "olx",
@@ -3908,8 +3586,7 @@
       "account_missing_code": "200",
       "known_accounts": ["janek", "test"],
       "category": "shopping",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "Joe Monster",
@@ -3920,8 +3597,7 @@
       "account_missing_code": "200",
       "known_accounts": ["bober", "coldseed"],
       "category": "misc",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "Joe Monster",
@@ -3932,8 +3608,7 @@
       "account_missing_code": "200",
       "known_accounts": ["dandris", "lasior"],
       "category": "misc",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "kwejk.pl",
@@ -3944,8 +3619,7 @@
       "account_missing_code": "404",
       "known_accounts": ["test", "janek"],
       "category": "images",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "JBZD",
@@ -3956,8 +3630,7 @@
       "account_missing_code": "404",
       "known_accounts": ["test", "janek"],
       "category": "images",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "Mistrzowie",
@@ -3968,8 +3641,7 @@
       "account_missing_code": "200",
       "known_accounts": ["test", "janek"],
       "category": "images",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "Demotywatory",
@@ -3980,8 +3652,7 @@
       "account_missing_code": "200",
       "known_accounts": ["test", "test2"],
       "category": "images",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "Faktopedia",
@@ -3992,8 +3663,7 @@
       "account_missing_code": "200",
       "known_accounts": ["janek", "ania"],
       "category": "images",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "Pewex",
@@ -4004,8 +3674,7 @@
       "account_missing_code": "200",
       "known_accounts": ["test", "ania"],
       "category": "misc",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "Motokiller",
@@ -4016,8 +3685,7 @@
       "account_missing_code": "200",
       "known_accounts": ["test", "janek"],
       "category": "images",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "Kotburger",
@@ -4028,8 +3696,7 @@
       "account_missing_code": "200",
       "known_accounts": ["ania", "janek"],
       "category": "images",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "Piekielni",
@@ -4040,8 +3707,7 @@
       "account_missing_code": "200",
       "known_accounts": ["test", "janek"],
       "category": "misc",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "Chamsko",
@@ -4052,8 +3718,7 @@
       "account_missing_code": "404",
       "known_accounts": ["test", "janek"],
       "category": "images",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "Tanuki.pl",
@@ -4064,8 +3729,7 @@
       "account_missing_code": "404",
       "known_accounts": ["ania", "avellana"],
       "category": "hobby",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "Polchat.pl",
@@ -4076,8 +3740,7 @@
       "account_missing_code": "200",
       "known_accounts": ["test","admin"],
       "category": "social",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "SFD",
@@ -4088,8 +3751,7 @@
       "account_missing_code": "404",
       "known_accounts": ["janek", "admin"],
       "category": "health",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "cda.pl",
@@ -4100,8 +3762,7 @@
       "account_missing_code": "200",
       "known_accounts": ["test2", "janek"],
       "category": "video",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "prv.pl",
@@ -4112,8 +3773,7 @@
       "account_missing_code": "200",
       "known_accounts": ["test", "test2"],
       "category": "tech",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "medyczka.pl",
@@ -4124,8 +3784,7 @@
       "account_missing_code": "200",
       "known_accounts": ["test", "janek"],
       "category": "health",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "karab.in",
@@ -4136,8 +3795,7 @@
       "account_missing_code": "404",
       "known_accounts": ["ernest", "puszkapandory"],
       "category": "social",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "101010.pl",
@@ -4148,8 +3806,7 @@
       "account_missing_code": "404",
       "known_accounts": ["szekspir", "xaphanpl"],
       "category": "social",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "pol.social",
@@ -4160,8 +3817,7 @@
       "account_missing_code": "404",
       "known_accounts": ["ftdl", "ducensor"],
       "category": "social",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "fedi.lewactwo.pl",
@@ -4172,8 +3828,7 @@
       "account_missing_code": "404",
       "known_accounts": ["lewactwo", "queereen"],
       "category": "social",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "rigcz.club",
@@ -4184,8 +3839,7 @@
       "account_missing_code": "404",
       "known_accounts": ["blazej", "adam"],
       "category": "social",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "ipolska.pl",
@@ -4196,8 +3850,7 @@
       "account_missing_code": "404",
       "known_accounts": ["maciek", "varden"],
       "category": "social",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "tfl.net.pl",
@@ -4208,8 +3861,7 @@
       "account_missing_code": "404",
       "known_accounts": ["jaczad", "manies"],
       "category": "social",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "quitter.pl",
@@ -4220,8 +3872,7 @@
       "account_missing_code": "404",
       "known_accounts": ["divmod", "panoptykon"],
       "category": "social",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "soc.citizen4.eu",
@@ -4232,8 +3883,7 @@
       "account_missing_code": "404",
       "known_accounts": ["admin", "miklo"],
       "category": "social",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "szmer.info",
@@ -4244,8 +3894,7 @@
       "account_missing_code": "200",
       "known_accounts": ["przeczzpreczem", "Xavier"],
       "category": "social",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "forumprawne.org",
@@ -4256,8 +3905,7 @@
       "account_missing_code": "500",
       "known_accounts": ["test", "test2"],
       "category": "misc",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "gloria.tv",
@@ -4268,8 +3916,7 @@
       "account_missing_code": "404",
       "known_accounts": ["test", "test2"],
       "category": "social",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "Szeroki Kadr",
@@ -4280,8 +3927,7 @@
       "account_missing_code": "200",
       "known_accounts": ["kowal", "janek"],
       "category": "hobby",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "oglaszamy24h.pl",
@@ -4292,8 +3938,7 @@
       "account_missing_code": "404",
       "known_accounts": ["kowal", "janek"],
       "category": "shopping",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "jeja.pl",
@@ -4304,8 +3949,7 @@
       "account_missing_code": "200",
       "known_accounts": ["kowal", "janek"],
       "category": "misc",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "lowcygier.pl",
@@ -4316,8 +3960,7 @@
       "account_missing_code": "404",
       "known_accounts": ["armin", "janek"],
       "category": "gaming",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "zatrybi.pl",
@@ -4328,8 +3971,7 @@
       "account_missing_code": "404",
       "known_accounts": ["Berlinek", "fenrek"],
       "category": "tech",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "vizjer.pl",
@@ -4340,8 +3982,7 @@
       "account_missing_code": "200",
       "known_accounts": ["janek", "tomek"],
       "category": "video",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "ulub.pl",
@@ -4352,8 +3993,7 @@
       "account_missing_code": "404",
       "known_accounts": ["janek", "test"],
       "category": "misc",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "watchmemore.com",
@@ -4364,8 +4004,7 @@
       "account_missing_code": "200",
       "known_accounts": ["medroxy", "arax123"],
       "category": "XXXPORNXXX",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "megamodels.pl",
@@ -4376,8 +4015,7 @@
       "account_missing_code": "200",
       "known_accounts": ["ania", "janek"],
       "category": "social",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "policja2009",
@@ -4388,8 +4026,7 @@
       "account_missing_code": "200",
       "known_accounts": ["Pvwel", "janek"],
       "category": "misc",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name": "CD-Action",
@@ -4400,8 +4037,7 @@
       "account_missing_code": "404",
       "known_accounts": ["saczuan", "cormac"],
       "category": "gaming",
-      "valid" : "True",
-       "requires_javascript" : "False"
+      "valid": true
     },
     {
       "name" : "Twitch.tv",
@@ -4412,8 +4048,7 @@
       "account_missing_code" : "204",
       "known_accounts" : ["summit1g", "cohhcarnage"],
       "category" : "gaming",
-      "valid" : "False",
-       "requires_javascript" : "False"
+      "valid" : false
       },
       {
         "name" : "fansly",
@@ -4425,8 +4060,7 @@
         "account_missing_code" : "200",
         "known_accounts" : ["Mikomin","test"],
         "category" : "XXXPORNXXX",
-        "valid" : "True",
-       "requires_javascript" : "False"
+        "valid" : true
         },
         {
           "name" : "mym.fans",
@@ -4437,8 +4071,7 @@
           "account_missing_code" : "404",
           "known_accounts" : ["Djelizamay","Andysparkles"],
           "category" : "social",
-          "valid" : "True",
-       "requires_javascript" : "False"
+          "valid" : true
         },
         {
           "name" : "SpankPay",
@@ -4449,8 +4082,7 @@
           "account_missing_code" : "200",
           "known_accounts" : ["Medroxy","Anna"],
           "category" : "finance",
-          "valid" : "True",
-       "requires_javascript" : "False"
+          "valid" : true
         },
         {
           "name" : "datezone",
@@ -4461,8 +4093,7 @@
           "account_missing_code" : "404",
           "known_accounts" : ["xkarola","zorro3330"],
           "category" : "XXXPORNXXX",
-          "valid" : "True",
-       "requires_javascript" : "False"
+          "valid" : true
         },
         {
           "name" : "FanCentro",
@@ -4473,8 +4104,7 @@
           "account_missing_code" : "301",
           "known_accounts" : ["medroxy","miaaamador"],
           "category" : "XXXPORNXXX",
-          "valid" : "True",
-       "requires_javascript" : "False"
+          "valid" : true
         },
         {
           "name" : "bitcoin forum",
@@ -4485,8 +4115,7 @@
           "account_missing_code" : "200",
           "known_accounts" : ["alex", "boss"],
           "category" : "finance",
-          "valid" : "True",
-       "requires_javascript" : "False"
+          "valid" : true
         },
         {
           "name" : "Fortnite Tracker",
@@ -4497,8 +4126,7 @@
           "account_missing_code" : "404",
           "known_accounts" : ["steph", "sam"],
           "category" : "gaming",
-          "valid" : "True",
-       "requires_javascript" : "False"
+          "valid" : true
         },
         {
           "name" : "Tellonym",
@@ -4509,8 +4137,7 @@
           "account_missing_code" : "404",
           "known_accounts" : ["jane", "jimmy"],
           "category" : "social",
-          "valid" : "True",
-       "requires_javascript" : "False"
+          "valid" : true
         },
         {
           "name" : "uid",
@@ -4521,8 +4148,7 @@
           "account_missing_code" : "404",
           "known_accounts" : ["john", "peter"],
           "category" : "social",
-          "valid" : "True",
-       "requires_javascript" : "False"
+          "valid" : true
         },
         {
           "name" : "Jeuxvideo",
@@ -4533,8 +4159,7 @@
           "account_missing_code" : "404",
           "known_accounts" : ["jane", "alex"],
           "category" : "gaming",
-          "valid" : "True",
-       "requires_javascript" : "False"
+          "valid" : true
         },
         {
           "name" : "Wikidot",
@@ -4545,8 +4170,7 @@
           "account_missing_code" : "404",
           "known_accounts" : ["jack", "allen"],
           "category" : "social",
-          "valid" : "True",
-       "requires_javascript" : "False"
+          "valid" : true
         },
         {
           "name" : "Chaos",
@@ -4557,8 +4181,7 @@
           "account_missing_code" : "404",
           "known_accounts" : ["alice", "sam"],
           "category" : "social",
-          "valid" : "True",
-       "requires_javascript" : "False"
+          "valid" : true
         },
         {
           "name" : "Arduino",
@@ -4569,8 +4192,7 @@
           "account_missing_code" : "404",
           "known_accounts" : ["peter", "john"],
           "category" : "tech",
-          "valid" : "True",
-       "requires_javascript" : "False"
+          "valid" : true
         },
         {
           "name" : "hackerearth",
@@ -4581,8 +4203,7 @@
           "account_missing_code" : "200",
           "known_accounts" : ["peter", "liam"],
           "category" : "coding",
-          "valid" : "True",
-       "requires_javascript" : "False"
+          "valid" : true
         },
         {
           "name" : "Independent academia",
@@ -4593,8 +4214,7 @@
           "account_missing_code" : "404",
           "known_accounts" : ["peter", "LiamM"],
           "category" : "hobby",
-          "valid" : "True",
-       "requires_javascript" : "False"
+          "valid" : true
         },
         {
           "name" : "Houzz",
@@ -4605,8 +4225,7 @@
           "account_missing_code" : "404",
           "known_accounts" : ["liam", "alex"],
           "category" : "hobby",
-          "valid" : "True",
-       "requires_javascript" : "False"
+          "valid" : true
         },
         {
           "name" : "Hubski",
@@ -4617,8 +4236,7 @@
           "account_missing_code" : "200",
           "known_accounts" : ["kleinbl00", "peter"],
           "category" : "hobby",
-          "valid" : "True",
-       "requires_javascript" : "False"
+          "valid" : true
         },
         {
           "name" : "crowdin",
@@ -4629,8 +4247,7 @@
           "account_missing_code" : "404",
           "known_accounts" : ["alex", "peter"],
           "category" : "hobby",
-          "valid" : "True",
-       "requires_javascript" : "False"
+          "valid" : true
         },
         {
           "name" : "warriorforum",
@@ -4641,8 +4258,7 @@
           "account_missing_code" : "400",
           "known_accounts" : ["alex", "peter"],
           "category" : "hobby",
-          "valid" : "True",
-       "requires_javascript" : "False"
+          "valid" : true
         },
         {
           "name" : "Producthunt",
@@ -4653,8 +4269,7 @@
           "account_missing_code" : "404",
           "known_accounts" : ["alex", "jack"],
           "category" : "business",
-          "valid" : "True",
-       "requires_javascript" : "False"
+          "valid" : true
         },
         {
         "name" : "Parler archived profile",
@@ -4666,8 +4281,7 @@
         "account_missing_code" : "200",
         "known_accounts" : ["JoePags", "dineshdsouza"],
         "category" : "archived",
-        "valid" : "True",
-       "requires_javascript" : "False"
+        "valid" : true
       },
       {
         "name" : "Parler archived posts",
@@ -4679,8 +4293,7 @@
         "account_missing_code" : "200",
         "known_accounts" : ["JoePags", "dineshdsouza"],
         "category" : "archived",
-        "valid" : "True",
-       "requires_javascript" : "False"
+        "valid" : true
       },
       {
         "name" : "Twitter archived profile",
@@ -4692,8 +4305,7 @@
         "account_missing_code" : "200",
         "known_accounts" : ["jack", "dineshdsouza"],
         "category" : "archived",
-        "valid" : "True",
-       "requires_javascript" : "False"
+        "valid" : true
       },
       {
         "name" : "Twitter archived tweets",
@@ -4705,8 +4317,7 @@
         "account_missing_code" : "200",
         "known_accounts" : ["jack", "dineshdsouza"],
         "category" : "archived",
-        "valid" : "True",
-       "requires_javascript" : "False"
+        "valid" : true
       },
       {
           "name" : "Pinkbike",
@@ -4717,8 +4328,7 @@
           "account_missing_code" : "404",
           "known_accounts" : ["dani", "annie"],
           "category" : "health",
-          "valid" : "True",
-       "requires_javascript" : "False"
+          "valid" : true
         },
         {
           "name" : "Researchgate",
@@ -4729,8 +4339,7 @@
           "account_missing_code" : "301",
           "known_accounts" : ["Tafara-Mwareya", "Jose-Roberto-Rasi"],
           "category" : "hobby",
-          "valid" : "True",
-       "requires_javascript" : "False"
+          "valid" : true
         },
         {
           "name" : "polygon",
@@ -4741,8 +4350,7 @@
           "account_missing_code" : "404",
           "known_accounts" : ["nicodeyo", "Nicole_Clark"],
           "category" : "gaming",
-          "valid" : "True",
-       "requires_javascript" : "False"
+          "valid" : true
         },
         {
           "name" : "nairaland",
@@ -4753,8 +4361,7 @@
           "account_missing_code" : "301",
           "known_accounts" : ["amakaone", "seun"],
           "category" : "news",
-          "valid" : "True",
-       "requires_javascript" : "False"
+          "valid" : true
         },
         {
           "name" : "tradingview",
@@ -4765,8 +4372,7 @@
           "account_missing_code" : "404",
           "known_accounts" : ["liam", "john"],
           "category" : "finance",
-          "valid" : "True",
-       "requires_javascript" : "False"
+          "valid" : true
         },
         {
           "name" : "wordnik",
@@ -4777,8 +4383,7 @@
           "account_missing_code" : "404",
           "known_accounts" : ["elle", "john"],
           "category" : "gaming",
-          "valid" : "True",
-       "requires_javascript" : "False"
+          "valid" : true
         },
         {
           "name" : "slant",
@@ -4789,8 +4394,7 @@
           "account_missing_code" : "404",
           "known_accounts" : ["bob", "john"],
           "category" : "shopping",
-          "valid" : "True",
-       "requires_javascript" : "False"
+          "valid" : true
         },
         {
           "name" : "memrise",
@@ -4801,8 +4405,7 @@
           "account_missing_code" : "404",
           "known_accounts" : ["alice", "john"],
           "category" : "hobby",
-          "valid" : "True",
-       "requires_javascript" : "False"
+          "valid" : true
         },
         {
           "name" : "kaggle",
@@ -4813,8 +4416,7 @@
           "account_missing_code" : "404",
           "known_accounts" : ["babyoda", "residentmario"],
           "category" : "coding",
-          "valid" : "True",
-       "requires_javascript" : "False"
+          "valid" : true
         },
         {
           "name" : "hackster",
@@ -4825,8 +4427,7 @@
           "account_missing_code" : "404",
           "known_accounts" : ["ian", "bob"],
           "category" : "coding",
-          "valid" : "True",
-       "requires_javascript" : "False"
+          "valid" : true
         },
         {
           "name" : "anonup",
@@ -4837,8 +4438,7 @@
           "account_missing_code" : "302",
           "known_accounts" : ["john", "peter"],
           "category" : "social",
-          "valid" : "True",
-       "requires_javascript" : "False"
+          "valid" : true
         },
         {
           "name" : "wego",
@@ -4849,8 +4449,7 @@
           "account_missing_code" : "302",
           "known_accounts" : ["mmish2", "Lisa_M_S"],
           "category" : "political",
-          "valid" : "True",
-       "requires_javascript" : "False"
+          "valid" : true
         },
         {
           "name" : "kik",
@@ -4861,8 +4460,7 @@
           "account_missing_code" : "200",
           "known_accounts" : ["adam", "smith", "jones"],
           "category" : "social",
-          "valid" : "True",
-       "requires_javascript" : "False"
+          "valid" : true
         },
         {
           "name": "Patronite",
@@ -4876,8 +4474,29 @@
             "radionowyswiat"
           ],
           "category": "finance",
-          "valid" : "True",
-       "requires_javascript" : "False"
+          "valid": true
+        },
+        {
+          "name" : "ow.ly",
+          "check_uri" : "http://ow.ly/user/{account}",
+          "account_existence_code" : "200",
+          "account_existence_string" : "Images",
+          "account_missing_string" : "404 error",
+          "account_missing_code" : "404",
+          "known_accounts" : ["StopAdMedia", "jokervendetti"],
+          "category" : "social",
+          "valid" : true
+        },
+        {
+          "name" : "Iconfinder",
+          "check_uri" : "https://www.iconfinder.com/{account}",
+          "account_existence_code" : "200",
+          "account_existence_string" : "iconsets",
+          "account_missing_string" : "Page not found",
+          "account_missing_code" : "404",
+          "known_accounts" : ["roundicons", "iconfinder"],
+          "category" : "images",
+          "valid" : true
         },
     {
         "name" : "Rarible",
@@ -4888,8 +4507,8 @@
         "account_missing_code" : "200",
         "known_accounts" : ["thewalker_01"],
         "category" : "social",
-        "valid" : "True",
-        "requires_javascript" : "True"
+        "valid" : true,
+        "requires_javascript" : true
       }
   ]
 }

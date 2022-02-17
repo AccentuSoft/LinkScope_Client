@@ -55,20 +55,19 @@ class Whats_My_Name:
                 # Some may redirect non-lowercase usernames, which could result in missed accounts.
                 social_field = entity[list(entity)[1]].strip().lower()
                 directory = Path(__file__).parent.resolve()
-                file_location = directory / 'web_accounts_list.json'
-                file = open(file_location, 'r').read()
-                file = json.loads(file)
+                with open(directory / 'web_accounts_list.json') as web_accounts_list:
+                    file = json.load(web_accounts_list)
 
                 with FuturesSession(max_workers=15) as session:
                     for site in file['sites']:
                         original_uri = site['check_uri'].replace('{account}', social_field)
                         account_existence_code = str(site['account_existence_code'])
                         account_existence_string = site['account_existence_string']
-                        requires_javascript = site['requires_javascript']
-                        if site['valid'] == "True":
+                        requires_javascript = site.get('requires_javascript', False)
+                        if site['valid']:
                             account_existence_string = re.escape(str(account_existence_string))
                             account_existence_string = re.compile(account_existence_string)
-                            if requires_javascript == "True":
+                            if requires_javascript:
                                 for _ in range(3):
                                     try:
                                         response = page.goto(original_uri, wait_until="networkidle", timeout=10000)
