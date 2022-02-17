@@ -60,11 +60,11 @@ class ThreatInfo:
             returnResults.append([{'Phrase': 'category: ' + data["category"],
                                    'Entity Type': 'Phrase'},
                                   {uid: {'Resolution': 'Category',
-                                         'Name': 'Category', 'Notes': ''}}])
+                                         'Notes': ''}}])
             returnResults.append([{'Phrase': 'risk: ' + data["risk"],
                                    'Entity Type': 'Phrase'},
                                   {uid: {'Resolution': 'Risk',
-                                         'Name': 'Risk', 'Notes': ''}}])
+                                         'Notes': ''}}])
 
             if linkNumbers == 0:
                 linkNumbers = int(len(data["news"]))
@@ -76,7 +76,7 @@ class ThreatInfo:
                                        'Date Created': data["news"][i]['stamp'].replace(' ', 'T'),
                                        'Entity Type': 'Website'},
                                       {uid: {'Resolution': 'Related Article',
-                                             'Name': 'Related Article', 'Notes': ''}}])
+                                             'Notes': ''}}])
 
             if not data["summary"]["attributes"]:
                 continue
@@ -85,12 +85,12 @@ class ThreatInfo:
                     returnResults.append([{'Phrase': key,
                                            'Entity Type': 'Phrase'},
                                           {uid: {'Resolution': 'Technologies Used',
-                                                 'Name': 'Technologies Used', 'Notes': ''}}])
+                                                 'Notes': ''}}])
 
                 for key in data["summary"]["attributes"]["protocol"].keys():
                     returnResults.append([{'Phrase': key,
                                            'Entity Type': 'Phrase'},
                                           {uid: {'Resolution': 'Protocols Used',
-                                                 'Name': 'Protocols Used', 'Notes': ''}}])
+                                                 'Notes': ''}}])
 
         return returnResults

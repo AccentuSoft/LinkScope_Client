@@ -71,14 +71,12 @@ class OrgSearch_GitAllSecrets:
                 returnResults.append([{'Organisation Name': 'Org or User: ' + userOrg[1],
                                        'Entity Type': 'GitHub Organisation'},
                                       {uid: {'Resolution': 'Tool: repo-supervisor',
-                                             'Name': 'Tool: repo-supervisor',
                                              'Notes': ''}}])
 
                 child_of_child = len(returnResults)
                 returnResults.append([{'Repository Name': userOrg[3],
                                        'Entity Type': 'GitHub Repository'},
                                       {index_of_child: {'Resolution': 'Repository of Organisation',
-                                                        'Name': 'Repository of Organisation',
                                                         'Notes': ''}}])
                 index += 1
 
@@ -94,7 +92,6 @@ class OrgSearch_GitAllSecrets:
                                                    'Notes': ansi_escape.sub('', hogSecret[hogIndex]),
                                                    'Entity Type': 'Phrase'},
                                                   {index_of_child: {'Resolution': 'GitHub Secret',
-                                                                    'Name': 'GitHub Secret',
                                                                     'Notes': ''}}])
                             # print(ansi_escape.sub('', hogSecret[hogIndex]))
                             hogIndex += 1
@@ -102,19 +99,16 @@ class OrgSearch_GitAllSecrets:
                             returnResults.append([{'Hash Value': ansi_escape.sub('', line),
                                                    'Entity Type': 'Hash'},
                                                   {childOfChild: {'Resolution': 'Tool: truffleHog',
-                                                                  'Name': 'GitHub Hash',
                                                                   'Notes': ''}}])
                         elif 'Filepath' in line:
                             returnResults.append([{'Filepath': ansi_escape.sub('', line),
                                                    'Entity Type': 'GitHub FilePath'},
                                                   {childOfChild: {'Resolution': 'GitHub FilePath',
-                                                                  'Name': 'GitHub FilePath',
                                                                   'Notes': ''}}])
                         elif 'Branch' in line:
                             returnResults.append([{'Branch': ansi_escape.sub('', line),
                                                    'Entity Type': 'GitHub Branch'},
                                                   {childOfChild: {'Resolution': 'GitHub Branch',
-                                                                  'Name': 'GitHub Branch',
                                                                   'Notes': ''}}])
 
                 for result in data:
@@ -125,14 +119,12 @@ class OrgSearch_GitAllSecrets:
                             returnResults.append([{'Filepath': secret.get('filepath'),
                                                    'Entity Type': 'GitHub FilePath'},
                                                   {child_of_child: {'Resolution': 'GitHub FilePath',
-                                                                    'Name': 'GitHub FilePath',
                                                                     'Notes': ''}}])
 
                             for scrt in secrets:
                                 returnResults.append([{'Secret': scrt,
                                                        'Entity Type': 'GitHub Secret'},
                                                       {child_child: {'Resolution': 'GitHub Secret',
-                                                                     'Name': 'GitHub Secret',
                                                                      'Notes': ''}}])
 
             return returnResults

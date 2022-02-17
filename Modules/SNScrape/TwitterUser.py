@@ -144,7 +144,7 @@ class TwitterUser:
                                            'User URL': item.user.url,
                                            'Verified': str(item.user.verified),
                                            'Display Name': item.user.displayname,
-                                           'Location': item.user.location,
+                                           'Location': str(item.user.location),
                                            'Description': item.user.description,
                                            'Protected': str(item.user.protected),
                                            'Followers': str(item.user.followersCount),
@@ -157,6 +157,7 @@ class TwitterUser:
                                            'Icon': iconByteArrayFin,  # If None, it will have the pic for Twitter User
                                            'Date Created': item.user.created.isoformat()},
                                           {uid: {'Resolution': 'Twitter User'}}])
+                tweetIndex = len(returnResults)
                 returnResults.append([{'Tweet ID': str(item.id),
                                        'Tweet URL': item.url,
                                        'Replies': str(item.replyCount),
@@ -167,8 +168,55 @@ class TwitterUser:
                                        'Place': str(item.place),
                                        'Entity Type': 'Tweet',
                                        'Date Created': item.date.isoformat(),
-                                       'Notes': item.content},
+                                       'Notes': str(item.content)},
                                       {childIndex: {'Resolution': 'Tweet'}}])
+                if item.outlinks:
+                    for link in item.outlinks:
+                        returnResults.append([{'URL': link,
+                                               'Entity Type': 'Website'},
+                                              {tweetIndex: {'Resolution': 'External Link in Tweet'}}])
+                if item.cashtags:
+                    for cashtag in item.cashtags:
+                        returnResults.append([{'Ticker ID': cashtag,
+                                               'Entity Type': 'Ticker'},
+                                              {tweetIndex: {'Resolution': 'Cashtag in Tweet'}}])
+                if item.hashtags:
+                    for hashtag in item.hashtags:
+                        returnResults.append([{'Phrase': hashtag,
+                                               'Entity Type': 'Phrase'},
+                                              {tweetIndex: {'Resolution': 'Hashtag in Tweet'}}])
+                if item.media:
+                    for mediaItem in item.media:
+                        if mediaItem.variants:
+                            maxBitrate = 0
+                            bestVariant = None
+                            for variant in mediaItem.variants:
+                                if variant.bitrate and variant.bitrate > maxBitrate:
+                                    maxBitrate = variant.bitrate
+                                    bestVariant = variant
+                            if bestVariant:
+                                returnResults.append([{'URL': str(bestVariant.url),
+                                                       'Entity Type': 'Website'},
+                                                      {tweetIndex: {'Resolution': 'Video in Tweet'}}])
+                        else:
+                            returnResults.append([{'URL': str(mediaItem.fullUrl),
+                                                   'Entity Type': 'Website'},
+                                                  {tweetIndex: {'Resolution': 'Picture in Tweet'}}])
+                if item.coordinates:
+                    placeName = 'Tweet Location ' + str(item.id)
+                    if item.place:
+                        placeName = str(item.place.fullName)
+                        if item.place.country:
+                            returnResults.append([{'Country Name': str(item.place.country),
+                                                   'Entity Type': 'Country'},
+                                                  {tweetIndex: {'Resolution': 'Country in Tweet'}}])
+
+                    returnResults.append([{'Label': placeName,
+                                           'Latitude': str(item.place.latitude),
+                                           'Longitude': str(item.place.longitude),
+                                           'Entity Type': 'GeoCoordinates'},
+                                          {tweetIndex: {'Resolution': 'Coordinates in Tweet'}}])
+
                 if maxResults and index >= maxResults:
                     break
 

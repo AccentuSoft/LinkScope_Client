@@ -49,30 +49,26 @@ class BlockChainAPI:
                   'Currency Type': 'BTC',
                   'Notes': 'sent by address',
                   'Entity Type': 'Currency'},
-                 {uid: {'Resolution': 'sent by address',
-                        'Name': 'sent by address',
+                 {uid: {'Resolution': 'Sent by address',
                         'Notes': ''}}])
             returnResults.append(
                 [{'Amount': str(int(getReceivedByAddress.text) / 100000000),
                   'Currency Type': 'BTC',
                   'Notes': 'received by address',
                   'Entity Type': 'Currency'},
-                 {uid: {'Resolution': 'received by address',
-                        'Name': 'received by address',
+                 {uid: {'Resolution': 'Received by address',
                         'Notes': ''}}])
             returnResults.append(
                 [{'Amount': str(int(addressBalance.text) / 100000000),
                   'Currency Type': 'BTC',
                   'Notes': 'address balance',
                   'Entity Type': 'Currency'},
-                 {uid: {'Resolution': 'address balance',
-                        'Name': 'address balance',
+                 {uid: {'Resolution': 'Address balance',
                         'Notes': ''}}])
             returnResults.append(
                 [{'Date': str(dateCreated),
                   'Notes': 'first seen date',
                   'Entity Type': 'Date'},
-                 {uid: {'Resolution': 'first seen date',
-                        'Name': 'first seen date',
+                 {uid: {'Resolution': 'First seen date',
                         'Notes': ''}}])
             return returnResults

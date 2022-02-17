@@ -41,43 +41,37 @@ class CompanyInfo:
             exchanges = data['exchanges']
             for exchange in exchanges:
                 returnResults.append([{'Exchange Name': exchange,
-                                       'Entity Type': 'Exchanges'},
+                                       'Entity Type': 'Exchange'},
                                       {uid: {'Resolution': 'Exchange',
-                                             'Name': 'Exchange',
                                              'Notes': ''}}])
 
             tickers = data['tickers']
             for ticker in tickers:
-                returnResults.append([{'Ticker Name': ticker,
-                                       'Entity Type': 'Tickers'},
-                                      {uid: {'Resolution': 'Exchange',
-                                             'Name': 'Exchange',
+                returnResults.append([{'Ticker ID': ticker,
+                                       'Entity Type': 'Ticker'},
+                                      {uid: {'Resolution': 'Ticker',
                                              'Notes': ''}}])
 
             if data['insiderTransactionForOwnerExists'] == 1:
                 returnResults.append([{'Phrase': 'Insider Transaction For Owner Exists',
                                        'Entity Type': 'Phrase'},
                                       {uid: {'Resolution': '',
-                                             'Name': '',
                                              'Notes': ''}}])
             else:
                 returnResults.append([{'Phrase': 'Insider Transaction For Owner Does Not Exists',
                                        'Entity Type': 'Phrase'},
                                       {uid: {'Resolution': '',
-                                             'Name': '',
                                              'Notes': ''}}])
 
             if data['insiderTransactionForIssuerExists'] == 1:
                 returnResults.append([{'Phrase': 'Insider Transaction For Issuer Exists',
                                        'Entity Type': 'Phrase'},
                                       {uid: {'Resolution': '',
-                                             'Name': '',
                                              'Notes': ''}}])
             else:
                 returnResults.append([{'Phrase': 'Insider Transaction For Issuer Does Not Exists',
                                        'Entity Type': 'Phrase'},
                                       {uid: {'Resolution': '',
-                                             'Name': '',
                                              'Notes': ''}}])
 
             if data['sic'] is not None:
@@ -85,13 +79,11 @@ class CompanyInfo:
                                        'Description': data['sicDescription'],
                                        'Entity Type': 'SIC'},
                                       {uid: {'Resolution': '',
-                                             'Name': '',
                                              'Notes': ''}}])
             if data['ein'] is not None:
                 returnResults.append([{'EIN': str(data['ein']),
                                        'Entity Type': 'EIN'},
                                       {uid: {'Resolution': '',
-                                             'Name': '',
                                              'Notes': ''}}])
             if data['addresses'] is not None:
                 returnResults.append([{'Street Address': data['addresses']['mailing']['street1'],
@@ -100,7 +92,6 @@ class CompanyInfo:
                                        'Locality': data['addresses']['mailing']['city'],
                                        'Entity Type': 'Address'},
                                       {uid: {'Resolution': '',
-                                             'Name': '',
                                              'Notes': ''}}])
 
             if data['addresses']['mailing']['street1'] != data['addresses']['business']['street1']:
@@ -110,6 +101,5 @@ class CompanyInfo:
                                        'Locality': data['addresses']['business']['city'],
                                        'Entity Type': 'Address'},
                                       {uid: {'Resolution': '',
-                                             'Name': '',
                                              'Notes': ''}}])
         return returnResults

@@ -66,16 +66,11 @@
             <Attribute default="Unknown" check="String" primary="False">Gross Proceeds Used</Attribute>
         </Attributes>
     </FormD>
-    <Tickers>
-        <Attributes>
-            <Attribute default="Ticker Name" check="String" primary="True">Ticker Name</Attribute>
-        </Attributes>
-    </Tickers>
-    <Exchanges>
+    <Exchange>
         <Attributes>
             <Attribute default="Exchange Name" check="String" primary="True">Exchange Name</Attribute>
         </Attributes>
-    </Exchanges>
+    </Exchange>
     <SIC>
         <Attributes>
             <Attribute default="0000" check="SIC/NAICS" primary="True">SIC</Attribute>
@@ -102,11 +97,6 @@
             <Attribute default="000000000000" check="ISINID" primary="True">ISINID</Attribute>
         </Attributes>
     </ISINID>
-    <Shares>
-        <Attributes>
-            <Attribute default="0" check="String" primary="True">Amount</Attribute>
-        </Attributes>
-    </Shares>
     <FormNMFP2>
         <Attributes>
             <Attribute default="NMFP2 Form Field" check="String" primary="True">Field Name</Attribute>

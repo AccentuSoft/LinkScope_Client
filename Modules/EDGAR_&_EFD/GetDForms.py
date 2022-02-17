@@ -114,7 +114,6 @@ class GetDForms:
 
                                                'Entity Type': 'FormD'},
                                               {uid: {'Resolution': 'D Form',
-                                                     'Name': 'D Form',
                                                      'Notes': ''}}])
 
                         people = data['edgarSubmission']['relatedPersonsList']['relatedPersonInfo']

@@ -70,6 +70,5 @@ class GetN8FForms:
                         returnResults.append([{'URL': anchor,
                                                'Entity Type': 'Website'},
                                               {uid: {'Resolution': 'N-8F Form',
-                                                     'Name': 'N-8F Form',
                                                      'Notes': ''}}])
         return returnResults

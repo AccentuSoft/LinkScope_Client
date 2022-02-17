@@ -100,6 +100,5 @@ class Get13FForms:
 
                                                    'Entity Type': 'Form13F'},
                                                   {uid: {'Resolution': 'Form13F',
-                                                         'Name': 'Form13F',
                                                          'Notes': ''}}])
         return returnResults

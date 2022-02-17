@@ -61,7 +61,6 @@ class DorkingMethod:
                             [{'URL': anchor,
                               'Entity Type': 'Website'},
                              {uid: {'Resolution': 'RSA Key',
-                                    'Name': 'RSA Key',
                                     'Notes': ''}}])
 
         return returnResults

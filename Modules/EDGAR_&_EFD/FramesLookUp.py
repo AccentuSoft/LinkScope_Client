@@ -9,7 +9,7 @@ class FramesLookUp:
 
     originTypes = {'Form Field'}
 
-    resultTypes = {'Edgar Company, Edgar ID, Country, Currency, Shares'}
+    resultTypes = {'Edgar Company, Edgar ID, Country, Currency, Phrase'}
 
     parameters = {
         'Quarter': {'description': 'Please Ensure that the selected Taxonomy matches the Form Field you typed',
@@ -66,31 +66,26 @@ class FramesLookUp:
                 returnResults.append([{'Company Name': data['data'][i]['entityName'],
                                        'Entity Type': 'Company'},
                                       {uid: {'Resolution': 'Edgar Company',
-                                             'Name': 'Edgar Company',
                                              'Notes': ''}}])
 
                 returnResults.append([{'CIK': str(data['data'][i]['cik']).zfill(10),
                                        'Entity Type': 'Edgar ID'},
                                       {index_of_child: {'Resolution': '',
-                                                        'Name': '',
                                                         'Notes': ''}}])
 
                 returnResults.append([{'Country Name': data['data'][i]['loc'],
                                        'Entity Type': 'Country'},
                                       {index_of_child: {'Resolution': '',
-                                                        'Name': '',
                                                         'Notes': ''}}])
                 if unit == 'USD':
                     returnResults.append([{'Amount': str(data['data'][i]['val']),
                                            'Currency Type': 'USD',
                                            'Entity Type': 'Currency'},
                                           {index_of_child: {'Resolution': 'Form Filed Value',
-                                                            'Name': 'Edgar ID',
                                                             'Notes': ''}}])
                 elif unit == 'shares':
-                    returnResults.append([{'Amount': str(data['data'][i]['val']),
-                                           'Entity Type': 'Shares'},
+                    returnResults.append([{'Phrase': 'Number of Shares: ' + str(data['data'][i]['val']),
+                                           'Entity Type': 'Phrase'},
                                           {index_of_child: {'Resolution': 'Form Filed Value',
-                                                            'Name': 'Edgar ID',
                                                             'Notes': ''}}])
         return returnResults

@@ -148,7 +148,6 @@ class GetNMFP2Forms:
                                                    'Friday 5': 'NO Value in Daily Measure',
                                                    'Entity Type': 'FormNMFP2'},
                                                   {uid: {'Resolution': field,
-                                                         'Name': 'FormNMFP2',
                                                          'Notes': ''}}])
                         else:
                             returnResults.append([{'Field Name': f'N-MFP2:({field})' + ' '
@@ -165,7 +164,6 @@ class GetNMFP2Forms:
                                                        'ns3:fridayWeek5'],
                                                    'Entity Type': 'FormNMFP2'},
                                                   {uid: {'Resolution': field,
-                                                         'Name': 'FormNMFP2',
                                                          'Notes': ''}}])
 
                     classLevelInfo = data['edgarSubmission']['formData']['classLevelInfo']
@@ -189,7 +187,6 @@ class GetNMFP2Forms:
                                                    'ns3:fridayWeek5'],
                                                'Entity Type': 'FormNMFP2'},
                                               {index_of_child: {'Resolution': 'Net Asset Per Share',
-                                                                'Name': 'FormNMFP2',
                                                                 'Notes': ''}}])
                         for weekCount in range(1, 6):
                             returnResults.append(
@@ -262,8 +259,7 @@ class GetNMFP2Forms:
                                                        'Ctgry Investments Rprsnts Collateral':
                                                            issuer['ctgryInvestmentsRprsntsCollateral'],
                                                        'Entity Type': 'Collateral Issuer'},
-                                                      {index_of_child: {'Resolution': 'Net Asset Per Share',
-                                                                        'Name': 'Collateral Issuer',
+                                                      {index_of_child: {'Resolution': 'Collateral Issuer',
                                                                         'Notes': ''}}])
 
                         except KeyError:

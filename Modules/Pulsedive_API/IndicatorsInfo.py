@@ -61,23 +61,23 @@ class IndicatorsInfo:
                 returnResults.append([{'Phrase': indicator['description'],
                                        'Entity Type': 'Phrase'},
                                       {uid: {'Resolution': 'Pulsedive Indicator Scan',
-                                             'Name': 'Pulsedive Indicator Scan', 'Notes': ''}}])
+                                             'Notes': ''}}])
                 returnResults.append([{'Phrase': 'risk:' + indicator['risk'],
                                        'Entity Type': 'Phrase'},
                                       {index_of_child: {'Resolution': 'Risk',
-                                                        'Name': 'Risk', 'Notes': ''}}])
+                                                        'Notes': ''}}])
 
             for port in data["attributes"]["port"]:
                 returnResults.append([{'Port': search_term + ':' + str(port),
                                        'Entity Type': 'Port'},
                                       {uid: {'Resolution': 'Ports Open',
-                                             'Name': 'Ports Open', 'Notes': ''}}])
+                                             'Notes': ''}}])
 
             for technology in data["attributes"]["technology"]:
                 returnResults.append([{'Phrase': technology,
                                        'Entity Type': 'Phrase'},
                                       {uid: {'Resolution': 'Technologies Used',
-                                             'Name': 'Technologies Used', 'Notes': ''}}])
+                                             'Notes': ''}}])
 
             index_of_child = len(returnResults)
 
@@ -87,17 +87,17 @@ class IndicatorsInfo:
                                            'Postal Code': data["properties"]["geo"]['zip'],
                                            'Entity Type': 'Address'},
                                           {uid: {'Resolution': 'Address',
-                                                 'Name': 'Address', 'Notes': ''}}])
+                                                 'Notes': ''}}])
                 elif data["properties"]["geo"].get('country') is not None:
                     returnResults.append([{'Country Name': data["properties"]["geo"]['country'],
                                            'Entity Type': 'Country'},
                                           {index_of_child: {'Resolution': 'Country',
-                                                            'Name': 'Country', 'Notes': ''}}])
+                                                            'Notes': ''}}])
                 elif data["properties"]["geo"].get('city') is not None:
                     returnResults.append([{'City Name': data["properties"]["geo"]['city'],
                                            'Entity Type': 'City'},
                                           {index_of_child: {'Resolution': 'City',
-                                                            'Name': 'City', 'Notes': ''}}])
+                                                            'Notes': ''}}])
 
             dns_list = data["properties"]["dns"]
             for key in dns_list.keys():
@@ -112,12 +112,12 @@ class IndicatorsInfo:
                         returnResults.append([{'Domain Name': value,
                                                'Entity Type': 'Domain'},
                                               {uid: {'Resolution': 'MX Record',
-                                                     'Name': 'MX Record', 'Notes': ''}}])
+                                                     'Notes': ''}}])
                 elif dns_type[i] == "a":
                     returnResults.append([{'IP Address': data["properties"]["dns"]["a"],
                                            'Entity Type': 'IP Address'},
                                           {index_of_child: {'Resolution': 'A Record',
-                                                            'Name': 'A Record', 'Notes': ''}}])
+                                                            'Notes': ''}}])
 
                 elif dns_type[i] == "txt":
                     for value in data["properties"]["dns"]['txt']:
@@ -125,34 +125,34 @@ class IndicatorsInfo:
                                                'Entity Type': 'Phrase',
                                                'Notes': value},
                                               {uid: {'Resolution': 'TXT Record',
-                                                     'Name': 'TXT Record', 'Notes': ''}}])
+                                                     'Notes': ''}}])
                 elif dns_type[i] == "soa":
                     returnResults.append([{'Domain Name': data["properties"]["dns"]['rname'],
                                            'Entity Type': 'Domain'},
                                           {uid: {'Resolution': 'Rname Record',
-                                                 'Name': 'Rname Record', 'Notes': ''}}])
+                                                 'Notes': ''}}])
                     returnResults.append([{'Domain Name': data["properties"]["dns"]['soa'],
                                            'Entity Type': 'Domain'},
                                           {index_of_child: {'Resolution': 'SOA Record',
-                                                            'Name': 'SOA Record', 'Notes': ''}}])
+                                                            'Notes': ''}}])
                 elif dns_type[i] == "ns":
                     for value in data["properties"]["dns"]['ns']:
                         returnResults.append([{'Domain Name': value,
                                                'Entity Type': 'Domain'},
                                               {uid: {'Resolution': 'NS Record',
-                                                     'Name': 'NS Record', 'Notes': ''}}])
+                                                     'Notes': ''}}])
 
             if data["properties"].get("ssl") is not None:
                 returnResults.append([{'Date': data["properties"]["ssl"]['expires'],
                                        'Notes': 'expiration date of ssl certificate',
                                        'Entity Type': 'Date'},
                                       {uid: {'Resolution': 'expiration date of ssl certificate',
-                                             'Name': 'expiration date of ssl certificate', 'Notes': ''}}])
+                                             'Notes': ''}}])
                 returnResults.append([{'Company Name': data["properties"]["ssl"]['org'],
                                        'Notes': 'issuer of certificate',
                                        'Entity Type': 'Company'},
                                       {uid: {'Resolution': 'issuer of certificate',
-                                             'Name': 'issuer of certificate', 'Notes': ''}}])
+                                             'Notes': ''}}])
 
             for key in data["properties"]["whois"].keys():
                 whois_type.append(key)
@@ -164,27 +164,27 @@ class IndicatorsInfo:
                     returnResults.append([{'Company Name': field[kind],
                                            'Entity Type': 'Company'},
                                           {uid: {'Resolution': 'Registrar Company',
-                                                 'Name': 'Registrar Company', 'Notes': ''}}])
+                                                 'Notes': ''}}])
 
                     returnResults.append([{'Phrase': 'registry domain id' + ":" + field["registry domain id"],
                                            'Entity Type': 'Phrase'},
                                           {index_of_child: {'Resolution': 'Registry Domain ID',
-                                                            'Name': 'registry domain id', 'Notes': ''}}])
+                                                            'Notes': ''}}])
 
                     returnResults.append([{'Phrase': "registrar iana id" + ":" + field["registrar iana id"],
                                            'Entity Type': 'Phrase'},
                                           {index_of_child: {'Resolution': 'Registrar IANA ID',
-                                                            'Name': 'registrar iana id', 'Notes': ''}}])
+                                                            'Notes': ''}}])
 
                     returnResults.append([{'Email Address': field["registrar abuse contact email"],
                                            'Entity Type': 'Email Address'},
                                           {index_of_child: {'Resolution': 'Registrar abuse contact email',
-                                                            'Name': 'Registrar abuse contact email', 'Notes': ''}}])
+                                                            'Notes': ''}}])
 
                     returnResults.append([{'Phone Number': field["registrar abuse contact phone"],
                                            'Entity Type': 'Phone Number'},
                                           {index_of_child: {'Resolution': 'Registrar abuse contact phone',
-                                                            'Name': 'Registrar abuse contact phone', 'Notes': ''}}])
+                                                            'Notes': ''}}])
                 elif kind == 'admin organization':
                     index_of_child = len(returnResults)
 
@@ -192,16 +192,16 @@ class IndicatorsInfo:
                                            'Notes': 'admin organization',
                                            'Entity Type': 'Company'},
                                           {uid: {'Resolution': 'Admin Organisation',
-                                                 'Name': 'Admin Organisation', 'Notes': ''}}])
+                                                 'Notes': ''}}])
                     returnResults.append([{'Email Address': field['admin email'],
                                            'Notes': 'admin email',
                                            'Entity Type': 'Email Address'},
                                           {index_of_child: {'Resolution': 'Admin Email Address',
-                                                            'Name': 'Admin Email Address', 'Notes': ''}}])
+                                                            'Notes': ''}}])
                     returnResults.append([{'Phone Number': field['admin phone'],
                                            'Notes': 'admin phone',
                                            'Entity Type': 'Phone Number'},
                                           {index_of_child: {'Resolution': 'Admin Phone Number',
-                                                            'Name': 'Admin Phone Number', 'Notes': ''}}])
+                                                            'Notes': ''}}])
 
         return returnResults

@@ -70,7 +70,6 @@ class Get10KForms:
 
                                                            'Entity Type': 'Form Field'},
                                                           {uid: {'Resolution': '10-K Field',
-                                                                 'Name': 'CIK Edgar ID',
                                                                  'Notes': ''}}])
 
                     if list(data['facts'][form][i]['units'].keys())[0] == 'shares':
@@ -90,7 +89,6 @@ class Get10KForms:
 
                                                        'Entity Type': 'Form Field'},
                                                       {uid: {'Resolution': '10-K Field',
-                                                             'Name': 'CIK Edgar ID',
                                                              'Notes': ''}}])
 
         return returnResults

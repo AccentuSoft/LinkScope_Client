@@ -18,15 +18,14 @@
             Currency.svg
         </Icon>
     </Currency>
-    <Shares>
+    <Ticker>
         <Attributes>
-            <Attribute default="Ticker ID" check="String" primary="True">Ticker</Attribute>
-            <Attribute default="0.0" check="Float" primary="False">Amount</Attribute>
+            <Attribute default="Ticker ID" check="String" primary="True">Ticker ID</Attribute>
         </Attributes>
         <Icon>
             Share.svg
         </Icon>
-    </Shares>
+    </Ticker>
     <Portfolio>
         <Attributes>
             <Attribute default="Portfolio Name" check="String" primary="True">Label</Attribute>

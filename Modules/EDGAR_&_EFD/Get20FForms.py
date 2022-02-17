@@ -69,7 +69,6 @@ class Get20FForms:
 
                                                            'Entity Type': 'Form Field'},
                                                           {uid: {'Resolution': '20-F Field',
-                                                                 'Name': 'CIK Edgar ID',
                                                                  'Notes': ''}}])
 
                     if list(data['facts'][form][i]['units'].keys())[0] == 'shares':
@@ -89,7 +88,6 @@ class Get20FForms:
 
                                                        'Entity Type': 'Form Field'},
                                                       {uid: {'Resolution': '20-F Field',
-                                                             'Name': 'CIK Edgar ID',
                                                              'Notes': ''}}])
 
         return returnResults
