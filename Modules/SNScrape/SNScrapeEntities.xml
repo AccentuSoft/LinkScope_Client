@@ -34,4 +34,27 @@
             Default.svg
         </Icon>
     </Tweet>
+    <VK_User>
+        <Attributes>
+            <Attribute default="VKUsername" check="String" primary="True">VK Username</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Name</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Description</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Verified</Attribute>
+            <Attribute default="0" check="Numbers" primary="False">Followers</Attribute>
+            <Attribute default="0" check="Numbers" primary="False">Following</Attribute>
+            <Attribute default="0" check="Numbers" primary="False">Posts</Attribute>
+            <Attribute default="0" check="Numbers" primary="False">Photos</Attribute>
+        </Attributes>
+        <Icon>
+            Social_Media_Account.svg
+        </Icon>
+    </VK_User>
+    <VK_Post>
+        <Attributes>
+            <Attribute default="https://vk.com/wall0_0" check="URL" primary="True">VK Post URL</Attribute>
+        </Attributes>
+        <Icon>
+            Default.svg
+        </Icon>
+    </VK_Post>
 </Social>

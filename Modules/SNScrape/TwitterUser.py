@@ -30,13 +30,14 @@ us what you think: \ngithub.com/AccentuSoft/Li\u2026\n\n#OSINT #OpenSource #Link
 
 
 class TwitterUser:
-    name = "Get Tweets by User"
+    name = "Get Tweets by Twitter User"
 
     description = "Get Tweets made by the specified twitter username / handle, or twitter user ID."
 
-    originTypes = {'Social Media Handle', 'Phrase', 'Twitter User'}
+    originTypes = {'Social Media Handle', 'Phrase', 'Twitter User', 'VK User'}
 
-    resultTypes = {'Phrase'}
+    resultTypes = {'Twitter User', 'Tweet', 'Website', 'Ticker', 'Country', 'GeoCoordinates', 'Social Media Handle',
+                   'Phrase'}
 
     parameters = {'Username or User ID': {'description': 'Please specify whether to treat the given inputs as '
                                                          'Twitter usernames or as twitter user IDs.\nA Username, or '
@@ -45,10 +46,11 @@ class TwitterUser:
                                           'type': 'SingleChoice',
                                           'value': {'Usernames', 'User IDs'},
                                           'default': 'Usernames'},
-                  'Max Results': {'description': 'Please enter the maximum number of results to return, or "0" to '
-                                                 'return all results.',
-                                  'type': 'String',
-                                  'default': '100'},
+                  'Max Tweets': {'description': 'Please enter the maximum number of tweets to process, or "0" to '
+                                                'return all results. Note that this does not include quoted tweets '
+                                                '(i.e. this is how many surface-level tweets to explore).',
+                                 'type': 'String',
+                                 'default': '100'},
                   'Start Date': {'description': 'Please specify the earliest date to retrieve results from.\nThe date '
                                                 'format is flexible, but the best formatting for input is:\n'
                                                 'YYYY-MM-DD HH:mm:SS Z\nIf you do not wish to specify a date, enter '
@@ -87,13 +89,13 @@ class TwitterUser:
         if parameters['Username or User ID'] == 'User IDs':
             arguments.isUserId = True
         try:
-            maxResults = int(parameters['Max Results'])
+            maxResults = int(parameters['Max Tweets'])
             if maxResults < 0:
                 raise ValueError('')
             if maxResults != 0:
                 arguments.maxResults = maxResults
         except ValueError:
-            return 'Invalid integer specified for "Max Results" parameter.'
+            return 'Invalid integer specified for "Max Tweets" parameter.'
 
         if parameters['Start Date'] != 'NONE':
             try:
@@ -107,14 +109,128 @@ class TwitterUser:
         returnResults = []
         childIndex = 0
 
+        def parseTweet(tweetItem, parentItemIndex):
+            selfItemIndex = len(returnResults)
+            returnResults.append([{'Tweet ID': str(tweetItem.id),
+                                   'Tweet URL': tweetItem.url,
+                                   'Replies': str(tweetItem.replyCount),
+                                   'Retweets': str(tweetItem.retweetCount),
+                                   'Likes': str(tweetItem.likeCount),
+                                   'Quotes': str(tweetItem.quoteCount),
+                                   'Coordinates': str(tweetItem.coordinates),
+                                   'Place': str(tweetItem.place),
+                                   'Entity Type': 'Tweet',
+                                   'Date Created': tweetItem.date.isoformat(),
+                                   'Notes': str(tweetItem.content)},
+                                  {parentItemIndex: {'Resolution': 'Tweet'}}])
+            if tweetItem.outlinks:
+                for link in set(tweetItem.outlinks):
+                    returnResults.append([{'URL': link,
+                                           'Entity Type': 'Website'},
+                                          {selfItemIndex: {'Resolution': 'External Link in Tweet'}}])
+            if tweetItem.cashtags:
+                for cashtag in set(tweetItem.cashtags):
+                    returnResults.append([{'Ticker ID': cashtag,
+                                           'Entity Type': 'Ticker'},
+                                          {selfItemIndex: {'Resolution': 'Cashtag in Tweet'}}])
+            if tweetItem.hashtags:
+                for hashtag in set(tweetItem.hashtags):
+                    returnResults.append([{'Phrase': hashtag,
+                                           'Entity Type': 'Phrase'},
+                                          {selfItemIndex: {'Resolution': 'Hashtag in Tweet'}}])
+            if tweetItem.media:
+                for mediaItem in set(tweetItem.media):
+                    if mediaItem.variants:
+                        maxBitrate = 0
+                        bestVariant = None
+                        for variant in mediaItem.variants:
+                            if variant.bitrate and variant.bitrate > maxBitrate:
+                                maxBitrate = variant.bitrate
+                                bestVariant = variant
+                        if bestVariant:
+                            videoIndex = len(returnResults)
+                            returnResults.append([{'URL': str(bestVariant.url),
+                                                   'Entity Type': 'Website'},
+                                                  {selfItemIndex: {'Resolution': 'Video in Tweet'}}])
+                            returnResults.append([{'URL': str(mediaItem.thumbnailUrl),
+                                                   'Entity Type': 'Website'},
+                                                  {videoIndex: {'Resolution': 'Video Thumbnail'}}])
+                    else:
+                        returnResults.append([{'URL': str(mediaItem.fullUrl),
+                                               'Entity Type': 'Website'},
+                                              {selfItemIndex: {'Resolution': 'Picture in Tweet'}}])
+            if tweetItem.coordinates:
+                placeName = 'Tweet Location ' + str(tweetItem.id)
+                if tweetItem.place:
+                    if tweetItem.place.fullName:
+                        placeName = str(tweetItem.place.fullName)
+                    if tweetItem.place.country:
+                        returnResults.append([{'Country Name': str(tweetItem.place.country),
+                                               'Entity Type': 'Country'},
+                                              {selfItemIndex: {'Resolution': 'Country in Tweet'}}])
+
+                returnResults.append([{'Label': placeName,
+                                       'Latitude': str(tweetItem.place.latitude),
+                                       'Longitude': str(tweetItem.place.longitude),
+                                       'Entity Type': 'GeoCoordinates'},
+                                      {selfItemIndex: {'Resolution': 'Coordinates in Tweet'}}])
+            if tweetItem.mentionedUsers:
+                for userName in set(tweetItem.mentionedUsers):
+                    returnResults.append([{'User Name': userName.username,
+                                           'Entity Type': 'Social Media Handle'},
+                                          {selfItemIndex: {'Resolution': 'Users mentioned in Tweet'}}])
+            if tweetItem.inReplyToTweetId:
+                returnResults.append([{'Tweet ID': str(tweetItem.inReplyToTweetId),
+                                       'Entity Type': 'Tweet',
+                                       'Notes': str(tweetItem.content)},
+                                      {selfItemIndex: {'Resolution': 'Replying to this Tweet'}}])
+            if tweetItem.inReplyToUser:
+                try:
+                    childTwitterAccIconRequest = requests.get(tweetItem.inReplyToUser.profileImageUrl)
+                    childIconByteArray = QByteArray(childTwitterAccIconRequest.content)
+                    childIconImageOriginal = QImage().fromData(childIconByteArray)
+                    childIconImageScaled = childIconImageOriginal.scaled(QSize(40, 40))
+                    childIconByteArrayFin = QByteArray()
+                    childImageBuffer = QBuffer(childIconByteArrayFin)
+                    childImageBuffer.open(QIODevice.WriteOnly)
+                    childIconImageScaled.save(childImageBuffer, "PNG")
+                    childImageBuffer.close()
+                except Exception:
+                    childIconByteArrayFin = None
+                returnResults.append([{'Twitter Handle': '@' + tweetItem.inReplyToUser.username,
+                                       'User ID': str(tweetItem.inReplyToUser.id),
+                                       'User URL': tweetItem.inReplyToUser.url,
+                                       'Verified': str(tweetItem.inReplyToUser.verified),
+                                       'Display Name': str(tweetItem.inReplyToUser.displayname),
+                                       'Location': str(tweetItem.inReplyToUser.location),
+                                       'Description': tweetItem.inReplyToUser.description,
+                                       'Protected': str(tweetItem.inReplyToUser.protected),
+                                       'Followers': str(tweetItem.inReplyToUser.followersCount),
+                                       'Following': str(tweetItem.inReplyToUser.friendsCount),
+                                       'Statuses': str(tweetItem.inReplyToUser.statusesCount),
+                                       'Favourites': str(tweetItem.inReplyToUser.favouritesCount),
+                                       'Listed': str(tweetItem.inReplyToUser.listedCount),
+                                       'Media': str(tweetItem.inReplyToUser.mediaCount),
+                                       'Entity Type': 'Twitter User',
+                                       'Icon': childIconByteArrayFin,  # If None -> default twitter user pic
+                                       'Date Created': tweetItem.inReplyToUser.created.isoformat()},
+                                      {selfItemIndex: {'Resolution': 'Twitter User'}}])
+
+            if tweetItem.quotedTweet:
+                parseTweet(tweetItem.quotedTweet, selfItemIndex)
+
         for entity in entityJsonList:
             uid = entity['uid']
             if entity['Entity Type'] == 'Phrase':
                 primaryField = entity['Phrase']
             elif entity['Entity Type'] == 'Twitter User':
                 primaryField = entity['Twitter Handle']
-            else:
+            elif entity['Entity Type'] == 'VK User':
+                primaryField = entity['VK Username']
+            elif entity['Entity Type'] == 'Social Media Handle':
                 primaryField = entity['User Name']
+            else:
+                continue
             if primaryField.startswith('@'):
                 primaryField = primaryField[1:]
             arguments.username = primaryField
@@ -143,7 +259,7 @@ class TwitterUser:
                                            'User ID': str(item.user.id),
                                            'User URL': item.user.url,
                                            'Verified': str(item.user.verified),
-                                           'Display Name': item.user.displayname,
+                                           'Display Name': str(item.user.displayname),
                                            'Location': str(item.user.location),
                                            'Description': item.user.description,
                                            'Protected': str(item.user.protected),
@@ -154,68 +270,11 @@ class TwitterUser:
                                            'Listed': str(item.user.listedCount),
                                            'Media': str(item.user.mediaCount),
                                            'Entity Type': 'Twitter User',
-                                           'Icon': iconByteArrayFin,  # If None, it will have the pic for Twitter User
+                                           'Icon': iconByteArrayFin,  # If None -> default twitter user pic
                                            'Date Created': item.user.created.isoformat()},
                                           {uid: {'Resolution': 'Twitter User'}}])
-                tweetIndex = len(returnResults)
-                returnResults.append([{'Tweet ID': str(item.id),
-                                       'Tweet URL': item.url,
-                                       'Replies': str(item.replyCount),
-                                       'Retweets': str(item.retweetCount),
-                                       'Likes': str(item.likeCount),
-                                       'Quotes': str(item.quoteCount),
-                                       'Coordinates': str(item.coordinates),
-                                       'Place': str(item.place),
-                                       'Entity Type': 'Tweet',
-                                       'Date Created': item.date.isoformat(),
-                                       'Notes': str(item.content)},
-                                      {childIndex: {'Resolution': 'Tweet'}}])
-                if item.outlinks:
-                    for link in item.outlinks:
-                        returnResults.append([{'URL': link,
-                                               'Entity Type': 'Website'},
-                                              {tweetIndex: {'Resolution': 'External Link in Tweet'}}])
-                if item.cashtags:
-                    for cashtag in item.cashtags:
-                        returnResults.append([{'Ticker ID': cashtag,
-                                               'Entity Type': 'Ticker'},
-                                              {tweetIndex: {'Resolution': 'Cashtag in Tweet'}}])
-                if item.hashtags:
-                    for hashtag in item.hashtags:
-                        returnResults.append([{'Phrase': hashtag,
-                                               'Entity Type': 'Phrase'},
-                                              {tweetIndex: {'Resolution': 'Hashtag in Tweet'}}])
-                if item.media:
-                    for mediaItem in item.media:
-                        if mediaItem.variants:
-                            maxBitrate = 0
-                            bestVariant = None
-                            for variant in mediaItem.variants:
-                                if variant.bitrate and variant.bitrate > maxBitrate:
-                                    maxBitrate = variant.bitrate
-                                    bestVariant = variant
-                            if bestVariant:
-                                returnResults.append([{'URL': str(bestVariant.url),
-                                                       'Entity Type': 'Website'},
-                                                      {tweetIndex: {'Resolution': 'Video in Tweet'}}])
-                        else:
-                            returnResults.append([{'URL': str(mediaItem.fullUrl),
-                                                   'Entity Type': 'Website'},
-                                                  {tweetIndex: {'Resolution': 'Picture in Tweet'}}])
-                if item.coordinates:
-                    placeName = 'Tweet Location ' + str(item.id)
-                    if item.place:
-                        placeName = str(item.place.fullName)
-                        if item.place.country:
-                            returnResults.append([{'Country Name': str(item.place.country),
-                                                   'Entity Type': 'Country'},
-                                                  {tweetIndex: {'Resolution': 'Country in Tweet'}}])
 
-                    returnResults.append([{'Label': placeName,
-                                           'Latitude': str(item.place.latitude),
-                                           'Longitude': str(item.place.longitude),
-                                           'Entity Type': 'GeoCoordinates'},
-                                          {tweetIndex: {'Resolution': 'Coordinates in Tweet'}}])
+                parseTweet(item, childIndex)
 
                 if maxResults and index >= maxResults:
                     break
