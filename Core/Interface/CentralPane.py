@@ -344,6 +344,7 @@ class TabbedPane(QtWidgets.QTabWidget):
                 # Attempt to get the index of an existing entity that shares primary field and type with the new
                 #   entity. Those two entities are considered to be referring to the same thing.
                 newNodeExistsIndex = allEntityPrimaryFieldsAndTypes.index((newNodePrimaryField, newNodeEntityType))
+
                 # If entity already exists, update the fields and re-add
                 newNodeExistingUID = allEntityUIDs[newNodeExistsIndex]
                 existingEntityJSON = self.entityDB.getEntity(newNodeExistingUID)
@@ -358,8 +359,12 @@ class TabbedPane(QtWidgets.QTabWidget):
                     if len(newNodeJSON) == 0:
                         newNodeUIDs.append(newNodeExistingUID)
                         continue
+                # Remove any 'None' values from new nodes - we want to keep all collected info.
+                for potentiallyNoneKey, potentiallyNoneValue in newNodeJSON.items():
+                    if potentiallyNoneValue is None or potentiallyNoneValue == 'None':
+                        del newNodeJSON[potentiallyNoneKey]
                 # Update old values to new ones, and add new ones where applicable.
-                existingEntityJSON.update(dict((newNodeKey, newNodeJSON[newNodeKey]) for newNodeKey in newNodeJSON))
+                existingEntityJSON.update(newNodeJSON)
                 self.entityDB.addEntity(existingEntityJSON, fromServer=True, updateTimeline=False)
                 newNodeUIDs.append(newNodeExistingUID)
             except ValueError:
