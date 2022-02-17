@@ -19,11 +19,11 @@ class MessageHandler:
     """
 
     def debug(self, message, exc_info=True):
-        logging.debug(message, exc_info=exc_info)
+        self.linkScopeLogger.debug(message, exc_info=exc_info)
         return message
 
     def info(self, message, popUp=False, exc_info=False):
-        logging.info(message, exc_info=exc_info)
+        self.linkScopeLogger.info(message, exc_info=exc_info)
         if popUp:
             msgBox = QtWidgets.QMessageBox()
             msgBox.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
@@ -33,7 +33,7 @@ class MessageHandler:
         return message
 
     def warning(self, message, popUp=False, exc_info=False):
-        logging.warning(message, exc_info=exc_info)
+        self.linkScopeLogger.warning(message, exc_info=exc_info)
         if popUp:
             msgBox = QtWidgets.QMessageBox()
             msgBox.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
@@ -43,7 +43,7 @@ class MessageHandler:
         return message
 
     def error(self, message, popUp=True, exc_info=True):
-        logging.error(message, exc_info=exc_info)
+        self.linkScopeLogger.error(message, exc_info=exc_info)
         if popUp:
             msgBox = QtWidgets.QMessageBox()
             msgBox.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
@@ -53,7 +53,7 @@ class MessageHandler:
         return message
 
     def critical(self, message, popUp=True, exc_info=True):
-        logging.critical(message, exc_info=exc_info)
+        self.linkScopeLogger.critical(message, exc_info=exc_info)
         if popUp:
             msgBox = QtWidgets.QMessageBox()
             msgBox.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
@@ -63,29 +63,28 @@ class MessageHandler:
         return message
 
     # Set the severity level
-    def setSeverityLevel(self, level):
-        currentLogLevel = logging.root.level
+    def setSeverityLevel(self, level: int):
+        currentLogLevel = self.linkScopeLogger.level
         try:
             level = int(level)
-            logging.root.setLevel(level)
-            self.mainWindow.SETTINGS.setValue("Logging/Severity", logging.root.level)
+            self.linkScopeLogger.setLevel(level)
+            self.mainWindow.SETTINGS.setValue("Logging/Severity", self.linkScopeLogger.level)
         except ValueError:
             self.warning("Invalid Severity Level specified.")
-            logging.root.setLevel(currentLogLevel)
+            self.linkScopeLogger.setLevel(currentLogLevel)
             self.mainWindow.SETTINGS.setValue("Logging/Severity", currentLogLevel)
 
     def getSeverityLevel(self):
-        return logging.root.level
+        return self.linkScopeLogger.level
 
     def changeLogfile(self, newLogFile):
         self.mainWindow.SETTINGS.setValue("Logging/Logfile", newLogFile)
         self.logFileHandler = logging.FileHandler(
             self.mainWindow.SETTINGS.value("Logging/Logfile", str(Path.home() / 'LinkScope_logfile.log')), 'a')
-        rootLogger = logging.getLogger()
-        for handler in rootLogger.handlers[:]:
+        for handler in self.linkScopeLogger.handlers[:]:
             if isinstance(handler, logging.FileHandler):
-                rootLogger.removeHandler(handler)
-        rootLogger.addHandler(self.logFileHandler)
+                self.linkScopeLogger.removeHandler(handler)
+        self.linkScopeLogger.addHandler(self.logFileHandler)
 
     def __init__(self, parentObject):
         self.mainWindow = parentObject
@@ -99,11 +98,15 @@ class MessageHandler:
         self.logFormatterQueue = logging.Formatter('[%(asctime)s] - %(levelname)s: %(message)s')
         self.logFileHandler.setFormatter(self.logFormatter)
         self.logQueueHandler.setFormatter(self.logFormatterQueue)
+
+        # Do not handle root logger messages
         rootLogger = logging.getLogger()
         for handler in rootLogger.handlers[:]:
-            if isinstance(handler, logging.FileHandler):
+            if isinstance(handler, logging.Handler):
                 rootLogger.removeHandler(handler)
-        rootLogger.addHandler(self.logFileHandler)
-        rootLogger.addHandler(self.logQueueHandler)
+
+        self.linkScopeLogger = logging.getLogger('LinkScope_Logger')
+        self.linkScopeLogger.addHandler(self.logFileHandler)
+        self.linkScopeLogger.addHandler(self.logQueueHandler)
 
         self.setSeverityLevel(self.mainWindow.SETTINGS.value("Logging/Severity", logging.INFO))

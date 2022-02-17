@@ -151,9 +151,8 @@ class Holehe_Account_Discovery:
 
         def processFunc(process_queue: Queue):
             import asyncio
-            import logging
             from concurrent.futures import ThreadPoolExecutor
-            logging.getLogger().setLevel(60)  # Do not allow any logging
+
             executor = ThreadPoolExecutor(15)
             loop = asyncio.new_event_loop()
             asyncio.set_event_loop(loop)

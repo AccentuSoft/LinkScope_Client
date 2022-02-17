@@ -30,14 +30,11 @@ class VKontakteUser:
 
     def resolution(self, entityJsonList, parameters):
         import argparse
-        import logging
         import pytz
         import snscrape.base
         import snscrape.modules
         import snscrape.version
         from dateutil.parser import parse
-
-        logging.getLogger().setLevel(60)  # Do not allow any logging
 
         classes = snscrape.base.Scraper.__subclasses__()
         scrapers = {}

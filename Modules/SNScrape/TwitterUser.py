@@ -39,7 +39,6 @@ class TwitterUser:
 
     def resolution(self, entityJsonList, parameters):
         import argparse
-        import logging
         import requests
         import pytz
         import snscrape.base
@@ -48,8 +47,6 @@ class TwitterUser:
         from dateutil.parser import parse
         from PySide6.QtCore import QByteArray, QBuffer, QIODevice, QSize
         from PySide6.QtGui import QImage
-
-        logging.getLogger().setLevel(60)  # Do not allow any logging
 
         classes = snscrape.base.Scraper.__subclasses__()
         scrapers = {}
