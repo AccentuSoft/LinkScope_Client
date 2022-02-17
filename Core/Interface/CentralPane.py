@@ -360,7 +360,7 @@ class TabbedPane(QtWidgets.QTabWidget):
                         newNodeUIDs.append(newNodeExistingUID)
                         continue
                 # Remove any 'None' values from new nodes - we want to keep all collected info.
-                for potentiallyNoneKey, potentiallyNoneValue in newNodeJSON.items():
+                for potentiallyNoneKey, potentiallyNoneValue in dict(newNodeJSON).items():
                     if potentiallyNoneValue is None or potentiallyNoneValue == 'None':
                         del newNodeJSON[potentiallyNoneKey]
                 # Update old values to new ones, and add new ones where applicable.

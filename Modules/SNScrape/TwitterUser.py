@@ -2,30 +2,6 @@
 
 """
 Credit to: https://github.com/JustAnotherArchivist/snscrape
-
-Output reference:
-
-{"_type": "snscrape.modules.twitter.Tweet",
-"url": "https://twitter.com/accentusoft/status/1491141777361113088",
-"date": "2022-02-08T20:07:58+00:00",
-"content": "Hello World! Version 1 of LinkScope Client has just been released! Have a look and tell us
-what you think: \nhttps://t.co/LiVcY2N5O7\n\n#OSINT #OpenSource #LinkScope",
-"renderedContent": "Hello World! Version 1 of LinkScope Client has just been released! Have a look and tell
-us what you think: \ngithub.com/AccentuSoft/Li\u2026\n\n#OSINT #OpenSource #LinkScope",
-"id": 1491141777361113088, "user": {"_type": "snscrape.modules.twitter.User", "username": "accentusoft",
-"id": 1457461982563606528, "displayname": "AccentuSoft AccentuSoft", "description": "",
-"rawDescription": "", "descriptionUrls": null, "verified": false, "created": "2021-11-07T21:36:51+00:00",
-"followersCount": 0, "friendsCount": 44, "statusesCount": 1, "favouritesCount": 2, "listedCount": 0,
-"mediaCount": 0, "location": "", "protected": false, "linkUrl": null, "linkTcourl": null,
-"profileImageUrl": "https://pbs.twimg.com/profile_images/1457462076872577026/R73cgLK3_normal.png",
-"profileBannerUrl": null, "label": null, "url": "https://twitter.com/accentusoft"}, "replyCount": 0,
-"retweetCount": 2, "likeCount": 1, "quoteCount": 0, "conversationId": 1491141777361113088, "lang": "en",
-"source": "<a href=\"https://mobile.twitter.com\" rel=\"nofollow\">Twitter Web App</a>",
-"sourceUrl": "https://mobile.twitter.com", "sourceLabel": "Twitter Web App",
-"outlinks": ["https://github.com/AccentuSoft/LinkScope_Client"], "tcooutlinks": ["https://t.co/LiVcY2N5O7"],
-"media": null, "retweetedTweet": null, "quotedTweet": null, "inReplyToTweetId": null, "inReplyToUser": null,
-"mentionedUsers": null, "coordinates": null, "place": null,
-"hashtags": ["OSINT", "OpenSource", "LinkScope"], "cashtags": null}
 """
 
 
@@ -139,8 +115,8 @@ class TwitterUser:
                                            'Entity Type': 'Phrase'},
                                           {selfItemIndex: {'Resolution': 'Hashtag in Tweet'}}])
             if tweetItem.media:
-                for mediaItem in set(tweetItem.media):
-                    if mediaItem.variants:
+                for mediaItem in tweetItem.media:
+                    if hasattr(mediaItem, 'variants'):
                         maxBitrate = 0
                         bestVariant = None
                         for variant in mediaItem.variants:
@@ -170,12 +146,12 @@ class TwitterUser:
                                               {selfItemIndex: {'Resolution': 'Country in Tweet'}}])
 
                 returnResults.append([{'Label': placeName,
-                                       'Latitude': str(tweetItem.place.latitude),
-                                       'Longitude': str(tweetItem.place.longitude),
+                                       'Latitude': str(tweetItem.coordinates.latitude),
+                                       'Longitude': str(tweetItem.coordinates.longitude),
                                        'Entity Type': 'GeoCoordinates'},
                                       {selfItemIndex: {'Resolution': 'Coordinates in Tweet'}}])
             if tweetItem.mentionedUsers:
-                for userName in set(tweetItem.mentionedUsers):
+                for userName in tweetItem.mentionedUsers:
                     returnResults.append([{'User Name': userName.username,
                                            'Entity Type': 'Social Media Handle'},
                                           {selfItemIndex: {'Resolution': 'Users mentioned in Tweet'}}])
@@ -213,8 +189,9 @@ class TwitterUser:
                                        'Media': str(tweetItem.inReplyToUser.mediaCount),
                                        'Entity Type': 'Twitter User',
                                        'Icon': childIconByteArrayFin,  # If None -> default twitter user pic
-                                       'Date Created': tweetItem.inReplyToUser.created.isoformat()},
-                                      {selfItemIndex: {'Resolution': 'Twitter User'}}])
+                                       'Date Created': None if tweetItem.inReplyToUser.created is None else
+                                       tweetItem.inReplyToUser.created.isoformat()},
+                                      {selfItemIndex: {'Resolution': 'Replying to Twitter User'}}])
 
             if tweetItem.quotedTweet:
                 parseTweet(tweetItem.quotedTweet, selfItemIndex)

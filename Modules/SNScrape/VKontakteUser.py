@@ -64,12 +64,11 @@ class VKontakteUser:
                 sinceDate = parse(parameters['Start Date'])
                 if sinceDate.tzinfo is None:
                     sinceDate = sinceDate.replace(tzinfo=pytz.UTC)
-                arguments.since = sinceDate
+                arguments.since = sinceDate.date()  # Time information is not available
             except ValueError:
                 return 'Invalid date specified for "Start Date" parameter.'
 
         returnResults = []
-        childIndex = 0
 
         def parsePost(postItem, parentItemIndex):
             selfItemIndex = len(returnResults)
@@ -84,7 +83,7 @@ class VKontakteUser:
                                            'Entity Type': 'Website'},
                                           {selfItemIndex: {'Resolution': 'External Link in Post'}}])
             if postItem.photos:
-                for photo in set(postItem.photos):
+                for photo in postItem.photos:
                     variantURLs = []
                     for variant in photo.variants:
                         variantURLs.append(variant.url)
@@ -97,6 +96,7 @@ class VKontakteUser:
                 returnResults.append([{'URL': postItem.video.url,
                                        'Entity Type': 'Website'},
                                       {selfItemIndex: {'Resolution': 'Video in Post'}}])
+                # Does not always contain valid urls for some reason.
                 returnResults.append([{'URL': postItem.video.thumbUrl,
                                        'Entity Type': 'Website'},
                                       {videoIndex: {'Resolution': 'Video Thumbnail'}}])
@@ -120,27 +120,25 @@ class VKontakteUser:
                 primaryField = primaryField[1:]
             arguments.username = primaryField
 
-            scraper = scrapers['twitter-user'].cli_from_args(arguments)
+            scraper = scrapers['vkontakte-user'].cli_from_args(arguments)
+            item = scraper.entity
+
+            childIndex = len(returnResults)
+            returnResults.append([{'VK Username': item.username,
+                                   'Name': str(item.name),
+                                   'Verified': str(item.verified),
+                                   'Description': str(item.description),
+                                   'Followers': str(item.followers),
+                                   'Following': str(item.following),
+                                   'Posts': str(item.posts),
+                                   'Photos': str(item.photos),
+                                   'Entity Type': 'VK User'},
+                                  {uid: {'Resolution': 'Twitter User'}}])
 
             for index, item in enumerate(scraper.get_items(), start=1):
                 if arguments.since is not None and item.date < arguments.since:
                     break
-                if index == 1:
-                    # User will be the same for all tweets of the same entity, so no sense in adding it multiple times.
-                    childIndex = len(returnResults)
-
-                    returnResults.append([{'VK Username': item.username,
-                                           'Name': str(item.name),
-                                           'Verified': str(item.verified),
-                                           'Description': str(item.description),
-                                           'Followers': str(item.user.followersCount),
-                                           'Following': str(item.user.friendsCount),
-                                           'Posts': str(item.user.statusesCount),
-                                           'Photos': str(item.user.favouritesCount),
-                                           'Entity Type': 'VK User'},
-                                          {uid: {'Resolution': 'Twitter User'}}])
-                else:
-                    parsePost(item, childIndex)
+                parsePost(item, childIndex)
                 if maxResults and index >= maxResults:
                     break
 
