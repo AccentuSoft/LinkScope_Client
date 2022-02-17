@@ -5,15 +5,6 @@ Credits in web_accounts_list.json
 """
 
 class Whats_My_Name:
-    """
-    The file web_accounts_list.json is required for the resolution Whats_My_Name.
-    Find:true
-    Replace:true,\n        "requires_javascript" : false
-    Find: "valid" : true
-    Replace: "valid" : "True"
-    Find: "valid" : false
-    Replace: "valid" : "False"
-    """
 
     name = "Whats My Name"
     description = "Find potentially connected social media accounts."
