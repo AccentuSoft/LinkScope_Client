@@ -92,14 +92,14 @@ class VKontakteUser:
                                            'Notes': "Variants:\n" + "\n".join(variantURLs)},
                                           {selfItemIndex: {'Resolution': 'Photo in Post'}}])
             if postItem.video:
-                videoIndex = len(returnResults)
+                # videoIndex = len(returnResults)
                 returnResults.append([{'URL': postItem.video.url,
                                        'Entity Type': 'Website'},
                                       {selfItemIndex: {'Resolution': 'Video in Post'}}])
                 # Does not always contain valid urls for some reason.
-                returnResults.append([{'URL': postItem.video.thumbUrl,
-                                       'Entity Type': 'Website'},
-                                      {videoIndex: {'Resolution': 'Video Thumbnail'}}])
+                # returnResults.append([{'URL': postItem.video.thumbUrl,
+                #                       'Entity Type': 'Website'},
+                #                      {videoIndex: {'Resolution': 'Video Thumbnail'}}])
             if postItem.quotedPost:
                 parsePost(postItem.quotedPost, selfItemIndex)
 
