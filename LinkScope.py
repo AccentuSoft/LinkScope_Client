@@ -557,26 +557,29 @@ class MainWindow(QtWidgets.QMainWindow):
             uidsToSelect = []
             findText = findPrompt.findInput.text()
             if findText != "":
-                if regex:
-                    expression = re.compile(findText)
-                    for item in entityPrimaryFields:
-                        if expression.match(item):
-                            # Add the elements in each index to uidsToSelect instead of the sets themselves.
-                            uidsToSelect.extend(entityPrimaryFields[item])
+                try:
+                    if regex:
+                        expression = re.compile(findText)
+                        for item in entityPrimaryFields:
+                            if expression.match(item):
+                                # Add the elements in each index to uidsToSelect instead of the sets themselves.
+                                uidsToSelect.extend(entityPrimaryFields[item])
 
-                else:
-                    for item in entityPrimaryFields:
-                        if item.startswith(findText):
-                            # Add the elements in each index to uidsToSelect instead of the sets themselves.
-                            uidsToSelect.extend(entityPrimaryFields[item])
+                    else:
+                        for item in entityPrimaryFields:
+                            if item.startswith(findText):
+                                # Add the elements in each index to uidsToSelect instead of the sets themselves.
+                                uidsToSelect.extend(entityPrimaryFields[item])
 
-                currentScene.clearSelection()
-                for item in [linkOrEntity for linkOrEntity in currentScene.items()
-                             if isinstance(linkOrEntity, BaseNode) or isinstance(linkOrEntity, BaseConnector)]:
-                    if str(item.uid) in uidsToSelect:
-                        item.setSelected(True)
-                if len(uidsToSelect) == 1 and ',' not in uidsToSelect[0]:
-                    self.centralWidget().tabbedPane.getCurrentView().centerViewportOnNode(uidsToSelect[0])
+                    currentScene.clearSelection()
+                    for item in [linkOrEntity for linkOrEntity in currentScene.items()
+                                 if isinstance(linkOrEntity, BaseNode) or isinstance(linkOrEntity, BaseConnector)]:
+                        if str(item.uid) in uidsToSelect:
+                            item.setSelected(True)
+                    if len(uidsToSelect) == 1 and ',' not in uidsToSelect[0]:
+                        self.centralWidget().tabbedPane.getCurrentView().centerViewportOnNode(uidsToSelect[0])
+                except re.error:
+                    self.MESSAGEHANDLER.error('Invalid Regex Specified!', popUp=True, exc_info=False)
 
     def findEntityOfTypeOnCanvas(self, regex: bool = False) -> None:
         currentScene = self.centralWidget().tabbedPane.getCurrentScene()
@@ -601,26 +604,29 @@ class MainWindow(QtWidgets.QMainWindow):
             findText = findPrompt.findInput.text()
             findType = findPrompt.typeInput.currentText()
             if findText != "":
-                if regex:
-                    expression = re.compile(findText)
-                    for item in entityTypesOnCanvas[findType]:
-                        if expression.match(item):
-                            # Add the elements in each index to uidsToSelect instead of the sets themselves.
-                            uidsToSelect.extend(entityTypesOnCanvas[findType][item])
+                try:
+                    if regex:
+                        expression = re.compile(findText)
+                        for item in entityTypesOnCanvas[findType]:
+                            if expression.match(item):
+                                # Add the elements in each index to uidsToSelect instead of the sets themselves.
+                                uidsToSelect.extend(entityTypesOnCanvas[findType][item])
 
-                else:
-                    for item in entityTypesOnCanvas[findType]:
-                        if item.startswith(findText):
-                            # Add the elements in each index to uidsToSelect instead of the sets themselves.
-                            uidsToSelect.extend(entityTypesOnCanvas[findType][item])
+                    else:
+                        for item in entityTypesOnCanvas[findType]:
+                            if item.startswith(findText):
+                                # Add the elements in each index to uidsToSelect instead of the sets themselves.
+                                uidsToSelect.extend(entityTypesOnCanvas[findType][item])
 
-                currentScene.clearSelection()
-                for item in [sceneEntity for sceneEntity in currentScene.items()
-                             if isinstance(sceneEntity, BaseNode)]:
-                    if item.uid in uidsToSelect:
-                        item.setSelected(True)
-                if len(uidsToSelect) == 1:
-                    self.centralWidget().tabbedPane.getCurrentView().centerViewportOnNode(uidsToSelect[0])
+                    currentScene.clearSelection()
+                    for item in [sceneEntity for sceneEntity in currentScene.items()
+                                 if isinstance(sceneEntity, BaseNode)]:
+                        if item.uid in uidsToSelect:
+                            item.setSelected(True)
+                    if len(uidsToSelect) == 1:
+                        self.centralWidget().tabbedPane.getCurrentView().centerViewportOnNode(uidsToSelect[0])
+                except re.error:
+                    self.MESSAGEHANDLER.error('Invalid Regex Specified!', popUp=True, exc_info=False)
 
     def mergeEntities(self) -> None:
         """
@@ -2933,7 +2939,10 @@ class FindEntityOnCanvasDialog(QtWidgets.QDialog):
         super(FindEntityOnCanvasDialog, self).__init__()
         self.setModal(True)
         self.setMinimumWidth(400)
-        self.setWindowTitle('Find Entity')
+        if regex:
+            self.setWindowTitle('Regex Find Entity or Link')
+        else:
+            self.setWindowTitle('Find Entity or Link')
         self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
 
         findLabel = QtWidgets.QLabel('Find:')
@@ -2976,7 +2985,10 @@ class FindEntityOfTypeOnCanvasDialog(QtWidgets.QDialog):
         super(FindEntityOfTypeOnCanvasDialog, self).__init__()
         self.setModal(True)
         self.setMinimumWidth(400)
-        self.setWindowTitle('Find Entity Of Type')
+        if regex:
+            self.setWindowTitle('Regex Find Entity Of Type')
+        else:
+            self.setWindowTitle('Find Entity Of Type')
         self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
 
         typeLabel = QtWidgets.QLabel('Entity Type:')
