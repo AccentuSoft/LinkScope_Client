@@ -265,9 +265,17 @@ class EntityDetails(QtWidgets.QWidget):
                 magicType = magic.from_file(str(fullFilePath), mime=True)
                 if magicType.split('/')[0] == 'image':
                     previewImage = QtGui.QImage(fullFilePath)
-                    previewPixmap = QtGui.QPixmap(previewImage)
-                    previewLabel = QtWidgets.QLabel()
-                    previewLabel.setPixmap(previewPixmap.scaled(250, 250, QtCore.Qt.KeepAspectRatio))
+                    if previewImage.isNull():
+                        # If launched from terminal, expect errors like the following to show up:
+                        # qt.gui.imageio: QImageIOHandler: Rejecting image as it exceeds the current allocation
+                        #   limit of 128 megabytes
+                        # This is fine - we are handling this here, by having the label show text instead of a null
+                        #   image.
+                        previewLabel = QtWidgets.QLabel('Error Creating Image Preview.')
+                    else:
+                        previewPixmap = QtGui.QPixmap(previewImage)
+                        previewLabel = QtWidgets.QLabel()
+                        previewLabel.setPixmap(previewPixmap.scaled(250, 250, QtCore.Qt.KeepAspectRatio))
                     self.detailsLayoutOneNode.addWidget(QtWidgets.QLabel('Preview:'), rowCount, 0)
                     self.detailsLayoutOneNode.addWidget(previewLabel, rowCount, 1, 10, 1)
 
