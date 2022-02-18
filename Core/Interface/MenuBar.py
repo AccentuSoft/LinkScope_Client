@@ -895,88 +895,18 @@ class MenuBar(QtWidgets.QMenuBar):
                                                  popUp=True)
             return
 
-        newNodes = []
-        baseFilesPath = Path(self.parent().SETTINGS.value('Project/FilesDir'))
-        currTempDir = Path.home()
+        downloadThread = SaveWebsiteThread(self, self.parent(), websiteEntities)
 
         steps = len(websiteEntities) + 1
         progress = QtWidgets.QProgressDialog('Downloading websites, please wait...',
                                              'Abort', 0, steps, self.parent())
-        progress.setMinimumDuration(0)
-        progress.setWindowModality(QtCore.Qt.WindowModal)
-        progressValue = 1
-        progress.setValue(progressValue)
-
-        def handle_response(response):
-            try:
-                if response.ok:
-                    filename = os.path.basename(response.url)
-                    if filename == '':
-                        filename = tldextract.extract(response.url).fqdn + ' ' + str(time.time_ns()) + '.html'
-                    f = open(currTempDir / filename, "wb")
-                    f.write(response.body())
-                    f.close()
-            except Exception:
-                pass
-
-        with sync_playwright() as p:
-            browser = p.firefox.launch()
-
-            if platform.system() == 'Linux':
-                context = browser.new_context(
-                    viewport={'width': 1920, 'height': 1080},
-                    user_agent='Mozilla/5.0 (X11; Linux i686; rv:96.0) Gecko/20100101 Firefox/96.0'
-                )
-                urlPath = Path.home() / '.mozilla' / 'firefox'
-            else:  # We already checked before that the platform is either 'Linux' or 'Windows'.
-                context = browser.new_context(
-                    viewport={'width': 1920, 'height': 1080},
-                    user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:96.0) Gecko/20100101 Firefox/96.0'
-                )
-                urlPath = Path(os.environ['APPDATA']) / 'Mozilla' / 'Firefox' / 'Profiles'
-
-            tabsFilePath = list(urlPath.glob('*default*/sessionstore-backups/recovery.jsonlz4'))
-            if len(tabsFilePath) != 0:
-                tabsFilePath = tabsFilePath[0]
-                cookiesDatabasePath = tabsFilePath.parent.parent / 'cookies.sqlite'
-                browserCookies = self.firefoxCookiesHelper(cookiesDatabasePath)
-                context.add_cookies(browserCookies)
-            page = context.new_page()
-            page.on("response", handle_response)
-
-            for websiteEntity in websiteEntities:
-                website = websiteEntity[1]
-                with tempfile.TemporaryDirectory() as tempDir:
-                    currTempDir = Path(tempDir)
-                    archiveDir = baseFilesPath / (tldextract.extract(website).fqdn + ' Snapshot ' + str(time.time_ns()))
-
-                    for _ in range(3):
-                        try:
-                            page.goto(website)
-                            page.keyboard.press("End")
-                            page.wait_for_load_state("networkidle")
-                            break
-                        except TimeoutError:
-                            pass
-                    progressValue += 1
-                    progress.setValue(progressValue)
-                    if progress.wasCanceled():
-                        break
-
-                    newNodeName = Path(shutil.make_archive(str(archiveDir), 'zip', currTempDir)).relative_to(
-                        baseFilesPath)
-                    newNodes.append([{'Archive Name': str(newNodeName),
-                                      'File Path': str(newNodeName),
-                                      'Entity Type': 'Archive'},
-                                     {websiteEntity[0]: {'Resolution': 'Website Snapshot', 'Notes': ''}}])
-            context.close()
-            browser.close()
-        self.parent().centralWidget().tabbedPane.facilitateResolution('Download Websites', newNodes)
+        progress.setMinimumDuration(1500)
+        downloadThread.progressSignal.connect(progress.setValue)
+        progress.canceled.connect(lambda: downloadThread.cancelOperation())
+        downloadThread.start()
 
     def screenshotWebsites(self) -> None:
-        baseFilesPath = Path(self.parent().SETTINGS.value('Project/FilesDir'))
         websiteEntities = []
-
         currentScene = self.parent().centralWidget().tabbedPane.getCurrentScene()
         for item in currentScene.selectedItems():
             if isinstance(item, BaseNode):
@@ -987,66 +917,22 @@ class MenuBar(QtWidgets.QMenuBar):
                     except KeyError:
                         continue
 
+        if len(websiteEntities) == 0:
+            self.parent().MESSAGEHANDLER.warning('Please select the "Website" nodes that correspond to the sites that '
+                                                 'you wish to download, and re-run the Download Selected Websites '
+                                                 'operation.',
+                                                 popUp=True)
+            return
+
+        screenshotThread = ScreenshotWebsiteThread(self, self.parent(), websiteEntities)
+
         steps = len(websiteEntities) + 1
         progress = QtWidgets.QProgressDialog('Screenshotting websites, please wait...',
                                              'Abort', 0, steps, self.parent())
-        progress.setMinimumDuration(0)
-        progress.setWindowModality(QtCore.Qt.WindowModal)
-        progressValue = 1
-        progress.setValue(progressValue)
-
-        newNodes = []
-
-        with sync_playwright() as p:
-            browser = p.firefox.launch()
-
-            if platform.system() == 'Linux':
-                context = browser.new_context(
-                    viewport={'width': 1920, 'height': 1080},
-                    user_agent='Mozilla/5.0 (X11; Linux i686; rv:96.0) Gecko/20100101 Firefox/96.0'
-                )
-                urlPath = Path.home() / '.mozilla' / 'firefox'
-            else:  # We already checked before that the platform is either 'Linux' or 'Windows'.
-                context = browser.new_context(
-                    viewport={'width': 1920, 'height': 1080},
-                    user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:96.0) Gecko/20100101 Firefox/96.0'
-                )
-                urlPath = Path(os.environ['APPDATA']) / 'Mozilla' / 'Firefox' / 'Profiles'
-
-            tabsFilePath = list(urlPath.glob('*default*/sessionstore-backups/recovery.jsonlz4'))
-            if len(tabsFilePath) != 0:
-                tabsFilePath = tabsFilePath[0]
-                cookiesDatabasePath = tabsFilePath.parent.parent / 'cookies.sqlite'
-                browserCookies = self.firefoxCookiesHelper(cookiesDatabasePath)
-                context.add_cookies(browserCookies)
-            page = context.new_page()
-
-            for websiteEntity in websiteEntities:
-                website = websiteEntity[1]
-                screenshotName = tldextract.extract(website).fqdn + ' Screenshot ' + str(time.time_ns()) + '.png'
-                currFileName = baseFilesPath / screenshotName
-
-                for _ in range(3):
-                    try:
-                        page.goto(website)
-                        page.wait_for_load_state("networkidle")
-                        page.screenshot(path=str(currFileName), full_page=True)
-                        break
-                    except TimeoutError:
-                        pass
-                progressValue += 1
-                progress.setValue(progressValue)
-                if progress.wasCanceled():
-                    break
-
-                newNodes.append([{'Image Name': screenshotName,
-                                  'File Path': screenshotName,
-                                  'Entity Type': 'Image'},
-                                 {websiteEntity[0]: {'Resolution': 'Website Screenshot', 'Notes': ''}}])
-
-            context.close()
-            browser.close()
-        self.parent().centralWidget().tabbedPane.facilitateResolution('Screenshot Websites', newNodes)
+        progress.setMinimumDuration(1500)
+        screenshotThread.progressSignal.connect(progress.setValue)
+        progress.canceled.connect(lambda: screenshotThread.cancelOperation())
+        screenshotThread.start()
 
     def entityNotesToTextFile(self) -> None:
         baseFilesPath = Path(self.parent().SETTINGS.value('Project/FilesDir'))
@@ -1070,7 +956,7 @@ class MenuBar(QtWidgets.QMenuBar):
                                       'File Path': fileName,
                                       'Entity Type': 'Document'},
                                      {itemJSON['uid']: {'Resolution': 'Notes to Text File', 'Notes': ''}}])
-        self.parent().centralWidget().tabbedPane.facilitateResolution('Notes to Text File', newNodes)
+        self.parent().facilitateResolutionSignalListener.emit('Notes to Text File Operation', newNodes)
 
     def importFromBrowser(self) -> None:
         """
@@ -1498,19 +1384,21 @@ class MenuBar(QtWidgets.QMenuBar):
                     parentUID = parentID
                     if isinstance(parentUID, int):
                         parentUID = newNodeUIDs[parentUID]
-                    resolutionName = parentsDict[parentID]['Resolution']
-                    newLinkUID = (parentUID, outputEntityUID)
-                    # Avoid creating more links between the same two entities.
-                    if newLinkUID in allLinks:
-                        linkJson = self.parent().LENTDB.getLinkIfExists(newLinkUID)
-                        if resolutionName not in linkJson['Notes']:
-                            linkJson['Notes'] += '\nConnection also produced by Resolution: ' + resolutionName
-                            self.parent().LENTDB.addLink(linkJson, fromServer=True)
-                    else:
-                        self.parent().LENTDB.addLink({'uid': newLinkUID, 'Resolution': resolutionName,
-                                                      'Notes': parentsDict[parentID]['Notes']}, fromServer=True)
-                        links.append((parentUID, outputEntityUID, resolutionName))
-                        allLinks.append(newLinkUID)
+                    # Sanity check: Check that the node that was used for this resolution still exists.
+                    if parentUID in allEntityUIDs:
+                        resolutionName = parentsDict[parentID]['Resolution']
+                        newLinkUID = (parentUID, outputEntityUID)
+                        # Avoid creating more links between the same two entities.
+                        if newLinkUID in allLinks:
+                            linkJson = self.parent().LENTDB.getLinkIfExists(newLinkUID)
+                            if resolutionName not in linkJson['Notes']:
+                                linkJson['Notes'] += '\nConnection also produced by Resolution: ' + resolutionName
+                                self.parent().LENTDB.addLink(linkJson, fromServer=True)
+                        else:
+                            self.parent().LENTDB.addLink({'uid': newLinkUID, 'Resolution': resolutionName,
+                                                          'Notes': parentsDict[parentID]['Notes']}, fromServer=True)
+                            links.append((parentUID, outputEntityUID, resolutionName))
+                            allLinks.append(newLinkUID)
 
         self.parent().syncDatabase()
         if importToCanvas:
@@ -2377,3 +2265,165 @@ class CanvasPictureDialog(QtWidgets.QDialog):
             if Path(self.fileDirectory).suffix != 'png':
                 self.fileDirectory = str(Path(self.fileDirectory).with_suffix('.png'))
             self.fileDirectoryLine.setText(self.fileDirectory)
+
+
+class ScreenshotWebsiteThread(QtCore.QThread):
+    progressSignal = QtCore.Signal(int)
+    cancelled = False
+
+    def __init__(self, menuBar, mainWindow, websiteEntities):
+        super(ScreenshotWebsiteThread, self).__init__()
+        self.mainWindow = mainWindow
+        self.menuBar = menuBar
+        self.websiteEntities = websiteEntities
+
+    def cancelOperation(self):
+        self.cancelled = True
+
+    def run(self) -> None:
+        baseFilesPath = Path(self.mainWindow.SETTINGS.value('Project/FilesDir'))
+        progressValue = 1
+        self.progressSignal.emit(progressValue)
+
+        newNodes = []
+
+        with sync_playwright() as p:
+            browser = p.firefox.launch()
+
+            if platform.system() == 'Linux':
+                context = browser.new_context(
+                    viewport={'width': 1920, 'height': 1080},
+                    user_agent='Mozilla/5.0 (X11; Linux i686; rv:96.0) Gecko/20100101 Firefox/96.0'
+                )
+                urlPath = Path.home() / '.mozilla' / 'firefox'
+            else:  # We already checked before that the platform is either 'Linux' or 'Windows'.
+                context = browser.new_context(
+                    viewport={'width': 1920, 'height': 1080},
+                    user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:96.0) Gecko/20100101 Firefox/96.0'
+                )
+                urlPath = Path(os.environ['APPDATA']) / 'Mozilla' / 'Firefox' / 'Profiles'
+
+            tabsFilePath = list(urlPath.glob('*default*/sessionstore-backups/recovery.jsonlz4'))
+            if len(tabsFilePath) != 0:
+                tabsFilePath = tabsFilePath[0]
+                cookiesDatabasePath = tabsFilePath.parent.parent / 'cookies.sqlite'
+                browserCookies = self.menuBar.firefoxCookiesHelper(cookiesDatabasePath)
+                context.add_cookies(browserCookies)
+            page = context.new_page()
+
+            for websiteEntity in self.websiteEntities:
+                if self.cancelled:
+                    break
+                website = websiteEntity[1]
+                screenshotName = tldextract.extract(website).fqdn + ' Screenshot ' + str(time.time_ns()) + '.png'
+                currFileName = baseFilesPath / screenshotName
+
+                for _ in range(3):
+                    try:
+                        page.goto(website)
+                        page.wait_for_load_state("networkidle")
+                        page.screenshot(path=str(currFileName), full_page=True)
+                        break
+                    except TimeoutError:
+                        pass
+                progressValue += 1
+                self.progressSignal.emit(progressValue)
+
+                newNodes.append([{'Image Name': screenshotName,
+                                  'File Path': screenshotName,
+                                  'Entity Type': 'Image'},
+                                 {websiteEntity[0]: {'Resolution': 'Website Screenshot', 'Notes': ''}}])
+
+            context.close()
+            browser.close()
+        self.progressSignal.emit(len(self.websiteEntities) + 1)
+        self.mainWindow.facilitateResolutionSignalListener.emit('Screenshot Websites Operation', newNodes)
+
+
+class SaveWebsiteThread(QtCore.QThread):
+    progressSignal = QtCore.Signal(int)
+    cancelled = False
+
+    def __init__(self, menuBar, mainWindow, websiteEntities):
+        super(SaveWebsiteThread, self).__init__()
+        self.mainWindow = mainWindow
+        self.menuBar = menuBar
+        self.websiteEntities = websiteEntities
+
+    def cancelOperation(self):
+        self.cancelled = True
+
+    def run(self) -> None:
+        newNodes = []
+        baseFilesPath = Path(self.mainWindow.SETTINGS.value('Project/FilesDir'))
+        currTempDir = Path.home()
+
+        progressValue = 1
+        self.progressSignal.emit(progressValue)
+
+        def handle_response(response):
+            try:
+                if response.ok:
+                    filename = os.path.basename(response.url)
+                    if filename == '':
+                        filename = tldextract.extract(response.url).fqdn + ' ' + str(time.time_ns()) + '.html'
+                    f = open(currTempDir / filename, "wb")
+                    f.write(response.body())
+                    f.close()
+            except Exception:
+                pass
+
+        with sync_playwright() as p:
+            browser = p.firefox.launch()
+
+            if platform.system() == 'Linux':
+                context = browser.new_context(
+                    viewport={'width': 1920, 'height': 1080},
+                    user_agent='Mozilla/5.0 (X11; Linux i686; rv:96.0) Gecko/20100101 Firefox/96.0'
+                )
+                urlPath = Path.home() / '.mozilla' / 'firefox'
+            else:  # We already checked before that the platform is either 'Linux' or 'Windows'.
+                context = browser.new_context(
+                    viewport={'width': 1920, 'height': 1080},
+                    user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:96.0) Gecko/20100101 Firefox/96.0'
+                )
+                urlPath = Path(os.environ['APPDATA']) / 'Mozilla' / 'Firefox' / 'Profiles'
+
+            tabsFilePath = list(urlPath.glob('*default*/sessionstore-backups/recovery.jsonlz4'))
+            if len(tabsFilePath) != 0:
+                tabsFilePath = tabsFilePath[0]
+                cookiesDatabasePath = tabsFilePath.parent.parent / 'cookies.sqlite'
+                browserCookies = self.menuBar.firefoxCookiesHelper(cookiesDatabasePath)
+                context.add_cookies(browserCookies)
+            page = context.new_page()
+            page.on("response", handle_response)
+
+            for websiteEntity in self.websiteEntities:
+                if self.cancelled:
+                    break
+                website = websiteEntity[1]
+                with tempfile.TemporaryDirectory() as tempDir:
+                    currTempDir = Path(tempDir)
+                    archiveDir = baseFilesPath / (tldextract.extract(website).fqdn + ' Snapshot ' + str(time.time_ns()))
+
+                    for _ in range(3):
+                        try:
+                            page.goto(website)
+                            page.keyboard.press("End")
+                            page.wait_for_load_state("networkidle")
+                            break
+                        except TimeoutError:
+                            pass
+                    progressValue += 1
+                    self.progressSignal.emit(progressValue)
+
+                    newNodeName = Path(shutil.make_archive(str(archiveDir), 'zip', currTempDir)).relative_to(
+                        baseFilesPath)
+                    newNodes.append([{'Archive Name': str(newNodeName),
+                                      'File Path': str(newNodeName),
+                                      'Entity Type': 'Archive'},
+                                     {websiteEntity[0]: {'Resolution': 'Website Snapshot', 'Notes': ''}}])
+            context.close()
+            browser.close()
+        self.progressSignal.emit(len(self.websiteEntities) + 1)
+        self.mainWindow.facilitateResolutionSignalListener.emit('Download Websites Operation', newNodes)

@@ -39,6 +39,8 @@ from Core.PathHelper import is_path_exists_or_creatable_portable
 # Main Window of Application
 class MainWindow(QtWidgets.QMainWindow):
 
+    facilitateResolutionSignalListener = QtCore.Signal(str, list)
+
     # Redefining the function to adjust its signature.
     def centralWidget(self) -> Union[QtWidgets.QWidget, QtWidgets.QWidget, CentralPane.WorkspaceWidget]:
         return super(MainWindow, self).centralWidget()
@@ -1700,6 +1702,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                                           self.URLMANAGER,
                                                           self.LENTDB,
                                                           self.RESOURCEHANDLER))
+        self.facilitateResolutionSignalListener.connect(self.centralWidget().tabbedPane.facilitateResolution)
 
         self.loadModules()
 
