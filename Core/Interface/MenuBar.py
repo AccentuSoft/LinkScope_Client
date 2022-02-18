@@ -919,10 +919,26 @@ class MenuBar(QtWidgets.QMenuBar):
 
         with sync_playwright() as p:
             browser = p.firefox.launch()
-            context = browser.new_context(
-                viewport={'width': 1920, 'height': 1080},
-                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:96.0) Gecko/20100101 Firefox/96.0'
-            )
+
+            if platform.system() == 'Linux':
+                context = browser.new_context(
+                    viewport={'width': 1920, 'height': 1080},
+                    user_agent='Mozilla/5.0 (X11; Linux i686; rv:96.0) Gecko/20100101 Firefox/96.0'
+                )
+                urlPath = Path.home() / '.mozilla' / 'firefox'
+            else:  # We already checked before that the platform is either 'Linux' or 'Windows'.
+                context = browser.new_context(
+                    viewport={'width': 1920, 'height': 1080},
+                    user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:96.0) Gecko/20100101 Firefox/96.0'
+                )
+                urlPath = Path(os.environ['APPDATA']) / 'Mozilla' / 'Firefox' / 'Profiles'
+
+            tabsFilePath = list(urlPath.glob('*default*/sessionstore-backups/recovery.jsonlz4'))
+            if len(tabsFilePath) != 0:
+                tabsFilePath = tabsFilePath[0]
+                cookiesDatabasePath = tabsFilePath.parent.parent / 'cookies.sqlite'
+                browserCookies = self.firefoxCookiesHelper(cookiesDatabasePath)
+                context.add_cookies(browserCookies)
             page = context.new_page()
             page.on("response", handle_response)
 
@@ -955,7 +971,7 @@ class MenuBar(QtWidgets.QMenuBar):
             browser.close()
         self.parent().centralWidget().tabbedPane.facilitateResolution('Download Websites', newNodes)
 
-    def screenshotWebsites(self):
+    def screenshotWebsites(self) -> None:
         baseFilesPath = Path(self.parent().SETTINGS.value('Project/FilesDir'))
         websiteEntities = []
 
@@ -979,11 +995,28 @@ class MenuBar(QtWidgets.QMenuBar):
 
         with sync_playwright() as p:
             browser = p.firefox.launch()
-            context = browser.new_context(
-                viewport={'width': 1920, 'height': 1080},
-                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:96.0) Gecko/20100101 Firefox/96.0'
-            )
+
+            if platform.system() == 'Linux':
+                context = browser.new_context(
+                    viewport={'width': 1920, 'height': 1080},
+                    user_agent='Mozilla/5.0 (X11; Linux i686; rv:96.0) Gecko/20100101 Firefox/96.0'
+                )
+                urlPath = Path.home() / '.mozilla' / 'firefox'
+            else:  # We already checked before that the platform is either 'Linux' or 'Windows'.
+                context = browser.new_context(
+                    viewport={'width': 1920, 'height': 1080},
+                    user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:96.0) Gecko/20100101 Firefox/96.0'
+                )
+                urlPath = Path(os.environ['APPDATA']) / 'Mozilla' / 'Firefox' / 'Profiles'
+
+            tabsFilePath = list(urlPath.glob('*default*/sessionstore-backups/recovery.jsonlz4'))
+            if len(tabsFilePath) != 0:
+                tabsFilePath = tabsFilePath[0]
+                cookiesDatabasePath = tabsFilePath.parent.parent / 'cookies.sqlite'
+                browserCookies = self.firefoxCookiesHelper(cookiesDatabasePath)
+                context.add_cookies(browserCookies)
             page = context.new_page()
+
             for websiteEntity in websiteEntities:
                 website = websiteEntity[1]
                 screenshotName = tldextract.extract(website).fqdn + ' Screenshot ' + str(time.time_ns()) + '.png'
@@ -1011,7 +1044,7 @@ class MenuBar(QtWidgets.QMenuBar):
             browser.close()
         self.parent().centralWidget().tabbedPane.facilitateResolution('Screenshot Websites', newNodes)
 
-    def entityNotesToTextFile(self):
+    def entityNotesToTextFile(self) -> None:
         baseFilesPath = Path(self.parent().SETTINGS.value('Project/FilesDir'))
         currentScene = self.parent().centralWidget().tabbedPane.getCurrentScene()
 
@@ -1106,42 +1139,7 @@ class MenuBar(QtWidgets.QMenuBar):
                                             tabsToOpen.add((url, browserEntry['title']))
 
                             cookiesDatabasePath = tabsFilePath.parent.parent / 'cookies.sqlite'
-                            newCookiesDatabase = tempfile.mkstemp(suffix='.sqlite')
-                            newCookiesDatabasePath = Path(newCookiesDatabase[1])
-
-                            # Try to copy the database a few times, so we can access it
-                            #   with sqlite (original is locked)
-                            copiedFile = False
-                            for _ in range(5):
-                                shutil.copyfile(cookiesDatabasePath, newCookiesDatabasePath)
-                                originalDigest = self.cookieFileHashHelper(cookiesDatabasePath)
-                                newDigest = self.cookieFileHashHelper(newCookiesDatabasePath)
-                                if originalDigest == newDigest:
-                                    copiedFile = True
-                                    break
-                                else:
-                                    time.sleep(0.2)
-
-                            browserCookies = []
-                            if not copiedFile:
-                                self.parent().MESSAGEHANDLER.warning('Could not access Firefox cookies.', popUp=True)
-                            else:
-                                cookiesDB = sqlite3.connect(newCookiesDatabasePath)
-                                for cookie in cookiesDB.execute('SELECT name,value,host,path,expiry,isSecure,'
-                                                                'isHttpOnly,sameSite FROM moz_cookies'):
-                                    newCookie = {'name': cookie[0], 'value': cookie[1],
-                                                 'domain': cookie[2], 'path': cookie[3],
-                                                 'expires': cookie[4], 'secure': bool(cookie[5]),
-                                                 'httpOnly': bool(cookie[6])}
-                                    if cookie[7] == 0:
-                                        newCookie['sameSite'] = "None"
-                                    elif cookie[7] == 1:
-                                        newCookie['sameSite'] = "Lax"
-                                    elif cookie[7] == 2:
-                                        newCookie['sameSite'] = "Strict"
-                                    browserCookies.append(newCookie)
-                                cookiesDB.close()
-                            newCookiesDatabasePath.unlink(missing_ok=True)
+                            browserCookies = self.firefoxCookiesHelper(cookiesDatabasePath)
                             context.add_cookies(browserCookies)
                             page = context.new_page()
 
@@ -1382,7 +1380,47 @@ class MenuBar(QtWidgets.QMenuBar):
                                                importDialog.importToCanvasDropdown.currentText())
             progress.setValue(4)
 
-    def cookieFileHashHelper(self, filePath):
+    def firefoxCookiesHelper(self, cookiesDatabasePath: Path) -> list:
+        newCookiesDatabase = tempfile.mkstemp(suffix='.sqlite')
+        newCookiesDatabasePath = Path(newCookiesDatabase[1])
+
+        # Try to copy the database a few times, so we can access it
+        #   with sqlite (original is locked)
+        copiedFile = False
+        for _ in range(5):
+            shutil.copyfile(cookiesDatabasePath, newCookiesDatabasePath)
+            originalDigest = self.cookieFileHashHelper(cookiesDatabasePath)
+            newDigest = self.cookieFileHashHelper(newCookiesDatabasePath)
+            if originalDigest == newDigest:
+                copiedFile = True
+                break
+            else:
+                time.sleep(0.2)
+
+        browserCookies = []
+        if not copiedFile:
+            self.parent().MESSAGEHANDLER.warning('Could not access Firefox cookies.', popUp=True)
+        else:
+            cookiesDB = sqlite3.connect(newCookiesDatabasePath)
+            for cookie in cookiesDB.execute('SELECT name,value,host,path,expiry,isSecure,'
+                                            'isHttpOnly,sameSite FROM moz_cookies'):
+                newCookie = {'name': cookie[0], 'value': cookie[1],
+                             'domain': cookie[2], 'path': cookie[3],
+                             'expires': cookie[4], 'secure': bool(cookie[5]),
+                             'httpOnly': bool(cookie[6])}
+                if cookie[7] == 0:
+                    newCookie['sameSite'] = "None"
+                elif cookie[7] == 1:
+                    newCookie['sameSite'] = "Lax"
+                elif cookie[7] == 2:
+                    newCookie['sameSite'] = "Strict"
+                browserCookies.append(newCookie)
+            cookiesDB.close()
+        newCookiesDatabasePath.unlink(missing_ok=True)
+
+        return browserCookies
+
+    def cookieFileHashHelper(self, filePath: Path):
         cookieHash = hashlib.md5()  # nosec
         with open(filePath, 'rb') as cookieFile:
             for chunk in iter(lambda: cookieFile.read(4096), b""):
@@ -1415,6 +1453,7 @@ class MenuBar(QtWidgets.QMenuBar):
                 # Attempt to get the index of an existing entity that shares primary field and type with the new
                 #   entity. Those two entities are considered to be referring to the same thing.
                 newNodeExistsIndex = allEntityPrimaryFieldsAndTypes.index((newNodePrimaryField, newNodeEntityType))
+
                 # If entity already exists, update the fields and re-add
                 newNodeExistingUID = allEntityUIDs[newNodeExistsIndex]
                 existingEntityJSON = self.parent().LENTDB.getEntity(newNodeExistingUID)
@@ -1429,8 +1468,12 @@ class MenuBar(QtWidgets.QMenuBar):
                     if len(newNodeJSON) == 0:
                         newNodeUIDs.append(newNodeExistingUID)
                         continue
+                # Remove any 'None' values from new nodes - we want to keep all collected info.
+                for potentiallyNoneKey, potentiallyNoneValue in dict(newNodeJSON).items():
+                    if potentiallyNoneValue is None or potentiallyNoneValue == 'None':
+                        del newNodeJSON[potentiallyNoneKey]
                 # Update old values to new ones, and add new ones where applicable.
-                existingEntityJSON.update(dict((newNodeKey, newNodeJSON[newNodeKey]) for newNodeKey in newNodeJSON))
+                existingEntityJSON.update(newNodeJSON)
                 self.parent().LENTDB.addEntity(existingEntityJSON, fromServer=True, updateTimeline=False)
                 newNodeUIDs.append(newNodeExistingUID)
             except ValueError:
