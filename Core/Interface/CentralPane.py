@@ -317,6 +317,7 @@ class TabbedPane(QtWidgets.QTabWidget):
         progress = QtWidgets.QProgressDialog('Resolving new nodes for resolution: ' + resolution_name +
                                              ', please wait...', 'Abort Resolving Nodes', 0, steps, self)
         progress.setWindowModality(QtCore.Qt.WindowModal)
+        progress.setMinimumDuration(1500)
 
         # Get all the entities, then split it into several lists, to make searching & iterating through them faster.
         allEntities = [(entity['uid'], (entity[list(entity)[1]], entity['Entity Type']))
@@ -1198,7 +1199,7 @@ class CanvasScene(QtWidgets.QGraphicsScene):
         progress = QtWidgets.QProgressDialog('Opening Canvas: ' + canvasName + ', please wait...',
                                              '', 0, steps, self.parent())
         # Remove Cancel button from progress bar (user should not be able to stop canvas from loading).
-
+        progress.setMinimumDuration(1500)
         progress.setCancelButton(None)
         progress.setWindowModality(QtCore.Qt.WindowModal)
         progressValue = 0

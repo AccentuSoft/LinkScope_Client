@@ -899,11 +899,13 @@ class MenuBar(QtWidgets.QMenuBar):
         baseFilesPath = Path(self.parent().SETTINGS.value('Project/FilesDir'))
         currTempDir = Path.home()
 
-        steps = len(websiteEntities)
+        steps = len(websiteEntities) + 1
         progress = QtWidgets.QProgressDialog('Downloading websites, please wait...',
                                              'Abort', 0, steps, self.parent())
+        progress.setMinimumDuration(0)
         progress.setWindowModality(QtCore.Qt.WindowModal)
-        progressValue = 0
+        progressValue = 1
+        progress.setValue(progressValue)
 
         def handle_response(response):
             try:
@@ -985,11 +987,13 @@ class MenuBar(QtWidgets.QMenuBar):
                     except KeyError:
                         continue
 
-        steps = len(websiteEntities)
+        steps = len(websiteEntities) + 1
         progress = QtWidgets.QProgressDialog('Screenshotting websites, please wait...',
                                              'Abort', 0, steps, self.parent())
+        progress.setMinimumDuration(0)
         progress.setWindowModality(QtCore.Qt.WindowModal)
-        progressValue = 0
+        progressValue = 1
+        progress.setValue(progressValue)
 
         newNodes = []
 
