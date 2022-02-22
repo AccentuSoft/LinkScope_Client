@@ -1,0 +1,5 @@
+aiohttp[speedups]
+aiosmtplib
+requests_html
+aiohttp_socks
+dnspython

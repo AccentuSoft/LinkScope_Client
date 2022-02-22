@@ -10,7 +10,7 @@ For BTC Donations : 1FHDM49QfZX6pJmhjLE5tB2K6CaTLMZpXZ
 
 class Holehe_Account_Discovery:
     name = "Holehe Account Discovery"
-    description = "Find information about a persons social media accounts"
+    description = "Discover Social Media Accounts associated with an Email Address."
     originTypes = {'Email Address'}
     resultTypes = {'Email Address', 'Phone Number', 'Phrase', 'Date', 'Domain'}
     parameters = {'Use Password Recovery Methods': {'description': 'This option dictates whether the module checks '
