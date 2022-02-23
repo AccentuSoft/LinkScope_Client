@@ -5,7 +5,7 @@ class Amass_Domain:
     name = "Amass Domain Scan"
     description = "Find information about a particular domain"
     originTypes = {'Domain'}
-    resultTypes = {'IP Address', 'Phrase', 'Autonomous System', 'Domain'}
+    resultTypes = {'IP Address', 'Phrase', 'Autonomous System', 'Domain', 'IPv6 Address'}
     parameters = {'VirusTotal API Key': {'description': 'Enter your api key under your profile after'
                                                         ' signing up on https://virustotal.com.',
                                          'type': 'String',

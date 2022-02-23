@@ -4,8 +4,8 @@
 class Amass_Intel:
     name = "Amass Intel Scan"
     description = "Find information about a particular domain"
-    originTypes = {'Domain', 'IP Address', 'Autonomous System', 'Phrase', 'Company', 'Organization'}
-    resultTypes = {'Domain', 'IP Address', 'Autonomous System', 'Phrase', 'Company', 'Organization'}
+    originTypes = {'Domain', 'IP Address', 'Autonomous System'}
+    resultTypes = {'Domain'}
     parameters = {'VirusTotal': {'description': 'Enter your api key under your profile after'
                                                 ' signing up on https://virustotal.com.',
                                  'type': 'String',
@@ -126,168 +126,105 @@ class Amass_Intel:
         from docker.errors import APIError
 
         return_result = []
-        client = docker.from_env()
         # Generate Config as a temporary file:
-        for entity in entityJsonList:
-            primary_field = entity[list(entity)[1]].strip()
-            try:
-                with tempfile.TemporaryDirectory() as tempDir:
-                    tempPath = Path(tempDir).absolute()
-                    config = tempfile.NamedTemporaryFile(mode='w+t', prefix='Amass',
-                                                         suffix='Config',
-                                                         dir=tempPath)
-                    config.write("share = true\n")
-                    config.write("[scope]\n")
-                    config.write("port = 80\n")
-                    config.write("port = 443\n")
-                    config.write("[data_sources]\n")
-                    config.write("minimum_ttl = 1440\n")
-                    for parameter in parameters:
-                        if parameters[f'{parameter}'] != 'None':
-                            field1 = f"[data_sources.{parameter}]"
-                            field2 = f"[data_sources.{parameter}.Credentials]"
-                            if parameter == "ZoomEye":
-                                username, password = parameters[parameter].split(' ', 1)
-                                config.write(f"{field1}\n")
-                                config.write(f"{field2}\n")
-                                config.write(f"username = {username}\n")
-                                config.write(f"password = {password}\n")
-                            elif parameter == "FacebookCT":
-                                field3, secret = parameters[parameter].split(' ', 1)
-                                config.write(f"{field1}\n")
-                                config.write(f"[data_sources.{parameter}.app1\n")
-                                config.write(f"apikey = \"{field3}\"\n")
-                                config.write(f"secret = {secret}\n")
-                            elif parameter == "Twitter":
-                                field3, secret = parameters[parameter].split(' ', 1)
-                                config.write(f"{field1}\n")
-                                config.write(f"[data_sources.{parameter}.account1\n")
-                                config.write(f"apikey = \"{field3}\"\n")
-                                config.write(f"secret = {secret}\n")
-                            elif parameter == "ReconDev.paid":
-                                field3 = parameters[f'{parameter}']
-                                config.write(f"{field1}\n")
-                                config.write(f"[data_sources.{parameter}.paid\n")
-                                config.write(f"apikey = \"{field3}\"\n")
-                            elif parameter == "ReconDev.free":
-                                field3 = parameters[f'{parameter}']
-                                config.write(f"{field1}\n")
-                                config.write(f"[data_sources.{parameter}.free\n")
-                                config.write(f"apikey = \"{field3}\"\n")
-                            else:
-                                field3 = parameters[f'{parameter}']
-                                config.write(f"{field1}\n")
-                                config.write(f"{field2}\n")
-                                config.write(f"apikey = \"{field3}\"\n")
-                            path_to_config = config.name
-                            path_to_config = path_to_config.replace(str(tempPath), "")
-                            config.seek(0)
-                            # print(config.read())
-                            # print(path_to_config)
-                            # print(entity['Entity Type'])
-                            if entity['Entity Type'] == "Domain":
-                                container = client.containers.run("caffix/amass:latest",
-                                                                  f"intel -src -d {primary_field} -config /.config/amass"
-                                                                  f"{path_to_config}",
-                                                                  volumes={
-                                                                      str(tempPath): {'bind': '/.config/amass',
-                                                                                      'mode': 'rw'}},
-                                                                  remove=True)
-                            elif entity['Entity Type'] == "Organization" or entity['Entity Type'] == "Phrase" or entity[
-                                    'Entity Type'] == "Company":
-                                container = client.containers.run("caffix/amass:latest",
-                                                                  f"intel -src -org {primary_field} -whois -config "
-                                                                  f"/.config/amass{path_to_config}",
-                                                                  volumes={
-                                                                      str(tempPath): {'bind': '/.config/amass',
-                                                                                      'mode': 'rw'}},
-                                                                  remove=True)
-                            elif entity['Entity Type'] == "IP Address":
-                                try:
-                                    ip_address(primary_field)
-                                except ValueError:
-                                    return "The Entity Provided isn't a valid IP Address"
-                                container = client.containers.run("caffix/amass:latest",
-                                                                  f"intel -src -addr {primary_field} -whois -config "
-                                                                  f"/.config/amass{path_to_config}",
-                                                                  volumes={
-                                                                      str(tempPath): {'bind': '/.config/amass',
-                                                                                      'mode': 'rw'}},
-                                                                  remove=True)
-                            elif entity['Entity Type'] == "Autonomous System":
-                                container = client.containers.run("caffix/amass:latest",
-                                                                  f"intel -src -asn {entity[list(entity)[2]].strip()}   "
-                                                                  f" -whois -config /.config/amass{path_to_config}",
-                                                                  volumes={
-                                                                      str(tempPath): {'bind': '/.config/amass',
-                                                                                      'mode': 'rw'}},
-                                                                  remove=True)
-                        else:
-                            if entity['Entity Type'] == "Domain":
-                                container = client.containers.run("caffix/amass:latest",
-                                                                  f"intel -src -d {primary_field}",
-                                                                  volumes={
-                                                                      str(tempPath): {'bind': '/.config/amass',
-                                                                                      'mode': 'rw'}},
-                                                                  remove=True)
-                            elif entity['Entity Type'] == "Organization" or entity['Entity Type'] == "Phrase" or entity[
-                                    'Entity Type'] == "Company":
-                                container = client.containers.run("caffix/amass:latest",
-                                                                  f"intel -src -org {primary_field} -whois",
-                                                                  volumes={
-                                                                      str(tempPath): {'bind': '/.config/amass',
-                                                                                      'mode': 'rw'}},
-                                                                  remove=True)
-                            elif entity['Entity Type'] == "IP Address":
-                                try:
-                                    ip_address(primary_field)
-                                except ValueError:
-                                    return "The Entity Provided isn't a valid IP Address"
-                                container = client.containers.run("caffix/amass:latest",
-                                                                  f"intel -src -addr {primary_field} -whois",
-                                                                  volumes={
-                                                                      str(tempPath): {'bind': '/.config/amass',
-                                                                                      'mode': 'rw'}},
-                                                                  remove=True)
-                            elif entity['Entity Type'] == "Autonomous System":
-                                container = client.containers.run("caffix/amass:latest",
-                                                                  f"intel -src -asn {entity[list(entity)[2]].strip()}"
-                                                                  f" -whois",
-                                                                  volumes={
-                                                                      str(tempPath): {'bind': '/.config/amass',
-                                                                                      'mode': 'rw'}},
-                                                                  remove=True)
-                    jsonFile = tempPath / 'amass.json'
-                    if jsonFile.exists():
-                        jsonContents = ""
-                        with open(jsonFile, 'r') as jsonFileHandler:
-                            jsonContents = jsonFileHandler.read()
-            except (APIError, docker.errors.ContainerError) as error:
-                return "Soomething happened to docker - Cannot continue."
-            uid = entity['uid']
-            for dictionary in jsonContents.splitlines():
-                index_of_child = len(return_result)
-                line_dictionary = json.loads(dictionary)
-                size = len(line_dictionary['addresses'])
-                return_result.append([{'Domain Name': str(line_dictionary['name']),
-                                       'Entity Type': 'Domain'},
-                                      {uid: {'Resolution': 'Amass Intel Scan', 'Notes': ''}}])
-                for ip in range(size):
-                    if type(ip_address(line_dictionary['addresses'][ip]['ip'])) is IPv4Address:
-                        return_result.append([{'IP Address': str(line_dictionary['addresses'][ip]['ip']),
-                                               'Entity Type': 'IP Address'},
-                                              {index_of_child: {'Resolution': 'Amass IP Address', 'Notes': ''}}])
-                    elif type(ip_address(line_dictionary['addresses'][ip]['ip'])) is IPv6Address:
-                        return_result.append([{'IPv6 Address': str(line_dictionary['addresses'][ip]['ip']),
-                                               'Entity Type': 'IPv6 Address'},
-                                              {index_of_child: {'Resolution': 'Amass IPv6 Address', 'Notes': ''}}])
-                    return_result.append([{'AS Number': "AS" + str(line_dictionary['addresses'][ip]['asn']),
-                                           'ASN Cidr': str(line_dictionary['addresses'][ip]['cidr']),
-                                           'Entity Type': 'Autonomous System'},
-                                          {index_of_child: {'Resolution': 'Amass Autonomous System', 'Notes': ''}}])
-                    return_result.append([{'Phrase': str(line_dictionary['addresses'][ip]['desc']),
-                                           'Entity Type': 'Phrase'},
-                                          {index_of_child: {'Resolution': 'Amass Intel Scan Description',
-                                                            'Notes': ''}}])
-        jsonFileHandler.close()
+        with tempfile.TemporaryDirectory() as tempDir:
+            tempPath = Path(tempDir).absolute()
+            config = tempfile.NamedTemporaryFile(mode='w+t', prefix='Amass',
+                                                 suffix='Config',
+                                                 dir=tempPath)
+            config.write("share = true\n")
+            config.write("[scope]\n")
+            config.write("port = 80\n")
+            config.write("port = 443\n")
+            config.write("[data_sources]\n")
+            config.write("minimum_ttl = 1440\n")
+            for parameter in parameters:
+                if parameters[f'{parameter}'] != 'None':
+                    field1 = f"[data_sources.{parameter}]"
+                    field2 = f"[data_sources.{parameter}.Credentials]"
+                    if parameter == "ZoomEye":
+                        username, password = parameters[parameter].split(' ', 1)
+                        config.write(f"{field1}\n")
+                        config.write(f"{field2}\n")
+                        config.write(f"username = {username}\n")
+                        config.write(f"password = {password}\n")
+                    elif parameter == "FacebookCT":
+                        field3, secret = parameters[parameter].split(' ', 1)
+                        config.write(f"{field1}\n")
+                        config.write(f"[data_sources.{parameter}.app1\n")
+                        config.write(f"apikey = \"{field3}\"\n")
+                        config.write(f"secret = {secret}\n")
+                    elif parameter == "Twitter":
+                        field3, secret = parameters[parameter].split(' ', 1)
+                        config.write(f"{field1}\n")
+                        config.write(f"[data_sources.{parameter}.account1\n")
+                        config.write(f"apikey = \"{field3}\"\n")
+                        config.write(f"secret = {secret}\n")
+                    elif parameter == "ReconDev.paid":
+                        field3 = parameters[f'{parameter}']
+                        config.write(f"{field1}\n")
+                        config.write(f"[data_sources.{parameter}.paid\n")
+                        config.write(f"apikey = \"{field3}\"\n")
+                    elif parameter == "ReconDev.free":
+                        field3 = parameters[f'{parameter}']
+                        config.write(f"{field1}\n")
+                        config.write(f"[data_sources.{parameter}.free\n")
+                        config.write(f"apikey = \"{field3}\"\n")
+                    else:
+                        field3 = parameters[f'{parameter}']
+                        config.write(f"{field1}\n")
+                        config.write(f"{field2}\n")
+                        config.write(f"apikey = \"{field3}\"\n")
+            path_to_config = "/" + Path(config.name).name
+            config.seek(0)
+            for entity in entityJsonList:
+                primary_field = entity[list(entity)[1]].strip()
+                try:
+                    client = docker.from_env()
+                    if entity['Entity Type'] == "Domain":
+                        container = client.containers.run("caffix/amass:latest",
+                                                          f"intel -whois -d {primary_field} -config /.config/amass"
+                                                          f"{path_to_config}",
+                                                          volumes={
+                                                              str(tempPath): {'bind': '/.config/amass',
+                                                                              'mode': 'rw'}},
+                                                          remove=True)
+                    elif entity['Entity Type'] == "IP Address":
+                        try:
+                            ip_address(primary_field)
+                        except ValueError:
+                            return "The Entity Provided isn't a valid IP Address"
+                        container = client.containers.run("caffix/amass:latest",
+                                                          f"intel -addr {primary_field} -config "
+                                                          f"/.config/amass{path_to_config}",
+                                                          volumes={
+                                                              str(tempPath): {'bind': '/.config/amass',
+                                                                              'mode': 'rw'}},
+                                                          remove=True)
+                    elif entity['Entity Type'] == "Autonomous System":
+                        if primary_field.startswith('AS'):
+                            primary_field = primary_field[2:]
+                        container = client.containers.run("caffix/amass:latest",
+                                                          f"intel -asn {primary_field}"
+                                                          f" -config /.config/amass{path_to_config}",
+                                                          volumes={
+                                                              str(tempPath): {'bind': '/.config/amass',
+                                                                              'mode': 'rw'}},
+                                                          remove=True)
+                    textFile = tempPath / 'amass.txt'
+                    textContents = ""
+                    if textFile.exists():
+                        with open(textFile, 'r') as textFileHandler:
+                            textContents = textFileHandler.read()
+
+                    client.close()
+                except (APIError, docker.errors.ContainerError) as error:
+                    return "Something happened to the docker container - Cannot continue: " + str(error)
+                uid = entity['uid']
+                for newDomain in textContents.splitlines():
+                    return_result.append([{'Domain Name': newDomain.strip(),
+                                           'Entity Type': 'Domain'},
+                                          {uid: {'Resolution': 'Amass Intel Scan', 'Notes': ''}}])
+
+            config.close()
         return return_result
