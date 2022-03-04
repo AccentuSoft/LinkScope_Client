@@ -42,7 +42,7 @@ class MessageHandler:
                                           self.mainWindow.tr(message))
         return message
 
-    def error(self, message, popUp=True, exc_info=True):
+    def error(self, message, popUp=True, exc_info=False):
         self.linkScopeLogger.error(message, exc_info=exc_info)
         if popUp:
             msgBox = QtWidgets.QMessageBox()
