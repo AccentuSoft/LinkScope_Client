@@ -5,6 +5,7 @@
       <Attribute default="Unknown" check="String" primary="False">Gender</Attribute>
       <Attribute default="Unknown" check="String" primary="False">Occupation</Attribute>
       <Attribute default="Unknown" check="String" primary="False">Date of Birth</Attribute>
+      <Attribute default="Unknown" check="String" primary="False">Nationality</Attribute>
     </Attributes>
     <Icon>
       Person.svg
@@ -16,6 +17,7 @@
       <Attribute default="Unknown" check="String" primary="False">Gender</Attribute>
       <Attribute default="Unknown" check="String" primary="False">Occupation</Attribute>
       <Attribute default="Unknown" check="String" primary="False">Date of Birth</Attribute>
+      <Attribute default="Unknown" check="String" primary="False">Nationality</Attribute>
     </Attributes>
     <Icon>
       Person.svg
