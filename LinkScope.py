@@ -38,7 +38,6 @@ from Core.PathHelper import is_path_exists_or_creatable_portable
 
 # Main Window of Application
 class MainWindow(QtWidgets.QMainWindow):
-
     facilitateResolutionSignalListener = QtCore.Signal(str, list)
 
     # Redefining the function to adjust its signature.
@@ -815,6 +814,43 @@ class MainWindow(QtWidgets.QMainWindow):
                 elif newSettingValue[0] != '':
                     # Do not allow blank settings.
                     self.SETTINGS.setValue(key, newSettingValue[0])
+
+            self.saveProject()
+
+    def changeGraphics(self):
+        settingsDialog = GraphicsEditDialog(self.SETTINGS, self.RESOURCEHANDLER)
+        settingsConfirm = settingsDialog.exec()
+
+        if settingsConfirm:
+            newSettings = settingsDialog.newSettings
+            try:
+                etfVal = int(newSettings["ETF"])
+                self.entityTextFont.setPointSize(etfVal)
+                self.SETTINGS.setValue("Program/EntityTextFontSize", str(newSettings["ETF"]))
+            except ValueError:
+                pass
+            try:
+                ltfVal = int(newSettings["LTF"])
+                self.linkTextFont.setPointSize(ltfVal)
+                self.SETTINGS.setValue("Program/LinkTextFontSize", str(newSettings["LTF"]))
+            except ValueError:
+                pass
+
+            etcVal = newSettings["ETC"]
+            newEtcColor = QtGui.QColor(etcVal)
+            if newEtcColor.isValid():
+                self.entityTextBrush.setColor(newEtcColor)
+                self.SETTINGS.setValue("Program/EntityTextColor", newEtcColor.name())
+            ltcVal = newSettings["LTC"]
+            newLtcColor = QtGui.QColor(ltcVal)
+            if newLtcColor.isValid():
+                self.linkTextBrush.setColor(newLtcColor)
+                self.SETTINGS.setValue("Program/LinkTextColor", newLtcColor.name())
+
+            for viewKey in self.centralWidget().tabbedPane.canvasTabs:
+                scene = self.centralWidget().tabbedPane.canvasTabs[viewKey].scene()
+                scene.updateNodeGraphics(self.entityTextFont, self.entityTextBrush, self.linkTextFont,
+                                         self.linkTextBrush)
 
             self.saveProject()
 
@@ -1697,11 +1733,25 @@ class MainWindow(QtWidgets.QMainWindow):
         self.RESOLUTIONMANAGER.loadResolutionsFromDir(
             Path(self.SETTINGS.value("Program/BaseDir")) / "Core" / "Resolutions" / "Core")
 
+        self.entityTextFont = QtGui.QFont(self.SETTINGS.value("Program/EntityTextFontType"),
+                                          int(self.SETTINGS.value("Program/EntityTextFontSize")),
+                                          int(self.SETTINGS.value("Program/EntityTextFontBoldness")))
+        self.entityTextBrush = QtGui.QBrush(self.SETTINGS.value("Program/EntityTextColor"))
+        self.linkTextFont = QtGui.QFont(self.SETTINGS.value("Program/LinkTextFontType"),
+                                        int(self.SETTINGS.value("Program/LinkTextFontSize")),
+                                        int(self.SETTINGS.value("Program/LinkTextFontBoldness")))
+        self.linkTextBrush = QtGui.QBrush(self.SETTINGS.value("Program/LinkTextColor"))
+
         self.setCentralWidget(CentralPane.WorkspaceWidget(self,
                                                           self.MESSAGEHANDLER,
                                                           self.URLMANAGER,
                                                           self.LENTDB,
-                                                          self.RESOURCEHANDLER))
+                                                          self.RESOURCEHANDLER,
+                                                          self.entityTextFont,
+                                                          self.entityTextBrush,
+                                                          self.linkTextFont,
+                                                          self.linkTextBrush))
+
         self.facilitateResolutionSignalListener.connect(self.centralWidget().tabbedPane.facilitateResolution)
 
         self.loadModules()
@@ -2575,6 +2625,132 @@ class MultiChoicePropertyInput(QtWidgets.QGroupBox):
         return valuesSelected
 
 
+class GraphicsEditDialog(QtWidgets.QDialog):
+
+    def __init__(self, settingsObject, resourceHandler):
+        super(GraphicsEditDialog, self).__init__()
+
+        self.setModal(True)
+        self.setMaximumWidth(850)
+        self.setMinimumWidth(600)
+        self.setMaximumHeight(600)
+        self.setMinimumHeight(400)
+        self.settings = settingsObject
+        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
+
+        editDialogLayout = QtWidgets.QGridLayout()
+        self.setLayout(editDialogLayout)
+        scrollArea = QtWidgets.QScrollArea()
+        scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        scrollArea.setWidgetResizable(True)
+        scrollContainer = QtWidgets.QWidget()
+        scrollLayout = QtWidgets.QVBoxLayout()
+        scrollContainer.setLayout(scrollLayout)
+        scrollArea.setWidget(scrollContainer)
+        editDialogLayout.addWidget(scrollArea, 0, 0, 2, 2)
+
+        resolutionCategoryWidget = QtWidgets.QWidget()
+        self.resolutionCategoryLayout = SettingsCategoryLayout(supportsDeletion=False)
+        resolutionCategoryWidget.setLayout(self.resolutionCategoryLayout)
+        resolutionCategoryLabel = QtWidgets.QLabel('Graphics Settings')
+
+        resolutionCategoryLabel.setFont(QtGui.QFont("Times", 13, QtGui.QFont.Bold))
+        resolutionCategoryLabel.setFrameStyle(QtWidgets.QFrame.Raised | QtWidgets.QFrame.Panel)
+
+        resolutionCategoryLabel.setAlignment(QtCore.Qt.AlignCenter)
+        scrollLayout.addWidget(resolutionCategoryLabel)
+        scrollLayout.addWidget(resolutionCategoryWidget)
+
+        confirmButton = QtWidgets.QPushButton('Confirm')
+        confirmButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET_2)
+        confirmButton.clicked.connect(self.accept)
+        editDialogLayout.addWidget(confirmButton, 2, 1, 1, 1)
+        cancelButton = QtWidgets.QPushButton('Cancel')
+        cancelButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET_2)
+        cancelButton.clicked.connect(self.reject)
+        editDialogLayout.addWidget(cancelButton, 2, 0, 1, 1)
+
+        self.settingsTextboxes = []
+        self.settingsValueTextboxes = []
+        self.newSettings = {}
+
+        etfSettingTextbox = SettingsIntegerEditTextBox(int(self.settings.value("Program/EntityTextFontSize")), "ETF",
+                                                       50, 5)
+        etfSettingTextbox.setStyleSheet(Stylesheets.TEXT_BOX_STYLESHEET)
+        self.settingsValueTextboxes.append(etfSettingTextbox)
+        self.resolutionCategoryLayout.addRow("Entity Text Font Size", etfSettingTextbox)
+
+        ltfSettingTextbox = SettingsIntegerEditTextBox(int(self.settings.value("Program/LinkTextFontSize")), "LTF",
+                                                       50, 5)
+        ltfSettingTextbox.setStyleSheet(Stylesheets.TEXT_BOX_STYLESHEET)
+        self.settingsValueTextboxes.append(ltfSettingTextbox)
+        self.resolutionCategoryLayout.addRow("Link Text Font Size", ltfSettingTextbox)
+
+        self.colorPicker = QtWidgets.QColorDialog()
+        self.colorPicker.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
+        self.colorPicker.setOption(QtWidgets.QColorDialog.DontUseNativeDialog, True)
+
+        etcSettingWidget = QtWidgets.QWidget()
+        etcSettingLayout = QtWidgets.QHBoxLayout()
+        etcSettingWidget.setLayout(etcSettingLayout)
+
+        etcSettingTextbox = SettingsEditTextBox(self.settings.value("Program/EntityTextColor"), "ETC")
+        etcSettingTextbox.setReadOnly(True)
+        etcSettingTextbox.setStyleSheet(Stylesheets.TEXT_BOX_STYLESHEET)
+        etcSettingLayout.addWidget(etcSettingTextbox, 5)
+
+        etcSettingPalettePrompt = QtWidgets.QPushButton(QtGui.QIcon(resourceHandler.getIcon("colorPicker")),
+                                                        "Pick Colour")
+        etcSettingPalettePrompt.clicked.connect(self.runEntityColorPicker)
+        etcSettingLayout.addWidget(etcSettingPalettePrompt)
+
+        self.settingsTextboxes.append(etcSettingTextbox)
+        self.resolutionCategoryLayout.addRow("Entity Text Color", etcSettingWidget)
+
+        ltcSettingWidget = QtWidgets.QWidget()
+        ltcSettingLayout = QtWidgets.QHBoxLayout()
+        ltcSettingWidget.setLayout(ltcSettingLayout)
+
+        ltcSettingTextbox = SettingsEditTextBox(self.settings.value("Program/LinkTextColor"), "LTC")
+        ltcSettingTextbox.setReadOnly(True)
+        ltcSettingTextbox.setStyleSheet(Stylesheets.TEXT_BOX_STYLESHEET)
+        ltcSettingLayout.addWidget(ltcSettingTextbox, 5)
+
+        ltcSettingPalettePrompt = QtWidgets.QPushButton(QtGui.QIcon(resourceHandler.getIcon("colorPicker")),
+                                                        "Pick Colour")
+        ltcSettingPalettePrompt.clicked.connect(self.runLinkColorPicker)
+        ltcSettingLayout.addWidget(ltcSettingPalettePrompt)
+
+        self.settingsTextboxes.append(ltcSettingTextbox)
+        self.resolutionCategoryLayout.addRow("Link Text Color", ltcSettingWidget)
+
+    def runEntityColorPicker(self):
+        color = self.colorPicker.getColor(QtGui.QColor(self.settings.value("Program/EntityTextColor")),
+                                          title="Select New Entity Text Color")
+        if color.isValid():
+            self.settingsTextboxes[0].setText(color.name())
+
+    def runLinkColorPicker(self):
+        color = self.colorPicker.getColor(QtGui.QColor(self.settings.value("Program/LinkTextColor")),
+                                          title="Select New Link Text Color")
+        if color.isValid():
+            self.settingsTextboxes[1].setText(color.name())
+
+    def accept(self) -> None:
+        # Cannot delete these values.
+        for settingTextbox in self.settingsTextboxes:
+            key = settingTextbox.settingsKey
+            value = settingTextbox.text()
+            self.newSettings[key] = value
+        for settingsValueTextbox in self.settingsValueTextboxes:
+            key = settingsValueTextbox.settingsKey
+            value = settingsValueTextbox.value()
+            self.newSettings[key] = value
+
+        super(GraphicsEditDialog, self).accept()
+
+
 class ProgramEditDialog(QtWidgets.QDialog):
 
     def __init__(self, settingsObject):
@@ -2877,8 +3053,20 @@ class ProjectEditDialog(QtWidgets.QDialog):
 
 class SettingsEditTextBox(QtWidgets.QLineEdit):
 
-    def __init__(self, contents, settingsKey):
+    def __init__(self, contents: str, settingsKey: str):
         super(SettingsEditTextBox, self).__init__(str(contents))
+        self.settingsKey = settingsKey
+        self.keyDeleted = False
+        self.setToolTip("Edit the contents to change the setting's value.")
+
+
+class SettingsIntegerEditTextBox(QtWidgets.QSpinBox):
+
+    def __init__(self, contents: int, settingsKey: str, maxVal: int, minVal: int):
+        super(SettingsIntegerEditTextBox, self).__init__()
+        self.setMaximum(maxVal)
+        self.setMinimum(minVal)
+        self.setValue(contents)
         self.settingsKey = settingsKey
         self.keyDeleted = False
         self.setToolTip("Edit the contents to change the setting's value.")

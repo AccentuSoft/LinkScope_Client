@@ -124,10 +124,16 @@ class MenuBar(QtWidgets.QMenuBar):
                                     statusTip="Edit Program Settings",
                                     triggered=self.editProgramSettings)
 
+        editGraphics = QtGui.QAction('Graphics Settings',
+                                     self,
+                                     statusTip="Edit Graphics Settings",
+                                     triggered=self.editGraphicsSettings)
+
         editSettingsMenu.addAction(editLog)
         editSettingsMenu.addAction(editResolution)
         editSettingsMenu.addAction(editProject)
         editSettingsMenu.addAction(editProgram)
+        editSettingsMenu.addAction(editGraphics)
 
         exitAction = QtGui.QAction("Exit",
                                    self,
@@ -727,6 +733,9 @@ class MenuBar(QtWidgets.QMenuBar):
 
     def editProgramSettings(self) -> None:
         self.parent().editProgramSettings()
+
+    def editGraphicsSettings(self) -> None:
+        self.parent().changeGraphics()
 
     def editResolutionsSettings(self) -> None:
         self.parent().editResolutionsSettings()

@@ -9,12 +9,14 @@ from PySide6.QtWidgets import QGraphicsItem
 from PySide6.QtWidgets import QGraphicsItemGroup, QGraphicsSimpleTextItem, QGraphicsPixmapItem
 from PySide6.QtSvgWidgets import QGraphicsSvgItem
 
-TEXTFONT = QtGui.QFont("Mono", 11, 700)
+ENTITY_TEXT_FONT = QtGui.QFont("Mono", 11, 700)
+LINK_TEXT_FONT = QtGui.QFont("Mono", 11, 700)
 
 
 class BaseNode(QGraphicsItemGroup):
 
-    def __init__(self, pictureByteArray: QtCore.QByteArray, uid, primaryAttribute: str) -> None:
+    def __init__(self, pictureByteArray: QtCore.QByteArray, uid, primaryAttribute: str, font: QtGui.QFont,
+                 brush: QtGui.QBrush) -> None:
         super(BaseNode, self).__init__()
 
         self.setCacheMode(self.DeviceCoordinateCache)
@@ -34,7 +36,12 @@ class BaseNode(QGraphicsItemGroup):
         self.labelItem = QGraphicsSimpleTextItem('')
         self.addToGroup(self.iconItem)
         self.addToGroup(self.labelItem)
-        self.labelItem.setFont(TEXTFONT)
+        if font is not None:
+            self.labelItem.setFont(font)
+        else:
+            self.labelItem.setFont(ENTITY_TEXT_FONT)
+        if brush is not None:
+            self.labelItem.setBrush(brush)
 
         self.updateLabel(primaryAttribute)
 
@@ -115,8 +122,8 @@ class BaseNode(QGraphicsItemGroup):
 class GroupNode(BaseNode):
 
     # childNodes is a list of tuples, uid and picture, of all the nodes in the group.
-    def __init__(self, pictureByteArray, uid: str, label: str = 'Entity Group') -> None:
-        super(GroupNode, self).__init__(pictureByteArray, uid, label)
+    def __init__(self, pictureByteArray, uid: str, label: str = 'Entity Group', font=None, brush=None) -> None:
+        super(GroupNode, self).__init__(pictureByteArray, uid, label, font, brush)
         self.groupedNodesConnectors = []
         self.itemsThatWereGrouped = []
         self.groupedNodesUid = set()
@@ -190,7 +197,8 @@ class GroupNode(BaseNode):
 # Ref: https://github.com/PySide/Examples/blob/master/examples/graphicsview/diagramscene/diagramscene.py
 class BaseConnector(QGraphicsItemGroup):
 
-    def __init__(self, origin, destination, name: str = 'None', uid=None, parent=None) -> None:
+    def __init__(self, origin, destination, name: str = 'None', uid=None, parent=None,
+                 font: QtGui.QFont = None, brush: QtGui.QBrush = None) -> None:
         super(BaseConnector, self).__init__(parent)
 
         self.myStartItem = origin
@@ -198,7 +206,12 @@ class BaseConnector(QGraphicsItemGroup):
 
         self.labelItem = QGraphicsSimpleTextItem('')
         self.addToGroup(self.labelItem)
-        self.labelItem.setFont(TEXTFONT)
+        if font is not None:
+            self.labelItem.setFont(font)
+        else:
+            self.labelItem.setFont(LINK_TEXT_FONT)
+        if brush is not None:
+            self.labelItem.setBrush(brush)
 
         self.updateLabel(name)
 

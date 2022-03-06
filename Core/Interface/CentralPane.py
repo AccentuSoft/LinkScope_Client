@@ -28,7 +28,12 @@ class WorkspaceWidget(QtWidgets.QWidget):
                  messageHandler,
                  urlManager,
                  entityDB,
-                 resourceHandler):
+                 resourceHandler,
+                 entityTextFont,
+                 entityTextBrush,
+                 linkTextFont,
+                 linkTextBrush):
+
         super(WorkspaceWidget, self).__init__(parent=mainWindow)
 
         self.mainWindow = mainWindow
@@ -42,6 +47,10 @@ class WorkspaceWidget(QtWidgets.QWidget):
                                      urlManager,
                                      entityDB,
                                      resourceHandler,
+                                     entityTextFont,
+                                     entityTextBrush,
+                                     linkTextFont,
+                                     linkTextBrush,
                                      mainWindow)
 
         self.docAndCanvasLayout.addWidget(self.tabbedPane, 0, 1)
@@ -154,6 +163,10 @@ class TabbedPane(QtWidgets.QTabWidget):
                  urlManager,
                  entityDB,
                  resourceHandler,
+                 entityTextFont,
+                 entityTextBrush,
+                 linkTextFont,
+                 linkTextBrush,
                  mainWindow):
 
         super(TabbedPane, self).__init__(parent)
@@ -161,6 +174,10 @@ class TabbedPane(QtWidgets.QTabWidget):
         self.urlManager = urlManager
         self.entityDB = entityDB
         self.resourceHandler = resourceHandler
+        self.entityTextFont = entityTextFont
+        self.entityTextBrush = entityTextBrush
+        self.linkTextFont = linkTextFont
+        self.linkTextBrush = linkTextBrush
         self.mainWindow = mainWindow
 
         self.setAcceptDrops(True)
@@ -174,7 +191,8 @@ class TabbedPane(QtWidgets.QTabWidget):
     def addCanvas(self, canvasName='New Graph', graph=None, positions=None, a=0, b=0, c=0, d=0) -> bool:
         if not self.isCanvasNameAvailable(canvasName):
             return False
-        scene = CanvasScene(self, graph, positions, a, b, c, d, canvasName)
+        scene = CanvasScene(self, graph, positions, a, b, c, d, canvasName,
+                            self.entityTextFont, self.entityTextBrush, self.linkTextFont, self.linkTextBrush)
         view = CanvasView(self,
                           scene,
                           canvasName,
@@ -459,7 +477,8 @@ class TabbedPane(QtWidgets.QTabWidget):
                             nodePrimaryAttribute = nodeJSON.get(list(nodeJSON)[1])
                         except IndexError:
                             nodePrimaryAttribute = ''
-                        newNode = Entity.BaseNode(picture, uid, nodePrimaryAttribute)
+                        newNode = Entity.BaseNode(picture, uid, nodePrimaryAttribute, self.entityTextFont,
+                                                  self.entityTextBrush)
                         scene.addNodeToScene(newNode)
                         scene.addLinkDragDrop(scene.nodesDict[parentUID], newNode, newLink[2])
 
@@ -1038,7 +1057,8 @@ class CanvasView(QtWidgets.QGraphicsView):
 
 class CanvasScene(QtWidgets.QGraphicsScene):
 
-    def __init__(self, parent, graph=None, positions=None, a=0, b=0, c=0, d=0, canvasName: str = 'New Canvas') -> None:
+    def __init__(self, parent, graph=None, positions=None, a=0, b=0, c=0, d=0, canvasName: str = 'New Canvas',
+                 entityTextFont=None, entityTextBrush=None, linkTextFont=None, linkTextBrush=None) -> None:
         super(CanvasScene, self).__init__(a, b, c, d, parent)
         self.itemsToLink = []
         self.linking = False
@@ -1046,6 +1066,10 @@ class CanvasScene(QtWidgets.QGraphicsScene):
         self.appendingToGroup = False
         self.sceneGraph = graph
         self.scenePos = positions
+        self.entityTextFont = entityTextFont
+        self.entityTextBrush = entityTextBrush
+        self.linkTextFont = linkTextFont
+        self.linkTextBrush = linkTextBrush
 
         # All the nodes on the canvas. Easier than looping through self.items().
         self.nodesDict = {}
@@ -1063,6 +1087,23 @@ class CanvasScene(QtWidgets.QGraphicsScene):
         self.selectionChanged.connect(self.selectionChangeUpdater)
         self.resolutionThreadingLock = threading.Lock()
 
+    def updateNodeGraphics(self, entityTextFont, entityTextBrush, linkTextFont, linkTextBrush) -> None:
+        self.entityTextFont = entityTextFont
+        self.entityTextBrush = entityTextBrush
+        self.linkTextFont = linkTextFont
+        self.linkTextBrush = linkTextBrush
+        for item in self.items():
+            if isinstance(item, Entity.BaseNode):
+                item.labelItem.setFont(self.entityTextFont)
+                item.labelItem.setBrush(self.entityTextBrush)
+                # Re-Center the Label
+                item.updateLabel(item.labelItem.text())
+            elif isinstance(item, Entity.BaseConnector):
+                item.labelItem.setFont(self.linkTextFont)
+                item.labelItem.setBrush(self.linkTextBrush)
+                # Re-Center the Label
+                item.updateLabel(item.labelItem.text())
+
     # Redefined so that the BaseConnector items are not considered.
     def itemsBoundingRect(self) -> QtCore.QRectF:
         try:
@@ -1073,10 +1114,10 @@ class CanvasScene(QtWidgets.QGraphicsScene):
                     itemsX.append(item.pos().x())
                     itemsY.append(item.pos().y())
 
-            minX = min(itemsX) - 210
-            minY = min(itemsY) - 110
-            width = max(itemsX) - minX + 260
-            height = max(itemsY) - minY + 110
+            minX = min(itemsX) - (21 * self.entityTextFont.pointSize())
+            minY = min(itemsY) - 100 - self.entityTextFont.pointSize()
+            width = max(itemsX) - minX + (24 * self.entityTextFont.pointSize())
+            height = max(itemsY) - minY + 100 + self.entityTextFont.pointSize()
 
             return QtCore.QRectF(minX, minY, width, height)
         except ValueError:
@@ -1224,10 +1265,12 @@ class CanvasScene(QtWidgets.QGraphicsScene):
                 nodePrimaryAttribute = ''
 
             if groupItems is None:
-                newNode = Entity.BaseNode(picture, node, nodePrimaryAttribute)
+                newNode = Entity.BaseNode(picture, node, nodePrimaryAttribute, self.entityTextFont,
+                                          self.entityTextBrush)
                 self.addNodeToScene(newNode)
             else:
-                newNode = Entity.GroupNode(picture, node, nodePrimaryAttribute)
+                newNode = Entity.GroupNode(picture, node, nodePrimaryAttribute, self.entityTextFont,
+                                           self.entityTextBrush)
                 self.addNodeToScene(newNode)
 
                 newGroupList = newNode.listWidget
@@ -1276,7 +1319,8 @@ class CanvasScene(QtWidgets.QGraphicsScene):
             #   either a new one being created or an old one that was copied.
             groupItems = [uid for uid in entity['Child UIDs'] if uid not in self.sceneGraph.nodes]
             if len(groupItems) > 0:
-                newNode = Entity.GroupNode(picture, uid, entity['Group Name'])
+                newNode = Entity.GroupNode(picture, uid, entity['Group Name'], self.entityTextFont,
+                                           self.entityTextBrush)
                 self.addNodeToScene(newNode, x, y)
 
                 newGroupList = newNode.listWidget
@@ -1288,7 +1332,8 @@ class CanvasScene(QtWidgets.QGraphicsScene):
         elif entity.get('Entity Type'):
             if not fromServer:
                 self.parent().mainWindow.sendLocalCanvasUpdateToServer(self.getSelfName(), uid)
-            newNode = Entity.BaseNode(picture, uid, nodePrimaryAttribute)
+            newNode = Entity.BaseNode(picture, uid, nodePrimaryAttribute, self.entityTextFont,
+                                      self.entityTextBrush)
             self.addNodeToScene(newNode, x, y)
 
         if newNode is not None:
@@ -1319,12 +1364,14 @@ class CanvasScene(QtWidgets.QGraphicsScene):
                 nodePrimaryAttribute = entity.get(list(entity)[1])
             except IndexError:
                 nodePrimaryAttribute = ''
-            newNode = Entity.BaseNode(picture, uid, nodePrimaryAttribute)
+            newNode = Entity.BaseNode(picture, uid, nodePrimaryAttribute, self.entityTextFont,
+                                      self.entityTextBrush)
             self.addNodeToScene(newNode)
         else:
             groupItems = [uid for uid in groupItems if uid not in self.sceneGraph.nodes]
             if len(groupItems) > 0:
-                newNode = Entity.GroupNode(picture, uid, entity['Group Name'])
+                newNode = Entity.GroupNode(picture, uid, entity['Group Name'], self.entityTextFont,
+                                           self.entityTextBrush)
                 self.addNodeToScene(newNode)
 
                 newGroupList = newNode.listWidget
@@ -1518,7 +1565,8 @@ class CanvasScene(QtWidgets.QGraphicsScene):
             linkToEdit.uid.add(linkUID)
         else:
             self.sceneGraph.add_edge(origin.uid, destination.uid)
-            self.addLinkToScene(Entity.BaseConnector(origin, destination, name))
+            self.addLinkToScene(Entity.BaseConnector(origin, destination, name, font=self.linkTextFont,
+                                                     brush=self.linkTextBrush))
 
         if not fromServer:
             self.parent().mainWindow.sendLocalCanvasUpdateToServer(self.getSelfName(), linkUID)
@@ -1541,7 +1589,8 @@ class CanvasScene(QtWidgets.QGraphicsScene):
             linkToEdit.uid.add(uid)
         else:
             self.sceneGraph.add_edge(uid[0], uid[1])
-            self.addLinkToScene(Entity.BaseConnector(parentItem, childItem, name, uid))
+            self.addLinkToScene(Entity.BaseConnector(parentItem, childItem, name, uid, font=self.linkTextFont,
+                                                     brush=self.linkTextBrush))
 
         if not fromServer:
             self.parent().mainWindow.sendLocalCanvasUpdateToServer(self.getSelfName(), uid)

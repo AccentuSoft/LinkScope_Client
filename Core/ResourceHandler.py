@@ -59,6 +59,8 @@ class ResourceHandler:
                                       "Resources" / "Icons" / "DrawLink.png"),
                       "rearrange": str(Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) /
                                        "Resources" / "Icons" / "RearrangeGraph.png"),
+                      "colorPicker": str(Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) /
+                                         "Resources" / "Icons" / "ColorPicker.png"),
                       }
         # These are not meant to be strict - just restrictive enough such that users don't put in utter nonsense.
         # Note that regex isn't always the best way of validating fields, but it should be good enough for our
