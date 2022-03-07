@@ -1,0 +1,66 @@
+<KYC>
+    <Sanctioned_Person>
+        <Attributes>
+          <Attribute default="John Smith" check="String" primary="True">Full Name</Attribute>
+          <Attribute default="Unknown" check="String" primary="False">Gender</Attribute>
+          <Attribute default="Unknown" check="String" primary="False">Occupation</Attribute>
+          <Attribute default="Unknown" check="String" primary="False">Date of Birth</Attribute>
+          <Attribute default="Unknown" check="String" primary="False">Nationality</Attribute>
+        </Attributes>
+        <Icon>
+          SanctionedPerson.svg
+        </Icon>
+    </Sanctioned_Person>
+    <Criminal>
+        <Attributes>
+          <Attribute default="John Smith" check="String" primary="True">Full Name</Attribute>
+          <Attribute default="Unknown" check="String" primary="False">Gender</Attribute>
+          <Attribute default="Unknown" check="String" primary="False">Occupation</Attribute>
+          <Attribute default="Unknown" check="String" primary="False">Date of Birth</Attribute>
+          <Attribute default="Unknown" check="String" primary="False">Nationality</Attribute>
+        </Attributes>
+        <Icon>
+          SanctionedPerson.svg
+        </Icon>
+    </Criminal>
+    <Sanctioned_Organization>
+        <Attributes>
+            <Attribute default="Organization Name" check="String" primary="True">Organization Name</Attribute>
+        </Attributes>
+        <Icon>
+            SanctionedOrganization.svg
+        </Icon>
+    </Sanctioned_Organization>
+    <Politically_Exposed_Organization>
+        <Attributes>
+            <Attribute default="Organization Name" check="String" primary="True">Organization Name</Attribute>
+        </Attributes>
+        <Icon>
+            SanctionedOrganization.svg
+        </Icon>
+    </Politically_Exposed_Organization>
+    <Sanctioned_Company>
+        <Attributes>
+            <Attribute default="Company Name" check="String" primary="True">Company Name</Attribute>
+        </Attributes>
+        <Icon>
+            SanctionedCompany.svg
+        </Icon>
+    </Sanctioned_Company>
+    <Politically_Exposed_Company>
+        <Attributes>
+            <Attribute default="Company Name" check="String" primary="True">Company Name</Attribute>
+        </Attributes>
+        <Icon>
+            SanctionedCompany.svg
+        </Icon>
+    </Politically_Exposed_Company>
+    <KYC_Phrase>
+        <Attributes>
+          <Attribute default="Phrase" check="String" primary="True">KYC Phrase</Attribute>
+        </Attributes>
+        <Icon>
+          KYCPhrase.svg
+        </Icon>
+    </KYC_Phrase>
+</KYC>
