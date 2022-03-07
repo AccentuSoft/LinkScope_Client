@@ -372,7 +372,10 @@ class TabbedPane(QtWidgets.QTabWidget):
                 del newNodeJSON[newNodePrimaryFieldKey]
                 try:
                     notesField = newNodeJSON.pop('Notes')
-                    existingEntityJSON['Notes'] += '\n' + notesField
+                    if existingEntityJSON.get('Notes'):
+                        existingEntityJSON['Notes'] += '\n' + notesField
+                    else:
+                        existingEntityJSON['Notes'] = notesField
                 except KeyError:
                     # If no new field was actually added to the entity, don't re-add to the database
                     if len(newNodeJSON) == 0:
