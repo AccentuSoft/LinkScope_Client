@@ -13,7 +13,19 @@ python3.9 -m pip install --upgrade -r requirements.txt
 
 PLAYWRIGHT_BROWSERS_PATH=0 python3.9 -m playwright install
 
-python3.9 -m PyInstaller --clean --icon="./Icon.ico" --noconsole --noconfirm --onedir --add-data "./Modules:Modules/" --add-data "./Resources:Resources/" --add-data "./Core:Core/" --collect-all "PySide6" --collect-all "networkx" --collect-all "pydot" --collect-all "msgpack" --hidden-import "_cffi_backend" --collect-all "folium" --collect-all "shodan" --collect-all "vtapi3" --collect-all "docker" --collect-all "exif" --collect-all "dns" --collect-all "pycountry" --collect-all "tldextract" --collect-all "requests_futures" --collect-all "branca" --collect-all "bs4" --hidden-import "pandas" --collect-all "docx2python" --collect-all "tweepy" --collect-all "PyPDF2" --collect-all "Wappalyzer" --collect-all "email_validator" --add-data "./buildEnv/lib/python3.9/site-packages/social-analyzer:social-analyzer/" --hidden-import "PIL" --hidden-import "lz4" --hidden-import "lxml" --hidden-import "jellyfish" --hidden-import "defusedxml" --hidden-import "cchardet" --hidden-import "ipwhois" --hidden-import "xmltodict" --hidden-import "dateutil" --hidden-import "urllib3" --hidden-import "logging" --hidden-import "holehe" --hidden-import "httpx" --collect-all "snscrape" --hidden-import "pytz" "./LinkScope.py"
+# Numpy cannot be loaded without the 'noarchive' debug flag - bug?
+python3.9 -m PyInstaller --clean --icon="./Icon.ico" --noconsole --noconfirm --onedir --noupx -d noarchive \
+--add-data "./Modules:Modules/" --add-data "./Resources:Resources/" --add-data "./Core:Core/" \
+--collect-all "PySide6" --collect-all "networkx" --collect-all "pydot" --collect-all "msgpack" \
+--hidden-import "_cffi_backend" --collect-all "folium" --collect-all "shodan" --collect-all "vtapi3" \
+--collect-all "docker" --collect-all "exif" --collect-all "pycountry" --collect-all "tldextract" \
+--collect-all "requests_futures" --collect-all "branca" --collect-all "bs4" --hidden-import "pandas" \
+--collect-all "docx2python" --collect-all "tweepy" --collect-all "PyPDF2" --collect-all "Wappalyzer" \
+--collect-all "email_validator" --add-data "./buildEnv/lib/python3.9/site-packages/social-analyzer:social-analyzer/" \
+--hidden-import "PIL" --hidden-import "lz4" --hidden-import "lxml" --hidden-import "jellyfish" \
+--hidden-import "defusedxml" --hidden-import "cchardet" --hidden-import "ipwhois" --hidden-import "xmltodict" \
+--hidden-import "dateutil" --hidden-import "urllib3" --hidden-import "logging" --hidden-import "holehe" \
+--hidden-import "httpx" --collect-all "snscrape" --hidden-import "pytz" "./LinkScope.py"
 
 # Copy web engine resources in final package, so that the map tool works.
 cp buildEnv/lib/python3.9/site-packages/PySide6/Qt/resources/qtwebengine_resources.pak dist/LinkScope

@@ -33,6 +33,8 @@ lxml
 # Speeds up parsing of webpages by bs4
 cchardet
 bs4
+# Redundant, but doesn't hurt.
+beautifulsoup4
 
 # Need to run 'playwright install'.
 playwright
