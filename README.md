@@ -1,6 +1,6 @@
 # LinkScope Client
 <p align="center">
-  <img src="Repository_Images/Flower.png">
+  <img src="Repository_Images/DemoPic.png">
 </p>
 
 ## Description

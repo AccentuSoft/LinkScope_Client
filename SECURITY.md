@@ -2,7 +2,7 @@
 
 ## Supported Platforms and Versions
 
-Currently, only the latest version of the software is supported: Version 1.1.0.
+Currently, only the latest version of the software is supported.
 
 The software is targeted towards Linux (Debian / Ubuntu) and Windows (version 10).
 Other platforms are not officially supported.
