@@ -25,7 +25,8 @@ python3.9 -m PyInstaller --clean --icon="./Icon.ico" --noconsole --noconfirm --o
 --hidden-import "PIL" --hidden-import "lz4" --hidden-import "lxml" --hidden-import "jellyfish" \
 --hidden-import "defusedxml" --hidden-import "cchardet" --hidden-import "ipwhois" --hidden-import "xmltodict" \
 --hidden-import "dateutil" --hidden-import "urllib3" --hidden-import "logging" --hidden-import "holehe" \
---hidden-import "httpx" --collect-all "snscrape" --hidden-import "pytz" "./LinkScope.py"
+--hidden-import "httpx" --collect-all "snscrape" --hidden-import "pytz" --hidden-import "name-that-hash" \
+"./LinkScope.py"
 
 # Copy web engine resources in final package, so that the map tool works.
 cp buildEnv/lib/python3.9/site-packages/PySide6/Qt/resources/qtwebengine_resources.pak dist/LinkScope

@@ -67,3 +67,4 @@ aiosmtplib
 requests-html
 aiohttp_socks
 dnspython
+name-that-hash
