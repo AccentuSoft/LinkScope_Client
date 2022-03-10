@@ -20,7 +20,7 @@
       <Attribute default="Unknown" check="String" primary="False">Nationality</Attribute>
     </Attributes>
     <Icon>
-      Person.svg
+      PEP.svg
     </Icon>
   </Politically_Exposed_Person>
   <Phrase>
