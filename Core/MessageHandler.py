@@ -101,7 +101,7 @@ class MessageHandler:
 
         # Do not handle root logger messages
         rootLogger = logging.getLogger()
-        for handler in rootLogger.handlers[:]:
+        for handler in rootLogger.handlers:
             if isinstance(handler, logging.Handler):
                 rootLogger.removeHandler(handler)
 
