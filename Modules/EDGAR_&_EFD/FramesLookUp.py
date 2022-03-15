@@ -4,6 +4,8 @@ class FramesLookUp:
     # A string that is treated as the name of this resolution.
     name = "Frames Look Up"
 
+    category = "EDGAR Info"
+
     # A string that describes this resolution.
     description = "Returns Frame Forms"
 

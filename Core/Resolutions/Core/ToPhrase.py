@@ -3,6 +3,7 @@
 
 class ToPhrase:
     name = "Convert To Phrase"
+    category = "String Operations"
     description = "Convert the primary field of selected entities to a Phrase entity."
     originTypes = {'*'}
     resultTypes = {'Phrase'}

@@ -3,8 +3,9 @@
 
 class URLScan:
     name = "URLScan Website Search"
+    category = "Threats & Malware"
     description = "Find information about a given website"
-    originTypes = {'Website', 'domain'}
+    originTypes = {'Website', 'Domain'}
     resultTypes = {'IP Address', 'Website', 'Domain', 'Hash'}
     parameters = {'api key': {'description': 'Enter your api key under your profile after'
                                              ' signing up on https://urlscan.io.'

@@ -1756,6 +1756,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.loadModules()
 
+        # Sort the resolutions alphabetically.
+        self.RESOLUTIONMANAGER.resolutions = dict(sorted(self.RESOLUTIONMANAGER.resolutions.items()))
+
         self.dockbarOne = DockBarOne.DockBarOne(
             self,
             self.RESOLUTIONMANAGER,

@@ -4,6 +4,8 @@
 class OpenCorporateCompanyResults:
     name = "OpenCorporate Company Lookup"
 
+    category = "OpenCorporates"
+
     description = "Returns Results per Company"
 
     originTypes = {'Phrase', 'Company', 'Open Corporate Company'}

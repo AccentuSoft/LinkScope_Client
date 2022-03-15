@@ -3,6 +3,7 @@
 
 class Nessus_Import:
     name = "Nessus Import"
+    category = "Nessus"
     description = "Import .nessus report findings"
     originTypes = {'Document'}
     resultTypes = {'Finding', 'Port', 'IP Address', 'IPv6 Address', 'Phrase', 'CVE'}

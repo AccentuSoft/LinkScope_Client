@@ -3,7 +3,8 @@
 
 class HunterEmailVerifier:
     name = "Hunter.io Email Verifier"
-    description = "Verify an email using hunter.io"
+    category = "Online Identity"
+    description = "Verify an email using hunter.io."
     originTypes = {"Email Address"}
     resultTypes = {'Phrase'}
     parameters = {'Hunter API Key': {'description': "Enter the api key under your profile after signing up at "

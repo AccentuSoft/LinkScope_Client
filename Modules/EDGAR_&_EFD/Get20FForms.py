@@ -4,6 +4,8 @@ class Get20FForms:
     # A string that is treated as the name of this resolution.
     name = "Get Recent 20-F Forms"
 
+    category = "EDGAR Info"
+
     # A string that describes this resolution.
     description = "Returns Nodes 20-F Forms"
 

@@ -10,6 +10,7 @@ For BTC Donations : 1FHDM49QfZX6pJmhjLE5tB2K6CaTLMZpXZ
 
 class Holehe_Account_Discovery:
     name = "Holehe Account Discovery"
+    category = "Online Identity"
     description = "Discover Social Media Accounts associated with an Email Address."
     originTypes = {'Email Address'}
     resultTypes = {'Email Address', 'Phone Number', 'Phrase', 'Date', 'Domain'}

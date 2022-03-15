@@ -4,6 +4,8 @@
 class OpenCorporateCompanyOfficers:
     name = "OpenCorporate Officers Lookup"
 
+    category = "OpenCorporates"
+
     description = "Returns Nodes of Officers"
 
     originTypes = {'Open Corporate Company'}

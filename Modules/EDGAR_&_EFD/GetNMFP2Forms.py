@@ -4,6 +4,8 @@ class GetNMFP2Forms:
     # A string that is treated as the name of this resolution.
     name = "Get Recent N-MFP2 Forms"
 
+    category = "EDGAR Info"
+
     # A string that describes this resolution.
     description = "Returns Nodes N-MFP2 Forms"
 

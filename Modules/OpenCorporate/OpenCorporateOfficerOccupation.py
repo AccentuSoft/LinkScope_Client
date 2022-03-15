@@ -4,6 +4,8 @@
 class OpenCorporateOfficerOccupation:
     name = "Get OpenCorporate Officers"
 
+    category = "OpenCorporates"
+
     description = "Returns Nodes of Companies where the Person is an Officer"
 
     originTypes = {'Person', 'Phrase'}

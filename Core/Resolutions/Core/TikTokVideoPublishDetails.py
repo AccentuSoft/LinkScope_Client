@@ -5,6 +5,8 @@ class TikTokVideoPublishDetails:
     # A string that is treated as the name of this resolution.
     name = "TikTok Video Publishing Details"
 
+    category = "Website Information"
+
     # A string that describes this resolution.
     description = "Extracts information from public TikTok Videos."
 

@@ -1,6 +1,7 @@
 class ASNToCIDR:
     # A string that is treated as the name of this resolution.
     name = "Get CIDR from ASN"
+    category = "Network Infrastructure"
 
     # A string that describes this resolution.
     description = "Get network information for an Autonomous System Number."

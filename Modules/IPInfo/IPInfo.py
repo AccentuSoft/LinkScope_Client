@@ -3,6 +3,7 @@
 
 class IPInfo:
     name = "Get IPInfo Results For IP"
+    category = "Geolocation"
     description = "Find information about the location of a given IP Address"
     originTypes = {'IP Address'}
     resultTypes = {'Geocordinates', 'Organization', 'City'}

@@ -3,6 +3,7 @@
 
 class NessusExistingScan:
     name = "Existing Nessus Template Scan"
+    category = "Nessus"
     description = "Nessus vulnerability scanner"
     originTypes = {'Phrase'}
     resultTypes = {'Finding', 'Port', 'IP Address', 'IPv6 Address', 'Phrase', 'CVE'}

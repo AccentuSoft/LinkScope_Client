@@ -8,6 +8,8 @@ Credit to: https://github.com/JustAnotherArchivist/snscrape
 class TwitterUser:
     name = "Get Tweets by Twitter User"
 
+    category = "Online Identity"
+
     description = "Get Tweets made by the specified twitter username / handle, or twitter user ID."
 
     originTypes = {'Social Media Handle', 'Phrase', 'Twitter User', 'VK User'}

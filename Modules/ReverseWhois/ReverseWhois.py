@@ -5,6 +5,8 @@ class ReverseWhois:
 
     name = "Discover Domains Owned by Entity"
 
+    category = "Reverse Whois"
+
     description = "Discover Domains Owned by Entity through reverse whois lookup"
 
     originTypes = {'Phrase', 'Company', 'Person'}

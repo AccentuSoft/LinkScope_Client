@@ -3,6 +3,7 @@
 
 class EFDByToDate:
     name = 'Get EFD Reports To Date'
+    category = "US Senate Financial Info"
     description = 'Get EFD reports ending at the date specified by the input entities.'
     originTypes = {'Date'}
     resultTypes = {'Politically Exposed Person', 'Website'}

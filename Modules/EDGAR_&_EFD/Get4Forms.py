@@ -4,6 +4,8 @@ class Get4Forms:
     # A string that is treated as the name of this resolution.
     name = "Get Recent 4 Forms"
 
+    category = "EDGAR Info"
+
     # A string that describes this resolution.
     description = "Returns Nodes D Forms"
 

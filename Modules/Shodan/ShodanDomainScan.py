@@ -3,6 +3,7 @@
 
 class ShodanDomainScan:
     name = "Shodan Domain Scan"
+    category = "Network Infrastructure"
     description = "Find information about a particular domain"
     originTypes = {'Domain'}
     resultTypes = {'Domain'}

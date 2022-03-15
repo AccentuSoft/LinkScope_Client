@@ -3,6 +3,7 @@
 
 class FileHasher:
     name = "Get File Hash"
+    category = "File Operations"
     description = "Get the Hash of a file."
     originTypes = {"Image", "Document", "Video", "Archive", "Disk"}
     resultTypes = {'Hash'}

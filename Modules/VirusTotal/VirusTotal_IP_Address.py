@@ -3,6 +3,7 @@
 
 class VirusTotal_IP_Address:
     name = "VirusTotal IP Address Scan"
+    category = "Threats & Malware"
     description = "Find information about a IP address using VirusTotal.com"
     originTypes = {"IP Address"}
     resultTypes = {"Country", "Company", "Autonomous System"}

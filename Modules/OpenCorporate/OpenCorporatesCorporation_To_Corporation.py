@@ -4,6 +4,8 @@
 class OpenCorporatesCorporation_To_Corporation:
     name = "OpenCorporateCompany to Company"
 
+    category = "OpenCorporates"
+
     description = "OpenCorporateCompany Entity to Company Entity"
 
     originTypes = {'Open Corporate Company'}

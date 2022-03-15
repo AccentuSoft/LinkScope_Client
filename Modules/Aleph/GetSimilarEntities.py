@@ -3,6 +3,7 @@
 
 class GetSimilarEntities:
     name = "Get Similar Entities"
+    category = "Aleph OCCRP"
     description = "Find information about similar entities"
     originTypes = {'Phrase', 'Person', 'Politically Exposed Person'}
     resultTypes = {'Phrase', 'Person', 'Address', 'Aleph ID'}

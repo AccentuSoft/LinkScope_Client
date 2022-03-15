@@ -3,7 +3,8 @@
 
 class HunterDomainEmailSearch:
     name = "Hunter.io Domain Email Search"
-    description = "Find all the emails associated with a domain"
+    category = "Online Identity"
+    description = "Find all the emails associated with a domain."
     originTypes = {"Domain"}
     resultTypes = {'Email Address'}
     parameters = {'Hunter API Key': {'description': "Enter the api key under your profile after signing up at "

@@ -2,6 +2,8 @@ class IPToASN:
     # A string that is treated as the name of this resolution.
     name = "Get ASN From IP"
 
+    category = "Network Infrastructure"
+
     # A string that describes this resolution.
     description = "Get the Autonomous System Number that the selected IP Addresses belong to."
 

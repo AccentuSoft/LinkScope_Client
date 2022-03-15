@@ -3,6 +3,7 @@
 
 class WordCounter:
     name = "Get Number Of Words"
+    category = "String Operations"
     description = "Count the number of words in a given phrase."
     originTypes = {'Phrase'}
     resultTypes = {'Phrase'}

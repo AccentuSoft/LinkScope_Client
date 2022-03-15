@@ -5,6 +5,8 @@ class WayBack:
     # A string that is treated as the name of this resolution.
     name = "Get WayBack Pages"
 
+    category = "Website Information"
+
     # A string that describes this resolution.
     description = "Returns Nodes of websites for the requested time period"
 

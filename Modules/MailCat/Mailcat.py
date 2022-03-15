@@ -7,6 +7,7 @@ Credit: https://github.com/sharsil/mailcat
 
 class Mailcat:
     name = "MailCat Email Discovery"
+    category = "Online Identity"
     description = "Discover Email Addresses associated with a Username or Phrase."
     originTypes = {'Email Address', 'Phrase', 'Social Media Handle'}
     resultTypes = {'Email Address'}

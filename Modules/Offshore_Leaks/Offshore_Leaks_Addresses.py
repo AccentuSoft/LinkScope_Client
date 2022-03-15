@@ -3,6 +3,7 @@
 
 class Offshore_Leaks_Addresses:
     name = "Offshore Leaks Addresses"
+    category = "Offshore Leaks"
     description = "Find information about Addresses using the OffShores Database."
     originTypes = {'Phrase', 'Address'}
     resultTypes = {'Company, Country', 'Phrase'}

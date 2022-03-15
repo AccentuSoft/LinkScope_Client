@@ -2,7 +2,8 @@
 
 
 class AircraftInquiryBySerialNumber:
-    name = "AircraftInquiry By Serial Number"
+    name = "Aircraft Inquiry By Serial Number"
+    category = "Aircraft"
     description = "Find information about aircraft identifications from https://registry.faa.gov/aircraftinquiry/"
     originTypes = {"Identification Number"}
     resultTypes = {'Phrase', 'Person', 'Identification Number', 'Company'}

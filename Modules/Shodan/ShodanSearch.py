@@ -3,6 +3,7 @@
 
 class ShodanSearch:
     name = "Shodan Database Search"
+    category = "Network Infrastructure"
     description = "Search Shodan's database"
     originTypes = {'IP Address', 'Phrase', 'Person'}
     resultTypes = {'IP Address'}

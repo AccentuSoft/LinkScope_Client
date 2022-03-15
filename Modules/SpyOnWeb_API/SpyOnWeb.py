@@ -4,6 +4,8 @@
 class SpyOnWeb:
     name = "SpyOnWeb API"
 
+    category = "Website Information"
+
     description = "Discover Websites Connections through UA numbers"
 
     originTypes = {'Domain'}

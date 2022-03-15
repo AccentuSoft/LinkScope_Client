@@ -3,6 +3,7 @@
 
 class IPToHostname:
     name = "IP To Hostname"
+    category = "Network Infrastructure"
     description = "Gets the Fully Qualified Domain Name associated with the given IPv4 / IPv6 address."
     originTypes = {'IPv6 Address', 'IP Address'}
     resultTypes = {'Domain'}

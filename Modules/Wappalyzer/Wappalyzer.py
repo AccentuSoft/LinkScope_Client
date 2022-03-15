@@ -3,6 +3,7 @@
 
 class Wappalyzer:
     name = "Wappalyzer Website Analysis"
+    category = "Website Information"
     description = "Find information about what technologies a website is using"
     originTypes = {'Website', 'Domain'}
     resultTypes = {'Website Infrastructure'}

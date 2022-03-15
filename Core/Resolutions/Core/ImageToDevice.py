@@ -3,6 +3,7 @@
 
 class ImageToDevice:
     name = "Device From Image"
+    category = "File Operations"
     description = "Find information about on what device an image was taken with."
     originTypes = {"Image"}
     resultTypes = {'Phrase'}

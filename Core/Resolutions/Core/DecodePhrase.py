@@ -2,6 +2,8 @@ class DecodePhrase:
     # A string that is treated as the name of this resolution.
     name = "Decode Phrase"
 
+    category = "String Operations"
+
     # A string that describes this resolution.
     description = "Decode encoded phrases."
 

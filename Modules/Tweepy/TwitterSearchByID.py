@@ -4,6 +4,8 @@
 class TwitterSearchByID:
     name = "Get Tweets by Twitter Handle"
 
+    category = "Online Identity"
+
     description = """
     Returns Tweets per ID.
     """

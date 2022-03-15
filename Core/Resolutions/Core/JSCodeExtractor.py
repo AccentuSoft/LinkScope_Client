@@ -5,6 +5,8 @@ class JSCodeExtractor:
     # A string that is treated as the name of this resolution.
     name = "Extract Tracking Codes"
 
+    category = "Website Tracking"
+
     # A string that describes this resolution.
     description = "Returns Nodes of 'ca-pub', 'ua' and 'gtm' tracking codes for websites and/or domains."
 

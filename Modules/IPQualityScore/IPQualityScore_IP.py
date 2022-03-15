@@ -3,6 +3,7 @@
 
 class IPQualityScore_IP:
     name = "IP Quality Score IP"
+    category = "Threats & Malware"
     description = "Find information about the location of a given IP Address or Validate an Email Address"
     originTypes = {'IP Address'}
     resultTypes = {'Phrase', 'Autonomous System', 'Geocordinates', 'Organization', 'Country', 'City'}

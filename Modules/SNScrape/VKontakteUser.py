@@ -8,6 +8,8 @@ Credit to: https://github.com/JustAnotherArchivist/snscrape
 class VKontakteUser:
     name = "Get Posts by VKontakte User"
 
+    category = "Online Identity"
+
     description = "Get Posts made by the specified VKontakte username."
 
     originTypes = {'Social Media Handle', 'Phrase', 'Twitter User', 'VK User'}

@@ -3,6 +3,7 @@
 
 class EtherScanGetBalance:
     name = "EtherScan.io Get Balance"
+    category = "CryptoCurrency"
     description = "EtherScan get the balance of the selected account"
     originTypes = {"Crypto Wallet"}
     resultTypes = {'Crypto Wallet'}

@@ -3,6 +3,7 @@
 
 class VirusTotal_URL:
     name = "VirusTotal URL Scan"
+    category = "Threats & Malware"
     description = "Find information about a URL using VirusTotal.com"
     originTypes = {"Website"}
     resultTypes = {'Phrase'}

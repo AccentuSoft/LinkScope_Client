@@ -3,6 +3,7 @@
 
 class EtherScanGetBlocksMined:
     name = "EtherScan.io Get Blocks Mined"
+    category = "CryptoCurrency"
     description = "EtherScan Blocks Mined from the selected account"
     originTypes = {"Crypto Wallet"}
     resultTypes = {'Crypto Wallet'}

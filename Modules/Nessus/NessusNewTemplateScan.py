@@ -3,6 +3,7 @@
 
 class NessusNewTemplateScan:
     name = "New Nessus Template Scan"
+    category = "Nessus"
     description = "Nessus vulnerability scanner"
     originTypes = {'Website', 'IP Address', 'IPv6 Address', 'Domain'}
     resultTypes = {'Finding', 'Port', 'IP Address', 'IPv6 Address', 'Phrase', 'CVE'}

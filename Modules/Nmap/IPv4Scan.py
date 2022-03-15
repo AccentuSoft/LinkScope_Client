@@ -5,6 +5,8 @@ class IPv4Scan:
     # A string that is treated as the name of this resolution.
     name = "IPv4 Nmap Scan"
 
+    category = "Network Scanning"
+
     # A string that describes this resolution.
     description = ""
 

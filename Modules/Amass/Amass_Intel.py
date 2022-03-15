@@ -3,6 +3,7 @@
 
 class Amass_Intel:
     name = "Amass Intel Scan"
+    category = "Network Infrastructure"
     description = "Find information about a particular domain"
     originTypes = {'Domain', 'IP Address', 'Autonomous System'}
     resultTypes = {'Domain'}

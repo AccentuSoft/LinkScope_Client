@@ -3,6 +3,7 @@
 
 class VirusTotal_Domain:
     name = "VirusTotal Domain Scan"
+    category = "Threats & Malware"
     description = "Find information about a domain using VirusTotal.com"
     originTypes = {"Domain"}
     resultTypes = {'Country', 'Domain', 'Company', 'Email Address', 'Phrase'}

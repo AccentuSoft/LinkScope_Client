@@ -3,7 +3,8 @@
 
 class HunterPersonEmailFinder:
     name = "Hunter.io Person Email Finder"
-    description = "Find the email of a person by scanning a domain with hunter.io and providing a Full Name"
+    category = "Online Identity"
+    description = "Find the email of a person for a particular domain."
     originTypes = {"Domain"}
     resultTypes = {'Email Address'}
     parameters = {'Hunter API Key': {'description': "Enter the api key under your profile after signing up at "

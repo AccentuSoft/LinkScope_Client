@@ -4,6 +4,7 @@
 class ExtractPDFMeta:
     # A string that is treated as the name of this resolution.
     name = "Get PDF Metadata"
+    category = "File Operations"
 
     # A string that describes this resolution.
     description = "Returns a set of nodes that contain all the metadata info of pdf files."

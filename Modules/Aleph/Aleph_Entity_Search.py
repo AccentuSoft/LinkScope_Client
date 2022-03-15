@@ -3,6 +3,7 @@
 
 class Aleph_Entity_Search:
     name = "Aleph Entity Search"
+    category = "Aleph OCCRP"
     description = "Find information about a given search parameter"
     originTypes = {'Phrase', 'Person', 'Politically Exposed Person'}
     resultTypes = {'Phrase'}

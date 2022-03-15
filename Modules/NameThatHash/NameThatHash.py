@@ -11,6 +11,8 @@ class NameThatHash:
     # A string that is treated as the name of this resolution.
     name = "Identify Hash Type"
 
+    category = "String Operations"
+
     # A string that describes this resolution.
     description = "Identifies the algorithm that was used to generate the hash given as input."
 

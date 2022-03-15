@@ -19,6 +19,8 @@ class FileExtractor:
     # A string that is treated as the name of this resolution.
     name = "Find Hosted File URLs"
 
+    category = "Website Information"
+
     # A string that describes this resolution.
     description = "Returns Nodes of files in websites and domains."
 

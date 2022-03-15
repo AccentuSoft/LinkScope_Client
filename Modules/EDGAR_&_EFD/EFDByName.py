@@ -3,6 +3,7 @@
 
 class EFDByName:
     name = 'Get EFD Reports by Name'
+    category = "US Senate Financial Info"
     description = 'Get EFD reports concerning the people specified by the input entities.'
     originTypes = {'Person', 'Politically Exposed Person'}
     resultTypes = {'Website'}

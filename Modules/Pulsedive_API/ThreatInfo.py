@@ -5,6 +5,8 @@ class ThreatInfo:
     # A string that is treated as the name of this resolution.
     name = "Pulsedive Threat Lookup"
 
+    category = "Threats & Malware"
+
     # A string that describes this resolution.
     description = "Returns Nodes of Threat Info"
 

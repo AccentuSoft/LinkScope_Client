@@ -18,6 +18,7 @@ Tweaks to this script can be made depending on each investigator's workflow.
 
 class GetExternalURLs:
     name = "Get External Urls"
+    category = "Website Information"
     description = "Returns all links to external sites on a website."
     originTypes = {'Website'}
     resultTypes = {'Website'}

@@ -7,6 +7,7 @@ Credits in web_accounts_list.json
 class Whats_My_Name:
 
     name = "Whats My Name"
+    category = "Online Identity"
     description = "Find potentially connected social media accounts."
     originTypes = {'Phrase', 'Person', 'Social Media Handle'}
     resultTypes = {'Website'}

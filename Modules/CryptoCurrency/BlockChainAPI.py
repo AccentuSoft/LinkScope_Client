@@ -5,6 +5,8 @@ class BlockChainAPI:
     # A string that is treated as the name of this resolution.
     name = "BlockChainAPI Get Transaction Details"
 
+    category = "CryptoCurrency"
+
     # A string that describes this resolution.
     description = "Returns Nodes of balance, sent, received info"
 

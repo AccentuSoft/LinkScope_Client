@@ -3,6 +3,7 @@
 
 class IPWhois:
     name = "IPv4 WhoIs Information"
+    category = "Network Infrastructure"
     description = "Extract information from the Whois record that corresponds to a given IP Address."
     originTypes = {'IP Address'}
     resultTypes = {'Country', 'Autonomous System', 'Email Address'}

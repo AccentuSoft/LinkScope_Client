@@ -3,6 +3,7 @@
 
 class VirusTotal_File:
     name = "VirusTotal File Scan"
+    category = "Threats & Malware"
     description = "Find information about a file using VirusTotal.com"
     originTypes = {"Image", "Document", "Archive"}
     resultTypes = {'Hash'}

@@ -5,6 +5,8 @@ class EmailExtractor:
     # A string that is treated as the name of this resolution.
     name = "Extract Emails"
 
+    category = "Website Information"
+
     # A string that describes this resolution.
     description = "Returns the email addresses present on a website or index page of a domain."
 

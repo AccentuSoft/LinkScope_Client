@@ -3,6 +3,7 @@
 
 class ShodanIPScan:
     name = "Shodan IP Scan"
+    category = "Network Infrastructure"
     description = "Find information about ip addresses and discovered vulnerabilities"
     originTypes = {'IP Address'}
     resultTypes = {'Shodan Scan'}

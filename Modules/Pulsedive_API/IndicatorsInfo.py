@@ -5,6 +5,8 @@ class IndicatorsInfo:
     # A string that is treated as the name of this resolution.
     name = "Pulsedive Indicators Lookup"
 
+    category = "Threats & Malware"
+
     # A string that describes this resolution.
     description = "Returns Nodes of Indicators Info"
 

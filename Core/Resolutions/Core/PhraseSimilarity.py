@@ -2,6 +2,7 @@
 
 class PhraseSimilarity:
     name = "String Similarity Check"
+    category = "String Operations"
     description = "Find the ratio of similarity between two strings."
     originTypes = {'*'}
     resultTypes = {'Phrase'}

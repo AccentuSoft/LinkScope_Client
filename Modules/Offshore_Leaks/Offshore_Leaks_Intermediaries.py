@@ -3,6 +3,7 @@
 
 class Offshore_Leaks_Intermediaries:
     name = "Offshore Leaks Intermediaries"
+    category = "Offshore Leaks"
     description = "Find information about Intermediaries using the OffShores Database."
     originTypes = {'Phrase', 'Company', 'Organization'}
     resultTypes = {'Company, Country', 'Phrase'}

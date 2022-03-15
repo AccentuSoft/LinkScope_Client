@@ -3,6 +3,7 @@
 
 class ImageToGeoLocation:
     name = "Geolocation From Image"
+    category = "File Operations"
     description = "Find information about where an image was taken."
     originTypes = {"Image"}
     resultTypes = {'GeoCoordinates'}

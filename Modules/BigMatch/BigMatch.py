@@ -3,6 +3,7 @@
 
 class BigMatch:
     name = "BigMatch Search"
+    category = "Secrets & Leaks"
     description = "Find information about a file using https://bigmatch.rev.ng/static/index.html"
     originTypes = {"Image", "Document", "Archive"}
     resultTypes = {'Website'}

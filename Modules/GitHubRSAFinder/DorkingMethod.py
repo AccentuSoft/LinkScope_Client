@@ -5,6 +5,8 @@ class DorkingMethod:
     # A string that is treated as the name of this resolution.
     name = "RSA Keys Startpage Dorking"
 
+    category = "Secrets & Leaks"
+
     # A string that describes this resolution.
     description = "Returns Nodes of github repos containing RSA keys"
 

@@ -5,6 +5,8 @@ class RegexMatch:
     # A string that is treated as the name of this resolution.
     name = "Get Regex Match"
 
+    category = "String Operations"
+
     # A string that describes this resolution.
     description = "Extract text from Phrases and Websites with Regular Expressions."
 

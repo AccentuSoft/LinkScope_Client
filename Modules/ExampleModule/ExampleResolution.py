@@ -4,6 +4,8 @@ class ExampleResolution:
     # A string that is treated as the name of this resolution.
     name = "Example Resolution"
 
+    category = "Example"
+
     # A string that describes this resolution.
     description = "Resolves Nothing in particular"
 

@@ -13,6 +13,8 @@ class AffiliateCodesExtractor:
     # A string that is treated as the name of this resolution.
     name = "Extract Affiliate Codes"
 
+    category = "Website Tracking"
+
     # A string that describes this resolution.
     description = "Returns Facebook and Amazon affiliate codes found in websites."
 

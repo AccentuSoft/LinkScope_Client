@@ -4,6 +4,8 @@ class GetN8FForms:
     # A string that is treated as the name of this resolution.
     name = "Get Recent N-8F Forms"
 
+    category = "EDGAR Info"
+
     # A string that describes this resolution.
     description = "Returns Nodes N-8F Forms Websites"
 

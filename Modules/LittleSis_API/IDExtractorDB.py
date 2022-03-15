@@ -2,6 +2,8 @@ class IDExtractorDB:
     # A string that is treated as the name of this resolution.
     name = "LittleSis ID Extractor"
 
+    category = "LittleSis"
+
     # A string that describes this resolution.
     description = "Returns Nodes of ID Info"
 

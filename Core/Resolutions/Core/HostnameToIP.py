@@ -3,6 +3,7 @@
 
 class HostnameToIP:
     name = "Hostname To IP"
+    category = "Network Infrastructure"
     description = "Gets the IP associated with the given hostname."
     originTypes = {'Domain', 'Website'}
     resultTypes = {'IP Address', 'IPv6 Address'}

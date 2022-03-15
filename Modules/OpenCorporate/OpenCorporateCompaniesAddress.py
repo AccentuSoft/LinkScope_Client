@@ -4,6 +4,8 @@
 class OpenCorporateCompaniesAddress:
     name = "Get OpenCorporate Company's Address"
 
+    category = "OpenCorporates"
+
     description = "Returns Address per company."
 
     originTypes = {'Phrase', 'Company', 'Open Corporate Company'}

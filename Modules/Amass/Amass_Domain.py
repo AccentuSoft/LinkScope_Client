@@ -3,6 +3,7 @@
 
 class Amass_Domain:
     name = "Amass Domain Scan"
+    category = "Network Infrastructure"
     description = "Find information about a particular domain"
     originTypes = {'Domain'}
     resultTypes = {'IP Address', 'Phrase', 'Autonomous System', 'Domain', 'IPv6 Address'}

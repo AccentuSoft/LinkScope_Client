@@ -5,6 +5,8 @@ class ContainsPhrase:
     # A string that is treated as the name of this resolution.
     name = "Contains Phrase"
 
+    category = "String Operations"
+
     # A string that describes this resolution.
     description = "Checks if a Phrase exists in the Notes of a Phrase entity or the body of a Website."
 

@@ -3,6 +3,7 @@
 
 class Reddit:
     name = "Reddit Comments and Submissions Lookup"
+    category = "Reddit"
     description = "Search Reddit for Phrases or Persons ('Authors') sorted by most recent."
     originTypes = {'Phrase', 'Person'}
     resultTypes = {'Phrase'}

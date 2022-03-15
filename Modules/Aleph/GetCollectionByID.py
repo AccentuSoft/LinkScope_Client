@@ -3,6 +3,7 @@
 
 class GetCollectionByID:
     name = "Get Collections By ID"
+    category = "Aleph OCCRP"
     description = "Find information about Collections and their IDs"
     originTypes = {'Phrase'}
     resultTypes = {'Phrase. Person, Address, Phone Number, Email Address, Country, Bank Account'}

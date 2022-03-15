@@ -4,6 +4,8 @@
 class TwitterSearchByKeyWord:
     name = "Get Tweets by Keyword"
 
+    category = "Online Identity"
+
     description = """
     Returns Tweets per ID.
     """

@@ -3,6 +3,7 @@
 
 class Comments_To_Hash:
     name = "Comments To Hash"
+    category = "Reddit"
     description = "Transform a Reddit Comment entity to a Hash entity."
     originTypes = {'Reddit Comment'}
     resultTypes = {'Hash'}

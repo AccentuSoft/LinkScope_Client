@@ -3,6 +3,7 @@
 
 class GetCollectionsInfo:
     name = "Get Collections Info"
+    category = "Aleph OCCRP"
     description = "Find information about Collections and their IDs"
     originTypes = {'Phrase'}
     resultTypes = {'Phrase, Aleph ID'}

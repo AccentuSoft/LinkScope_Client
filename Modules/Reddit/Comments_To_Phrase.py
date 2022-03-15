@@ -3,6 +3,7 @@
 
 class Comments_To_Phrase:
     name = "Comments To Phrase"
+    category = "Reddit"
     description = "Transform a Reddit Comment entity to a Phrase entity."
     originTypes = {'Reddit Comment'}
     resultTypes = {'Phrase'}

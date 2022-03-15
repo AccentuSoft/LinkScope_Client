@@ -3,6 +3,7 @@
 
 class AircraftInquiryByDealer:
     name = "Aircraft Inquiry By Dealer"
+    category = "Aircraft"
     description = "Find information about aircraft identifications from https://registry.faa.gov/aircraftinquiry/"
     originTypes = {"Company"}
     resultTypes = {'Phrase', 'Company'}

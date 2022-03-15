@@ -4,6 +4,8 @@ class CompanyInfo:
     # A string that is treated as the name of this resolution.
     name = "Get Company Info"
 
+    category = "EDGAR Info"
+
     # A string that describes this resolution.
     description = "Returns Nodes containing Company Information"
 

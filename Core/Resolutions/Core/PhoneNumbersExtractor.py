@@ -10,6 +10,8 @@ class PhoneNumbersExtractor:
     # A string that is treated as the name of this resolution.
     name = "Extract Phone Numbers"
 
+    category = "Website Information"
+
     # A string that describes this resolution.
     description = "Returns the Phone Numbers present on a website or index page of a domain."
 

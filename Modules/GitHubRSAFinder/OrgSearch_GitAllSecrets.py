@@ -5,6 +5,8 @@ class OrgSearch_GitAllSecrets:
     # A string that is treated as the name of this resolution.
     name = "Git-All-Secrets OrgSearch"
 
+    category = "Secrets & Leaks"
+
     # A string that describes this resolution.
     description = "Returns Nodes of Relationship Info"
 

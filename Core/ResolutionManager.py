@@ -17,8 +17,7 @@ class ResolutionManager:
 
     def loadResolutionsFromDir(self, directory: Path):
         exceptionsCount = 0
-        if self.resolutions.get(directory.stem) is None:
-            self.resolutions[directory.stem] = {}
+        resolutionCategory = "Uncategorized"
         for resolution in listdir(directory):
             try:
                 if resolution.endswith('.py'):
@@ -35,19 +34,29 @@ class ResolutionManager:
                     originTypes = resClassInst.originTypes
                     resultTypes = resClassInst.resultTypes
                     resolutionParameters = resClassInst.parameters
-                    self.resolutions[directory.stem][resNameString] = {'name': resNameString,
-                                                                       'description': resolutionDesc,
-                                                                       'originTypes': originTypes,
-                                                                       'resultTypes': resultTypes,
-                                                                       'parameters': resolutionParameters,
-                                                                       'resolution': resClass
-                                                                       }
+                    try:
+                        resolutionCategory = resClassInst.category
+                        if not isinstance(resolutionCategory, str):
+                            raise AttributeError()
+                    except AttributeError:
+                        pass
+                    if self.resolutions.get(resolutionCategory) is None:
+                        self.resolutions[resolutionCategory] = {}
+                    self.resolutions[resolutionCategory][resNameString] = {'name': resNameString,
+                                                                           'description': resolutionDesc,
+                                                                           'originTypes': originTypes,
+                                                                           'resultTypes': resultTypes,
+                                                                           'parameters': resolutionParameters,
+                                                                           'category': resolutionCategory,
+                                                                           'resolution': resClass
+                                                                           }
                     self.messageHandler.info("Loaded Resolution: " + resNameString)
             except Exception as e:
                 self.messageHandler.error("Cannot load resolutions from " + str(directory) + "\n Info: " + repr(e))
                 exceptionsCount += 1
-                if exceptionsCount > 5:
-                    self.messageHandler.critical("Failed loading too many modules to proceed.")
+                if exceptionsCount > 3:
+                    # Will not occur when loading modules with 3 or fewer resolutions, but that should be fine.
+                    self.messageHandler.critical("Failed loading too many resolutions to proceed.")
                     sys.exit(5)
 
     def getResolutionParameters(self, resolutionCategory, resolutionNameString):
