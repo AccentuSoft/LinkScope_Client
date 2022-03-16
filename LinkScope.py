@@ -629,6 +629,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 except re.error:
                     self.MESSAGEHANDLER.error('Invalid Regex Specified!', popUp=True, exc_info=False)
 
+    def findResolution(self) -> None:
+        # Dereference the entities and resolutions, just to be safe.
+        findDialog = FindResolutionDialog(self, list(self.RESOURCEHANDLER.getAllEntities()),
+                                          dict(self.RESOLUTIONMANAGER.resolutions))
+        findDialog.exec()
+
     def mergeEntities(self) -> None:
         """
         Show table of entities w/ primary fields, and incoming / outgoing links.
@@ -2426,7 +2432,7 @@ class ResolutionParametersSelector(QtWidgets.QDialog):
             labelText = ""
             if resolutionDescription is not None:
                 labelText += resolutionDescription + "\n\n"
-            labelText += 'Select the entities to use for this resolution. Accepted Origin Types: ' + \
+            labelText += 'Select the entities to use for this resolution.\nAccepted Origin Types: ' + \
                          ', '.join(originTypes)
             entitySelectTabLabel = QtWidgets.QLabel(labelText)
             entitySelectTabLabel.setWordWrap(True)
@@ -3231,6 +3237,119 @@ class FindEntityOfTypeOnCanvasDialog(QtWidgets.QDialog):
 
     def changeSelectedType(self):
         self.findInput.setCompleter(self.autoCompleters[self.typeInput.currentText()])
+
+
+class ResolutionSearchResultsList(QtWidgets.QListWidget):
+
+    def __init__(self, mainWindowObject: MainWindow):
+        super(ResolutionSearchResultsList, self).__init__()
+        self.mainWindow = mainWindowObject
+
+    def mouseDoubleClickEvent(self, event: QtGui.QMouseEvent) -> None:
+        super(ResolutionSearchResultsList, self).mouseDoubleClickEvent(event)
+        resItem = self.itemAt(event.pos())
+        if resItem is None or '/' not in resItem.text():
+            return
+        self.mainWindow.centralWidget().tabbedPane.getCurrentScene().clearSelection()
+        self.mainWindow.runResolution(resItem.text())
+
+
+class FindResolutionDialog(QtWidgets.QDialog):
+
+    def __init__(self, parent: MainWindow, entityList: list, resolutionDict: dict):
+        super(FindResolutionDialog, self).__init__()
+        self.entities = entityList
+        self.resolutions = resolutionDict
+        self.setModal(True)
+        self.setWindowTitle('Find Resolutions')
+        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
+
+        dialogLayout = QtWidgets.QGridLayout()
+        self.setLayout(dialogLayout)
+
+        descriptionLabel = QtWidgets.QLabel("Find Resolutions based on their parameters.")
+        descriptionLabel.setWordWrap(True)
+        dialogLayout.addWidget(descriptionLabel, 0, 0, 1, 2)
+
+        originLabel = QtWidgets.QLabel("Origin Entity:")
+        self.originDropDown = QtWidgets.QComboBox()
+        self.originDropDown.addItem('Any')
+        self.originDropDown.addItems(entityList)
+        self.originDropDown.addItem('*')
+        dialogLayout.addWidget(originLabel, 1, 0, 1, 1)
+        dialogLayout.addWidget(self.originDropDown, 1, 1, 1, 1)
+
+        targetLabel = QtWidgets.QLabel("Target Entity:")
+        self.targetDropDown = QtWidgets.QComboBox()
+        self.targetDropDown.addItem('Any')
+        self.targetDropDown.addItems(entityList)
+        self.targetDropDown.addItem('*')
+        dialogLayout.addWidget(targetLabel, 2, 0, 1, 1)
+        dialogLayout.addWidget(self.targetDropDown, 2, 1, 1, 1)
+
+        keywordsLabel = QtWidgets.QLabel("Keywords:")
+        self.keywordsWidget = QtWidgets.QLineEdit()
+        self.keywordsWidget.setToolTip("Add keywords separated by spaces.\nKeywords are checked against the "
+                                       "resolutions' titles and descriptions.")
+        dialogLayout.addWidget(keywordsLabel, 3, 0, 1, 2)
+        dialogLayout.addWidget(self.keywordsWidget, 4, 0, 1, 2)
+
+        resultsLabel = QtWidgets.QLabel("Matches:")
+        self.resultsWidget = ResolutionSearchResultsList(parent)
+        self.resultsWidget.addItem('Click "Search" to display results')
+        dialogLayout.addWidget(resultsLabel, 5, 0, 1, 2)
+        dialogLayout.addWidget(self.resultsWidget, 6, 0, 2, 2)
+
+        self.searchButton = QtWidgets.QPushButton("Search")
+        self.searchButton.clicked.connect(self.search)
+        self.closeButton = QtWidgets.QPushButton("Close")
+        self.closeButton.clicked.connect(self.accept)
+        dialogLayout.addWidget(self.closeButton, 8, 0, 1, 1)
+        dialogLayout.addWidget(self.searchButton, 8, 1, 1, 1)
+
+    def search(self):
+        self.resultsWidget.clear()
+        target = self.targetDropDown.currentText()
+        validResolutions = []
+        if target != 'Any':
+            for category in self.resolutions:
+                for resolution in self.resolutions[category]:
+                    if target in self.resolutions[category][resolution]['originTypes']:
+                        validResolutions.append(category + '/' + resolution)
+        else:
+            for category in self.resolutions:
+                for resolution in self.resolutions[category]:
+                    validResolutions.append(category + '/' + resolution)
+
+        origin = self.originDropDown.currentText()
+        if origin != 'Any':
+            for category in self.resolutions:
+                for resolution in self.resolutions[category]:
+                    if origin not in self.resolutions[category][resolution]['originTypes']:
+                        try:
+                            validResolutions.pop(category + '/' + resolution)
+                        except KeyError:
+                            # Python's philosophy of asking for forgiveness instead of asking for permission
+                            #   is not one to live your life by. When in Rome, though.
+                            pass
+
+        # Try to see if any of the keywords are a substring of the name or description of any resolution.
+        keywordFilter = self.keywordsWidget.text().strip()
+        if keywordFilter != '':
+            wordsToFind = keywordFilter.split(' ')
+            for category in self.resolutions:
+                for resolution in self.resolutions[category]:
+                    titleText = self.resolutions[category][resolution]['name']
+                    descriptionText = self.resolutions[category][resolution]['description']
+                    for keyword in wordsToFind:
+                        if keyword not in titleText and keyword not in descriptionText:
+                            try:
+                                validResolutions.pop(category + '/' + resolution)
+                            except KeyError:
+                                pass
+
+        for result in validResolutions:
+            self.resultsWidget.addItem(result)
 
 
 class MergeEntitiesDialog(QtWidgets.QDialog):

@@ -171,6 +171,13 @@ class MenuBar(QtWidgets.QMenuBar):
         viewMenu.addAction(regexTypeFindAction)
         viewMenu.addSeparator()
 
+        resolutionFindAction = QtGui.QAction("Find Resolutions",
+                                             self,
+                                             statusTip="Find Resolutions based on a set of parameters",
+                                             triggered=self.findResolutions)
+        viewMenu.addAction(resolutionFindAction)
+        viewMenu.addSeparator()
+
         rearrangeGraphAction = QtGui.QAction("Rearrange Graph",
                                              self,
                                              statusTip="Rearrange the nodes on the current Canvas to a default "
@@ -866,6 +873,9 @@ class MenuBar(QtWidgets.QMenuBar):
 
     def findEntitiesOfTypeRegex(self) -> None:
         self.parent().findEntityOfTypeOnCanvas(regex=True)
+
+    def findResolutions(self) -> None:
+        self.parent().findResolution()
 
     def openWebsite(self) -> None:
         currentScene = self.parent().centralWidget().tabbedPane.getCurrentScene()
