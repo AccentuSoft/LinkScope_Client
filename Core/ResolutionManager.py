@@ -83,13 +83,21 @@ class ResolutionManager:
         return None
 
     def loadResolutionsFromServer(self, serverRes):
-        self.resolutions |= serverRes
+        for category in serverRes:
+            if category not in self.resolutions:
+                self.resolutions[category] = {}
+            for serverResolution in serverRes[category]:
+                self.resolutions[category][serverResolution] = serverRes[category][serverResolution]
 
     def removeServerResolutions(self):
-        try:
-            self.resolutions.pop("Server Resolutions")
-        except KeyError:
-            pass
+        for category in dict(self.resolutions):
+            for resolution in self.resolutions[category]:
+                # If resolution class does not exist locally, then assume it exists on the server.
+                if self.resolutions[category][resolution]['resolution'] == '':
+                    self.resolutions[category].pop(resolution)
+        for category in dict(self.resolutions):
+            if len(self.resolutions[category]) == 0:
+                self.resolutions.pop(category)
 
     def getResolutionCategories(self):
         result = []
@@ -129,7 +137,8 @@ class ResolutionManager:
         for category in self.resolutions:
             for resolution in self.resolutions[category]:
                 if self.resolutions[category][resolution]['name'] == resolutionName:
-                    if category == "Server Resolutions":
+                    # If resolution class does not exist locally, then assume it exists on the server.
+                    if self.resolutions[category][resolution]['resolution'] == '':
                         self.mainWindow.executeRemoteResolution(resolutionName, resolutionEntitiesInput, parameters,
                                                                 resolutionUID)
                         # Returning a bool so we know that the resolution is running on the server.
