@@ -17,8 +17,8 @@ class ResolutionManager:
 
     def loadResolutionsFromDir(self, directory: Path):
         exceptionsCount = 0
-        resolutionCategory = "Uncategorized"
         for resolution in listdir(directory):
+            resolutionCategory = "Uncategorized"
             try:
                 if resolution.endswith('.py'):
                     resolutionName = resolution[:-3]
