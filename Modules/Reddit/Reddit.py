@@ -80,7 +80,7 @@ class Reddit:
                                           {index_of_child: {'Resolution': resolution_name,
                                                             'Notes': ''}}])
 
-                    comment_resolution = 'Reddit Comment Hashed'
+                    comment_resolution = 'Reddit Comment Hash'
                     comment = hashlib.md5(value.get('body', 'N/A').encode())  # nosec
                     comment = hexlify(comment.digest()).decode()
                     return_result.append([{'Comment': comment,
