@@ -3327,7 +3327,7 @@ class FindResolutionDialog(QtWidgets.QDialog):
                 for resolution in self.resolutions[category]:
                     if origin not in self.resolutions[category][resolution]['originTypes']:
                         try:
-                            validResolutions.pop(category + '/' + resolution)
+                            validResolutions.remove(str(category) + '/' + str(resolution))
                         except KeyError:
                             # Python's philosophy of asking for forgiveness instead of asking for permission
                             #   is not one to live your life by. When in Rome, though.
@@ -3344,7 +3344,7 @@ class FindResolutionDialog(QtWidgets.QDialog):
                     for keyword in wordsToFind:
                         if keyword not in titleText and keyword not in descriptionText:
                             try:
-                                validResolutions.pop(category + '/' + resolution)
+                                validResolutions.remove(str(category) + '/' + str(resolution))
                             except KeyError:
                                 pass
 
