@@ -4097,11 +4097,11 @@
         },
         {
           "name" : "FanCentro",
-          "check_uri" : "https://fancentro.com/{account}/",
+          "check_uri" : "https://fancentro.com/api/profile.get?profileAlias={account}&limit=1",
           "account_existence_code" : "200",
-          "account_existence_string" : "Feed",
-          "account_missing_string" : "",
-          "account_missing_code" : "301",
+          "account_existence_string" : "\"status\":true",
+          "account_missing_string" : "\"status\":false",
+          "account_missing_code" : "200",
           "known_accounts" : ["medroxy","miaaamador"],
           "category" : "XXXPORNXXX",
           "valid" : true
@@ -4488,6 +4488,17 @@
           "valid" : true
         },
         {
+          "name" : "Playstation Network",
+          "check_uri" : "https://psnprofiles.com/xhr/search/users?q={account}",
+          "account_existence_code" : "200",
+          "account_existence_string" : "<div class=\"progress-bar small level\">",
+          "account_missing_string" : "We couldn't find anything ",
+          "account_missing_code" : "200",
+          "known_accounts" : ["SlimShaggy18", "ikemenzi"],
+          "category" : "gaming",
+          "valid" : true
+        },
+        {
           "name" : "Iconfinder",
           "check_uri" : "https://www.iconfinder.com/{account}",
           "account_existence_code" : "200",
@@ -4498,7 +4509,7 @@
           "category" : "images",
           "valid" : true
         },
-    {
+        {
         "name" : "Rarible",
         "check_uri" : "https://rarible.com/{account}",
         "account_existence_code" : "200",
