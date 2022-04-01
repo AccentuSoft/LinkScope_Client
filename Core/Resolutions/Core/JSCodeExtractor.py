@@ -27,6 +27,7 @@ class JSCodeExtractor:
         gtmRegex = re.compile(r'\bGTM-[A-Z0-9]{1,7}\b', re.IGNORECASE)
         gRegex = re.compile(r'\bG-[A-Z0-9]{1,15}\b', re.IGNORECASE)
         qualtricsRegex = re.compile(r'\bQ_ZID=[a-zA-Z_0-9]*\b', re.IGNORECASE)
+        pingdomRegex = re.compile(r'\bpa-[a-fA-F0-9]{24}.js\b$', re.IGNORECASE)
 
         def GetTrackingCodes(pageUid, requestUrl) -> None:
             if requestUrl not in requestUrlsParsed:
@@ -56,6 +57,11 @@ class JSCodeExtractor:
                                            'Entity Type': 'Phrase'},
                                           {pageUid: {'Resolution': 'Qualtrics Tracking Code',
                                                      'Notes': ''}}])
+                for pCode in pingdomRegex.findall(requestUrl):
+                    returnResults.append([{'Phrase': pCode[:-3],
+                                           'Entity Type': 'Phrase'},
+                                          {pageUid: {'Resolution': 'Pingdom Tracking Code',
+                                                     'Notes': ''}}])
 
         with sync_playwright() as p:
             browser = p.firefox.launch()
@@ -64,6 +70,11 @@ class JSCodeExtractor:
                 user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:94.0) Gecko/20100101 Firefox/94.0'
             )
             page = context.new_page()
+            uid = None
+
+            # Subscribe to "request" events.
+            page.on("request", lambda request: GetTrackingCodes(uid, request.url))
+
             for site in entityJsonList:
                 uid = site['uid']
                 url = site.get('URL') if site.get('Entity Type', '') == 'Website' else site.get('Domain Name', None)
@@ -72,8 +83,6 @@ class JSCodeExtractor:
                 if not url.startswith('http://') and not url.startswith('https://'):
                     url = 'http://' + url
 
-                # Subscribe to "request" events.
-                page.on("request", lambda request: GetTrackingCodes(uid, request.url))
                 page.goto(url)
             page.close()
             browser.close()
