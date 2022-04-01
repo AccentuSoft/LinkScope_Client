@@ -26,9 +26,10 @@ class JSCodeExtractor:
         pubRegex = re.compile(r'\bca-pub-\d{1,16}\b', re.IGNORECASE)
         gtmRegex = re.compile(r'\bGTM-[A-Z0-9]{1,7}\b', re.IGNORECASE)
         gRegex = re.compile(r'\bG-[A-Z0-9]{1,15}\b', re.IGNORECASE)
-        qualtricsRegex = re.compile(r'\bQ_ZID=[a-zA-Z_0-9]*\b', re.IGNORECASE)
-        pingdomRegex = re.compile(r'\bpa-[a-fA-F0-9]{24}.js\b$', re.IGNORECASE)
-        mPulseRegex = re.compile(r'\b[a-zA-Z_0-9]{5}(-[a-zA-Z_0-9]{5}){4}\b', re.IGNORECASE)
+        qualtricsRegex = re.compile(r'\bQ_(?:Z|S)ID=[a-zA-Z_0-9]*\b')
+        pingdomRegex = re.compile(r'\bpa-[a-fA-F0-9]{24}.js\b$')
+        mPulseRegex = re.compile(r'\b[A-Z0-9]{5}(?:-[A-Z0-9]{5}){4}\b')
+        contextWebRegex = re.compile(r'\.contextweb\.com.*token=.*')
 
         def GetTrackingCodes(pageUid, requestUrl) -> None:
             if requestUrl not in requestUrlsParsed:
@@ -67,6 +68,11 @@ class JSCodeExtractor:
                     returnResults.append([{'Phrase': mCode,
                                            'Entity Type': 'Phrase'},
                                           {pageUid: {'Resolution': 'mPulse Tracking Code',
+                                                     'Notes': ''}}])
+                for cCode in contextWebRegex.findall(requestUrl):
+                    returnResults.append([{'Phrase': cCode.split('token=')[1].split('&')[0],
+                                           'Entity Type': 'Phrase'},
+                                          {pageUid: {'Resolution': 'ContextWeb Tracking Code',
                                                      'Notes': ''}}])
 
         with sync_playwright() as p:
