@@ -28,6 +28,7 @@ class JSCodeExtractor:
         gRegex = re.compile(r'\bG-[A-Z0-9]{1,15}\b', re.IGNORECASE)
         qualtricsRegex = re.compile(r'\bQ_ZID=[a-zA-Z_0-9]*\b', re.IGNORECASE)
         pingdomRegex = re.compile(r'\bpa-[a-fA-F0-9]{24}.js\b$', re.IGNORECASE)
+        mPulseRegex = re.compile(r'\b[a-zA-Z_0-9]{5}(-[a-zA-Z_0-9]{5}){4}\b', re.IGNORECASE)
 
         def GetTrackingCodes(pageUid, requestUrl) -> None:
             if requestUrl not in requestUrlsParsed:
@@ -61,6 +62,11 @@ class JSCodeExtractor:
                     returnResults.append([{'Phrase': pCode[:-3],
                                            'Entity Type': 'Phrase'},
                                           {pageUid: {'Resolution': 'Pingdom Tracking Code',
+                                                     'Notes': ''}}])
+                for mCode in mPulseRegex.findall(requestUrl):
+                    returnResults.append([{'Phrase': mCode,
+                                           'Entity Type': 'Phrase'},
+                                          {pageUid: {'Resolution': 'mPulse Tracking Code',
                                                      'Notes': ''}}])
 
         with sync_playwright() as p:
