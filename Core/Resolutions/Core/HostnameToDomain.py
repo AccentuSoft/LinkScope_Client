@@ -2,9 +2,9 @@
 
 
 class HostnameToDomain:
-    name = "Hostname to Domain"
-    category = "Website Information"
-    description = "Find the domain of any given hostname."
+    name = "Get Top Level Domain"
+    category = "Network Infrastructure"
+    description = "Get the top level domain of any given website or subdomain."
     originTypes = {'Domain', 'Website'}
     resultTypes = {'Domain'}
     parameters = {}
