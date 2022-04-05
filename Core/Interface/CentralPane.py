@@ -408,6 +408,8 @@ class TabbedPane(QtWidgets.QTabWidget):
                 if isinstance(parentUID, int):
                     parentUID = newNodeUIDs[parentUID]
                 # Sanity check: Check that the node that was used for this resolution still exists.
+                #   If not, do not create link.
+                # Note: The new node was still created.
                 if parentUID in allEntityUIDs:
                     resolutionName = parentsDict[parentID].get('Resolution', 'Link')
                     newLinkUID = (parentUID, outputEntityUID)
