@@ -163,6 +163,9 @@ class ResourceHandler:
         """
         Check that the attribute value given matches the regex of the category 'check'.
         """
+        # Ignore checks - this is used for non-string attributes in special entities.
+        if check == 'None':
+            return True
         attrCheck = self.checks.get(check)
         if attrCheck is None:
             return False

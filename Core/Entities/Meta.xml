@@ -2,7 +2,7 @@
   <EntityGroup>
     <Attributes>
       <Attribute default="Entity Group" check="String" primary="True">Group Name</Attribute>
-      <Attribute default="[]" check="String" primary="False">Child UIDs</Attribute>
+      <Attribute default="[]" check="None" primary="False">Child UIDs</Attribute>
     </Attributes>
     <Icon>
       GroupNode.svg
