@@ -21,7 +21,7 @@ class GetExternalURLs:
     category = "Website Information"
     description = "Returns all links to external sites on a website."
     originTypes = {'Website'}
-    resultTypes = {'Website'}
+    resultTypes = {'Website', 'Onion Website'}
 
     parameters = {'Element types to check': {'description': 'Select the types of elements to investigate for '
                                                             'external links. Note that "a" elements have the lowest '
@@ -41,6 +41,7 @@ class GetExternalURLs:
         import re
         import urllib
 
+        onionRegex = re.compile(r"""^https?://\w{56}\.onion/?(\S(?<!\.))*(\.(\S(?<!\.))*)?$""")
         returnResult = []
 
         extract_a = '<a> elements' in parameters['Element types to check']
@@ -115,8 +116,13 @@ class GetExternalURLs:
                                     externalUrls.add(link.split('#')[0])
 
                 for externalUrl in externalUrls:
-                    returnResult.append([{'URL': externalUrl, 'Entity Type': 'Website'},
-                                         {urlVisited[2]: {'Resolution': 'External Link', 'Notes': ''}}])
+                    onionCheck = onionRegex.findall(externalUrl)
+                    if len(onionCheck) == 1:
+                        returnResult.append([{'Onion URL': externalUrl, 'Entity Type': 'Onion Website'},
+                                             {urlVisited[2]: {'Resolution': 'External Link', 'Notes': ''}}])
+                    else:
+                        returnResult.append([{'URL': externalUrl, 'Entity Type': 'Website'},
+                                             {urlVisited[2]: {'Resolution': 'External Link', 'Notes': ''}}])
             page.close()
             browser.close()
 
