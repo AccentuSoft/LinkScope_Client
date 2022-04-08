@@ -105,5 +105,9 @@ class URLManager:
         return savePath
 
     def handleRemoteURL(self, url):
-        entity = {'Entity Type': 'Website', 'URL': url.toString()}
+        stringURL = url.toString()
+        if self.mainWindow.RESOURCEHANDLER.runCheckOnAttribute(stringURL, 'Onion'):
+            entity = {'Entity Type': 'Onion Website', 'Onion URL': stringURL}
+        else:
+            entity = {'Entity Type': 'Website', 'URL': stringURL}
         return entity

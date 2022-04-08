@@ -24,6 +24,14 @@
       Website.svg
     </Icon>
   </Website>
+  <Onion_Website>
+    <Attributes>
+      <Attribute default="http://exampleexampleexampleexampleexampleexampleexampleexample.onion" check="Onion" primary="True">Onion URL</Attribute>
+    </Attributes>
+    <Icon>
+      OnionWebsite.svg
+    </Icon>
+  </Onion_Website>
   <Domain>
     <Attributes>
       <Attribute default="example.com" check="Domain" primary="True">Domain Name</Attribute>

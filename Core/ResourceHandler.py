@@ -69,6 +69,7 @@ class ResourceHandler:
                        'Phonenumber': re.compile(r"""^(\+|00)?[0-9\(\) \-]{3,32}$"""),
                        'String': re.compile(r""".+"""),
                        'URL': re.compile(r"""^https?://(\S(?<!\.)){1,63}(\.(\S(?<!\.)){1,63})+$"""),
+                       'Onion': re.compile(r"""^https?://\w{56}\.onion/?(\S(?<!\.))*(\.(\S(?<!\.))*)?$"""),
                        'Domain': re.compile(r"""^(\S(?<!\.)(?!/)(?<!/)){1,63}(\.(\S(?<!\.)(?!/)(?<!/)){1,63})+$"""),
                        'Float': re.compile(r"""^([-+])?(\d|\.(?=\d))+$"""),
                        'WordString': re.compile(r"""^\D+$"""),
