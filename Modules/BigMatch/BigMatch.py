@@ -11,7 +11,7 @@ class BigMatch:
 
     def resolution(self, entityJsonList, parameters):
         from pathlib import Path
-        from playwright.sync_api import sync_playwright, TimeoutError
+        from playwright.sync_api import sync_playwright, TimeoutError, Error
         from bs4 import BeautifulSoup
 
         return_result = []
@@ -60,6 +60,8 @@ class BigMatch:
                         break
                     except TimeoutError:
                         pass
+                    except Error:
+                        break
             page.close()
             browser.close()
         return return_result

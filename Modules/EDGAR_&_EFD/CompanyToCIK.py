@@ -19,7 +19,7 @@ class CompanyToCIK:
     def resolution(self, entityJsonList, parameters):
         import re
         from bs4 import BeautifulSoup
-        from playwright.sync_api import sync_playwright, TimeoutError
+        from playwright.sync_api import sync_playwright, TimeoutError, Error
 
         returnResults = []
         index_of_child = []
@@ -45,6 +45,8 @@ class CompanyToCIK:
                         break
                     except TimeoutError:
                         pass
+                    except Error:
+                        break
                 if not pageResolved:
                     continue
 

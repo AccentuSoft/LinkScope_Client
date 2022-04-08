@@ -47,7 +47,7 @@ class FileExtractor:
         from binascii import hexlify
         from pathlib import Path
         from bs4 import BeautifulSoup
-        from playwright.sync_api import sync_playwright, TimeoutError
+        from playwright.sync_api import sync_playwright, TimeoutError, Error
 
         try:
             maxDepth = max(int(parameters['Max Depth']), 0)
@@ -76,6 +76,8 @@ class FileExtractor:
                     break
                 except TimeoutError:
                     pass
+                except Error:
+                    break
 
             soupContents = BeautifulSoup(page.content(), 'lxml')
 

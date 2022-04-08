@@ -36,7 +36,7 @@ class GetExternalURLs:
 
     def resolution(self, entityJsonList, parameters):
         import tldextract
-        from playwright.sync_api import sync_playwright, TimeoutError
+        from playwright.sync_api import sync_playwright, TimeoutError, Error
         from bs4 import BeautifulSoup
         import re
         import urllib
@@ -79,6 +79,8 @@ class GetExternalURLs:
                         break
                     except TimeoutError:
                         pass
+                    except Error:
+                        break
             for urlVisited in allPages:
                 externalUrls = set()
                 soupContents = BeautifulSoup(urlVisited[1].content(), 'lxml')

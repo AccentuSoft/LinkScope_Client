@@ -18,7 +18,7 @@ class DorkingMethod:
 
     def resolution(self, entityJsonList, parameters):
         from bs4 import BeautifulSoup
-        from playwright.sync_api import sync_playwright, TimeoutError
+        from playwright.sync_api import sync_playwright, TimeoutError, Error
 
         returnResults = []
         urls = set()
@@ -51,6 +51,8 @@ class DorkingMethod:
                         break
                     except TimeoutError:
                         pass
+                    except Error:
+                        break
                 if not pageResolved:
                     continue
                 soup = BeautifulSoup(page.content(), "lxml")  # store the result from the search

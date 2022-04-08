@@ -17,7 +17,7 @@ class JSCodeExtractor:
     parameters = {}
 
     def resolution(self, entityJsonList, parameters):
-        from playwright.sync_api import sync_playwright
+        from playwright.sync_api import sync_playwright, Error
         import re
         returnResults = []
         requestUrlsParsed = set()
@@ -95,7 +95,10 @@ class JSCodeExtractor:
                 if not url.startswith('http://') and not url.startswith('https://'):
                     url = 'http://' + url
 
-                page.goto(url)
+                try:
+                    page.goto(url)
+                except Error:
+                    pass
             page.close()
             browser.close()
 

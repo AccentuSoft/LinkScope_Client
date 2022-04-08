@@ -22,7 +22,7 @@ class GetNMFP2Forms:
         import requests
         import xmltodict
         import json
-        from playwright.sync_api import sync_playwright, TimeoutError
+        from playwright.sync_api import sync_playwright, TimeoutError, Error
         from bs4 import BeautifulSoup
         from ast import literal_eval
 
@@ -81,6 +81,8 @@ class GetNMFP2Forms:
                         break
                     except TimeoutError:
                         pass
+                    except Error:
+                        break
                 if not pageResolved:
                     continue
                 page.wait_for_timeout(1000)

@@ -34,7 +34,7 @@ class EFDByToDate:
 
     def resolution(self, entityJsonList, parameters):
         from datetime import datetime
-        from playwright.sync_api import sync_playwright, TimeoutError
+        from playwright.sync_api import sync_playwright, TimeoutError, Error
         from bs4 import BeautifulSoup, SoupStrainer, Doctype, Tag
 
         returnResults = []
@@ -70,13 +70,17 @@ class EFDByToDate:
                     break
                 except TimeoutError:
                     pass
+                except Error:
+                    break
             if not pageResolved:
-                return "Could not access efdsearch website."
+                return "Could not access EFD Search website."
 
             try:
                 page.click("text=I understand the prohibitions on obtaining and use of financial disclosure repor")
             except TimeoutError:
-                return "The efdsearch website is unresponsive"
+                return "The EFD search website is unresponsive."
+            except Error:
+                return "Connection Error."
             page.wait_for_timeout(1000)
 
             for entity in entityJsonList:
@@ -100,6 +104,8 @@ class EFDByToDate:
                         break
                     except TimeoutError:
                         pass
+                    except Error:
+                        break
                 if not pageResolved:
                     continue
 

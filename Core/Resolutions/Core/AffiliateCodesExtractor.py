@@ -42,7 +42,7 @@ class AffiliateCodesExtractor:
                                            'value': {'Yes', 'No'}}}
 
     def resolution(self, entityJsonList, parameters):
-        from playwright.sync_api import sync_playwright, TimeoutError
+        from playwright.sync_api import sync_playwright, TimeoutError, Error
         from bs4 import BeautifulSoup
         import urllib
         import tldextract
@@ -123,6 +123,8 @@ class AffiliateCodesExtractor:
                     break
                 except TimeoutError:
                     pass
+                except Error:
+                    break
             if not pageResolved:
                 return
 
@@ -160,6 +162,8 @@ class AffiliateCodesExtractor:
                                                 break
                                             except TimeoutError:
                                                 pass
+                                            except Error:
+                                                break
                                 else:
                                     GetAffiliateCodes(currentUID, newLink)
                             else:
@@ -176,6 +180,8 @@ class AffiliateCodesExtractor:
                                         break
                                     except TimeoutError:
                                         pass
+                                    except Error:
+                                        break
                             else:
                                 GetAffiliateCodes(currentUID, newLink)
 
