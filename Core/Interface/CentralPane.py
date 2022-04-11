@@ -665,10 +665,24 @@ class CanvasView(QtWidgets.QGraphicsView):
 
         self.menu = QtWidgets.QMenu()
         self.menu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
-        viewMenu = self.menu.addMenu("Hide / Delete")
+        selectMenu = self.menu.addMenu("Select...")
+        selectMenu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
+        viewMenu = self.menu.addMenu("Hide / Delete...")
         viewMenu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
-        groupingMenu = self.menu.addMenu("Grouping")
+        groupingMenu = self.menu.addMenu("Grouping...")
         groupingMenu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
+
+        actionSelectChildren = QtGui.QAction('Select Child Nodes',
+                                             selectMenu,
+                                             statusTip="Select the child entities of the selected nodes.",
+                                             triggered=self.scene().selectChildNodes)
+        selectMenu.addAction(actionSelectChildren)
+
+        actionSelectParents = QtGui.QAction('Select Parent Nodes',
+                                            selectMenu,
+                                            statusTip="Select the parent entities of the selected nodes.",
+                                            triggered=self.scene().selectParentNodes)
+        selectMenu.addAction(actionSelectParents)
 
         actionDelete = QtGui.QAction('Hide Selected Items',
                                      viewMenu,
@@ -1707,9 +1721,38 @@ class CanvasScene(QtWidgets.QGraphicsScene):
             self.parent().messageHandler.info('Edited link: ' + str(pEditor.objectJson['uid']) + ' | ' +
                                               pEditor.objectJson['Resolution'])
 
+    def selectAllNodes(self) -> None:
+        self.clearSelection()
+        for node in self.nodesDict:
+            self.nodesDict[node].setSelected(True)
+
+    def selectChildNodes(self) -> None:
+        items = [item.uid for item in self.selectedItems() if isinstance(item, Entity.BaseNode)]
+        self.clearSelection()
+        for item in items:
+            childLinks = self.parent().entityDB.getOutgoingLinks(item)
+            for childLink in childLinks:
+                # Ask forgiveness instead of permission - set children as selected, if they are on the canvas.
+                try:
+                    self.nodesDict[childLink[1]].setSelected(True)
+                except KeyError:
+                    pass
+
+    def selectParentNodes(self) -> None:
+        items = [item.uid for item in self.selectedItems() if isinstance(item, Entity.BaseNode)]
+        self.clearSelection()
+        for item in items:
+            parentLinks = self.parent().entityDB.getIncomingLinks(item)
+            for parentLink in parentLinks:
+                # Ask forgiveness instead of permission - set parents as selected, if they are on the canvas.
+                try:
+                    self.nodesDict[parentLink[0]].setSelected(True)
+                except KeyError:
+                    pass
+
     # Because the entities on each canvas are stored in dicts, and dicts are ordered, group nodes will always
     # come after the nodes they contain.
-    def groupSelectedItems(self):
+    def groupSelectedItems(self) -> None:
         items = [item for item in self.selectedItems() if isinstance(item, Entity.BaseNode)]
         for item in items:
             if isinstance(item, Entity.GroupNode):

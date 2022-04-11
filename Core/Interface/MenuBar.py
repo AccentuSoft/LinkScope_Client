@@ -144,6 +144,29 @@ class MenuBar(QtWidgets.QMenuBar):
         viewMenu = self.addMenu("View")
         viewMenu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
 
+        actionSelectAllNodes = QtGui.QAction('Select All Nodes',
+                                             self,
+                                             statusTip="Select all nodes on this canvas.",
+                                             triggered=self.selectAllNodes)
+        actionSelectAllNodes.setShortcut('Ctrl+A')
+        viewMenu.addAction(actionSelectAllNodes)
+
+        actionSelectChildren = QtGui.QAction('Select Child Nodes',
+                                             self,
+                                             statusTip="Select the child entities of the selected nodes.",
+                                             triggered=self.selectChildNodes)
+        actionSelectChildren.setShortcut('Ctrl+Shift+C')
+        viewMenu.addAction(actionSelectChildren)
+
+        actionSelectParents = QtGui.QAction('Select Parent Nodes',
+                                            self,
+                                            statusTip="Select the parent entities of the selected nodes.",
+                                            triggered=self.selectParentNodes)
+        actionSelectParents.setShortcut('Ctrl+Shift+P')
+        viewMenu.addAction(actionSelectParents)
+
+        viewMenu.addSeparator()
+
         findAction = QtGui.QAction("&Find",
                                    self,
                                    statusTip="Find Links or Entities by their Primary Field",
@@ -859,8 +882,23 @@ class MenuBar(QtWidgets.QMenuBar):
     def uploadFiles(self) -> None:
         self.parent().uploadFiles()
 
-    def downloadFiles(self):
+    def downloadFiles(self) -> None:
         self.parent().downloadFiles()
+
+    def manageCollectors(self) -> None:
+        with self.parent().serverCollectorsLock:
+            currentCollectors = dict(self.parent().collectors)
+        collectorsDialog = CollectorsDialog(currentCollectors if self.parent().FCOM.isConnected() else None)
+        collectorsDialog.exec()
+
+    def selectAllNodes(self) -> None:
+        self.parent().centralWidget().tabbedPane.getCurrentScene().selectAllNodes()
+
+    def selectChildNodes(self) -> None:
+        self.parent().centralWidget().tabbedPane.getCurrentScene().selectChildNodes()
+
+    def selectParentNodes(self) -> None:
+        self.parent().centralWidget().tabbedPane.getCurrentScene().selectParentNodes()
 
     def findEntityOrLink(self) -> None:
         self.parent().findEntityOrLinkOnCanvas()
