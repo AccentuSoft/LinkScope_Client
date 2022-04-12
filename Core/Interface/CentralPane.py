@@ -605,8 +605,17 @@ class DocWorldPane(QtWidgets.QWidget):
                           if entity.get('Latitude') is not None and
                           entity.get('Longitude') is not None]
         for marker in markerEntities:
-            coordinates = [float(marker['Latitude'].replace(',', '.')),
-                           float(marker['Longitude'].replace(',', '.'))]
+            # Add check in case location attributes are already set as floats.
+            try:
+                latitude = float(marker['Latitude'].replace(',', '.'))
+            except AttributeError:
+                latitude = marker['Latitude']
+
+            try:
+                longitude = float(marker['Longitude'].replace(',', '.'))
+            except AttributeError:
+                longitude = marker['Longitude']
+            coordinates = [latitude, longitude]
             label = marker[list(marker)[1]]
             self.addMarker(coordinates, label)
         html = self.m.get_root().render()
