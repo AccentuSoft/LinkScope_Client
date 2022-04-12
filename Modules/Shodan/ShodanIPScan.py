@@ -47,6 +47,15 @@ class ShodanIPScan:
             return_result.append([{'Port': host['ip_str'] + ":" + str(port),
                                    'Entity Type': 'Port'},
                                   {uid: {'Resolution': 'Shodan IP Ports', 'Notes': ''}}])
+        for hostname in host['hostnames']:
+            return_result.append([{'Domain Name': hostname,
+                                   'Entity Type': 'Domain'},
+                                  {uid: {'Resolution': 'Shodan IP Hostnames', 'Notes': ''}}])
+
+        for domain in host['domains']:
+            return_result.append([{'Domain Name': domain,
+                                   'Entity Type': 'Domain'},
+                                  {uid: {'Resolution': 'Shodan IP Domains', 'Notes': ''}}])
 
     def resolution(self, entityJsonList, parameters):
         import shodan
@@ -64,24 +73,21 @@ class ShodanIPScan:
                 ip_address(primary_field)
             except ValueError:
                 return "The Entity Provided isn't a valid IP Address"
-            if scan == "No":
-                try:
-                    host = api.host(primary_field)
-                except shodan.exception.APIError:
-                    return "The API Key provided is Invalid"
-                self.parsing(host, return_result, uid)
-            elif scan == "Yes":
+            if scan == "Yes":
                 try:
                     results = api.scan(primary_field)
                 except shodan.exception.APIError:
-                    return "The API Key provided is Invalid"
-                while results['status'] != "DONE":
-                    results = api.scan(primary_field)
-                    time.sleep(5)
-                    break
-                try:
-                    host = api.host(primary_field)
-                except shodan.exception.APIError:
-                    return "The API Key provided is Invalid"
-                self.parsing(host, return_result, uid)
+                    return "The API Key provided is invalid, or does not have enough credits."
+                scanID = results['id']
+                scanStatusQuery = api.scan_status(scanID)
+                while scanStatusQuery['status'] != 'DONE':
+                    time.sleep(10)
+                    scanStatusQuery = api.scan_status(scanID)
+
+            try:
+                host = api.host(primary_field)
+            except shodan.exception.APIError:
+                return "The API Key provided is invalid."
+            self.parsing(host, return_result, uid)
+
         return return_result
