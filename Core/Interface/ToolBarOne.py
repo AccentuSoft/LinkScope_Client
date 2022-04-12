@@ -18,6 +18,7 @@ class ToolBarOne(QtWidgets.QToolBar):
                                   statusTip="Create new Canvas or Open existing Canvas",
                                   triggered=self.addCanvas,
                                   icon=QtGui.QIcon(self.parent().RESOURCEHANDLER.getIcon('addCanvas')))
+        newCanvas.setShortcut('Ctrl+N')
         self.addAction(newCanvas)
         self.insertSeparator(newCanvas)
 
