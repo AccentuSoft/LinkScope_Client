@@ -185,6 +185,7 @@ class MenuBar(QtWidgets.QMenuBar):
                                         statusTip="Find Links or Entities by their Primary Field using Regex",
                                         triggered=self.findEntityOrLinkRegex)
         viewMenu.addAction(regexFindAction)
+        findAction.setShortcut("Ctrl+Shift+F")
 
         regexTypeFindAction = QtGui.QAction("Regex Find Entity of Type",
                                             self,
