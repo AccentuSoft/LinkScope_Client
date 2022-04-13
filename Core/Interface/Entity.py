@@ -58,6 +58,8 @@ class BaseNode(QGraphicsItemGroup):
         self.parentGroup = None
 
     def updateLabel(self, newText: str = '') -> None:
+        if not isinstance(newText, str):
+            newText = str(newText)
         if newText != '':
             if len(newText) > 50:
                 newText = newText[:47] + "..."
