@@ -34,4 +34,13 @@
             Portfolio.svg
         </Icon>
     </Portfolio>
+    <Crypto_Wallet>
+        <Attributes>
+          <Attribute default="Wallet Address" check="String" primary="True">Wallet Address</Attribute>
+          <Attribute default="Bitcoin" check="String" primary="False">Currency Name</Attribute>
+        </Attributes>
+        <Icon>
+          Default.svg
+        </Icon>
+    </Crypto_Wallet>
 </Financials>
