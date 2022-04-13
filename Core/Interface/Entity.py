@@ -182,8 +182,10 @@ class GroupNode(BaseNode):
         incomingLinks = self.scene().parent().entityDB.getIncomingLinks(uid)
         outgoingLinks = self.scene().parent().entityDB.getOutgoingLinks(uid)
 
-        [self.scene().addLinkProgrammatic(link[0], self.uid) for link in incomingLinks]
-        [self.scene().addLinkProgrammatic(self.uid, link[1]) for link in outgoingLinks]
+        for link in incomingLinks:
+            self.scene().addLinkProgrammatic(link, self.scene().parent().entityDB.getLink(link)['Resolution'])
+        for link in outgoingLinks:
+            self.scene().addLinkProgrammatic(link, self.scene().parent().entityDB.getLink(link)['Resolution'])
 
     def removeSpecificItemFromGroupIfExists(self, uid) -> bool:
         if uid in self.groupedNodesUid:

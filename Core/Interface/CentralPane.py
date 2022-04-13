@@ -1202,11 +1202,12 @@ class CanvasScene(QtWidgets.QGraphicsScene):
                 self.parent().mainWindow.toggleLinkingMode()
 
         elif self.appendingToGroup:
-            selectedGroupItems = [item for item in self.selectedItems()
-                                  if isinstance(item, Entity.GroupNode)]
+            selectedGroupItems = [item for item in self.selectedItems() if isinstance(item, Entity.GroupNode)]
             if len(selectedGroupItems) < 1:
                 pass
             elif len(selectedGroupItems) > 1:
+                self.parent().mainWindow.MESSAGEHANDLER.warning('Too many group items selected, '
+                                                                'please only choose one.', popUp=True)
                 self.parent().mainWindow.setStatus('Too many group items selected, please only choose one.')
             else:
                 groupEntityMaybe = selectedGroupItems[0]
@@ -1220,9 +1221,9 @@ class CanvasScene(QtWidgets.QGraphicsScene):
                     newJson = self.parent().entityDB.getEntity(groupEntityMaybe.uid)
                     for item in self.itemsToAppendToGroup:
                         self.removeNode(item)
+                        self.sceneGraph.add_node(item.uid, groupID=groupEntityMaybe.uid)
                         groupEntityMaybe.addItemToGroup(item.uid)
                         newJson['Child UIDs'].append(item.uid)
-                        self.sceneGraph.add_node(item.uid, groupID=groupEntityMaybe.uid)
                     self.parent().entityDB.addEntity(newJson)
                     self.appendSelectedItemsToGroupToggle()
                     # Refresh list to show new entity/entities
