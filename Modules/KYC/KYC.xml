@@ -63,4 +63,13 @@
           KYCPhrase.svg
         </Icon>
     </KYC_Phrase>
+    <Sanctioned_Crypto_Wallet>
+        <Attributes>
+          <Attribute default="Wallet Address" check="String" primary="True">Wallet Address</Attribute>
+          <Attribute default="Bitcoin" check="String" primary="False">Currency Name</Attribute>
+        </Attributes>
+        <Icon>
+          Default.svg
+        </Icon>
+    </Sanctioned_Crypto_Wallet>
 </KYC>
