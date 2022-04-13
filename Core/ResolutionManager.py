@@ -91,7 +91,7 @@ class ResolutionManager:
 
     def removeServerResolutions(self):
         for category in dict(self.resolutions):
-            for resolution in self.resolutions[category]:
+            for resolution in dict(self.resolutions[category]):
                 # If resolution class does not exist locally, then assume it exists on the server.
                 if self.resolutions[category][resolution]['resolution'] == '':
                     self.resolutions[category].pop(resolution)
