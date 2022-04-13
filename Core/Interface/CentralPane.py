@@ -468,26 +468,30 @@ class TabbedPane(QtWidgets.QTabWidget):
                     uid = newLink[1]
                     parentUID = newLink[0]
                     if parentUID in scene.nodesDict and uid not in scene.nodesDict:
-                        sceneChanged = True
+                        if uid not in scene.sceneGraph.nodes:
+                            sceneChanged = True
 
-                        nodeJSON = self.entityDB.getEntity(uid)
+                            nodeJSON = self.entityDB.getEntity(uid)
 
-                        # This is more efficient for large canvases than syncing afterwards.
-                        self.mainWindow.sendLocalCanvasUpdateToServer(canvas, uid)
+                            # This is more efficient for large canvases than syncing afterwards.
+                            self.mainWindow.sendLocalCanvasUpdateToServer(canvas, uid)
 
-                        picture = nodeJSON.get('Icon')
-                        scene.sceneGraph.add_node(uid)
+                            picture = nodeJSON.get('Icon')
+                            scene.sceneGraph.add_node(uid)
 
-                        try:
-                            nodePrimaryAttribute = nodeJSON.get(list(nodeJSON)[1])
-                        except IndexError:
-                            nodePrimaryAttribute = ''
-                        newNode = Entity.BaseNode(picture, uid, nodePrimaryAttribute, self.entityTextFont,
-                                                  self.entityTextBrush)
-                        scene.addNodeToScene(newNode)
-                        scene.addLinkDragDrop(scene.nodesDict[parentUID], newNode, newLink[2])
+                            try:
+                                nodePrimaryAttribute = nodeJSON.get(list(nodeJSON)[1])
+                            except IndexError:
+                                nodePrimaryAttribute = ''
+                            newNode = Entity.BaseNode(picture, uid, nodePrimaryAttribute, self.entityTextFont,
+                                                      self.entityTextBrush)
+                            scene.addNodeToScene(newNode)
 
-                        addedNodes.append(newNode)
+                            scene.addLinkDragDrop(scene.nodesDict[parentUID], newNode, newLink[2])
+                            addedNodes.append(newNode)
+                        else:
+                            scene.addLinkProgrammatic((newLink[0], newLink[1]), newLink[2])
+
                     elif parentUID in scene.nodesDict and uid in scene.nodesDict:
                         # Need to send this to server, since it won't be drawn otherwise.
                         scene.addLinkDragDrop(scene.nodesDict[parentUID], scene.nodesDict[uid], newLink[2])
@@ -1669,8 +1673,8 @@ class CanvasScene(QtWidgets.QGraphicsScene):
 
         for edgeToDelete in edgesToDelete:
             # Remove UIDs from list, and delete the link if no more UIDs are left
-            self.linksDict[edgeToDelete].uid = [linkToStayUID for linkToStayUID in self.linksDict[edgeToDelete].uid
-                                                if linkToStayUID not in edgesToDelete[edgeToDelete]]
+            self.linksDict[edgeToDelete].uid = {linkToStayUID for linkToStayUID in self.linksDict[edgeToDelete].uid
+                                                if linkToStayUID not in edgesToDelete[edgeToDelete]}
             if len(self.linksDict[edgeToDelete].uid) == 0:
                 self.removeEdge(self.linksDict[edgeToDelete])
 
