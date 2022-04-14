@@ -20,9 +20,14 @@ class CertificateInfo:
         for entity in entityJsonList:
             uid = entity['uid']
             websiteURL = entity['URL']
-            if not websiteURL.startswith('https'):
-                continue  # Ignore non-https sites
-            addressWithoutHttps = websiteURL[8:].split('/')[0]
+            if websiteURL.startswith('https'):
+                addressWithoutHttps = websiteURL[8:].split('/')[0]
+            elif websiteURL.startswith('http'):
+                # Just in case an entity was created for the http version of a site,
+                #   but there is actually a https version of the site.
+                addressWithoutHttps = websiteURL[7:].split('/')[0]
+            else:
+                continue
 
             with sslContext.wrap_socket(socket.socket(), server_hostname=addressWithoutHttps) as s:
                 try:
