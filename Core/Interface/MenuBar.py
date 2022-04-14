@@ -550,6 +550,7 @@ class MenuBar(QtWidgets.QMenuBar):
 
                                 if createLinkEntitiesDialog.exec_():
                                     randomizePrimary = createLinkEntitiesDialog.randomizeLabel.isChecked()
+                                    extraLink = createLinkEntitiesDialog.extraLinkLabel.isChecked()
                                     entityOneType = importLinksCSVDialog.entityOneTypeChoiceDropdown.currentText()
                                     entityTwoType = importLinksCSVDialog.entityTwoTypeChoiceDropdown.currentText()
 
@@ -621,7 +622,6 @@ class MenuBar(QtWidgets.QMenuBar):
                                             linkJSONOne['Resolution'] += ' OUT'
                                             linkJSONTwo = dict(linkJSON)
                                             linkJSONTwo['Resolution'] += ' IN'
-                                            linkJSONThree = dict(linkJSON)
 
                                             newEntityJSON = {str(attributeRows[key]): str(entityRow[key]).strip()
                                                              for key in range(len(attributeRows))}
@@ -641,7 +641,6 @@ class MenuBar(QtWidgets.QMenuBar):
 
                                             linkJSONOne['uid'] = (entityOneJSON['uid'], newNode['uid'])
                                             linkJSONTwo['uid'] = (newNode['uid'], entityTwoJSON['uid'])
-                                            linkJSONThree['uid'] = (entityOneJSON['uid'], entityTwoJSON['uid'])
 
                                             if self.parent().LENTDB.addLink(linkJSONOne) is not None:
                                                 newLinks.append((entityOneJSON['uid'], newNode['uid'],
@@ -650,9 +649,12 @@ class MenuBar(QtWidgets.QMenuBar):
                                                 newLinks.append((newNode['uid'], entityTwoJSON['uid'],
                                                                  linkJSONTwo['Resolution']))
 
-                                            if self.parent().LENTDB.addLink(linkJSONThree) is not None:
-                                                newLinks.append((entityOneJSON['uid'], entityTwoJSON['uid'],
-                                                                 linkJSONThree['Resolution']))
+                                            if extraLink:
+                                                linkJSONThree = dict(linkJSON)
+                                                linkJSONThree['uid'] = (entityOneJSON['uid'], entityTwoJSON['uid'])
+                                                if self.parent().LENTDB.addLink(linkJSONThree) is not None:
+                                                    newLinks.append((entityOneJSON['uid'], entityTwoJSON['uid'],
+                                                                     linkJSONThree['Resolution']))
 
                             else:
                                 entityOneType = importLinksCSVDialog.entityOneTypeChoiceDropdown.currentText()
@@ -1922,6 +1924,11 @@ class ImportLinkEntitiesFromCSVFile(QtWidgets.QDialog):
                                        "the imported entities.")
         self.randomizeLabel.setChecked(True)
 
+        self.extraLinkLabel = QtWidgets.QCheckBox('Include links bypassing imported entities?')
+        self.extraLinkLabel.setToolTip("Check this box if you want links created between the parent and child "
+                                       "entities, as well as links between the parent, new node and child entities.")
+        self.extraLinkLabel.setChecked(False)
+
         self.fieldMappingComboBoxes = []
         tableFieldAttributeMapping = QtWidgets.QWidget()
         tableFieldAttributeMappingLayout = QtWidgets.QHBoxLayout()
@@ -1959,6 +1966,7 @@ class ImportLinkEntitiesFromCSVFile(QtWidgets.QDialog):
         importLayout.addWidget(tableFieldAttributeMapping)
         importLayout.addWidget(csvTable)
         importLayout.addWidget(self.randomizeLabel)
+        importLayout.addWidget(self.extraLinkLabel)
         importLayout.addWidget(buttonsWidget)
 
         self.pickEntityToImportAs()
