@@ -22,7 +22,7 @@ class CertificateInfo:
             websiteURL = entity['URL']
             if not websiteURL.startswith('https'):
                 continue  # Ignore non-https sites
-            addressWithoutHttps = websiteURL[8:]
+            addressWithoutHttps = websiteURL[8:].split('/')[0]
 
             with sslContext.wrap_socket(socket.socket(), server_hostname=addressWithoutHttps) as s:
                 try:
