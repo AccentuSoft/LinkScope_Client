@@ -549,6 +549,7 @@ class MenuBar(QtWidgets.QMenuBar):
                                 createLinkEntitiesDialog = ImportLinkEntitiesFromCSVFile(self, fieldsRemainingDF)
 
                                 if createLinkEntitiesDialog.exec_():
+                                    randomizePrimary = createLinkEntitiesDialog.randomizeLabel.isChecked()
                                     entityOneType = importLinksCSVDialog.entityOneTypeChoiceDropdown.currentText()
                                     entityTwoType = importLinksCSVDialog.entityTwoTypeChoiceDropdown.currentText()
 
@@ -625,6 +626,10 @@ class MenuBar(QtWidgets.QMenuBar):
                                             newEntityJSON = {str(attributeRows[key]): str(entityRow[key]).strip()
                                                              for key in range(len(attributeRows))}
                                             newEntityJSON['Entity Type'] = entityTypeToImportAs
+
+                                            if randomizePrimary:
+                                                newEntityJSON[newEntityPrimaryAttribute] += ' | ' + str(uuid4())
+
                                             newNode = self.parent().LENTDB.getEntityOfType(
                                                 newEntityJSON[newEntityPrimaryAttribute], entityTypeToImportAs)
                                             if newNode is None:
@@ -1912,6 +1917,11 @@ class ImportLinkEntitiesFromCSVFile(QtWidgets.QDialog):
         entityTypeChoiceLayout.addWidget(entityTypeChoiceLabel)
         entityTypeChoiceLayout.addWidget(self.entityTypeChoiceDropdown)
 
+        self.randomizeLabel = QtWidgets.QCheckBox('Add random token to Primary Field?')
+        self.randomizeLabel.setToolTip("Choose whether you want to append a random token to the primary fields of "
+                                       "the imported entities.")
+        self.randomizeLabel.setChecked(True)
+
         self.fieldMappingComboBoxes = []
         tableFieldAttributeMapping = QtWidgets.QWidget()
         tableFieldAttributeMappingLayout = QtWidgets.QHBoxLayout()
@@ -1948,6 +1958,7 @@ class ImportLinkEntitiesFromCSVFile(QtWidgets.QDialog):
         importLayout.addWidget(entityTypeChoiceWidget)
         importLayout.addWidget(tableFieldAttributeMapping)
         importLayout.addWidget(csvTable)
+        importLayout.addWidget(self.randomizeLabel)
         importLayout.addWidget(buttonsWidget)
 
         self.pickEntityToImportAs()
