@@ -656,50 +656,52 @@ class MenuBar(QtWidgets.QMenuBar):
                                                     newLinks.append((entityOneJSON['uid'], entityTwoJSON['uid'],
                                                                      linkJSONThree['Resolution']))
 
-                            else:
-                                entityOneType = importLinksCSVDialog.entityOneTypeChoiceDropdown.currentText()
-                                entityTwoType = importLinksCSVDialog.entityTwoTypeChoiceDropdown.currentText()
+                                else:
+                                    entityOneType = importLinksCSVDialog.entityOneTypeChoiceDropdown.currentText()
+                                    entityTwoType = importLinksCSVDialog.entityTwoTypeChoiceDropdown.currentText()
 
-                                for row in csvDF.itertuples(index=False):
-                                    count = 0
-                                    linkJSON = {}
-                                    entityOneJSON = {}
-                                    entityTwoJSON = {}
-                                    resolutionID = ""
-                                    notes = ""
+                                    for row in csvDF.itertuples(index=False):
+                                        count = 0
+                                        linkJSON = {}
+                                        entityOneJSON = {}
+                                        entityTwoJSON = {}
+                                        resolutionID = ""
+                                        notes = ""
 
-                                    for column in row:
-                                        column = str(column)
-                                        mapping = csvDF.columns[count]
-                                        if mapping == 'Entity One':
-                                            entityOneJSON = self.parent().LENTDB.getEntityOfType(column, entityOneType)
-                                        elif mapping == 'Entity Two':
-                                            entityTwoJSON = self.parent().LENTDB.getEntityOfType(column, entityTwoType)
-                                        elif mapping == 'Notes':
-                                            notes = column
-                                        elif mapping == 'Resolution ID':
-                                            resolutionID = column
-                                        else:
-                                            linkJSON[mapping] = column
-                                        count += 1
+                                        for column in row:
+                                            column = str(column)
+                                            mapping = csvDF.columns[count]
+                                            if mapping == 'Entity One':
+                                                entityOneJSON = self.parent().LENTDB.getEntityOfType(column,
+                                                                                                     entityOneType)
+                                            elif mapping == 'Entity Two':
+                                                entityTwoJSON = self.parent().LENTDB.getEntityOfType(column,
+                                                                                                     entityTwoType)
+                                            elif mapping == 'Notes':
+                                                notes = column
+                                            elif mapping == 'Resolution ID':
+                                                resolutionID = column
+                                            else:
+                                                linkJSON[mapping] = column
+                                            count += 1
 
-                                    if (entityOneJSON is not None) and (entityTwoJSON is not None):
-                                        linkJSON['uid'] = (entityOneJSON['uid'], entityTwoJSON['uid'])
-                                        linkJSON['Notes'] = notes
-                                        if importLinksCSVDialog.randAsIs.isChecked():
-                                            linkJSON['Resolution'] = resolutionID
-                                        elif importLinksCSVDialog.randMerge.isChecked():
-                                            linkJSON['Resolution'] = resolutionID + ' | ' + str(uuid4())
-                                        elif importLinksCSVDialog.randReplace.isChecked():
-                                            linkJSON['Resolution'] = str(uuid4())
+                                        if (entityOneJSON is not None) and (entityTwoJSON is not None):
+                                            linkJSON['uid'] = (entityOneJSON['uid'], entityTwoJSON['uid'])
+                                            linkJSON['Notes'] = notes
+                                            if importLinksCSVDialog.randAsIs.isChecked():
+                                                linkJSON['Resolution'] = resolutionID
+                                            elif importLinksCSVDialog.randMerge.isChecked():
+                                                linkJSON['Resolution'] = resolutionID + ' | ' + str(uuid4())
+                                            elif importLinksCSVDialog.randReplace.isChecked():
+                                                linkJSON['Resolution'] = str(uuid4())
 
-                                        # If 'Resolution ID' is not mapped, generate random IDs.
-                                        if not linkJSON.get('Resolution'):
-                                            linkJSON['Resolution'] = str(uuid4())
+                                            # If 'Resolution ID' is not mapped, generate random IDs.
+                                            if not linkJSON.get('Resolution'):
+                                                linkJSON['Resolution'] = str(uuid4())
 
-                                        if self.parent().LENTDB.addLink(linkJSON) is not None:
-                                            newLinks.append((entityOneJSON['uid'], entityTwoJSON['uid'],
-                                                             linkJSON['Resolution']))
+                                            if self.parent().LENTDB.addLink(linkJSON) is not None:
+                                                newLinks.append((entityOneJSON['uid'], entityTwoJSON['uid'],
+                                                                 linkJSON['Resolution']))
 
                     newNodeUIDs = [newEntity['uid'] for newEntity in self.parent().LENTDB.addEntities(newNodes)]
 

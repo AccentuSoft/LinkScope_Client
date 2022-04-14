@@ -460,7 +460,6 @@ class TabbedPane(QtWidgets.QTabWidget):
                        linkGroupingOverride: bool = False) -> None:
         for canvas in self.canvasTabs:
             scene = self.canvasTabs[canvas].scene()
-            sceneChanged = False
             with scene.resolutionThreadingLock:
                 addedNodes = []
 
@@ -469,8 +468,6 @@ class TabbedPane(QtWidgets.QTabWidget):
                     parentUID = newLink[0]
                     if parentUID in scene.nodesDict and uid not in scene.nodesDict:
                         if uid not in scene.sceneGraph.nodes:
-                            sceneChanged = True
-
                             nodeJSON = self.entityDB.getEntity(uid)
 
                             # This is more efficient for large canvases than syncing afterwards.
@@ -507,9 +504,9 @@ class TabbedPane(QtWidgets.QTabWidget):
                     [scene.removeNode(item) for item in addedNodes]
                     scene.addNodeProgrammatic(uid, itemUIDs, fromServer=True)
 
-            if sceneChanged:
-                scene.rearrangeGraph()
-                # self.mainWindow.syncCanvasByName(canvas)
+            # Even if nothing is added, the graph could need to be rearranged for clarity.
+            scene.rearrangeGraph()
+            # self.mainWindow.syncCanvasByName(canvas)
 
     def serverLinkAddHelper(self, linkJson: dict, overwrite: bool = False) -> None:
         """
