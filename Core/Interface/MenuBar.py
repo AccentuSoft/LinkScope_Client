@@ -195,10 +195,11 @@ class MenuBar(QtWidgets.QMenuBar):
         viewMenu.addAction(regexTypeFindAction)
         viewMenu.addSeparator()
 
-        resolutionFindAction = QtGui.QAction("Find Resolutions",
+        resolutionFindAction = QtGui.QAction("Find &Resolutions",
                                              self,
                                              statusTip="Find Resolutions based on a set of parameters",
                                              triggered=self.findResolutions)
+        resolutionFindAction.setShortcut("Ctrl+R")
         viewMenu.addAction(resolutionFindAction)
         viewMenu.addSeparator()
 
@@ -219,11 +220,10 @@ class MenuBar(QtWidgets.QMenuBar):
         viewMenu.addAction(rearrangeAsTimelineAction)
         viewMenu.addSeparator()
 
-        runningResolutionsAction = QtGui.QAction("&Running Resolutions",
+        runningResolutionsAction = QtGui.QAction("Running Resolutions",
                                                  self,
                                                  statusTip="View Running Resolutions",
                                                  triggered=self.runningResolutions)
-        runningResolutionsAction.setShortcut("Ctrl+R")
         viewMenu.addAction(runningResolutionsAction)
         viewMenu.addSeparator()
 
