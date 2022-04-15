@@ -24,12 +24,17 @@ class JSCodeExtractor:
 
         uaRegex = re.compile(r'\bUA-\d{4,10}-\d{1,4}\b', re.IGNORECASE)
         pubRegex = re.compile(r'\bca-pub-\d{1,16}\b', re.IGNORECASE)
-        gtmRegex = re.compile(r'\bGTM-[A-Z0-9]{1,7}\b', re.IGNORECASE)
-        gRegex = re.compile(r'\bG-[A-Z0-9]{1,15}\b', re.IGNORECASE)
-        qualtricsRegex = re.compile(r'\bQ_(?:Z|S)ID=[a-zA-Z_0-9]*\b')
-        pingdomRegex = re.compile(r'\bpa-[a-fA-F0-9]{24}.js\b$')
-        mPulseRegex = re.compile(r'\b[A-Z0-9]{5}(?:-[A-Z0-9]{5}){4}\b')
+        gtmRegex = re.compile(r'\bGTM-[A-Z\d]{1,7}\b')
+        gRegex = re.compile(r'\bG-[A-Z\d]{1,15}\b', re.IGNORECASE)
+        qualtricsRegex = re.compile(r'\bQ_(?:Z|S)ID=\w*\b')
+        pingdomRegex = re.compile(r'\bpa-[a-fA-F\d]{24}.js\b$')
+        mPulseRegex = re.compile(r'\b[A-Z\d]{5}(?:-[A-Z\d]{5}){4}\b')
         contextWebRegex = re.compile(r'\.contextweb\.com.*token=.*')
+        facebookRegex = re.compile(r'facebook.com/tr?.*id=\d*')
+        googleMapsRegex = re.compile(r'maps\.googleapis\.com/maps/api/js\?.*client=[ a-zA-Z\d-]*')
+        marketoRegex = re.compile(r'marketo\.com/rtp-api/v1/rtp.js\?.*aid=[ a-zA-Z\d-]*')
+        visualWebsiteOptimizerRegex = re.compile(r'visualwebsiteoptimizer\.com/j\.php\?.*a=\d*')
+        optimizeRegex = re.compile(r'googleoptimize\.com/optimize\.js\?.*id=[A-Z\d-]*')
 
         def GetTrackingCodes(pageUid, requestUrl) -> None:
             if requestUrl not in requestUrlsParsed:
@@ -73,6 +78,31 @@ class JSCodeExtractor:
                     returnResults.append([{'Phrase': cCode.split('token=')[1].split('&')[0],
                                            'Entity Type': 'Phrase'},
                                           {pageUid: {'Resolution': 'ContextWeb Tracking Code',
+                                                     'Notes': ''}}])
+                for fCode in facebookRegex.findall(requestUrl):
+                    returnResults.append([{'Phrase': fCode.split('id=')[1].split('&')[0],
+                                           'Entity Type': 'Phrase'},
+                                          {pageUid: {'Resolution': 'Facebook Tracking Pixel Code',
+                                                     'Notes': ''}}])
+                for mapsCode in googleMapsRegex.findall(requestUrl):
+                    returnResults.append([{'Phrase': mapsCode.split('client=', 1)[1].split('&')[0],
+                                           'Entity Type': 'Phrase'},
+                                          {pageUid: {'Resolution': 'Google Maps Client Code',
+                                                     'Notes': ''}}])
+                for marketoCode in marketoRegex.findall(requestUrl):
+                    returnResults.append([{'Phrase': marketoCode.split('aid=')[1].split('&')[0],
+                                           'Entity Type': 'Phrase'},
+                                          {pageUid: {'Resolution': 'Marketo Tracking Code',
+                                                     'Notes': ''}}])
+                for vwoCode in visualWebsiteOptimizerRegex.findall(requestUrl):
+                    returnResults.append([{'Phrase': vwoCode.split('a=')[1].split('&')[0],
+                                           'Entity Type': 'Phrase'},
+                                          {pageUid: {'Resolution': 'Visual Website Optimizer Tracking User ID',
+                                                     'Notes': ''}}])
+                for oCode in optimizeRegex.findall(requestUrl):
+                    returnResults.append([{'Phrase': oCode.split('id=')[1].split('&')[0],
+                                           'Entity Type': 'Phrase'},
+                                          {pageUid: {'Resolution': 'Google Optimize ID',
                                                      'Notes': ''}}])
 
         with sync_playwright() as p:
