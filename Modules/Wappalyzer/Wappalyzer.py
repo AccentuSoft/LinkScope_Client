@@ -24,4 +24,4 @@ class Wappalyzer:
                 return_result.append([{'Infrastructure': cms,
                                        'Entity Type': 'Website Infrastructure'},
                                       {uid: {'Resolution': 'Wappalyzer Scan', 'Notes': ''}}])
-            return return_result
+        return return_result
