@@ -18,10 +18,14 @@ class Wappalyzer:
             primary_field = entity[list(entity)[1]].strip()
             if not primary_field.startswith('http://') and not primary_field.startswith('https://'):
                 primary_field = 'http://' + primary_field
-            webpage = WebPage.new_from_url(primary_field)
-            wappalyzer = Wappalyzer.latest()
-            for cms in wappalyzer.analyze(webpage):
-                return_result.append([{'Infrastructure': cms,
-                                       'Entity Type': 'Website Infrastructure'},
-                                      {uid: {'Resolution': 'Wappalyzer Scan', 'Notes': ''}}])
+            try:
+                webpage = WebPage.new_from_url(primary_field)
+                wappalyzer = Wappalyzer.latest()
+                for cms in wappalyzer.analyze(webpage):
+                    return_result.append([{'Infrastructure': cms,
+                                           'Entity Type': 'Website Infrastructure'},
+                                          {uid: {'Resolution': 'Wappalyzer Scan', 'Notes': ''}}])
+            except Exception:
+                pass
+
         return return_result
