@@ -35,6 +35,8 @@ class JSCodeExtractor:
         marketoRegex = re.compile(r'marketo\.com/rtp-api/v1/rtp.js\?.*aid=[ a-zA-Z\d-]*')
         visualWebsiteOptimizerRegex = re.compile(r'visualwebsiteoptimizer\.com/j\.php\?.*a=\d*')
         optimizeRegex = re.compile(r'googleoptimize\.com/optimize\.js\?.*id=[A-Z\d-]*')
+        markMonitorRegex = re.compile(r'\.adsrvr\.org/track/evnt/\?.*adv=[a-zA-Z\d-]*')
+        zendeskRegex = re.compile(r'\.zdassets\.com/ekr/snippet\.js\?.*key=[a-zA-Z\d-]*')
 
         def GetTrackingCodes(pageUid, requestUrl) -> None:
             if requestUrl not in requestUrlsParsed:
@@ -103,6 +105,16 @@ class JSCodeExtractor:
                     returnResults.append([{'Phrase': oCode.split('id=')[1].split('&')[0],
                                            'Entity Type': 'Phrase'},
                                           {pageUid: {'Resolution': 'Google Optimize ID',
+                                                     'Notes': ''}}])
+                for mmCode in markMonitorRegex.findall(requestUrl):
+                    returnResults.append([{'Phrase': mmCode.split('adv=')[1].split('&')[0],
+                                           'Entity Type': 'Phrase'},
+                                          {pageUid: {'Resolution': 'Mark Monitor Tracking ID',
+                                                     'Notes': ''}}])
+                for zCode in zendeskRegex.findall(requestUrl):
+                    returnResults.append([{'Phrase': zCode.split('key=')[1].split('&')[0],
+                                           'Entity Type': 'Phrase'},
+                                          {pageUid: {'Resolution': 'Zendesk ID',
                                                      'Notes': ''}}])
 
         with sync_playwright() as p:
