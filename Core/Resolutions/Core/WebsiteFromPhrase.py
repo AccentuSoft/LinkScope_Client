@@ -12,6 +12,7 @@ class WebsiteFromPhrase:
 
     def resolution(self, entityJsonList, parameters):
         import re
+        import tldextract
 
         websiteRegex = re.compile(r"""^https?://(\S(?<!\.)){1,63}(\.(\S(?<!\.)){1,63})+$""")
         wordChar = re.compile(r'\w')
@@ -24,9 +25,14 @@ class WebsiteFromPhrase:
                 while wordChar.match(entityChunk[-1]) is None:
                     entityChunk = entityChunk[:-1]
                 if websiteRegex.match(entityChunk):
-                    returnResults.append([{'URL': primaryField,
-                                           'Entity Type': 'Website'},
-                                          {entity['uid']: {'Resolution': 'Phrase To Website',
-                                                           'Notes': ''}}])
+                    try:
+                        tldObject = tldextract.extract(entityChunk)
+                        if tldObject.suffix != '':
+                            returnResults.append([{'URL': entityChunk,
+                                                   'Entity Type': 'Website'},
+                                                  {entity['uid']: {'Resolution': 'Phrase To Website',
+                                                                   'Notes': ''}}])
+                    except Exception:
+                        pass
 
         return returnResults
