@@ -1,4 +1,4 @@
-PySide6>=6.2.0
+PySide6<6.3.0
 
 
 # For python-magic, the following packages may be required:
