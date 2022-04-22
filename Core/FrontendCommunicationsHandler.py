@@ -203,7 +203,7 @@ class CommunicationsHandler(QtCore.QObject):
         encryptor = self.cipher.encryptor()
         padNeeded = 16 - (len(bytesObject) % 16)
         message = encryptor.update(b'a' * padNeeded + bytesObject) + encryptor.finalize()
-        return b64encode(message) + b'\x00\x00\x00'
+        return b64encode(message)
 
     def decryptTransmission(self, bytesObject) -> Union[bytes, None]:
         decrypter = self.cipher.decryptor()
@@ -225,7 +225,7 @@ class CommunicationsHandler(QtCore.QObject):
                 messageJson = {"uuid": largeMessageUUID,
                                "message": partArg,
                                "done": done}
-                self.sock.send(self.encryptTransmission(dumps(messageJson)))
+                self.sock.send(self.encryptTransmission(dumps(messageJson)) + b'\x03\x03\x03\x03\x03')
         except BrokenPipeError:
             if showErrorOnBrokenPipe:
                 self.mainWindow.MESSAGEHANDLER.error("Disconnected from server!", popUp=True, exc_info=False)
@@ -270,14 +270,13 @@ class CommunicationsHandler(QtCore.QObject):
                     # Socket closed.
                     break
                 receivedInfo = oldData + receivedInfo
-                messages = receivedInfo.split(b'\x00\x00\x00')
-                if not receivedInfo.endswith(b'\x00\x00\x00'):
-                    oldData = messages[-1]
-                else:
-                    oldData = b''
+                messages = receivedInfo.split(b'\x03\x03\x03\x03\x03')
                 # Last message is either blank (i.e. '') or incomplete data, so we ignore it.
+                oldData = messages[-1]
                 messages = messages[:-1]
                 for message in messages:
+                    if len(message) == 0:
+                        continue
                     message = b64decode(message)
                     decryptedInfo = self.decryptTransmission(message)
                     if decryptedInfo is None:
