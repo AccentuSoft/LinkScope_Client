@@ -18,6 +18,7 @@ class JSCodeExtractor:
 
     def resolution(self, entityJsonList, parameters):
         from playwright.sync_api import sync_playwright, Error
+        from base64 import b64decode
         import re
         returnResults = []
         requestUrlsParsed = set()
@@ -28,7 +29,7 @@ class JSCodeExtractor:
         gRegex = re.compile(r'\bG-[A-Z\d]{1,15}\b', re.IGNORECASE)
         qualtricsRegex = re.compile(r'\bQ_(?:Z|S)ID=\w*\b')
         pingdomRegex = re.compile(r'\bpa-[a-fA-F\d]{24}.js\b$')
-        mPulseRegex = re.compile(r'\b[A-Z\d]{5}(?:-[A-Z\d]{5}){4}\b')
+        mPulseRegex = re.compile(r'go-mpulse.net/boomerang/[A-Z\d]{5}(?:-[A-Z\d]{5}){4}\b')
         contextWebRegex = re.compile(r'\.contextweb\.com.*token=.*')
         facebookRegex = re.compile(r'facebook.com/tr?.*id=\d*')
         googleMapsRegex = re.compile(r'maps\.googleapis\.com/maps/api/js\?.*client=[ a-zA-Z\d-]*')
@@ -38,6 +39,12 @@ class JSCodeExtractor:
         markMonitorRegex = re.compile(r'\.adsrvr\.org/track/evnt/\?.*adv=[a-zA-Z\d-]*')
         zendeskRegex = re.compile(r'\.zdassets\.com/ekr/snippet\.js\?.*key=[a-zA-Z\d-]*')
         quantServeRegex = re.compile(r'pixel\.quantserve\.com/pixel/.*\.gif\?')
+        cookieLawRegex = re.compile(r'cdn\.cookielaw\.org/consent/.*/')
+        oneTagRegex = re.compile(r'get\.s-onetag\.com/.*/')
+        bounceExchangeRegex = re.compile(r'tag\.bounceexchange\.com/.*/')
+        pushlyRegex = re.compile(r'cdn.p-n.io/.*domain_key=[\w%]*')
+        akamaiRegex = re.compile(r'/akam/.*a=[\w%=]*')
+        demdexRegex = re.compile(r'dpm\.demdex\.net/id\?.*d_orgid=[^&]*')
 
         def GetTrackingCodes(pageUid, requestUrl) -> None:
             if requestUrl not in requestUrlsParsed:
@@ -73,7 +80,7 @@ class JSCodeExtractor:
                                           {pageUid: {'Resolution': 'Pingdom Tracking Code',
                                                      'Notes': ''}}])
                 for mCode in mPulseRegex.findall(requestUrl):
-                    returnResults.append([{'Phrase': mCode,
+                    returnResults.append([{'Phrase': mCode.split('/')[-1],
                                            'Entity Type': 'Phrase'},
                                           {pageUid: {'Resolution': 'mPulse Tracking Code',
                                                      'Notes': ''}}])
@@ -122,18 +129,58 @@ class JSCodeExtractor:
                                            'Entity Type': 'Phrase'},
                                           {pageUid: {'Resolution': 'QuantServe Tracking Pixel ID',
                                                      'Notes': ''}}])
+                for clCode in cookieLawRegex.findall(requestUrl):
+                    returnResults.append([{'Phrase': clCode.split('/')[2],
+                                           'Entity Type': 'Phrase'},
+                                          {pageUid: {'Resolution': 'CookieLaw Website ID',
+                                                     'Notes': ''}}])
+                for otCode in oneTagRegex.findall(requestUrl):
+                    returnResults.append([{'Phrase': otCode.split('/')[1],
+                                           'Entity Type': 'Phrase'},
+                                          {pageUid: {'Resolution': 'OneTag Tracking ID',
+                                                     'Notes': ''}}])
+                for beCode in bounceExchangeRegex.findall(requestUrl):
+                    returnResults.append([{'Phrase': beCode.split('/')[1],
+                                           'Entity Type': 'Phrase'},
+                                          {pageUid: {'Resolution': 'BounceExchange Tracking ID',
+                                                     'Notes': ''}}])
+                for pushlyCode in pushlyRegex.findall(requestUrl):
+                    returnResults.append([{'Phrase': pushlyCode.split('domain_key=')[1],
+                                           'Entity Type': 'Phrase'},
+                                          {pageUid: {'Resolution': 'Pushly Website ID',
+                                                     'Notes': ''}}])
+                for aCode in akamaiRegex.findall(requestUrl):
+                    encodedTracking = aCode.split('a=', 1)[1]
+                    encodedTracking = encodedTracking.replace('%3D', '=')
+                    decodedTracking = b64decode(encodedTracking).decode('utf-8').split('t=')[1].split('&')[0]
+                    returnResults.append([{'Phrase': decodedTracking,
+                                           'Entity Type': 'Phrase'},
+                                          {pageUid: {'Resolution': 'Akamai Website ID',
+                                                     'Notes': 'SHA-1 Sum'}}])
+                for dCode in demdexRegex.findall(requestUrl):
+                    returnResults.append([{'Phrase': dCode.split('d_orgid=')[1],
+                                           'Entity Type': 'Phrase'},
+                                          {pageUid: {'Resolution': 'DemDex (Adobe) Website ID',
+                                                     'Notes': ''}}])
 
         with sync_playwright() as p:
             browser = p.firefox.launch()
             context = browser.new_context(
                 viewport={'width': 1920, 'height': 1080},
-                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:94.0) Gecko/20100101 Firefox/94.0'
+                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:99.0) Gecko/20100101 Firefox/99.0'
             )
-            page = context.new_page()
+            contextNoJS = browser.new_context(
+                viewport={'width': 1920, 'height': 1080},
+                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:99.0) Gecko/20100101 Firefox/99.0',
+                java_script_enabled=False
+            )
+            pageJS = context.new_page()
+            pageNoJS = contextNoJS.new_page()
             uid = None
 
             # Subscribe to "request" events.
-            page.on("request", lambda request: GetTrackingCodes(uid, request.url))
+            pageJS.on("request", lambda request: GetTrackingCodes(uid, request.url))
+            pageNoJS.on("request", lambda request: GetTrackingCodes(uid, request.url))
 
             for site in entityJsonList:
                 uid = site['uid']
@@ -144,10 +191,15 @@ class JSCodeExtractor:
                     url = 'http://' + url
 
                 try:
-                    page.goto(url)
+                    pageJS.goto(url, wait_until="networkidle")
                 except Error:
                     pass
-            page.close()
+                try:
+                    pageNoJS.goto(url, wait_until="networkidle")
+                except Error:
+                    pass
+            pageJS.close()
+            pageNoJS.close()
             browser.close()
 
         return returnResults
