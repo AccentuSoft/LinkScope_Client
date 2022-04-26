@@ -45,6 +45,7 @@ class JSCodeExtractor:
         pushlyRegex = re.compile(r'cdn.p-n.io/.*domain_key=[\w%]*')
         akamaiRegex = re.compile(r'/akam/.*a=[\w%=]*')
         demdexRegex = re.compile(r'dpm\.demdex\.net/id\?.*d_orgid=[^&]*')
+        brightcoveRegex = re.compile(r'metrics\.brightcove\.com/.*/tracker\?.*&account=[^&]*')
 
         def GetTrackingCodes(pageUid, requestUrl) -> None:
             if requestUrl not in requestUrlsParsed:
@@ -161,6 +162,11 @@ class JSCodeExtractor:
                     returnResults.append([{'Phrase': dCode.split('d_orgid=')[1],
                                            'Entity Type': 'Phrase'},
                                           {pageUid: {'Resolution': 'DemDex (Adobe) Website ID',
+                                                     'Notes': ''}}])
+                for bCode in brightcoveRegex.findall(requestUrl):
+                    returnResults.append([{'Phrase': bCode.split('account=')[1],
+                                           'Entity Type': 'Phrase'},
+                                          {pageUid: {'Resolution': 'BrightCove Website ID',
                                                      'Notes': ''}}])
 
         with sync_playwright() as p:
