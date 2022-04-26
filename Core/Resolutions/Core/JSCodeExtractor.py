@@ -37,6 +37,7 @@ class JSCodeExtractor:
         optimizeRegex = re.compile(r'googleoptimize\.com/optimize\.js\?.*id=[A-Z\d-]*')
         markMonitorRegex = re.compile(r'\.adsrvr\.org/track/evnt/\?.*adv=[a-zA-Z\d-]*')
         zendeskRegex = re.compile(r'\.zdassets\.com/ekr/snippet\.js\?.*key=[a-zA-Z\d-]*')
+        quantServeRegex = re.compile(r'pixel\.quantserve\.com/pixel/.*\.gif\?')
 
         def GetTrackingCodes(pageUid, requestUrl) -> None:
             if requestUrl not in requestUrlsParsed:
@@ -115,6 +116,11 @@ class JSCodeExtractor:
                     returnResults.append([{'Phrase': zCode.split('key=')[1].split('&')[0],
                                            'Entity Type': 'Phrase'},
                                           {pageUid: {'Resolution': 'Zendesk ID',
+                                                     'Notes': ''}}])
+                for qsCode in quantServeRegex.findall(requestUrl):
+                    returnResults.append([{'Phrase': qsCode.split('/pixel/')[1].split('.gif')[0],
+                                           'Entity Type': 'Phrase'},
+                                          {pageUid: {'Resolution': 'QuantServe Tracking Pixel ID',
                                                      'Notes': ''}}])
 
         with sync_playwright() as p:
