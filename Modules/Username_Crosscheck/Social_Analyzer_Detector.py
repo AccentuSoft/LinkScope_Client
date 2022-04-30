@@ -86,7 +86,7 @@ class Social_Analyzer_Detector:
             social_field = social_field.strip().lower()
             results = SocialAnalyzer.run_as_object(
                 username=social_field, silent=True, output="json", filter='good', metadata=False, logs_dir='',
-                websites=websites, mode='fast', timeout=10, profiles='detected')
+                websites=websites, mode='fast', timeout=15, profiles='detected')
 
             # Social Analyzer can return false positives. Verifying the results cuts down on those.
             # In some *very* rare cases this might result in false negatives, but we have not been able to find any
