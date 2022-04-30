@@ -7,9 +7,11 @@ python3.9 -m venv buildEnv
 
 source buildEnv/bin/activate
 
-python3.9 -m pip install --upgrade pip pyinstaller
+python3.9 -m pip install --upgrade wheel pip pyinstaller
 
-python3.9 -m pip install --upgrade -r requirements.txt
+python3.9 -m pip cache purge
+
+python3.9 -m pip install -r requirements.txt
 
 PLAYWRIGHT_BROWSERS_PATH=0 python3.9 -m playwright install
 
@@ -21,7 +23,7 @@ python3.9 -m PyInstaller --clean --icon="./Icon.ico" --noconsole --noconfirm --o
 --collect-all "docker" --collect-all "exif" --collect-all "pycountry" --collect-all "tldextract" \
 --collect-all "requests_futures" --collect-all "branca" --collect-all "bs4" --hidden-import "pandas" \
 --collect-all "docx2python" --collect-all "tweepy" --collect-all "PyPDF2" --collect-all "Wappalyzer" \
---collect-all "email_validator" --add-data "./buildEnv/lib/python3.9/site-packages/social-analyzer:social-analyzer/" \
+--collect-all "email_validator" --collect-all "social-analyzer" --collect-all "tld" \
 --hidden-import "PIL" --hidden-import "lz4" --hidden-import "lxml" --hidden-import "jellyfish" \
 --hidden-import "defusedxml" --hidden-import "cchardet" --hidden-import "ipwhois" --hidden-import "xmltodict" \
 --hidden-import "dateutil" --hidden-import "urllib3" --hidden-import "logging" --hidden-import "holehe" \

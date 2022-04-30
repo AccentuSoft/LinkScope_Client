@@ -895,11 +895,11 @@ class MenuBar(QtWidgets.QMenuBar):
     def downloadFiles(self) -> None:
         self.parent().downloadFiles()
 
-    def manageCollectors(self) -> None:
-        with self.parent().serverCollectorsLock:
-            currentCollectors = dict(self.parent().collectors)
-        collectorsDialog = CollectorsDialog(currentCollectors if self.parent().FCOM.isConnected() else None)
-        collectorsDialog.exec()
+    #def manageCollectors(self) -> None:
+    #    with self.parent().serverCollectorsLock:
+    #        currentCollectors = dict(self.parent().collectors)
+    #    collectorsDialog = CollectorsDialog(currentCollectors if self.parent().FCOM.isConnected() else None)
+    #    collectorsDialog.exec()
 
     def selectAllNodes(self) -> None:
         self.parent().centralWidget().tabbedPane.getCurrentScene().selectAllNodes()

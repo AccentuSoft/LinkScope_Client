@@ -7,9 +7,11 @@ python -m venv buildEnv
 
 call buildEnv\Scripts\activate.bat
 
-python -m pip install --upgrade pip pyinstaller
+python -m pip install --upgrade wheel pip pyinstaller
 
-python -m pip install --upgrade -r requirements.txt
+python -m pip cache purge
+
+python -m pip install -r requirements.txt
 
 set PLAYWRIGHT_BROWSERS_PATH=0
 playwright install
@@ -25,8 +27,7 @@ python -m PyInstaller --clean --icon="Icon.ico" --noconsole --noconfirm --onedir
 --collect-all "docker" --collect-all "exif" --collect-all "dns" --collect-all "pycountry" ^
 --collect-all "tldextract" --collect-all "requests_futures" --collect-all "branca" --collect-all "bs4" ^
 --hidden-import "pandas" --collect-all "docx2python" --collect-all "tweepy" --collect-all "PyPDF2" ^
---collect-all "Wappalyzer" --collect-all "email_validator" ^
---add-data "C:\Users\IEUser\AppData\Roaming\Python\Python39\site-packages\social-analyzer;social-analyzer" ^
+--collect-all "Wappalyzer" --collect-all "email_validator" --collect-all "social-analyzer" --collect-all "tld" ^
 --hidden-import "PIL" --hidden-import "lz4" --hidden-import "lxml" --hidden-import "jellyfish" ^
 --hidden-import "logging" --hidden-import "defusedxml" --hidden-import "dateutil" --hidden-import "xmltodict" ^
 --hidden-import "urllib3" --hidden-import "cchardet" --hidden-import "ipwhois" --hidden-import "holehe" ^

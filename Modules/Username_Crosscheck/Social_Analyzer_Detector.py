@@ -5,32 +5,32 @@ Note: Creates log files in temp folders in /tmp. Files are only readable by the 
 """
 
 
-class Social_Analyzer:
+class Social_Analyzer_Detector:
     name = "Social Analyzer"
     category = "Online Identity"
     description = "Find potentially connected social media accounts."
     originTypes = {'Phrase', 'Social Media Handle'}
     resultTypes = {'Social Media Handle'}
-    parameters = {'websites': {'description': 'Enter the domain names of the social media websites'
-                                              ' to check or "all" (no quotes) to check all available websites.'
-                                              ' Note that some of the results could be false positives.',
+    parameters = {'websites': {'description': 'Enter the domain names of the social media websites '
+                                              'to check, separated with spaces, or "all" (no quotes) '
+                                              'to check all available websites.\n'
+                                              'E.g.: "github.com instagram.com" (no quotes).',
                                'type': 'String',
                                'default': 'all',
-                               'value': 'e.g: Facebook.com, Instagram.com etc...'}}
+                               'value': 'Example input: facebook.com instagram.com'}}
 
     def resolution(self, entityJsonList, parameters):
         import requests
         from importlib import import_module
         from requests.exceptions import RequestException
-        import time
         import random
         import string
         import re
         commentsRegex = re.compile('<!--.*?-->', re.DOTALL)
-        websites = parameters['websites']
+        websites = parameters['websites'].lower()
 
         headers = {
-            'User-Agent': 'user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0',
+            'User-Agent': 'user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:99.0) Gecko/20100101 Firefox/99.0',
         }
 
         def resolutionHelper(original_url):
@@ -39,8 +39,7 @@ class Social_Analyzer:
             certificate verification is disabled.
             """
             try:
-                originalUsernameRegex = re.escape(social_field)
-                originalUsernameRegex2 = re.compile(originalUsernameRegex, re.IGNORECASE)
+                originalUsernameRegex = re.compile(re.escape(social_field), re.IGNORECASE)
                 firstResponse = requests.get(original_url, verify=False, timeout=30, allow_redirects=False,  # nosec
                                              headers=headers)
                 if firstResponse.status_code >= 300:
@@ -51,7 +50,7 @@ class Social_Analyzer:
                     usernameRegex = re.compile(social_field, re.IGNORECASE)
                     r = requests.get(original_url, timeout=30, verify=False, headers=headers)  # nosec
                     originalContent = r.text
-                    if len(originalUsernameRegex2.findall(originalContent)) == 0:
+                    if len(originalUsernameRegex.findall(originalContent)) == 0:
                         # False Positive
                         return False
                     modified_url = original_url.replace(social_field, modifiedUsername)
@@ -78,7 +77,13 @@ class Social_Analyzer:
             # Have to keep re-importing so that it works for entities beyond the first.
             SocialAnalyzer = import_module("social-analyzer").SocialAnalyzer(silent=True)
             uid = entity['uid']
-            social_field = entity[list(entity)[1]].strip().lower()
+            if entity['Entity Type'] == 'Phrase':
+                social_field = entity['Phrase']
+            elif entity['Entity Type'] == 'Social Media Handle':
+                social_field = entity['User Name']
+            else:
+                continue
+            social_field = social_field.strip().lower()
             results = SocialAnalyzer.run_as_object(
                 username=social_field, silent=True, output="json", filter='good', metadata=False, logs_dir='',
                 websites=websites, mode='fast', timeout=10, profiles='detected')
@@ -89,14 +94,7 @@ class Social_Analyzer:
             if len(results) != 0:
                 for link in results['detected']:
                     url = link['link']
-                    count = 0
                     helperResult = resolutionHelper(url)
-                    while helperResult is None:
-                        time.sleep(5)
-                        count += 1
-                        if count == 3:
-                            break
-                        helperResult = resolutionHelper(url)
-                    if count != 3 and helperResult is not False:
+                    if isinstance(helperResult, list):
                         return_result.append(helperResult)
         return return_result
