@@ -39,6 +39,7 @@ from Core.PathHelper import is_path_exists_or_creatable_portable
 # Main Window of Application
 class MainWindow(QtWidgets.QMainWindow):
     facilitateResolutionSignalListener = QtCore.Signal(str, list)
+    notifyUserSignalListener = QtCore.Signal(str, str, bool)
 
     # Redefining the function to adjust its signature.
     def centralWidget(self) -> Union[QtWidgets.QWidget, QtWidgets.QWidget, CentralPane.WorkspaceWidget]:
@@ -897,6 +898,15 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.statusBar().showMessage(self.tr(message), timeout)
 
+    def notifyUser(self, message: str, title: str = "LinkScope Notification", beep: bool = True,
+                   icon: QtGui.QIcon = None) -> None:
+        if icon is not None:
+            self.trayIcon.showMessage(self.tr(title), self.tr(message), icon)
+        else:
+            self.trayIcon.showMessage(self.tr(title), self.tr(message))
+        if beep:
+            application.beep()
+
     def getPictureOfCanvas(self, canvasName: str, justViewport: bool = True,
                            transparentBackground: bool = False) -> Union[QtGui.QPicture, None]:
         view = self.centralWidget().tabbedPane.canvasTabs.get(canvasName)
@@ -1174,6 +1184,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.MESSAGEHANDLER.info(status)
                 self.setStatus(status)
                 self.FCOM.askServerForResolutions()
+                status = "Getting Collectors..."
+                self.MESSAGEHANDLER.info(status)
+                self.setStatus(status)
+                self.FCOM.askServerForCollectors()
                 status = "Getting server projects list..."
                 self.MESSAGEHANDLER.info(status)
                 self.setStatus(status)
@@ -1198,6 +1212,8 @@ class MainWindow(QtWidgets.QMainWindow):
             self.closeServerProjectListener()
             with self.serverProjectsLock:
                 self.serverProjects = []
+            with self.serverCollectorsLock:
+                self.collectors = {}
         self.setStatus("Disconnected from server.")
         self.dockbarThree.serverStatus.updateStatus("Not connected to a server")
 
@@ -1216,6 +1232,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 if resolutionThread[0].isFinished():
                     self.resolutions.remove(resolutionThread)
                 break
+
+    def addCollectorsFromServerListener(self, server_collectors: dict) -> None:
+        with self.serverCollectorsLock:
+            self.collectors = server_collectors
 
     def receiveProjectsListListener(self, projects: list) -> None:
         with self.serverProjectsLock:
@@ -1639,13 +1659,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Set the main window title and show it to the user.
         self.setWindowTitle("LinkScope - " + self.SETTINGS.get('Project/Name', 'Untitled'))
-        try:
-            iconPath = Path(self.SETTINGS.get('Program/BaseDir')) / 'Icon.ico'
-            if iconPath.exists():
-                appIcon = QtGui.QIcon(str(iconPath))
-                self.setWindowIcon(appIcon)
-        except Exception:
-            pass
+        iconPath = Path(self.SETTINGS.get('Program/BaseDir')) / 'Icon.ico'
+        appIcon = QtGui.QIcon(str(iconPath))
+        self.setWindowIcon(appIcon)
+        self.trayIcon = QtWidgets.QSystemTrayIcon(appIcon, self)
+        # Whether the icon is shown or not depends on the Desktop environment.
+        self.trayIcon.show()
 
         self.dockbarOne.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         self.dockbarTwo.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
@@ -1735,6 +1754,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.serverProjects = []
         self.serverProjectsLock = threading.Lock()
         self.resolutions = []
+        self.serverCollectorsLock = threading.Lock()
+        self.collectors = {}
 
         self.RESOLUTIONMANAGER.loadResolutionsFromDir(
             Path(self.SETTINGS.value("Program/BaseDir")) / "Core" / "Resolutions" / "Core")
@@ -1776,6 +1797,10 @@ class MainWindow(QtWidgets.QMainWindow):
                                                 self.LENTDB)
 
         self.primaryToolbar = ToolBarOne.ToolBarOne('Primary Toolbar', self)
+
+        self.trayIcon = None
+        # Cannot specify icon if notification spawned from signal.
+        self.notifyUserSignalListener.connect(self.notifyUser)
 
         self.initializeLayout()
 

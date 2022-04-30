@@ -381,6 +381,13 @@ class MenuBar(QtWidgets.QMenuBar):
                                             triggered=self.downloadFiles)
         serverMenu.addAction(downloadFilesAction)
 
+        serverMenu.addSeparator()
+
+        manageCollectorsAction = QtGui.QAction("Manage Collectors", self,
+                                               statusTip="Start and / or stop Collectors for this project.",
+                                               triggered=self.manageCollectors)
+        serverMenu.addAction(manageCollectorsAction)
+
     # Use this function to change the labels of functions when necessary.
     # Not very efficient, but much more intuitive than creating a ton of different menus
     #   and mashing them together.
@@ -898,6 +905,7 @@ class MenuBar(QtWidgets.QMenuBar):
     def manageCollectors(self) -> None:
         with self.parent().serverCollectorsLock:
             currentCollectors = dict(self.parent().collectors)
+        print('CURR COLL', currentCollectors)
         collectorsDialog = CollectorsDialog(currentCollectors if self.parent().FCOM.isConnected() else None)
         collectorsDialog.exec()
 
@@ -1740,6 +1748,188 @@ class ViewAndStopResolutionsDialogOption(QtWidgets.QPushButton):
             self.mainWindowObject.cleanUpLocalFinishedResolutions()
         # Remove from parent's layout
         self.parent().layout().removeRow(self)
+
+
+class CollectorsDialog(QtWidgets.QDialog):
+
+    def __init__(self, collectorsDict: dict = None):
+        super(CollectorsDialog, self).__init__()
+        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
+        self.baseLayout = QtWidgets.QVBoxLayout()
+        self.setLayout(self.baseLayout)
+        self.setModal(True)
+
+        collectorsLabel = QtWidgets.QLabel("Collectors")
+        self.baseLayout.addWidget(collectorsLabel)
+
+        if collectorsDict is None:
+            notConnectedToServerLabel = QtWidgets.QLabel("Not connected to server, Collectors unavailable.")
+            self.baseLayout.addWidget(notConnectedToServerLabel)
+        else:
+            connectedToServerFormWidget = QtWidgets.QWidget()
+            self.connectedToServerFormWidgetLayout = QtWidgets.QVBoxLayout()
+
+            for collector in collectorsDict:
+                newCollectorWidget = QtWidgets.QWidget()
+                newCollectorWidgetLayout = QtWidgets.QGridLayout()
+                newCollectorWidget.setLayout(newCollectorWidgetLayout)
+
+                newCollectorLabel = QtWidgets.QLabel(collectorsDict[collector]['name'])
+                newCollectorLabel.setToolTip(collectorsDict[collector]['description'])
+                newCollectorButton = QtWidgets.QPushButton('Create New')
+                newCollectorButton.clicked.connect(lambda: self.close())  # TODO
+
+                newCollectorWidgetLayout.addWidget(newCollectorLabel, 0, 0)
+                newCollectorWidgetLayout.addWidget(newCollectorButton, 0, 1)
+
+                newCollectorInstanceTree = QtWidgets.QTreeWidget()
+                newCollectorInstanceTree.setColumnCount(2)
+                newCollectorInstanceTree.setHeaderLabels(['UID', 'Stop Button'])  # TODO
+
+                self.connectedToServerFormWidgetLayout.addWidget(newCollectorWidget)
+
+            connectedToServerFormWidget.setLayout(self.connectedToServerFormWidgetLayout)
+            # TODO: manage collectors.
+
+            self.baseLayout.addWidget(connectedToServerFormWidget)
+
+        closeButton = QtWidgets.QPushButton('Close')
+        closeButton.clicked.connect(self.accept)
+
+        self.baseLayout.addWidget(closeButton)
+
+
+class CollectorStartDialog(QtWidgets.QDialog):
+
+    def __init__(self, collectorDict: dict):
+        super(CollectorStartDialog, self).__init__()
+        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
+        self.setModal(True)
+        self.setWindowTitle('Collector Wizard')
+        self.parametersList = []
+        # Have two separate dicts for readability.
+        self.chosenParameters = {}
+        self.parametersToRemember = {}
+
+        dialogLayout = QtWidgets.QGridLayout()
+        self.setLayout(dialogLayout)
+        self.childWidget = QtWidgets.QTabWidget()
+        dialogLayout.addWidget(self.childWidget, 0, 0, 4, 2)
+        dialogLayout.setRowStretch(0, 1)
+        dialogLayout.setColumnStretch(0, 1)
+
+        if includeEntitySelector is not None and originTypes is not None:
+            entitySelectTab = QtWidgets.QWidget()
+            entitySelectTab.setLayout(QtWidgets.QVBoxLayout())
+            labelText = ""
+            if resolutionDescription is not None:
+                labelText += resolutionDescription + "\n\n"
+            labelText += 'Select the entities to use for this resolution.\nAccepted Origin Types: ' + \
+                         ', '.join(originTypes)
+            entitySelectTabLabel = QtWidgets.QLabel(labelText)
+            entitySelectTabLabel.setWordWrap(True)
+            entitySelectTabLabel.setMaximumWidth(600)
+
+            entitySelectTabLabel.setAlignment(QtCore.Qt.AlignCenter)
+            entitySelectTab.layout().addWidget(entitySelectTabLabel)
+
+            self.entitySelector = QtWidgets.QListWidget()
+            self.entitySelector.addItems(includeEntitySelector)
+
+            self.entitySelector.setSelectionMode(self.entitySelector.MultiSelection)
+            entitySelectTab.layout().addWidget(self.entitySelector)
+
+            self.childWidget.addTab(entitySelectTab, 'Entities')
+
+        for key in properties:
+            propertyWidget = QtWidgets.QWidget()
+            propertyKeyLayout = QtWidgets.QVBoxLayout()
+            propertyWidget.setLayout(propertyKeyLayout)
+
+            propertyLabel = QtWidgets.QLabel(properties[key].get('description'))
+            propertyLabel.setWordWrap(True)
+            propertyLabel.setMaximumWidth(600)
+
+            propertyLabel.setAlignment(QtCore.Qt.AlignCenter)
+            propertyKeyLayout.addWidget(propertyLabel)
+
+            propertyType = properties[key].get('type')
+            propertyValue = properties[key].get('value')
+            propertyDefaultValue = properties[key].get('default')
+
+            if propertyType == 'String':
+                propertyInputField = StringPropertyInput(propertyValue, propertyDefaultValue)
+            elif propertyType == 'File':
+                propertyInputField = FilePropertyInput(propertyValue, propertyDefaultValue)
+            elif propertyType == 'SingleChoice':
+                propertyInputField = SingleChoicePropertyInput(propertyValue, propertyDefaultValue)
+            elif propertyType == 'MultiChoice':
+                propertyInputField = MultiChoicePropertyInput(propertyValue, propertyDefaultValue)
+            else:
+                # If value has invalid type, skip to the next property.
+                propertyInputField = None
+
+            if propertyInputField is not None:
+                propertyKeyLayout.addWidget(propertyInputField)
+                propertyInputField.setStyleSheet(Stylesheets.CHECK_BOX_STYLESHEET)
+
+            rememberChoiceCheckbox = QtWidgets.QCheckBox('Remember Choice')
+            rememberChoiceCheckbox.setStyleSheet(Stylesheets.CHECK_BOX_STYLESHEET)
+            rememberChoiceCheckbox.setChecked(False)
+            propertyKeyLayout.addWidget(rememberChoiceCheckbox)
+            propertyKeyLayout.setStretch(1, 1)
+
+            self.childWidget.addTab(propertyWidget, key)
+            self.parametersList.append((key, propertyInputField, rememberChoiceCheckbox))
+
+        nextButton = QtWidgets.QPushButton('Next')
+        nextButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET_2)
+        nextButton.clicked.connect(self.nextTab)
+        previousButton = QtWidgets.QPushButton('Previous')
+        previousButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET_2)
+        previousButton.clicked.connect(self.previousTab)
+        acceptButton = QtWidgets.QPushButton('Accept')
+        acceptButton.setAutoDefault(True)
+        acceptButton.setDefault(True)
+        acceptButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET_2)
+        acceptButton.clicked.connect(self.accept)
+        cancelButton = QtWidgets.QPushButton('Cancel')
+        cancelButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET_2)
+        cancelButton.clicked.connect(self.reject)
+
+        dialogLayout.addWidget(previousButton, 4, 0, 1, 1)
+        dialogLayout.addWidget(nextButton, 4, 1, 1, 1)
+        dialogLayout.addWidget(cancelButton, 5, 0, 1, 1)
+        dialogLayout.addWidget(acceptButton, 5, 1, 1, 1)
+
+    def nextTab(self):
+        currentIndex = self.childWidget.currentIndex()
+        if currentIndex < self.childWidget.count():
+            self.childWidget.setCurrentIndex(currentIndex + 1)
+
+    def previousTab(self):
+        currentIndex = self.childWidget.currentIndex()
+        if currentIndex > 0:
+            self.childWidget.setCurrentIndex(currentIndex - 1)
+
+    def accept(self) -> None:
+        for resolutionParameterName, resolutionParameterInput, resolutionParameterRemember in self.parametersList:
+            value = resolutionParameterInput.getValue()
+            if value == '':
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setModal(True)
+                QtWidgets.QMessageBox.warning(msgBox,
+                                              "Not all parameters filled in",
+                                              "Some of the required parameters for the resolution have been left blank."
+                                              " Please fill them in before proceeding.")
+                return
+            self.chosenParameters[resolutionParameterName] = value
+
+            if resolutionParameterRemember.isChecked():
+                self.parametersToRemember[resolutionParameterName] = value
+
+        super(ResolutionParametersSelector, self).accept()
+
 
 
 class ImportLinksFromCSVFile(QtWidgets.QDialog):
