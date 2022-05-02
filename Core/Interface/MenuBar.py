@@ -28,6 +28,8 @@ from playwright.sync_api import sync_playwright, Error, TimeoutError
 from PySide6 import QtWidgets, QtGui, QtCore
 from Core.Interface import Stylesheets
 from Core.Interface.Entity import BaseNode
+from Core.ResolutionManager import StringPropertyInput, FilePropertyInput, SingleChoicePropertyInput, \
+    MultiChoicePropertyInput
 
 
 class MenuBar(QtWidgets.QMenuBar):
