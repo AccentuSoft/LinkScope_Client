@@ -4,6 +4,7 @@
 Credits in web_accounts_list.json
 """
 
+
 class Whats_My_Name:
 
     name = "Whats My Name"
@@ -46,6 +47,8 @@ class Whats_My_Name:
                 # Most services do not care about capitalization.
                 # Some may redirect non-lowercase usernames, which could result in missed accounts.
                 social_field = entity[list(entity)[1]].strip().lower()
+                if entity['Entity Type'] == 'Social Media Handle' and social_field.startswith('@'):
+                    social_field = social_field[1:]
                 directory = Path(__file__).parent.resolve()
                 with open(directory / 'web_accounts_list.json') as web_accounts_list:
                     file = json.load(web_accounts_list)
