@@ -1189,7 +1189,15 @@ class MainWindow(QtWidgets.QMainWindow):
                 status = "Getting Collectors..."
                 self.MESSAGEHANDLER.info(status)
                 self.setStatus(status)
-                self.FCOM.askServerForCollectors()
+                try:
+                    clientCollectorUIDs = literal_eval(self.SETTINGS.value('Project/Server/Collectors'))
+                except Exception as e:
+                    self.MESSAGEHANDLER.error('Unable to load Collectors from Settings file.',
+                                              popUp=False,
+                                              exc_info=False)
+                    self.MESSAGEHANDLER.debug('Cannot eval Project/Server/Collectors setting: ' + str(e))
+                    clientCollectorUIDs = {}
+                self.FCOM.askServerForCollectors(clientCollectorUIDs)
                 status = "Getting server projects list..."
                 self.MESSAGEHANDLER.info(status)
                 self.setStatus(status)
@@ -1216,6 +1224,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.serverProjects = []
             with self.serverCollectorsLock:
                 self.collectors = {}
+                self.runningCollectors = {}
         self.setStatus("Disconnected from server.")
         self.dockbarThree.serverStatus.updateStatus("Not connected to a server")
 
@@ -1235,9 +1244,10 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.resolutions.remove(resolutionThread)
                 break
 
-    def addCollectorsFromServerListener(self, server_collectors: dict) -> None:
+    def addCollectorsFromServerListener(self, server_collectors: dict, continuing_collectors_info: dict) -> None:
         with self.serverCollectorsLock:
             self.collectors = server_collectors
+            self.runningCollectors = continuing_collectors_info
 
     def receiveProjectsListListener(self, projects: list) -> None:
         with self.serverProjectsLock:
@@ -1758,6 +1768,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.resolutions = []
         self.serverCollectorsLock = threading.Lock()
         self.collectors = {}
+        self.runningCollectors = {}
 
         self.RESOLUTIONMANAGER.loadResolutionsFromDir(
             Path(self.SETTINGS.value("Program/BaseDir")) / "Core" / "Resolutions" / "Core")
