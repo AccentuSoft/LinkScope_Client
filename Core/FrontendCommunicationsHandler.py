@@ -49,7 +49,7 @@ class CommunicationsHandler(QtCore.QObject):
     connected_to_server_listener = QtCore.Signal(str)
     receive_question_answer = QtCore.Signal(dict)
     receive_chat_message = QtCore.Signal(str)
-    receive_collectors_signal = QtCore.Signal(dict)
+    receive_collectors_signal = QtCore.Signal(dict, dict)
     receive_resolutions_signal = QtCore.Signal(dict)
     receive_completed_resolution_result_signal = QtCore.Signal(str, list)
     receive_completed_resolution_string_result_signal = QtCore.Signal(str, str)
@@ -310,9 +310,11 @@ class CommunicationsHandler(QtCore.QObject):
                 # They will be reconstructed eventually, once all the pieces get here.
                 continue
 
-    def askServerForCollectors(self) -> None:
+    def askServerForCollectors(self, continuing_collectors_dict: dict) -> None:
         message = {"Operation": "Get Server Collectors",
-                   "Arguments": {}}
+                   "Arguments": {
+                       'continuing_collectors_dict': continuing_collectors_dict
+                   }}
         self.transmitMessage(message)
 
     def receiveCollectors(self, server_collectors) -> None:
@@ -717,8 +719,6 @@ class CommunicationsHandler(QtCore.QObject):
                 # Remove resolution from resolutions list.
                 resolution_uid = message.split(': ', 1)[1]
                 self.remove_server_resolution_from_running_signal.emit(resolution_uid)
-            elif operation == 'Stop Server Resolution':
-                pass  # TODO
             elif operation == 'Delete Project':
                 # Remove project from server projects list.
                 project_name = message.split(': ', 1)[1]
