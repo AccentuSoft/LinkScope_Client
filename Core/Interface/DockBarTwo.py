@@ -377,7 +377,14 @@ class EntityDetails(QtWidgets.QWidget):
 
 
 class MinSizeStackedLayout(QtWidgets.QStackedLayout):
+    """
+    Resize the layout to always take up the appropriate space for the currently selected widget.
+    Otherwise, large widgets (due to selecting entities with long strings of text) will stretch
+    out the ScrollArea and make the other, non-selected widgets to look bad when the layout
+    switches over.
 
+    https://stackoverflow.com/a/34300567
+    """
     def sizeHint(self) -> QtCore.QSize:
         return self.currentWidget().sizeHint()
 
