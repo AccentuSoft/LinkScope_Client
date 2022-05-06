@@ -826,7 +826,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
             self.saveProject()
 
-    def changeGraphics(self):
+    def changeGraphics(self) -> None:
         settingsDialog = GraphicsEditDialog(self.SETTINGS, self.RESOURCEHANDLER)
         settingsConfirm = settingsDialog.exec()
 
@@ -1162,6 +1162,39 @@ class MainWindow(QtWidgets.QMainWindow):
             if resolutionThread[0].isFinished() and resolutionThread[1] is False:
                 self.resolutions.remove(resolutionThread)
 
+    def getClientCollectors(self) -> dict:
+        with self.serverCollectorsLock:
+            try:
+                clientCollectorUIDs = literal_eval(self.SETTINGS.value('Project/Server/Collectors'))
+                if not isinstance(clientCollectorUIDs, dict):
+                    raise ValueError('Collectors were not saved in the correct format.')
+            except Exception as e:
+                self.MESSAGEHANDLER.error('Unable to load Collectors from Settings file.',
+                                          popUp=False,
+                                          exc_info=False)
+                self.MESSAGEHANDLER.debug('Cannot eval Project/Server/Collectors setting: ' + str(e))
+                clientCollectorUIDs = {}
+        return clientCollectorUIDs
+
+    def setClientCollectors(self, newClientCollectorsDict: dict) -> None:
+        if not isinstance(newClientCollectorsDict, dict):
+            self.MESSAGEHANDLER.error('Unable to save Collectors to Settings: Invalid format.')
+            self.MESSAGEHANDLER.debug('Collectors argument: ' + str(newClientCollectorsDict))
+            self.MESSAGEHANDLER.debug('Collectors format: ' + str(type(newClientCollectorsDict)))
+        else:
+            with self.serverCollectorsLock:
+                self.SETTINGS.setValue('Project/Server/Collectors', str(newClientCollectorsDict))
+                self.SETTINGS.save()
+            self.MESSAGEHANDLER.info('Client Collectors state updated.')
+
+    def receiveCollectorResultListener(self, collector_name: str, collector_uid: str, timestamp: str, results: list):
+        # Signal ints are 4 bytes long and signed, so we use strings to communicate timestamps.
+        currentCollectors = self.getClientCollectors()
+        currentCollectors[collector_uid] = int(timestamp)
+        self.setClientCollectors(currentCollectors)
+        self.centralWidget().tabbedPane.facilitateResolution('Collector ' + str(collector_uid), results)
+        self.notifyUser("New entities discovered by collector: " + str(collector_name), "Collector Update")
+
     # Server functions
     def statusMessageListener(self, message: str, showPopup: bool = True) -> None:
         if showPopup:
@@ -1189,15 +1222,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 status = "Getting Collectors..."
                 self.MESSAGEHANDLER.info(status)
                 self.setStatus(status)
-                try:
-                    clientCollectorUIDs = literal_eval(self.SETTINGS.value('Project/Server/Collectors'))
-                except Exception as e:
-                    self.MESSAGEHANDLER.error('Unable to load Collectors from Settings file.',
-                                              popUp=False,
-                                              exc_info=False)
-                    self.MESSAGEHANDLER.debug('Cannot eval Project/Server/Collectors setting: ' + str(e))
-                    clientCollectorUIDs = {}
-                self.FCOM.askServerForCollectors(clientCollectorUIDs)
+                self.FCOM.askServerForCollectors(self.getClientCollectors())
                 status = "Getting server projects list..."
                 self.MESSAGEHANDLER.info(status)
                 self.setStatus(status)
@@ -1248,6 +1273,28 @@ class MainWindow(QtWidgets.QMainWindow):
         with self.serverCollectorsLock:
             self.collectors = server_collectors
             self.runningCollectors = continuing_collectors_info
+
+    def startNewCollectorListener(self, collector_category: str, collector_name: str, collector_uid: str,
+                                  collector_entities: list, collector_parameters: dict):
+        with self.serverCollectorsLock:
+            if collector_category not in self.runningCollectors:
+                self.runningCollectors[collector_category] = {}
+            if collector_name not in self.runningCollectors[collector_category]:
+                self.runningCollectors[collector_category][collector_name] = []
+
+            # Re-running a collector would generate duplicate info; we don't want that.
+            duplicateExists = False
+            for collectorInstance in self.runningCollectors[collector_category][collector_name]:
+                if collectorInstance['uid'] == collector_uid:
+                    duplicateExists = True
+                    break
+            if not duplicateExists:
+                self.runningCollectors[collector_category][collector_name].append({'uid': collector_uid,
+                                                                                   'entities': collector_entities,
+                                                                                   'parameters': collector_parameters})
+        currentCollectors = self.getClientCollectors()
+        currentCollectors[collector_uid] = time.time_ns() // 1000
+        self.setClientCollectors(currentCollectors)
 
     def receiveProjectsListListener(self, projects: list) -> None:
         with self.serverProjectsLock:
@@ -2565,7 +2612,7 @@ class ResolutionParametersSelector(QtWidgets.QDialog):
                 msgBox = QtWidgets.QMessageBox()
                 msgBox.setModal(True)
                 QtWidgets.QMessageBox.warning(msgBox,
-                                              "Not all parameters filled in",
+                                              "Not all parameters were filled in",
                                               "Some of the required parameters for the resolution have been left blank."
                                               " Please fill them in before proceeding.")
                 return
