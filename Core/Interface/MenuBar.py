@@ -28,6 +28,8 @@ from playwright.sync_api import sync_playwright, Error, TimeoutError
 from PySide6 import QtWidgets, QtGui, QtCore
 from Core.Interface import Stylesheets
 from Core.Interface.Entity import BaseNode
+from Core.ResolutionManager import StringPropertyInput, FilePropertyInput, SingleChoicePropertyInput, \
+    MultiChoicePropertyInput
 
 
 class MenuBar(QtWidgets.QMenuBar):
@@ -380,6 +382,13 @@ class MenuBar(QtWidgets.QMenuBar):
                                                       "Materials entities.",
                                             triggered=self.downloadFiles)
         serverMenu.addAction(downloadFilesAction)
+
+        serverMenu.addSeparator()
+
+        manageCollectorsAction = QtGui.QAction("Manage Collectors", self,
+                                               statusTip="Start and / or stop Collectors for this project.",
+                                               triggered=self.manageCollectors)
+        serverMenu.addAction(manageCollectorsAction)
 
     # Use this function to change the labels of functions when necessary.
     # Not very efficient, but much more intuitive than creating a ton of different menus
@@ -895,11 +904,14 @@ class MenuBar(QtWidgets.QMenuBar):
     def downloadFiles(self) -> None:
         self.parent().downloadFiles()
 
-    #def manageCollectors(self) -> None:
-    #    with self.parent().serverCollectorsLock:
-    #        currentCollectors = dict(self.parent().collectors)
-    #    collectorsDialog = CollectorsDialog(currentCollectors if self.parent().FCOM.isConnected() else None)
-    #    collectorsDialog.exec()
+    def manageCollectors(self) -> None:
+        with self.parent().serverCollectorsLock:
+            currentCollectors = dict(self.parent().collectors)
+            runningCollectors = dict(self.parent().runningCollectors)
+        collectorsDialog = CollectorsDialog(self.parent(),
+                                            currentCollectors if self.parent().FCOM.isConnected() else None,
+                                            runningCollectors)
+        collectorsDialog.exec()
 
     def selectAllNodes(self) -> None:
         self.parent().centralWidget().tabbedPane.getCurrentScene().selectAllNodes()
@@ -1740,6 +1752,246 @@ class ViewAndStopResolutionsDialogOption(QtWidgets.QPushButton):
             self.mainWindowObject.cleanUpLocalFinishedResolutions()
         # Remove from parent's layout
         self.parent().layout().removeRow(self)
+
+
+class CollectorsDialog(QtWidgets.QDialog):
+
+    def __init__(self, mainWindow, collectorsDict: dict = None, runningCollectors: dict = None):
+        super(CollectorsDialog, self).__init__()
+        self.mainWindow = mainWindow
+        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
+        self.baseLayout = QtWidgets.QVBoxLayout()
+        self.setLayout(self.baseLayout)
+        self.setModal(True)
+        self.runningCollectorTreeItems = {}
+
+        collectorsLabel = QtWidgets.QLabel("Collectors")
+        collectorsLabel.setAlignment(QtCore.Qt.AlignCenter)
+        self.baseLayout.addWidget(collectorsLabel)
+
+        if collectorsDict is None:
+            notConnectedToServerLabel = QtWidgets.QLabel("Not connected to server, Collectors unavailable.")
+            self.baseLayout.addWidget(notConnectedToServerLabel)
+        else:
+            connectedToServerFormWidget = QtWidgets.QWidget()
+            self.connectedToServerFormWidgetLayout = QtWidgets.QVBoxLayout()
+
+            for category in collectorsDict:
+                categoryLabel = QtWidgets.QLabel("Category: " + str(category))
+                self.connectedToServerFormWidgetLayout.addWidget(categoryLabel)
+                for collector in collectorsDict[category]:
+                    newCollectorWidget = QtWidgets.QWidget()
+                    newCollectorWidgetLayout = QtWidgets.QGridLayout()
+                    newCollectorWidget.setLayout(newCollectorWidgetLayout)
+
+                    newCollectorLabel = QtWidgets.QLabel(collectorsDict[category][collector]['name'])
+                    newCollectorLabel.setToolTip(collectorsDict[category][collector]['description'])
+                    newCollectorButton = QtWidgets.QPushButton('Create New')
+                    newCollectorButton.clicked.connect(lambda: self.startSelectedCollector(
+                        collectorsDict[category][collector]))
+
+                    newCollectorWidgetLayout.addWidget(newCollectorLabel, 0, 0)
+                    newCollectorWidgetLayout.addWidget(newCollectorButton, 0, 1)
+
+                    newCollectorInstanceTree = QtWidgets.QTreeWidget()
+                    newCollectorInstanceTree.setColumnCount(2)
+                    newCollectorInstanceTree.setHeaderLabels(['UID', 'Stop Button'])
+                    newCollectorInstanceTree.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+                    newCollectorInstanceTree.header().setStretchLastSection(False)
+                    newCollectorInstanceTree.header().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+                    newCollectorWidgetLayout.addWidget(newCollectorInstanceTree, 1, 0, 2, 2)
+
+                    if runningCollectors is not None:
+                        for runningCollectorCategory in runningCollectors:
+                            for runningCollector in runningCollectors[runningCollectorCategory][collector]:
+                                newTreeItem = QtWidgets.QTreeWidgetItem(newCollectorInstanceTree)
+                                newTreeItem.setText(0, runningCollector['uid'])
+                                stopButton = QtWidgets.QPushButton("Stop")
+                                stopButton.clicked.connect(lambda: self.stopSelectedCollector(runningCollector['uid']))
+                                newCollectorInstanceTree.setItemWidget(newTreeItem, 1, stopButton)
+                                self.runningCollectorTreeItems[runningCollector['uid']] = (newTreeItem,
+                                                                                           newCollectorInstanceTree)
+
+                    self.connectedToServerFormWidgetLayout.addWidget(newCollectorWidget)
+
+            connectedToServerFormWidget.setLayout(self.connectedToServerFormWidgetLayout)
+
+            self.baseLayout.addWidget(connectedToServerFormWidget)
+
+        closeButton = QtWidgets.QPushButton('Close')
+        closeButton.clicked.connect(self.accept)
+
+        self.baseLayout.addWidget(closeButton)
+
+    def startSelectedCollector(self, collectorToStartDict: dict):
+        newCollector = CollectorStartDialog(self.mainWindow.LENTDB, collectorToStartDict)
+
+        if newCollector.exec_():
+            collector_name = collectorToStartDict['name']
+            try:
+                self.mainWindow.FCOM.startServerCollector(collector_name,
+                                                          newCollector.chosenItems,
+                                                          newCollector.chosenParameters)
+                self.mainWindow.MESSAGEHANDLER.info('Starting server collector: ' + collector_name)
+            except Exception as e:
+                self.mainWindow.MESSAGEHANDLER.error('Error starting server collector: ' + str(e))
+
+    def stopSelectedCollector(self, collectorToStop: str):
+        self.mainWindow.MESSAGEHANDLER.info('Stopping server collector with UID: ' + collectorToStop)
+        self.mainWindow.FCOM.stopServerCollector(collectorToStop)
+        self.runningCollectorTreeItems[collectorToStop][1].takeTopLevelItem(
+            self.runningCollectorTreeItems[collectorToStop][1].indexOfTopLevelItem(
+                self.runningCollectorTreeItems[collectorToStop][0]))
+        currentClientCollectors = self.mainWindow.getClientCollectors()
+        try:
+            currentClientCollectors.pop(collectorToStop)
+            self.mainWindow.setClientCollectors(currentClientCollectors)
+        except KeyError:
+            self.mainWindow.MESSAGEHANDLER.error('Trying to stop Collector that was never ran. Was confirmation that '
+                                                 'the collector was started by the server received?', popUp=False)
+
+
+class CollectorStartDialog(QtWidgets.QDialog):
+
+    def __init__(self, entityDB, collectorDict: dict):
+        super(CollectorStartDialog, self).__init__()
+        self.entityDB = entityDB
+        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
+        self.setModal(True)
+        self.setWindowTitle('Collector Wizard')
+        self.parametersList = []
+        self.chosenParameters = {}
+        self.chosenItems = []
+
+        dialogLayout = QtWidgets.QGridLayout()
+        self.setLayout(dialogLayout)
+        self.childWidget = QtWidgets.QTabWidget()
+        dialogLayout.addWidget(self.childWidget, 0, 0, 4, 2)
+        dialogLayout.setRowStretch(0, 1)
+        dialogLayout.setColumnStretch(0, 1)
+
+        entitySelectTab = QtWidgets.QWidget()
+        entitySelectTab.setLayout(QtWidgets.QVBoxLayout())
+        originTypes = collectorDict['originTypes']
+        labelText = collectorDict['description'] + "\n\n"
+        labelText += 'Select the entities to use for this collector.\nAccepted Origin Types: ' + \
+                     ', '.join(collectorDict['originTypes'])
+        entitySelectTabLabel = QtWidgets.QLabel(labelText)
+        entitySelectTabLabel.setWordWrap(True)
+        entitySelectTabLabel.setMaximumWidth(600)
+
+        entitySelectTabLabel.setAlignment(QtCore.Qt.AlignCenter)
+        entitySelectTab.layout().addWidget(entitySelectTabLabel)
+
+        self.entitySelector = QtWidgets.QTreeWidget()
+        self.entitySelector.setHeaderLabels(['Primary Field', 'Entity Type', 'Icon'])
+        self.entitySelector.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.entitySelector.setSortingEnabled(True)
+        # Stretch the first column, since it contains the primary field.
+        self.entitySelector.header().setStretchLastSection(False)
+        self.entitySelector.header().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        relevantEntityFields = [(entity['uid'], entity[list(entity)[1]], entity['Entity Type'], entity['Icon'])
+                                for entity in entityDB.getAllEntities()
+                                if entity['Entity Type'] in originTypes or originTypes == '*']
+        for eligibleEntity in relevantEntityFields:
+            newTreeWidgetItem = QtWidgets.QTreeWidgetItem(self.entitySelector)
+            newTreeWidgetItemPixmap = QtGui.QPixmap()
+            newTreeWidgetItemPixmap.loadFromData(eligibleEntity[3])
+            newTreeWidgetItem.setText(0, eligibleEntity[1])
+            newTreeWidgetItem.setText(1, eligibleEntity[2])
+            newTreeWidgetItem.setIcon(2, newTreeWidgetItemPixmap)
+            # Hidden, so we can pull the UID later.
+            newTreeWidgetItem.setText(3, eligibleEntity[0])
+
+        self.entitySelector.setSelectionMode(self.entitySelector.MultiSelection)
+        entitySelectTab.layout().addWidget(self.entitySelector)
+
+        self.childWidget.addTab(entitySelectTab, 'Entities')
+
+        parameters = collectorDict['parameters']
+        for key in parameters:
+            propertyWidget = QtWidgets.QWidget()
+            propertyKeyLayout = QtWidgets.QVBoxLayout()
+            propertyWidget.setLayout(propertyKeyLayout)
+
+            propertyLabel = QtWidgets.QLabel(parameters[key].get('description'))
+            propertyLabel.setWordWrap(True)
+            propertyLabel.setMaximumWidth(600)
+
+            propertyLabel.setAlignment(QtCore.Qt.AlignCenter)
+            propertyKeyLayout.addWidget(propertyLabel)
+
+            propertyType = parameters[key].get('type')
+            propertyValue = parameters[key].get('value')
+            propertyDefaultValue = parameters[key].get('default')
+
+            if propertyType == 'String':
+                propertyInputField = StringPropertyInput(propertyValue, propertyDefaultValue)
+            elif propertyType == 'File':
+                propertyInputField = FilePropertyInput(propertyValue, propertyDefaultValue)
+            elif propertyType == 'SingleChoice':
+                propertyInputField = SingleChoicePropertyInput(propertyValue, propertyDefaultValue)
+            elif propertyType == 'MultiChoice':
+                propertyInputField = MultiChoicePropertyInput(propertyValue, propertyDefaultValue)
+            else:
+                # If value has invalid type, skip to the next property.
+                propertyInputField = None
+
+            if propertyInputField is not None:
+                propertyKeyLayout.addWidget(propertyInputField)
+                propertyInputField.setStyleSheet(Stylesheets.CHECK_BOX_STYLESHEET)
+
+            propertyKeyLayout.setStretch(1, 1)
+
+            self.childWidget.addTab(propertyWidget, key)
+            self.parametersList.append((key, propertyInputField))
+
+        nextButton = QtWidgets.QPushButton('Next')
+        nextButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET_2)
+        nextButton.clicked.connect(self.nextTab)
+        previousButton = QtWidgets.QPushButton('Previous')
+        previousButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET_2)
+        previousButton.clicked.connect(self.previousTab)
+        acceptButton = QtWidgets.QPushButton('Accept')
+        acceptButton.setAutoDefault(True)
+        acceptButton.setDefault(True)
+        acceptButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET_2)
+        acceptButton.clicked.connect(self.accept)
+        cancelButton = QtWidgets.QPushButton('Cancel')
+        cancelButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET_2)
+        cancelButton.clicked.connect(self.reject)
+
+        dialogLayout.addWidget(previousButton, 4, 0, 1, 1)
+        dialogLayout.addWidget(nextButton, 4, 1, 1, 1)
+        dialogLayout.addWidget(cancelButton, 5, 0, 1, 1)
+        dialogLayout.addWidget(acceptButton, 5, 1, 1, 1)
+
+    def nextTab(self):
+        currentIndex = self.childWidget.currentIndex()
+        if currentIndex < self.childWidget.count():
+            self.childWidget.setCurrentIndex(currentIndex + 1)
+
+    def previousTab(self):
+        currentIndex = self.childWidget.currentIndex()
+        if currentIndex > 0:
+            self.childWidget.setCurrentIndex(currentIndex - 1)
+
+    def accept(self) -> None:
+        for item in self.entitySelector.selectedItems():
+            self.chosenItems.append(self.entityDB.getEntity(item.text(3)))
+        for resolutionParameterName, resolutionParameterInput in self.parametersList:
+            value = resolutionParameterInput.getValue()
+            if value == '':
+                msgBox = QtWidgets.QMessageBox()
+                msgBox.setModal(True)
+                QtWidgets.QMessageBox.warning(msgBox,
+                                              "Not all parameters were filled in",
+                                              "Some of the required parameters for the collector have been left blank."
+                                              " Please fill them in before proceeding.")
+                return
+            self.chosenParameters[resolutionParameterName] = value
+
+        super(CollectorStartDialog, self).accept()
 
 
 class ImportLinksFromCSVFile(QtWidgets.QDialog):

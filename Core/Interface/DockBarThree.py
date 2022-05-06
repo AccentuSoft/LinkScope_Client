@@ -50,6 +50,7 @@ class DockBarThree(QtWidgets.QDockWidget):
         self.chatBox = ChatBox(self, self.parent())
         self.timeWidget = TimeWidget(self, self.parent())
         self.logViewer = QtWidgets.QPlainTextEdit()
+        self.logViewer.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
 
         # Because we're not going to stop the thread before closing, an error will be thrown by Qt.
         # That error can be safely ignored.

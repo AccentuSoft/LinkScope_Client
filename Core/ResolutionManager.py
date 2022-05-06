@@ -6,6 +6,9 @@ from os import listdir
 from pathlib import Path
 from typing import Union
 
+from PySide6 import QtWidgets, QtGui
+from Core.Interface import Stylesheets
+
 
 class ResolutionManager:
 
@@ -18,6 +21,7 @@ class ResolutionManager:
     def loadResolutionsFromDir(self, directory: Path):
         exceptionsCount = 0
         for resolution in listdir(directory):
+            resolution = str(resolution)
             resolutionCategory = "Uncategorized"
             try:
                 if resolution.endswith('.py'):
@@ -141,9 +145,104 @@ class ResolutionManager:
                     if self.resolutions[category][resolution]['resolution'] == '':
                         self.mainWindow.executeRemoteResolution(resolutionName, resolutionEntitiesInput, parameters,
                                                                 resolutionUID)
-                        # Returning a bool so we know that the resolution is running on the server.
+                        # Returning a bool, so we know that the resolution is running on the server.
                         return True
 
                     resolutionClass = self.resolutions[category][resolution]['resolution']()
                     result = resolutionClass.resolution(resolutionEntitiesInput, parameters)
                     return result
+
+
+class StringPropertyInput(QtWidgets.QLineEdit):
+
+    def __init__(self, placeholderText, defaultText):
+        super(StringPropertyInput, self).__init__()
+        self.setPlaceholderText(placeholderText)
+        if defaultText is not None:
+            self.setText(defaultText)
+
+    def getValue(self):
+        return self.text()
+
+
+class FilePropertyInput(QtWidgets.QLineEdit):
+
+    def __init__(self, placeholderText, defaultText):
+        super(FilePropertyInput, self).__init__()
+        self.setPlaceholderText(placeholderText)
+        if defaultText is not None:
+            self.setText(defaultText)
+        self.fileDialog = QtWidgets.QFileDialog()
+
+    def getValue(self):
+        return self.text()
+
+    def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
+        fileChosen = self.fileDialog.getOpenFileName(self,
+                                                     "Open File",
+                                                     str(Path.home()),
+                                                     options=QtWidgets.QFileDialog.DontUseNativeDialog)
+        self.setText(fileChosen[0])
+
+
+class SingleChoicePropertyInput(QtWidgets.QGroupBox):
+
+    def __init__(self, optionsSet: set, defaultOption):
+        # Ensure that the options given are an actual set (i.e. each one is unique)
+        enforceOptionsSet = set(optionsSet)
+        super(SingleChoicePropertyInput, self).__init__(title='Option Selection')
+        vboxLayout = QtWidgets.QVBoxLayout()
+        self.setLayout(vboxLayout)
+
+        self.options = []
+        if defaultOption is None:
+            defaultOption = ''
+
+        for option in enforceOptionsSet:
+            radioButton = QtWidgets.QRadioButton(option)
+            radioButton.setStyleSheet(Stylesheets.RADIO_BUTTON_STYLESHEET)
+            if option == defaultOption:
+                radioButton.setChecked(True)
+            else:
+                radioButton.setChecked(False)
+            self.options.append(radioButton)
+            vboxLayout.addWidget(radioButton)
+
+    def getValue(self):
+        for option in self.options:
+            if option.isChecked():
+                return option.text()
+
+        return ''
+
+
+class MultiChoicePropertyInput(QtWidgets.QGroupBox):
+
+    def __init__(self, optionsSet: set, defaultOptions):
+        # Ensure that the options given are an actual set (i.e. each one is unique)
+        enforceOptionsSet = set(optionsSet)
+        super(MultiChoicePropertyInput, self).__init__(title='Option Selection')
+        vboxLayout = QtWidgets.QVBoxLayout()
+        self.setLayout(vboxLayout)
+
+        self.options = []
+        if defaultOptions is None:
+            defaultOptions = []
+
+        for option in enforceOptionsSet:
+            checkBox = QtWidgets.QCheckBox(option)
+            checkBox.setStyleSheet(Stylesheets.CHECK_BOX_STYLESHEET)
+            if option in defaultOptions:
+                checkBox.setChecked(True)
+            else:
+                checkBox.setChecked(False)
+            self.options.append(checkBox)
+            vboxLayout.addWidget(checkBox)
+
+    def getValue(self):
+        valuesSelected = []
+        for option in self.options:
+            if option.isChecked():
+                valuesSelected.append(option.text())
+
+        return valuesSelected

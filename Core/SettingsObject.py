@@ -43,6 +43,7 @@ class SettingsObject(dict):
         self.setValue("Project/Question Answering Retriever Value", "10")
         self.setValue("Project/Question Answering Reader Value", "10")
         self.setValue("Project/Server/Project", "")
+        self.setValue("Project/Server/Collectors", "{}")
 
         # The value '20' equates to logging.INFO
         # It's not necessary to set this, but we will for

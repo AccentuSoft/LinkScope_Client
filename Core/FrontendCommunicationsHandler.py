@@ -49,6 +49,9 @@ class CommunicationsHandler(QtCore.QObject):
     connected_to_server_listener = QtCore.Signal(str)
     receive_question_answer = QtCore.Signal(dict)
     receive_chat_message = QtCore.Signal(str)
+    receive_collectors_signal = QtCore.Signal(dict, dict)
+    receive_start_collector_signal = QtCore.Signal(str, str, str, list, dict)
+    receive_collector_result_signal = QtCore.Signal(str, str, str, list)
     receive_resolutions_signal = QtCore.Signal(dict)
     receive_completed_resolution_result_signal = QtCore.Signal(str, list)
     receive_completed_resolution_string_result_signal = QtCore.Signal(str, str)
@@ -84,6 +87,9 @@ class CommunicationsHandler(QtCore.QObject):
         self.connected_to_server_listener.connect(self.mainWindow.connectedToServerListener)
         self.receive_question_answer.connect(self.mainWindow.questionAnswerListener)
         self.receive_chat_message.connect(self.mainWindow.receiveChatMessage)
+        self.receive_collectors_signal.connect(self.mainWindow.addCollectorsFromServerListener)
+        self.receive_start_collector_signal.connect(self.mainWindow.startNewCollectorListener)
+        self.receive_collector_result_signal.connect(self.mainWindow.receiveCollectorResultListener)
         self.receive_resolutions_signal.connect(self.mainWindow.addResolutionsFromServerListener)
         self.receive_completed_resolution_result_signal.connect(self.mainWindow.resolutionSignalListener)
         self.receive_completed_resolution_string_result_signal.connect(self.mainWindow.resolutionSignalListener)
@@ -307,6 +313,52 @@ class CommunicationsHandler(QtCore.QObject):
                 # In this case, we are being sent fragmented messages.
                 # They will be reconstructed eventually, once all the pieces get here.
                 continue
+
+    def askServerForCollectors(self, continuing_collectors_dict: dict) -> None:
+        message = {"Operation": "Get Server Collectors",
+                   "Arguments": {
+                       'continuing_collectors_dict': continuing_collectors_dict
+                   }}
+        self.transmitMessage(message)
+
+    def receiveStartCollector(self, collector_category: str, collector_name: str, collector_uid: str,
+                              collector_entities: list, collector_parameters: dict):
+        self.receive_start_collector_signal.emit(collector_category, collector_name, collector_uid,
+                                                 collector_entities, collector_parameters)
+
+    def receiveCollectors(self, server_collectors: dict, continuing_collectors_info: dict) -> None:
+        self.receive_collectors_signal.emit(server_collectors, continuing_collectors_info)
+
+    def startServerCollector(self, collector_name: str, collector_entities: list, collector_parameters: dict,
+                             continueTimestamp: int = 0) -> None:
+        collector_entities_to_send = []
+        for entity in collector_entities:
+            try:
+                dereferenced_entity = dict(entity)
+                collector_entities_to_send.append(dereferenced_entity)
+                # Icon is not necessary for any collector as of now: 2022/4/3.
+                # Cutting it out saves data.
+                dereferenced_entity['Icon'] = ''
+            except KeyError:
+                pass
+        message = {'Operation': 'Start Server Collector',
+                   'Arguments': {
+                       'collector_name': collector_name,
+                       'collector_entities': collector_entities_to_send,
+                       'collector_parameters': collector_parameters,
+                       'continue_time': continueTimestamp
+                   }}
+        self.transmitMessage(message)
+
+    def stopServerCollector(self, collector_uid: str) -> None:
+        message = {"Operation": "Stop Server Collector",
+                   "Arguments": {
+                       'collector_uid': collector_uid
+                   }}
+        self.transmitMessage(message)
+
+    def receiveCollectorResult(self, collector_name: str, collector_uid: str, timestamp: str, results: list) -> None:
+        self.receive_collector_result_signal.emit(collector_name, collector_uid, timestamp, results)
 
     def askServerForResolutions(self) -> None:
         message = {"Operation": "Get Server Resolutions",
@@ -588,6 +640,8 @@ class CommunicationsHandler(QtCore.QObject):
                 self.receiveProjectCanvasesList(**arguments)
             elif operation == 'Resolution Result':
                 self.receiveResolutionResult(**arguments)
+            elif operation == 'Collector Results Signal':
+                self.receiveCollectorResult(**arguments)
             elif operation == "Chat":
                 self.receiveTextMessage(**arguments)
             elif operation == "Sync Database":
@@ -608,6 +662,10 @@ class CommunicationsHandler(QtCore.QObject):
                 self.receiveFileSummaryListener(**arguments)
             elif operation == "File Upload Abort":
                 self.receiveFileUploadAbort(**arguments)
+            elif operation == "Get Server Collectors":
+                self.receiveCollectors(**arguments)
+            elif operation == "Start Collector":
+                self.receiveStartCollector(**arguments)
             else:
                 self.mainWindow.MESSAGEHANDLER.warning('Unhandled message: ' + str(message) +
                                                        ' On Operation: ' + str(operation))
@@ -676,6 +734,9 @@ class CommunicationsHandler(QtCore.QObject):
                 file_name = message.split(': ', 1)[1]
                 # Remove file from uploading files list.
                 self.file_upload_abort_signal.emit(file_name)
+            elif operation == 'Stop Collector':
+                # No need to do anything here - stopping collectors is only done by the client.
+                pass
             else:
                 self.mainWindow.MESSAGEHANDLER.warning('Unhandled status message: ' + message +
                                                        ' Code: ' + str(status_code) +

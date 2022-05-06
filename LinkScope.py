@@ -27,6 +27,8 @@ from Core import EntityDB
 from Core import ResolutionManager
 from Core import URLManager
 from Core import FrontendCommunicationsHandler
+from Core.ResolutionManager import StringPropertyInput, FilePropertyInput, SingleChoicePropertyInput, \
+    MultiChoicePropertyInput
 from Core.Interface import CentralPane
 from Core.Interface import DockBarOne, DockBarTwo, DockBarThree
 from Core.Interface import ToolBarOne
@@ -39,6 +41,7 @@ from Core.PathHelper import is_path_exists_or_creatable_portable
 # Main Window of Application
 class MainWindow(QtWidgets.QMainWindow):
     facilitateResolutionSignalListener = QtCore.Signal(str, list)
+    notifyUserSignalListener = QtCore.Signal(str, str, bool)
 
     # Redefining the function to adjust its signature.
     def centralWidget(self) -> Union[QtWidgets.QWidget, QtWidgets.QWidget, CentralPane.WorkspaceWidget]:
@@ -823,7 +826,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
             self.saveProject()
 
-    def changeGraphics(self):
+    def changeGraphics(self) -> None:
         settingsDialog = GraphicsEditDialog(self.SETTINGS, self.RESOURCEHANDLER)
         settingsConfirm = settingsDialog.exec()
 
@@ -896,6 +899,15 @@ class MainWindow(QtWidgets.QMainWindow):
         """
 
         self.statusBar().showMessage(self.tr(message), timeout)
+
+    def notifyUser(self, message: str, title: str = "LinkScope Notification", beep: bool = True,
+                   icon: QtGui.QIcon = None) -> None:
+        if icon is not None:
+            self.trayIcon.showMessage(self.tr(title), self.tr(message), icon)
+        else:
+            self.trayIcon.showMessage(self.tr(title), self.tr(message))
+        if beep:
+            application.beep()
 
     def getPictureOfCanvas(self, canvasName: str, justViewport: bool = True,
                            transparentBackground: bool = False) -> Union[QtGui.QPicture, None]:
@@ -1150,6 +1162,39 @@ class MainWindow(QtWidgets.QMainWindow):
             if resolutionThread[0].isFinished() and resolutionThread[1] is False:
                 self.resolutions.remove(resolutionThread)
 
+    def getClientCollectors(self) -> dict:
+        with self.serverCollectorsLock:
+            try:
+                clientCollectorUIDs = literal_eval(self.SETTINGS.value('Project/Server/Collectors'))
+                if not isinstance(clientCollectorUIDs, dict):
+                    raise ValueError('Collectors were not saved in the correct format.')
+            except Exception as e:
+                self.MESSAGEHANDLER.error('Unable to load Collectors from Settings file.',
+                                          popUp=False,
+                                          exc_info=False)
+                self.MESSAGEHANDLER.debug('Cannot eval Project/Server/Collectors setting: ' + str(e))
+                clientCollectorUIDs = {}
+        return clientCollectorUIDs
+
+    def setClientCollectors(self, newClientCollectorsDict: dict) -> None:
+        if not isinstance(newClientCollectorsDict, dict):
+            self.MESSAGEHANDLER.error('Unable to save Collectors to Settings: Invalid format.')
+            self.MESSAGEHANDLER.debug('Collectors argument: ' + str(newClientCollectorsDict))
+            self.MESSAGEHANDLER.debug('Collectors format: ' + str(type(newClientCollectorsDict)))
+        else:
+            with self.serverCollectorsLock:
+                self.SETTINGS.setValue('Project/Server/Collectors', str(newClientCollectorsDict))
+                self.SETTINGS.save()
+            self.MESSAGEHANDLER.info('Client Collectors state updated.')
+
+    def receiveCollectorResultListener(self, collector_name: str, collector_uid: str, timestamp: str, results: list):
+        # Signal ints are 4 bytes long and signed, so we use strings to communicate timestamps.
+        currentCollectors = self.getClientCollectors()
+        currentCollectors[collector_uid] = int(timestamp)
+        self.setClientCollectors(currentCollectors)
+        self.centralWidget().tabbedPane.facilitateResolution('Collector ' + str(collector_uid), results)
+        self.notifyUser("New entities discovered by collector: " + str(collector_name), "Collector Update")
+
     # Server functions
     def statusMessageListener(self, message: str, showPopup: bool = True) -> None:
         if showPopup:
@@ -1174,6 +1219,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.MESSAGEHANDLER.info(status)
                 self.setStatus(status)
                 self.FCOM.askServerForResolutions()
+                status = "Getting Collectors..."
+                self.MESSAGEHANDLER.info(status)
+                self.setStatus(status)
+                self.FCOM.askServerForCollectors(self.getClientCollectors())
                 status = "Getting server projects list..."
                 self.MESSAGEHANDLER.info(status)
                 self.setStatus(status)
@@ -1198,6 +1247,9 @@ class MainWindow(QtWidgets.QMainWindow):
             self.closeServerProjectListener()
             with self.serverProjectsLock:
                 self.serverProjects = []
+            with self.serverCollectorsLock:
+                self.collectors = {}
+                self.runningCollectors = {}
         self.setStatus("Disconnected from server.")
         self.dockbarThree.serverStatus.updateStatus("Not connected to a server")
 
@@ -1216,6 +1268,33 @@ class MainWindow(QtWidgets.QMainWindow):
                 if resolutionThread[0].isFinished():
                     self.resolutions.remove(resolutionThread)
                 break
+
+    def addCollectorsFromServerListener(self, server_collectors: dict, continuing_collectors_info: dict) -> None:
+        with self.serverCollectorsLock:
+            self.collectors = server_collectors
+            self.runningCollectors = continuing_collectors_info
+
+    def startNewCollectorListener(self, collector_category: str, collector_name: str, collector_uid: str,
+                                  collector_entities: list, collector_parameters: dict):
+        with self.serverCollectorsLock:
+            if collector_category not in self.runningCollectors:
+                self.runningCollectors[collector_category] = {}
+            if collector_name not in self.runningCollectors[collector_category]:
+                self.runningCollectors[collector_category][collector_name] = []
+
+            # Re-running a collector would generate duplicate info; we don't want that.
+            duplicateExists = False
+            for collectorInstance in self.runningCollectors[collector_category][collector_name]:
+                if collectorInstance['uid'] == collector_uid:
+                    duplicateExists = True
+                    break
+            if not duplicateExists:
+                self.runningCollectors[collector_category][collector_name].append({'uid': collector_uid,
+                                                                                   'entities': collector_entities,
+                                                                                   'parameters': collector_parameters})
+        currentCollectors = self.getClientCollectors()
+        currentCollectors[collector_uid] = time.time_ns() // 1000
+        self.setClientCollectors(currentCollectors)
 
     def receiveProjectsListListener(self, projects: list) -> None:
         with self.serverProjectsLock:
@@ -1639,13 +1718,12 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Set the main window title and show it to the user.
         self.setWindowTitle("LinkScope - " + self.SETTINGS.get('Project/Name', 'Untitled'))
-        try:
-            iconPath = Path(self.SETTINGS.get('Program/BaseDir')) / 'Icon.ico'
-            if iconPath.exists():
-                appIcon = QtGui.QIcon(str(iconPath))
-                self.setWindowIcon(appIcon)
-        except Exception:
-            pass
+        iconPath = Path(self.SETTINGS.get('Program/BaseDir')) / 'Icon.ico'
+        appIcon = QtGui.QIcon(str(iconPath))
+        self.setWindowIcon(appIcon)
+        self.trayIcon = QtWidgets.QSystemTrayIcon(appIcon, self)
+        # Whether the icon is shown or not depends on the Desktop environment.
+        self.trayIcon.show()
 
         self.dockbarOne.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         self.dockbarTwo.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
@@ -1735,6 +1813,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.serverProjects = []
         self.serverProjectsLock = threading.Lock()
         self.resolutions = []
+        self.serverCollectorsLock = threading.Lock()
+        self.collectors = {}
+        self.runningCollectors = {}
 
         self.RESOLUTIONMANAGER.loadResolutionsFromDir(
             Path(self.SETTINGS.value("Program/BaseDir")) / "Core" / "Resolutions" / "Core")
@@ -1776,6 +1857,10 @@ class MainWindow(QtWidgets.QMainWindow):
                                                 self.LENTDB)
 
         self.primaryToolbar = ToolBarOne.ToolBarOne('Primary Toolbar', self)
+
+        self.trayIcon = None
+        # Cannot specify icon if notification spawned from signal.
+        self.notifyUserSignalListener.connect(self.notifyUser)
 
         self.initializeLayout()
 
@@ -2527,7 +2612,7 @@ class ResolutionParametersSelector(QtWidgets.QDialog):
                 msgBox = QtWidgets.QMessageBox()
                 msgBox.setModal(True)
                 QtWidgets.QMessageBox.warning(msgBox,
-                                              "Not all parameters filled in",
+                                              "Not all parameters were filled in",
                                               "Some of the required parameters for the resolution have been left blank."
                                               " Please fill them in before proceeding.")
                 return
@@ -2537,101 +2622,6 @@ class ResolutionParametersSelector(QtWidgets.QDialog):
                 self.parametersToRemember[resolutionParameterName] = value
 
         super(ResolutionParametersSelector, self).accept()
-
-
-class StringPropertyInput(QtWidgets.QLineEdit):
-
-    def __init__(self, placeholderText, defaultText):
-        super(StringPropertyInput, self).__init__()
-        self.setPlaceholderText(placeholderText)
-        if defaultText is not None:
-            self.setText(defaultText)
-
-    def getValue(self):
-        return self.text()
-
-
-class FilePropertyInput(QtWidgets.QLineEdit):
-
-    def __init__(self, placeholderText, defaultText):
-        super(FilePropertyInput, self).__init__()
-        self.setPlaceholderText(placeholderText)
-        if defaultText is not None:
-            self.setText(defaultText)
-        self.fileDialog = QtWidgets.QFileDialog()
-
-    def getValue(self):
-        return self.text()
-
-    def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
-        fileChosen = self.fileDialog.getOpenFileName(self,
-                                                     "Open File",
-                                                     str(Path.home()),
-                                                     options=QtWidgets.QFileDialog.DontUseNativeDialog)
-        self.setText(fileChosen[0])
-
-
-class SingleChoicePropertyInput(QtWidgets.QGroupBox):
-
-    def __init__(self, optionsSet: set, defaultOption):
-        # Ensure that the options given are an actual set (i.e. each one is unique)
-        enforceOptionsSet = set(optionsSet)
-        super(SingleChoicePropertyInput, self).__init__(title='Option Selection')
-        vboxLayout = QtWidgets.QVBoxLayout()
-        self.setLayout(vboxLayout)
-
-        self.options = []
-        if defaultOption is None:
-            defaultOption = ''
-
-        for option in enforceOptionsSet:
-            radioButton = QtWidgets.QRadioButton(option)
-            radioButton.setStyleSheet(Stylesheets.RADIO_BUTTON_STYLESHEET)
-            if option == defaultOption:
-                radioButton.setChecked(True)
-            else:
-                radioButton.setChecked(False)
-            self.options.append(radioButton)
-            vboxLayout.addWidget(radioButton)
-
-    def getValue(self):
-        for option in self.options:
-            if option.isChecked():
-                return option.text()
-
-        return ''
-
-
-class MultiChoicePropertyInput(QtWidgets.QGroupBox):
-
-    def __init__(self, optionsSet: set, defaultOptions):
-        # Ensure that the options given are an actual set (i.e. each one is unique)
-        enforceOptionsSet = set(optionsSet)
-        super(MultiChoicePropertyInput, self).__init__(title='Option Selection')
-        vboxLayout = QtWidgets.QVBoxLayout()
-        self.setLayout(vboxLayout)
-
-        self.options = []
-        if defaultOptions is None:
-            defaultOptions = []
-
-        for option in enforceOptionsSet:
-            checkBox = QtWidgets.QCheckBox(option)
-            checkBox.setStyleSheet(Stylesheets.CHECK_BOX_STYLESHEET)
-            if option in defaultOptions:
-                checkBox.setChecked(True)
-            else:
-                checkBox.setChecked(False)
-            self.options.append(checkBox)
-            vboxLayout.addWidget(checkBox)
-
-    def getValue(self):
-        valuesSelected = []
-        for option in self.options:
-            if option.isChecked():
-                valuesSelected.append(option.text())
-
-        return valuesSelected
 
 
 class GraphicsEditDialog(QtWidgets.QDialog):

@@ -15,12 +15,11 @@ class DockBarTwo(QtWidgets.QDockWidget):
 
         scrollAreaWidget.setWidget(self.entDetails)
         scrollAreaWidget.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-        scrollAreaWidget.setMinimumWidth(485)
+        scrollAreaWidget.setWidgetResizable(True)
+        scrollAreaWidget.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
 
         childWidget.addTab(scrollAreaWidget, 'Entity Details')
         childWidget.addTab(self.oracle, 'Oracle')
-        self.setMaximumWidth(600)
-        self.resize(self.height(), 500)
 
     def __init__(self,
                  mainWindow,
@@ -65,8 +64,9 @@ class EntityDetails(QtWidgets.QWidget):
         self.mainWindow = mainWindow
         self.resourceHandler = resourceHandler
         self.entityDB = entityDB
-        self.detailsLayout = QtWidgets.QStackedLayout()
+        self.detailsLayout = MinSizeStackedLayout()
         self.setLayout(self.detailsLayout)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
 
         layoutNothingSelected = QtWidgets.QVBoxLayout()
         widgetNothing = QtWidgets.QWidget()
@@ -86,8 +86,7 @@ class EntityDetails(QtWidgets.QWidget):
         # Need to keep track of how many nodes are selected.
         # ~ Nothing Selected/Hovered Layout
         nothingLabel = QtWidgets.QLabel("Nothing is Selected.")
-        nothingLabel.setAlignment(QtCore.Qt.AlignHCenter |
-                                  QtCore.Qt.AlignVCenter)
+        nothingLabel.setAlignment(QtCore.Qt.AlignCenter)
         layoutNothingSelected.addWidget(nothingLabel)
         ###
 
@@ -170,8 +169,6 @@ class EntityDetails(QtWidgets.QWidget):
         self.multiNodesTableLabelTwo.setMaximumHeight(20)
         layoutMultipleItemsSelected.addWidget(self.multiNodesTableLabelTwo)
         layoutMultipleItemsSelected.addWidget(self.linksTable)
-
-        self.setFixedWidth(475)
 
         self.currentlyShown = []
 
@@ -377,6 +374,15 @@ class EntityDetails(QtWidgets.QWidget):
                 self.nodeLinkL.setCurrentIndex(1)
         else:
             self.detailsLayout.setCurrentIndex(2)
+
+
+class MinSizeStackedLayout(QtWidgets.QStackedLayout):
+
+    def sizeHint(self) -> QtCore.QSize:
+        return self.currentWidget().sizeHint()
+
+    def minimumSize(self) -> QtCore.QSize:
+        return self.currentWidget().minimumSize()
 
 
 class SingleLinkItem(QtWidgets.QWidget):
