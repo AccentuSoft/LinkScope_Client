@@ -63,7 +63,11 @@ class PhoneNumbersExtractor:
                 except Error:
                     break
             if not pageResolved:
-                return
+                # Last chance for this to work; some pages have issues with the "networkidle" trigger.
+                try:
+                    page.goto(site, wait_until="load", timeout=10000)
+                except Error:
+                    return
 
             soupContents = BeautifulSoup(page.content(), 'lxml')
 
@@ -106,14 +110,16 @@ class PhoneNumbersExtractor:
                                                             'Notes': ''}}])
 
         with sync_playwright() as p:
-            browser = p.firefox.launch()
+            browser = p.chromium.launch()
             context = browser.new_context(
                 viewport={'width': 1920, 'height': 1080},
-                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:94.0) Gecko/20100101 Firefox/94.0'
+                user_agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) '
+                           'Chrome/101.0.4951.54 Safari/537.36',
             )
             for entity in entityJsonList:
                 uid = entity['uid']
-                url = entity.get('URL') if entity.get('Entity Type', '') == 'Website' else entity.get('Domain Name', None)
+                url = entity.get('URL') if entity.get('Entity Type', '') == 'Website' else \
+                    entity.get('Domain Name', None)
                 if url is None:
                     continue
                 if not url.startswith('http://') and not url.startswith('https://'):

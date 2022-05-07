@@ -86,7 +86,12 @@ class EmailExtractor:
                 except Error:
                     break
             if not pageResolved:
-                return
+                # Last chance for this to work; some pages have issues with the "networkidle" trigger.
+                try:
+                    page.goto(site, wait_until="load", timeout=10000)
+                except Error:
+                    return
+
             soupContents = BeautifulSoup(page.content(), 'lxml')
             if useRegex:
                 # Remove <span> and <noscript> tags, and attempt some basic de-obfuscation.
@@ -155,10 +160,11 @@ class EmailExtractor:
                             extractEmails(currentUID, newLink, newDepth)
 
         with sync_playwright() as p:
-            browser = p.firefox.launch()
+            browser = p.chromium.launch()
             context = browser.new_context(
                 viewport={'width': 1920, 'height': 1080},
-                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:99.0) Gecko/20100101 Firefox/99.0'
+                user_agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) '
+                           'Chrome/101.0.4951.54 Safari/537.36'
             )
             for entity in entityJsonList:
                 uid = entity['uid']
