@@ -98,8 +98,9 @@ class PhoneNumbersExtractor:
                 tagContents = tag.text
                 cleanTagContentsList = re.sub(cleanTagsRegex, '', tagContents).split('\n')
                 for cleanTag in cleanTagContentsList:
-                    if not phoneNumCharsExclusion.findall(cleanTag):
-                        returnResults.append([{'Phone Number': cleanTag.strip(),
+                    cleanTag = cleanTag.strip()
+                    if not phoneNumCharsExclusion.findall(cleanTag) and len(re.findall(r'\d', cleanTag)) >= 3:
+                        returnResults.append([{'Phone Number': cleanTag,
                                                'Entity Type': 'Phone Number'},
                                               {currentUID: {'Resolution': 'Phone Number Found',
                                                             'Notes': ''}}])
