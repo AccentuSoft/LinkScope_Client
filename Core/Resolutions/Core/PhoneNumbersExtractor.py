@@ -35,6 +35,10 @@ class PhoneNumbersExtractor:
         from playwright.sync_api import sync_playwright, TimeoutError, Error
         from bs4 import BeautifulSoup
         import tldextract
+        import re
+
+        cleanTagsRegex = re.compile(r'<.*?>')
+        phoneNumCharsExclusion = re.compile(r'[^ -+()\[\]\d]')
 
         returnResults = []
 
@@ -89,6 +93,16 @@ class PhoneNumbersExtractor:
                         if domain in newLink and newLink not in exploredDepth and newDepth > 0:
                             exploredDepth.add(newLink)
                             extractTels(currentUID, newLink, newDepth)
+            textTags = soupContents.find_all('p')
+            for tag in textTags:
+                tagContents = tag.text
+                cleanTagContentsList = re.sub(cleanTagsRegex, '', tagContents).split('\n')
+                for cleanTag in cleanTagContentsList:
+                    if not phoneNumCharsExclusion.findall(cleanTag):
+                        returnResults.append([{'Phone Number': cleanTag.strip(),
+                                               'Entity Type': 'Phone Number'},
+                                              {currentUID: {'Resolution': 'Phone Number Found',
+                                                            'Notes': ''}}])
 
         with sync_playwright() as p:
             browser = p.firefox.launch()
