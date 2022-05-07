@@ -89,7 +89,26 @@ class EmailExtractor:
                 return
             soupContents = BeautifulSoup(page.content(), 'lxml')
             if useRegex:
-                potentialEmails = emailRegex.findall(soupContents.get_text())
+                # Remove <span> and <noscript> tags, and attempt some basic de-obfuscation.
+                while True:
+                    try:
+                        soupContents.noscript.extract()
+                    except AttributeError:
+                        break
+                while True:
+                    try:
+                        soupContents.span.extract()
+                    except AttributeError:
+                        break
+                siteContent = soupContents.get_text()
+                siteContent = siteContent.replace('[at]', '@')
+                siteContent = siteContent.replace('(at)', '@')
+                siteContent = siteContent.replace('[dot]', '.')
+                siteContent = siteContent.replace('(dot)', '.')
+                siteContent = siteContent.replace('[.]', '.')
+                siteContent = siteContent.replace('(.)', '.')
+
+                potentialEmails = emailRegex.findall(siteContent)
                 for potentialEmail in potentialEmails:
                     try:
                         valid = validate_email(potentialEmail, dns_resolver=resolver, check_deliverability=verifyDomain)
@@ -139,11 +158,12 @@ class EmailExtractor:
             browser = p.firefox.launch()
             context = browser.new_context(
                 viewport={'width': 1920, 'height': 1080},
-                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:94.0) Gecko/20100101 Firefox/94.0'
+                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:99.0) Gecko/20100101 Firefox/99.0'
             )
             for entity in entityJsonList:
                 uid = entity['uid']
-                url = entity.get('URL') if entity.get('Entity Type', '') == 'Website' else entity.get('Domain Name', None)
+                url = entity.get('URL') if entity.get('Entity Type', '') == 'Website' else \
+                    entity.get('Domain Name', None)
                 if url is None:
                     continue
                 if not url.startswith('http://') and not url.startswith('https://'):
