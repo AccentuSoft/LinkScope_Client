@@ -2,14 +2,14 @@
 
 
 class ShodanSearch:
-    name = "Shodan Database Search"
+    name = "Shodan Search"
     category = "Network Infrastructure"
     description = "Search Shodan's database"
     originTypes = {'IP Address', 'Phrase', 'Person'}
     resultTypes = {'IP Address'}
-    parameters = {'Shodan API Key': {'description': 'Enter your Premium API key under your profile after'
-                                                    'signing up on https://shodan.io/ for more info on billing '
-                                                    'plans:https://account.shodan.io/billing',
+    parameters = {'Shodan API Key': {'description': 'Enter your Premium API key under your profile after '
+                                                    'signing up on https://shodan.io/.\nFor more info on billing '
+                                                    'plans: https://account.shodan.io/billing',
                                      'type': 'String',
                                      'value': '',
                                      'globals': True},
@@ -18,14 +18,13 @@ class ShodanSearch:
                                                        'be mindful of the value you enter.',
                                         'type': 'String',
                                         'value': 'Enter the number of results you want returned',
-                                        'default': '1'}
+                                        'default': '10'}
                   }
 
     def resolution(self, entityJsonList, parameters):
         import shodan
 
         return_result = []
-        results_count = 0
         api_key = parameters['Shodan API Key'].strip()
         try:
             max_results = int(parameters['Number of results'])
