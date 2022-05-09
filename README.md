@@ -3,6 +3,11 @@
   <img src="Repository_Images/DemoPic.png">
 </p>
 
+## Installer Download
+Get the installer for LinkScope Client from here:
+
+https://accentusoft.com/downloads/
+
 ## Description
 This is the repository for the LinkScope Client Online Investigation software. LinkScope allows you to perform online investigations by representing information as discrete pieces of data, called Entities.
 
