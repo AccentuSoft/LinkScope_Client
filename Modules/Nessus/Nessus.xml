@@ -7,9 +7,4 @@
             <Attribute default="Unknown" check="String" primary="False">CVSS2 Vector</Attribute>
         </Attributes>
     </Finding>
-    <CVE>
-        <Attributes>
-            <Attribute default="Unassigned CVE" check="String" primary="True">CVE</Attribute>
-        </Attributes>
-    </CVE>
 </Nessus>

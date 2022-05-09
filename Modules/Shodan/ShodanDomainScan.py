@@ -6,10 +6,10 @@ class ShodanDomainScan:
     category = "Network Infrastructure"
     description = "Find information about a particular domain"
     originTypes = {'Domain'}
-    resultTypes = {'Domain'}
-    parameters = {'Shodan API Key': {'description': 'Enter your Premium API key under your profile after'
-                                                    'signing up on https://shodan.io/ for more info on billing '
-                                                    'plans:https://account.shodan.io/billing',
+    resultTypes = {'Domain', 'IPv6 Address', 'IP Address'}
+    parameters = {'Shodan API Key': {'description': 'Enter your API key under your profile after '
+                                                    'signing up on https://shodan.io/.\nFor more info on billing '
+                                                    'plans: https://account.shodan.io/billing',
                                      'type': 'String',
                                      'value': '',
                                      'global': True}}

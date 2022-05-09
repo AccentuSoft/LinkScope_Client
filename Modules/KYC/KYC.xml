@@ -69,7 +69,7 @@
           <Attribute default="Bitcoin" check="String" primary="False">Currency Name</Attribute>
         </Attributes>
         <Icon>
-          Default.svg
+          Sanctioned_CryptoWallet.svg
         </Icon>
     </Sanctioned_Crypto_Wallet>
 </KYC>

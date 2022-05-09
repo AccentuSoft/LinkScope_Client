@@ -16,4 +16,13 @@
             Hash.svg
         </Icon>
     </Hash>
+    <CVE>
+        <Attributes>
+            <Attribute default="Unassigned CVE" check="String" primary="True">CVE</Attribute>
+            <Attribute default="0.0" check="Float" primary="False">CVSS Score</Attribute>
+        </Attributes>
+        <Icon>
+            CVE.svg
+        </Icon>
+    </CVE>
 </Software>

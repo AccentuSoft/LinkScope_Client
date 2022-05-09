@@ -40,7 +40,7 @@
           <Attribute default="Bitcoin" check="String" primary="False">Currency Name</Attribute>
         </Attributes>
         <Icon>
-          Default.svg
+          CryptoWallet.svg
         </Icon>
     </Crypto_Wallet>
 </Financials>
