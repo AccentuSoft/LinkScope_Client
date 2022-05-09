@@ -96,6 +96,7 @@ class EntityDetails(QtWidgets.QWidget):
         summaryPanel = QtWidgets.QWidget()
         summaryPanel.setLayout(summaryLayout)
         self.summaryIcon = QtWidgets.QLabel("")
+        self.summaryIcon.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
         self.entityTypeLabel = QtWidgets.QLabel("")
         self.entityUIDLabel = QtWidgets.QLabel("")
         self.entityPrimaryLabel = QtWidgets.QLabel("")
