@@ -835,13 +835,13 @@ class MainWindow(QtWidgets.QMainWindow):
             try:
                 etfVal = int(newSettings["ETF"])
                 self.entityTextFont.setPointSize(etfVal)
-                self.SETTINGS.setValue("Program/EntityTextFontSize", str(newSettings["ETF"]))
+                self.SETTINGS.setValue("Program/Graphics/EntityTextFontSize", str(newSettings["ETF"]))
             except ValueError:
                 pass
             try:
                 ltfVal = int(newSettings["LTF"])
                 self.linkTextFont.setPointSize(ltfVal)
-                self.SETTINGS.setValue("Program/LinkTextFontSize", str(newSettings["LTF"]))
+                self.SETTINGS.setValue("Program/Graphics/LinkTextFontSize", str(newSettings["LTF"]))
             except ValueError:
                 pass
 
@@ -849,12 +849,12 @@ class MainWindow(QtWidgets.QMainWindow):
             newEtcColor = QtGui.QColor(etcVal)
             if newEtcColor.isValid():
                 self.entityTextBrush.setColor(newEtcColor)
-                self.SETTINGS.setValue("Program/EntityTextColor", newEtcColor.name())
+                self.SETTINGS.setValue("Program/Graphics/EntityTextColor", newEtcColor.name())
             ltcVal = newSettings["LTC"]
             newLtcColor = QtGui.QColor(ltcVal)
             if newLtcColor.isValid():
                 self.linkTextBrush.setColor(newLtcColor)
-                self.SETTINGS.setValue("Program/LinkTextColor", newLtcColor.name())
+                self.SETTINGS.setValue("Program/Graphics/LinkTextColor", newLtcColor.name())
 
             for viewKey in self.centralWidget().tabbedPane.canvasTabs:
                 scene = self.centralWidget().tabbedPane.canvasTabs[viewKey].scene()
@@ -1820,14 +1820,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.RESOLUTIONMANAGER.loadResolutionsFromDir(
             Path(self.SETTINGS.value("Program/BaseDir")) / "Core" / "Resolutions" / "Core")
 
-        self.entityTextFont = QtGui.QFont(self.SETTINGS.value("Program/EntityTextFontType"),
-                                          int(self.SETTINGS.value("Program/EntityTextFontSize")),
-                                          int(self.SETTINGS.value("Program/EntityTextFontBoldness")))
-        self.entityTextBrush = QtGui.QBrush(self.SETTINGS.value("Program/EntityTextColor"))
-        self.linkTextFont = QtGui.QFont(self.SETTINGS.value("Program/LinkTextFontType"),
-                                        int(self.SETTINGS.value("Program/LinkTextFontSize")),
-                                        int(self.SETTINGS.value("Program/LinkTextFontBoldness")))
-        self.linkTextBrush = QtGui.QBrush(self.SETTINGS.value("Program/LinkTextColor"))
+        self.entityTextFont = QtGui.QFont(self.SETTINGS.value("Program/Graphics/EntityTextFontType"),
+                                          int(self.SETTINGS.value("Program/Graphics/EntityTextFontSize")),
+                                          int(self.SETTINGS.value("Program/Graphics/EntityTextFontBoldness")))
+        self.entityTextBrush = QtGui.QBrush(self.SETTINGS.value("Program/Graphics/EntityTextColor"))
+        self.linkTextFont = QtGui.QFont(self.SETTINGS.value("Program/Graphics/LinkTextFontType"),
+                                        int(self.SETTINGS.value("Program/Graphics/LinkTextFontSize")),
+                                        int(self.SETTINGS.value("Program/Graphics/LinkTextFontBoldness")))
+        self.linkTextBrush = QtGui.QBrush(self.SETTINGS.value("Program/Graphics/LinkTextColor"))
 
         self.setCentralWidget(CentralPane.WorkspaceWidget(self,
                                                           self.MESSAGEHANDLER,
@@ -2674,13 +2674,15 @@ class GraphicsEditDialog(QtWidgets.QDialog):
         self.settingsValueTextboxes = []
         self.newSettings = {}
 
-        etfSettingTextbox = SettingsIntegerEditTextBox(int(self.settings.value("Program/EntityTextFontSize")), "ETF",
+        etfSettingTextbox = SettingsIntegerEditTextBox(int(self.settings.value("Program/Graphics/EntityTextFontSize")),
+                                                       "ETF",
                                                        50, 5)
         etfSettingTextbox.setStyleSheet(Stylesheets.TEXT_BOX_STYLESHEET)
         self.settingsValueTextboxes.append(etfSettingTextbox)
         self.resolutionCategoryLayout.addRow("Entity Text Font Size", etfSettingTextbox)
 
-        ltfSettingTextbox = SettingsIntegerEditTextBox(int(self.settings.value("Program/LinkTextFontSize")), "LTF",
+        ltfSettingTextbox = SettingsIntegerEditTextBox(int(self.settings.value("Program/Graphics/LinkTextFontSize")),
+                                                       "LTF",
                                                        50, 5)
         ltfSettingTextbox.setStyleSheet(Stylesheets.TEXT_BOX_STYLESHEET)
         self.settingsValueTextboxes.append(ltfSettingTextbox)
@@ -2694,7 +2696,7 @@ class GraphicsEditDialog(QtWidgets.QDialog):
         etcSettingLayout = QtWidgets.QHBoxLayout()
         etcSettingWidget.setLayout(etcSettingLayout)
 
-        etcSettingTextbox = SettingsEditTextBox(self.settings.value("Program/EntityTextColor"), "ETC")
+        etcSettingTextbox = SettingsEditTextBox(self.settings.value("Program/Graphics/EntityTextColor"), "ETC")
         etcSettingTextbox.setReadOnly(True)
         etcSettingTextbox.setStyleSheet(Stylesheets.TEXT_BOX_STYLESHEET)
         etcSettingLayout.addWidget(etcSettingTextbox, 5)
@@ -2711,7 +2713,7 @@ class GraphicsEditDialog(QtWidgets.QDialog):
         ltcSettingLayout = QtWidgets.QHBoxLayout()
         ltcSettingWidget.setLayout(ltcSettingLayout)
 
-        ltcSettingTextbox = SettingsEditTextBox(self.settings.value("Program/LinkTextColor"), "LTC")
+        ltcSettingTextbox = SettingsEditTextBox(self.settings.value("Program/Graphics/LinkTextColor"), "LTC")
         ltcSettingTextbox.setReadOnly(True)
         ltcSettingTextbox.setStyleSheet(Stylesheets.TEXT_BOX_STYLESHEET)
         ltcSettingLayout.addWidget(ltcSettingTextbox, 5)
@@ -2725,13 +2727,13 @@ class GraphicsEditDialog(QtWidgets.QDialog):
         self.resolutionCategoryLayout.addRow("Link Text Color", ltcSettingWidget)
 
     def runEntityColorPicker(self):
-        color = self.colorPicker.getColor(QtGui.QColor(self.settings.value("Program/EntityTextColor")),
+        color = self.colorPicker.getColor(QtGui.QColor(self.settings.value("Program/Graphics/EntityTextColor")),
                                           title="Select New Entity Text Color")
         if color.isValid():
             self.settingsTextboxes[0].setText(color.name())
 
     def runLinkColorPicker(self):
-        color = self.colorPicker.getColor(QtGui.QColor(self.settings.value("Program/LinkTextColor")),
+        color = self.colorPicker.getColor(QtGui.QColor(self.settings.value("Program/Graphics/LinkTextColor")),
                                           title="Select New Link Text Color")
         if color.isValid():
             self.settingsTextboxes[1].setText(color.name())
@@ -2775,7 +2777,7 @@ class ProgramEditDialog(QtWidgets.QDialog):
         resolutionsEditDialog.addWidget(scrollArea, 0, 0, 2, 2)
 
         resolutionCategoryWidget = QtWidgets.QWidget()
-        self.resolutionCategoryLayout = SettingsCategoryLayout()
+        self.resolutionCategoryLayout = SettingsCategoryLayout(supportsDeletion=False)
         resolutionCategoryWidget.setLayout(self.resolutionCategoryLayout)
         resolutionCategoryLabel = QtWidgets.QLabel('Program Settings')
 
@@ -2802,7 +2804,7 @@ class ProgramEditDialog(QtWidgets.QDialog):
         for setting in self.settings:
             if setting.startswith('Program/'):
                 keyName = setting.split('Program/', 1)[1]
-                if keyName != "BaseDir":  # Don't allow users to mess with this.
+                if keyName != "BaseDir" and len(setting.split('/')) == 2:  # Don't allow users to mess with these.
                     # A bit redundant to do it this way, but it'll be cleaner if / when more settings are added.
                     if keyName == "GraphLayout":
                         settingSingleChoice = SettingsEditSingleChoice(['dot', 'sfdp', 'neato'],

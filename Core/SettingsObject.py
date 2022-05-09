@@ -23,14 +23,14 @@ class SettingsObject(dict):
         super().__init__()
         self.setValue("Program/BaseDir", "Unset")  # dirname(abspath(getsourcefile(lambda:0))) + "/../" )
         self.setValue("Program/GraphLayout", "dot")
-        self.setValue("Program/EntityTextFontType", "Mono")
-        self.setValue("Program/EntityTextFontSize", "11")
-        self.setValue("Program/EntityTextFontBoldness", "700")
-        self.setValue("Program/LinkTextFontType", "Mono")
-        self.setValue("Program/LinkTextFontSize", "11")
-        self.setValue("Program/LinkTextFontBoldness", "700")
-        self.setValue("Program/EntityTextColor", "#000000")  # RGB
-        self.setValue("Program/LinkTextColor", "#000000")  # RGB
+        self.setValue("Program/Graphics/EntityTextFontType", "Mono")
+        self.setValue("Program/Graphics/EntityTextFontSize", "11")
+        self.setValue("Program/Graphics/EntityTextFontBoldness", "700")
+        self.setValue("Program/Graphics/LinkTextFontType", "Mono")
+        self.setValue("Program/Graphics/LinkTextFontSize", "11")
+        self.setValue("Program/Graphics/LinkTextFontBoldness", "700")
+        self.setValue("Program/Graphics/EntityTextColor", "#000000")  # RGB
+        self.setValue("Program/Graphics/LinkTextColor", "#000000")  # RGB
         self.setValue("Project/Name", "Untitled")
         self.setValue("Project/BaseDir", "")
         self.setValue("Project/FilesDir", "")
