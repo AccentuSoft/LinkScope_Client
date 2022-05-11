@@ -350,6 +350,8 @@ class TabbedPane(QtWidgets.QTabWidget):
         allLinks = [linkUID['uid'] for linkUID in self.entityDB.getAllLinks()]
         links = []
         newNodeUIDs = []
+        nodesCreatedCount = 0
+        nodesUpdatedCount = 0
         for resultList in resolution_result:
             newNodeJSON = resultList[0]
             newNodeEntityType = newNodeJSON.get('Entity Type')
@@ -389,6 +391,7 @@ class TabbedPane(QtWidgets.QTabWidget):
                 existingEntityJSON.update(newNodeJSON)
                 self.entityDB.addEntity(existingEntityJSON, fromServer=True, updateTimeline=False)
                 newNodeUIDs.append(newNodeExistingUID)
+                nodesUpdatedCount += 1
             except ValueError:
                 # If there is no index for which the primary field and entity type of the new node match one of the
                 #   existing ones, the node must indeed be new. We add it here.
@@ -398,6 +401,7 @@ class TabbedPane(QtWidgets.QTabWidget):
                 #   create the same new entities.
                 allEntityUIDs.append(entityJson['uid'])
                 allEntityPrimaryFieldsAndTypes.append((newNodePrimaryField, newNodeEntityType))
+                nodesCreatedCount += 1
 
         progress.setValue(1)
         for resultListIndex in range(len(newNodeUIDs)):
@@ -434,7 +438,9 @@ class TabbedPane(QtWidgets.QTabWidget):
         progress.setValue(3)
         self.entityDB.resetTimeline()
         self.mainWindow.saveProject()
-        self.mainWindow.MESSAGEHANDLER.info('Resolution ' + resolution_name + ' completed successfully.')
+        self.mainWindow.MESSAGEHANDLER.info('Resolution ' + resolution_name + ' completed successfully: ' +
+                                            str(nodesCreatedCount) + ' new nodes created, ' + str(nodesUpdatedCount) +
+                                            ' existing nodes updated.')
 
     def linkAddHelper(self, links) -> None:
         """
