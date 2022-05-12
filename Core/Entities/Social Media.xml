@@ -2,7 +2,6 @@
     <Social_Media_Group>
         <Attributes>
             <Attribute default="Guest Group" check="String" primary="True">Group Name</Attribute>
-            <Attribute default="Unknown / Multiple" check="String" primary="False">Social Media Site</Attribute>
         </Attributes>
         <Icon>
             Social_Media_Group.svg

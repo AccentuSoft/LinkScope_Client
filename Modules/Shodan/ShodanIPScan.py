@@ -115,8 +115,8 @@ class ShodanIPScan:
 
             try:
                 host = api.host(primary_field)
-            except shodan.exception.APIError:
-                return "The API Key provided is invalid."
+            except shodan.exception.APIError as err:
+                return "Error: " + str(err)
             self.parsing(host, return_result, uid)
 
         return return_result

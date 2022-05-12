@@ -28,8 +28,8 @@ class ShodanDomainScan:
             try:
                 results = api.dns.domain_info(
                     domain=primary_field, history=False, page=1)
-            except shodan.exception.APIError:
-                return "The API Key provided is Invalid"
+            except shodan.exception.APIError as err:
+                return "Error: " + str(err)
             for subdomain_dict in results['data']:
                 value = subdomain_dict['value']
                 index_of_child = len(return_result)

@@ -1,7 +1,7 @@
 <Individuals>
   <Person>
     <Attributes>
-      <Attribute default="John Smith" check="String" primary="True">Full Name</Attribute>
+      <Attribute default="Firstname Lastname" check="String" primary="True">Full Name</Attribute>
       <Attribute default="Unknown" check="String" primary="False">Gender</Attribute>
       <Attribute default="Unknown" check="String" primary="False">Occupation</Attribute>
       <Attribute default="Unknown" check="String" primary="False">Date of Birth</Attribute>
@@ -13,7 +13,7 @@
   </Person>
   <Politically_Exposed_Person>
     <Attributes>
-      <Attribute default="John Smith" check="String" primary="True">Full Name</Attribute>
+      <Attribute default="Firstname Lastname" check="String" primary="True">Full Name</Attribute>
       <Attribute default="Unknown" check="String" primary="False">Gender</Attribute>
       <Attribute default="Unknown" check="String" primary="False">Occupation</Attribute>
       <Attribute default="Unknown" check="String" primary="False">Date of Birth</Attribute>

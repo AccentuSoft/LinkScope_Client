@@ -106,12 +106,9 @@ class EmailExtractor:
                     except AttributeError:
                         break
                 siteContent = soupContents.get_text()
-                siteContent = siteContent.replace('[at]', '@')
-                siteContent = siteContent.replace('(at)', '@')
-                siteContent = siteContent.replace('[dot]', '.')
-                siteContent = siteContent.replace('(dot)', '.')
-                siteContent = siteContent.replace('[.]', '.')
-                siteContent = siteContent.replace('(.)', '.')
+                siteContent = re.sub(r'\s*(\[|\<|\()+\s*at\s*(\]|\>|\))+\s*', '@', siteContent)
+                siteContent = re.sub(r'\s*(\[|\<|\()+\s*dot\s*(\]|\>|\))+\s*', '.', siteContent)
+                siteContent = re.sub(r'\s*(\[|\<|\()+\s*\.\s*(\]|\>|\))+\s*', '.', siteContent)
 
                 potentialEmails = emailRegex.findall(siteContent)
                 for potentialEmail in potentialEmails:

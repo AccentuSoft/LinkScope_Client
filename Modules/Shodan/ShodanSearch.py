@@ -37,8 +37,8 @@ class ShodanSearch:
             entityType = entity['Entity Type']
             try:
                 search = api.search(primary_field)
-            except shodan.exception.APIError:
-                return "The API Key provided is Invalid"
+            except shodan.exception.APIError as err:
+                return "Error: " + str(err)
             for match in search['matches'][:max_results]:
                 ipMatch = str(match['ip_str'])
                 if match.get('location') is not None:

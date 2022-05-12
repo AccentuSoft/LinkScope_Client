@@ -6,11 +6,11 @@ Credit: https://github.com/sharsil/mailcat
 
 
 class Mailcat:
-    name = "MailCat Email Discovery"
+    name = "Email Address Discovery - MailCat"
     category = "Online Identity"
     description = "Discover Email Addresses associated with a Username or Phrase."
     originTypes = {'Email Address', 'Phrase', 'Social Media Handle'}
-    resultTypes = {'Email Address'}
+    resultTypes = {'Email Address', 'Phrase'}
     parameters = {'Route traffic over Tor': {'description': 'This option dictates whether traffic should be routed '
                                                             'over the Tor network. Requires an active Tor service on '
                                                             'the host the resolution runs on.\nNOTE: This option is '
@@ -44,7 +44,6 @@ class Mailcat:
         import aiosmtplib
         import string as s
         import re
-        from time import sleep
         from typing import Dict, List
         import dns.resolver
         from requests_html import AsyncHTMLSession  # type: ignore
@@ -52,6 +51,8 @@ class Mailcat:
 
         from multiprocessing import Process, Queue
         from queue import Empty
+
+        emailRegex = re.compile(r"""(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])""")
 
         return_results_queue = Queue()
         return_results = []
@@ -81,11 +82,6 @@ class Mailcat:
 
         def randstr(num):
             return ''.join(random.sample((s.ascii_lowercase + s.ascii_uppercase + s.digits), num))
-
-        def sleeper(sList, s_min, s_max):
-            for ind in sList:
-                if sList.index(ind) < (len(sList) - 1):
-                    sleep(random.uniform(s_min, s_max))
 
         def via_proxy(proxy_str):
             def via():
@@ -233,7 +229,7 @@ class Mailcat:
                 except Exception as e:
                     logger.error(e, exc_info=True)
 
-                sleep(random.uniform(0.5, 2))
+                await asyncio.sleep(random.uniform(0.5, 2))
 
             if mailRuSucc:
                 result["MailRU"] = mailRuSucc
@@ -287,7 +283,7 @@ class Mailcat:
                             except KeyError as e:
                                 logger.error(e, exc_info=True)
 
-                    sleep(random.uniform(4, 6))  # don't reduce
+                    await asyncio.sleep(random.uniform(4, 6))  # don't reduce
 
                 except Exception as e:
                     logger.error(e, exc_info=True)
@@ -329,7 +325,7 @@ class Mailcat:
                             if exists == "0":
                                 tutaSucc.append(targetMail)
 
-                    sleep(random.uniform(2, 4))
+                    await asyncio.sleep(random.uniform(2, 4))
 
                 except Exception as e:
                     logger.error(e, exc_info=True)
@@ -493,7 +489,7 @@ class Mailcat:
                 except Exception as e:
                     logger.error(e, exc_info=True)
 
-                sleep(random.uniform(2, 4))
+                await asyncio.sleep(random.uniform(2, 4))
 
             if eclipsoSucc:
                 result["Eclipso"] = eclipsoSucc
@@ -634,7 +630,7 @@ class Mailcat:
                 except Exception as e:
                     logger.error(e, exc_info=True)
 
-                sleep(random.uniform(2, 4))
+                await asyncio.sleep(random.uniform(2, 4))
 
             if firemailSucc:
                 result["Firemail"] = firemailSucc
@@ -720,7 +716,7 @@ class Mailcat:
                 except Exception as e:
                     logger.error(e, exc_info=True)
 
-                sleep(random.uniform(0.5, 1.1))
+                await asyncio.sleep(random.uniform(0.5, 1.1))
 
             if fastmailSucc:
                 result["Fastmail"] = fastmailSucc
@@ -816,7 +812,7 @@ class Mailcat:
                         except Exception as e:
                             pass
 
-                        sleep(random.uniform(1, 3))
+                        await asyncio.sleep(random.uniform(1, 3))
 
             except Exception as e:
                 #pass
@@ -902,7 +898,7 @@ class Mailcat:
                             if "'free': false" in resp:
                                 bigmirSucc.append("{}@{}".format(target, maildomain))
 
-                    sleep(random.uniform(2, 4))
+                    await asyncio.sleep(random.uniform(2, 4))
 
                 except Exception as e:
                     logger.error(e, exc_info=True)
@@ -1086,7 +1082,7 @@ class Mailcat:
                     logger.error(e, exc_info=True)
 
                 finally:
-                    sleep(random.uniform(1, 2.1))
+                    await asyncio.sleep(random.uniform(1, 2.1))
 
             if runboxSucc:
                 result["Runbox"] = runboxSucc
@@ -1252,7 +1248,7 @@ class Mailcat:
                 except Exception as e:
                     logger.error(e, exc_info=True)
 
-                sleeper(hushDomains, 1.1, 2.2)
+                await asyncio.sleep(random.uniform(1.1, 2.2))
 
             if hushSucc:
                 result["HushMail"] = hushSucc
@@ -1348,7 +1344,7 @@ class Mailcat:
                 except Exception as e:
                     logger.error(e, exc_info=True)
 
-                sleep(random.uniform(2, 4))
+                await asyncio.sleep(random.uniform(2, 4))
 
             if aikqSucc:
                 result["Aikq"] = aikqSucc
@@ -1557,7 +1553,7 @@ class Mailcat:
                 except Exception as e:
                     logger.error(e, exc_info=True)
 
-                sleep(random.uniform(2, 4))
+                await asyncio.sleep(random.uniform(2, 4))
 
             if interiaSucc:
                 result["Interia"] = interiaSucc
@@ -1589,10 +1585,16 @@ class Mailcat:
                     emails = [emails]
                 for email in emails:
                     if email != originalString:
-                        return_results.append([{'Email Address': email,
-                                                'Entity Type': 'Email Address'},
-                                               {entityUID: {'Resolution': 'MailCat Existing Email Identified',
-                                                            'Notes': ''}}])
+                        if emailRegex.match(email) is not None:
+                            return_results.append([{'Email Address': email,
+                                                    'Entity Type': 'Email Address'},
+                                                   {entityUID: {'Resolution': 'MailCat Existing Email Identified',
+                                                                'Notes': ''}}])
+                        else:
+                            return_results.append([{'Phrase': email,
+                                                    'Entity Type': 'Phrase'},
+                                                   {entityUID: {'Resolution': 'MailCat Result',
+                                                                'Notes': ''}}])
 
         CHECKERS = [gmail, yandex, proton, mailRu,
                     rambler, tuta, yahoo, outlook,
@@ -1637,6 +1639,7 @@ class Mailcat:
             process_queue.put(return_results)
 
         p = Process(target=processFunc, args=(return_results_queue,))
+        p.daemon = True
         p.start()
         p.join()
         try:

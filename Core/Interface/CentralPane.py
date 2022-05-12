@@ -498,6 +498,28 @@ class TabbedPane(QtWidgets.QTabWidget):
                     elif parentUID in scene.nodesDict and uid in scene.nodesDict:
                         # Need to send this to server, since it won't be drawn otherwise.
                         scene.addLinkDragDrop(scene.nodesDict[parentUID], scene.nodesDict[uid], newLink[2])
+                    elif parentUID not in scene.nodesDict and uid in scene.nodesDict:
+                        if parentUID not in scene.sceneGraph.nodes:
+                            nodeJSON = self.entityDB.getEntity(parentUID)
+
+                            # This is more efficient for large canvases than syncing afterwards.
+                            self.mainWindow.sendLocalCanvasUpdateToServer(canvas, parentUID)
+
+                            picture = nodeJSON.get('Icon')
+                            scene.sceneGraph.add_node(parentUID)
+
+                            try:
+                                nodePrimaryAttribute = nodeJSON.get(list(nodeJSON)[1])
+                            except IndexError:
+                                nodePrimaryAttribute = ''
+                            newNode = Entity.BaseNode(picture, parentUID, nodePrimaryAttribute, self.entityTextFont,
+                                                      self.entityTextBrush)
+                            scene.addNodeToScene(newNode)
+
+                            scene.addLinkDragDrop(newNode, scene.nodesDict[uid], newLink[2])
+                            addedNodes.append(newNode)
+                        else:
+                            scene.addLinkProgrammatic((newLink[0], newLink[1]), newLink[2])
 
                 if len(addedNodes) >= int(self.mainWindow.SETTINGS.value(
                         "Project/Resolution Result Grouping Threshold", "15")) and not linkGroupingOverride:

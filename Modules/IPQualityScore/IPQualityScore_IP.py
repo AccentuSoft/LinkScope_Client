@@ -9,7 +9,7 @@ class IPQualityScore_IP:
     resultTypes = {'Phrase', 'Autonomous System', 'Geocordinates', 'Organization', 'Country', 'City'}
     parameters = {'IPQualityScore Private Key': {'description': 'Enter your private key under your profile after '
                                                                 'signing up on https://ipqualityscore.com. The limit '
-                                                                'per month is 5000 lookups.',
+                                                                'per month for free accounts is 5000 lookups.',
                                                  'type': 'String',
                                                  'value': '',
                                                  'global': True}}
