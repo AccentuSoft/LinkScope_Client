@@ -21,7 +21,7 @@ class SelectQuery:
 
 class LQLQueryParser:
 
-    def parseQuery(self, selectText, selectOption):
+    def parseQuery(self, selectText, selectOption, sourceDBClause, sourceCanvasClause):
         pass
 
     def parseModify(self):
