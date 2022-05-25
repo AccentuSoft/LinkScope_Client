@@ -1296,6 +1296,17 @@ class MainWindow(QtWidgets.QMainWindow):
         currentCollectors[collector_uid] = time.time_ns() // 1000
         self.setClientCollectors(currentCollectors)
 
+    def stopRunningCollector(self, collectorUID: str):
+        """
+        Stops collector. Need to be ran before setClientCollectors.
+        """
+        with self.serverCollectorsLock:
+            for collectorCategory in self.runningCollectors:
+                for collectorName in self.runningCollectors[collectorCategory]:
+                    for collector in self.runningCollectors[collectorCategory][collectorName]:
+                        if collector['uid'] == collectorUID:
+                            self.runningCollectors[collectorCategory][collectorName].remove(collector)
+
     def receiveProjectsListListener(self, projects: list) -> None:
         with self.serverProjectsLock:
             self.serverProjects = projects

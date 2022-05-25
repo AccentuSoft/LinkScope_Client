@@ -1845,6 +1845,7 @@ class CollectorsDialog(QtWidgets.QDialog):
         currentClientCollectors = self.mainWindow.getClientCollectors()
         try:
             currentClientCollectors.pop(collectorToStop)
+            self.mainWindow.stopRunningCollector(collectorToStop)
             self.mainWindow.setClientCollectors(currentClientCollectors)
         except KeyError:
             self.mainWindow.MESSAGEHANDLER.error('Trying to stop Collector that was never ran. Was confirmation that '
@@ -1892,7 +1893,7 @@ class CollectorStartDialog(QtWidgets.QDialog):
         self.entitySelector.header().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         relevantEntityFields = [(entity['uid'], entity[list(entity)[1]], entity['Entity Type'], entity['Icon'])
                                 for entity in entityDB.getAllEntities()
-                                if entity['Entity Type'] in originTypes or originTypes == '*']
+                                if entity['Entity Type'] in originTypes or '*' in originTypes]
         for eligibleEntity in relevantEntityFields:
             newTreeWidgetItem = QtWidgets.QTreeWidgetItem(self.entitySelector)
             newTreeWidgetItemPixmap = QtGui.QPixmap()
