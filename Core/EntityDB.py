@@ -241,6 +241,21 @@ class EntitiesDB:
             self.dbLock.release()
             return returnValue
 
+    def getAllEntityUIDs(self) -> Union[None, set]:
+        """
+        Returns a set containing the UIDs of every entity in the database.
+        """
+        self.dbLock.acquire()
+        returnValue = None
+        try:
+            returnValue = set(self.database.nodes)
+        except KeyError:
+            self.messageHandler.error(
+                "Tried to get entity with nonexistent UID.")
+        finally:
+            self.dbLock.release()
+            return returnValue
+
     def getAllLinks(self) -> Union[None, list]:
         """
         Returns a list containing the Json representation of every link in the database.
