@@ -256,7 +256,7 @@ class PDFReport:
                               ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
                               ('VALIGN', (0, 0), (-1, -1), 'MIDDLE')]
         for key in list(entity):
-            if key != 'uid' and key != 'Icon' and key != 'Notes' and key != 'Date Last Edited':
+            if key != 'uid' and key != 'Icon' and key != 'Notes' and key != 'Date Last Edited' and key != 'Child UIDs':
                 valueText = entity[key]
                 value = "".join([valueText[counter:counter+80] + "\n"
                                  for counter in range(0, len(valueText), 80)])
