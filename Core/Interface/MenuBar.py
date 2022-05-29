@@ -26,6 +26,7 @@ from uuid import uuid4
 from playwright.sync_api import sync_playwright, Error, TimeoutError
 
 from PySide6 import QtWidgets, QtGui, QtCore
+from Core.GlobalVariables import user_agents
 from Core.Interface import Stylesheets
 from Core.Interface.Entity import BaseNode
 from Core.ResolutionManager import StringPropertyInput, FilePropertyInput, SingleChoicePropertyInput, \
@@ -1071,14 +1072,13 @@ class MenuBar(QtWidgets.QMenuBar):
                         if platform.system() == 'Linux':
                             context = browser.new_context(
                                 viewport={'width': 1920, 'height': 1080},
-                                user_agent='Mozilla/5.0 (X11; Linux i686; rv:94.0) Gecko/20100101 Firefox/94.0'
+                                user_agent=user_agents['Firefox']['Linux'][0]
                             )
                             urlPath = Path.home() / '.mozilla' / 'firefox'
                         else:  # We already checked before that the platform is either 'Linux' or 'Windows'.
                             context = browser.new_context(
                                 viewport={'width': 1920, 'height': 1080},
-                                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:94.0) Gecko/20100101 '
-                                           'Firefox/94.0'
+                                user_agent=user_agents['Firefox']['Windows'][0]
                             )
                             urlPath = Path(os.environ['APPDATA']) / 'Mozilla' / 'Firefox' / 'Profiles'
 
@@ -1194,8 +1194,7 @@ class MenuBar(QtWidgets.QMenuBar):
                         if platform.system() == 'Linux':
                             context = browser.new_context(
                                 viewport={'width': 1920, 'height': 1080},
-                                user_agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
-                                           "Chrome/96.0.4664.45 Safari/537.36"
+                                user_agent=user_agents['Chrome']['Linux'][0]
                             )
                             sessionFilePath = Path.home() / '.config' / 'google-chrome' / 'Default' / 'Sessions'
                             if not sessionFilePath.exists():
@@ -1204,8 +1203,7 @@ class MenuBar(QtWidgets.QMenuBar):
                         else:  # We already checked before that the platform is either 'Linux' or 'Windows'.
                             context = browser.new_context(
                                 viewport={'width': 1920, 'height': 1080},
-                                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                                           "(KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36"
+                                user_agent=user_agents['Chrome']['Windows'][0]
                             )
                             sessionFilePath = Path.home() / 'AppData' / 'Local' / 'Google' / 'Chrome' / 'User Data' / \
                                               'Default'
@@ -2624,13 +2622,13 @@ class ScreenshotWebsiteThread(QtCore.QThread):
             if platform.system() == 'Linux':
                 context = browser.new_context(
                     viewport={'width': 1920, 'height': 1080},
-                    user_agent='Mozilla/5.0 (X11; Linux i686; rv:96.0) Gecko/20100101 Firefox/96.0'
+                    user_agent=user_agents['Firefox']['Linux'][0]
                 )
                 urlPath = Path.home() / '.mozilla' / 'firefox'
             else:  # We already checked before that the platform is either 'Linux' or 'Windows'.
                 context = browser.new_context(
                     viewport={'width': 1920, 'height': 1080},
-                    user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:96.0) Gecko/20100101 Firefox/96.0'
+                    user_agent=user_agents['Firefox']['Windows'][0]
                 )
                 urlPath = Path(os.environ['APPDATA']) / 'Mozilla' / 'Firefox' / 'Profiles'
 
@@ -2710,13 +2708,13 @@ class SaveWebsiteThread(QtCore.QThread):
             if platform.system() == 'Linux':
                 context = browser.new_context(
                     viewport={'width': 1920, 'height': 1080},
-                    user_agent='Mozilla/5.0 (X11; Linux i686; rv:96.0) Gecko/20100101 Firefox/96.0'
+                    user_agent=user_agents['Firefox']['Linux'][0]
                 )
                 urlPath = Path.home() / '.mozilla' / 'firefox'
             else:  # We already checked before that the platform is either 'Linux' or 'Windows'.
                 context = browser.new_context(
                     viewport={'width': 1920, 'height': 1080},
-                    user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:96.0) Gecko/20100101 Firefox/96.0'
+                    user_agent=user_agents['Firefox']['Windows'][0]
                 )
                 urlPath = Path(os.environ['APPDATA']) / 'Mozilla' / 'Firefox' / 'Profiles'
 
