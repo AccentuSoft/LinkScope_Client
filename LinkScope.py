@@ -474,28 +474,22 @@ class MainWindow(QtWidgets.QMainWindow):
         Select all the nodes that have no links coming into or going out of them.
         :return:
         """
-        self.centralWidget().tabbedPane.getCurrentScene().clearSelection()
-        currentCanvasGraph = self.centralWidget().tabbedPane.getCurrentScene().sceneGraph
-        nodes = [x for x in currentCanvasGraph.nodes()
-                 if currentCanvasGraph.out_degree(x) == 0 and currentCanvasGraph.in_degree(x) == 0]
-        for item in [node for node in self.centralWidget().tabbedPane.getCurrentScene().items()
-                     if isinstance(node, BaseNode)]:
-            if item.uid in nodes:
-                item.setSelected(True)
+        currentScene = self.centralWidget().tabbedPane.getCurrentScene()
+        currentScene.clearSelection()
+        for isolatedNodeUID in nx.isolates(currentScene.sceneGraph):
+            currentScene.nodesDict[isolatedNodeUID].setSelected(True)
 
     def selectNonIsolatedNodes(self) -> None:
         """
         Select all nodes with at least one link going into or out of them.
         :return:
         """
-        self.centralWidget().tabbedPane.getCurrentScene().clearSelection()
-        currentCanvasGraph = self.centralWidget().tabbedPane.getCurrentScene().sceneGraph
-        nodes = [x for x in currentCanvasGraph.nodes()
-                 if currentCanvasGraph.out_degree(x) > 0 or currentCanvasGraph.in_degree(x) > 0]
-        for item in [node for node in self.centralWidget().tabbedPane.getCurrentScene().items()
-                     if isinstance(node, BaseNode)]:
-            if item.uid in nodes:
-                item.setSelected(True)
+        currentScene = self.centralWidget().tabbedPane.getCurrentScene()
+        currentScene.clearSelection()
+        isolatedNodes = list(nx.isolates(currentScene.sceneGraph))
+        for node in currentScene.nodesDict:
+            if node not in isolatedNodes:
+                currentScene.nodesDict[node].setSelected(True)
 
     def findShortestPath(self) -> None:
         """
@@ -503,13 +497,14 @@ class MainWindow(QtWidgets.QMainWindow):
         Exactly two nodes must be selected.
         :return:
         """
-        endPoints = [item.uid for item in self.centralWidget().tabbedPane.getCurrentScene().selectedItems()
+        currentScene = self.centralWidget().tabbedPane.getCurrentScene()
+        endPoints = [item.uid for item in currentScene.selectedItems()
                      if isinstance(item, BaseNode)]
         if len(endPoints) != 2:
             self.MESSAGEHANDLER.warning('Exactly two entities must be selected for the Shortest Path function to work.',
                                         popUp=True)
             return
-        currentCanvasGraph = self.centralWidget().tabbedPane.getCurrentScene().sceneGraph
+        currentCanvasGraph = currentScene.sceneGraph
         try:
             shortestPath = nx.shortest_path(currentCanvasGraph, endPoints[0], endPoints[1])
         except nx.NetworkXNoPath:
@@ -523,14 +518,14 @@ class MainWindow(QtWidgets.QMainWindow):
             self.setStatus(messagePathNotFound)
             self.MESSAGEHANDLER.info(messagePathNotFound, popUp=True)
         else:
-            self.centralWidget().tabbedPane.getCurrentScene().clearSelection()
-            for item in [node for node in self.centralWidget().tabbedPane.getCurrentScene().items()
-                         if isinstance(node, BaseNode)]:
-                if item.uid in shortestPath:
-                    item.setSelected(True)
+            currentScene.clearSelection()
+
+            for itemUID in currentScene.nodesDict:
+                if itemUID in shortestPath:
+                    currentScene.nodesDict[itemUID].setSelected(True)
+
             linksToSelect = [(a, b) for a, b in zip(shortestPath, shortestPath[1:])]
-            for linkItem in [link for link in self.centralWidget().tabbedPane.getCurrentScene().items()
-                             if isinstance(link, BaseConnector)]:
+            for linkItem in [link for link in currentScene.items() if isinstance(link, BaseConnector)]:
                 if linkItem.uid.intersection(linksToSelect):
                     linkItem.setSelected(True)
             self.setStatus('Shortest path found.')
