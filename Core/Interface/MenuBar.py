@@ -206,7 +206,7 @@ class MenuBar(QtWidgets.QMenuBar):
         viewMenu.addAction(resolutionFindAction)
         viewMenu.addSeparator()
 
-        rearrangeGraphAction = QtGui.QAction("Rearrange Graph",
+        rearrangeGraphAction = QtGui.QAction("Rearrange Canvas Graph",
                                              self,
                                              statusTip="Rearrange the nodes on the current Canvas to a default "
                                                        "configuration according to the currently configured graphing "
@@ -214,7 +214,7 @@ class MenuBar(QtWidgets.QMenuBar):
                                              triggered=self.rearrangeGraph)
         viewMenu.addAction(rearrangeGraphAction)
 
-        rearrangeAsTimelineAction = QtGui.QAction("Rearrange Graph as Timeline",
+        rearrangeAsTimelineAction = QtGui.QAction("Rearrange Canvas Graph as Timeline",
                                                   self,
                                                   statusTip="Rearrange the nodes on the current Canvas to a "
                                                             "Left-to-Right half-tree according to the entities' "
@@ -287,6 +287,20 @@ class MenuBar(QtWidgets.QMenuBar):
                                                statusTip="Save the 'Notes' fields of the selected nodes as text files.",
                                                triggered=self.entityNotesToTextFile)
         nodeOperationsMenu.addAction(notesToTextFilesAction)
+
+        projectMenu = self.addMenu("Project Operations")
+        projectMenu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
+        generateReportAction = QtGui.QAction("Generate Report",
+                                             self,
+                                             statusTip="Generate a report from the set of currently selected nodes.",
+                                             triggered=self.generateReport)
+        projectMenu.addAction(generateReportAction)
+
+        queryAction = QtGui.QAction("Query Wizard",
+                                    self,
+                                    statusTip="Run LQL Queries.",
+                                    triggered=self.queryWizard)
+        projectMenu.addAction(queryAction)
 
         modulesMenu = self.addMenu("Modules")
         modulesMenu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
@@ -954,6 +968,12 @@ class MenuBar(QtWidgets.QMenuBar):
 
     def rearrangeGraphToTimeLine(self) -> None:
         self.parent().centralWidget().tabbedPane.getCurrentScene().rearrangeGraphTimeline()
+
+    def generateReport(self):
+        self.parent().generateReport()
+
+    def queryWizard(self):
+        self.parent().launchQueryWizard()
 
     def downloadWebsites(self) -> None:
         websiteEntities = []

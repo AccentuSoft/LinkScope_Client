@@ -35,6 +35,7 @@ from Core.Interface import ToolBarOne
 from Core.Interface import MenuBar
 from Core.Interface import Stylesheets
 from Core.Interface.Entity import BaseNode, BaseConnector, GroupNode
+from Core.LQL import LQLQueryBuilder
 from Core.PathHelper import is_path_exists_or_creatable_portable
 
 
@@ -732,6 +733,10 @@ class MainWindow(QtWidgets.QMainWindow):
             self.deleteSpecificEntity(entityToSplitUID)
             for scene in allScenesWithNode:
                 scene.rearrangeGraph()
+
+    def launchQueryWizard(self):
+        queryWizard = QueryBuilderWizard(self)
+        queryWizard.exec()
 
     def handleGroupNodeUpdateAfterEntityDeletion(self, entityUID) -> None:
         for canvas in self.centralWidget().tabbedPane.canvasTabs:
@@ -1796,6 +1801,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.URLMANAGER = URLManager.URLManager(self)
         self.RESOLUTIONMANAGER = ResolutionManager.ResolutionManager(self, self.MESSAGEHANDLER)
         self.FCOM = FrontendCommunicationsHandler.CommunicationsHandler(self)
+        self.LQLWIZARD = LQLQueryBuilder(self)
 
         # Have the project auto-save on regular intervals by default.
         self.saveTimer = QtCore.QTimer(self)
@@ -3634,6 +3640,54 @@ class SplitEntitiesDialog(QtWidgets.QDialog):
         # Clear out this list, no more need for it
         self.splitEntities = []
         super(SplitEntitiesDialog, self).accept()
+
+
+class QueryBuilderWizard(QtWidgets.QDialog):
+
+    def __init__(self, mainWindowObject: MainWindow):
+        super(QueryBuilderWizard, self).__init__()
+        self.setModal(True)
+        self.setWindowTitle('LQL Query Wizard')
+        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
+        dialogLayout = QtWidgets.QGridLayout()
+        self.setLayout(dialogLayout)
+
+        mainWindowObject.LQLWIZARD.takeSnapshot()
+
+
+class QueryResultsViewer(QtWidgets.QDialog):
+
+    def __init__(self, entitiesDict: dict, selectedUIDs: set, selectedFields: set):
+        super(QueryResultsViewer, self).__init__()
+        self.setModal(True)
+        self.setWindowTitle('Query Results')
+        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
+        dialogLayout = QtWidgets.QGridLayout()
+        self.setLayout(dialogLayout)
+
+        self.resultsTable = QtWidgets.QTableWidget()
+        headerFields = list(selectedFields)
+        try:
+            headerFields.remove('uid')
+        except ValueError:
+            pass
+        headerFields.insert(0, 'uid')
+        self.resultsTable.setHorizontalHeaderLabels(headerFields)
+
+        count = 0
+        for uid in selectedUIDs:
+            self.resultsTable.insertRow(count)
+            for index, field in enumerate(headerFields):
+                self.resultsTable.setItem(count, index, entitiesDict[uid][field])  # TODO Check that this works
+            count += 1
+
+        closeButton = QtWidgets.QPushButton('Close')
+        closeButton.clicked.connect(self.accept)
+        exportButton = QtWidgets.QPushButton('Export')
+        exportButton.clicked.connect(self.exportData)
+
+    def exportData(self):
+        pass  # TODO  - Save dialog, write csv file.
 
 
 if __name__ == '__main__':

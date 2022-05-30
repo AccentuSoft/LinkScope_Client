@@ -1,7 +1,12 @@
 #!/usr/bin/env python3
 
 from typing import Union
+from uuid import uuid4
 import re
+import networkx as nx
+import string
+
+from Core.GlobalVariables import non_string_fields
 
 """
 This class handles the backend stuff for the LinkScope Query Language.
@@ -31,26 +36,37 @@ class LQLQueryBuilder:
 
     QUERIES_HISTORY = {}
 
+    databaseSnapshot = None
+    databaseEntities = None
+    allCanvases = None
+    canvasesEntitiesDict = None
+    allEntityFields = None
+    allEntities = None
+
     def __init__(self, mainWindow):
         self.mainWindow = mainWindow
+
+    def takeSnapshot(self):
+        self.mainWindow.LENTDB.dbLock.acquire()
+        # Create a copy
+        self.databaseSnapshot = nx.DiGraph(self.mainWindow.LENTDB.database)
+        self.mainWindow.LENTDB.dbLock.release()
+
+        self.databaseEntities = set(self.databaseSnapshot.nodes)
+
         self.allCanvases = self.getAllCanvasNames()
-        self.allEntityFields, self.allEntities = self.getAllEntitiesAndFields()
-        self.databaseEntities = self.getAllUIDs()
         self.canvasesEntitiesDict = self.getCanvasesEntitiesDict(self.allCanvases)
+        self.allEntityFields, self.allEntities = self.getAllEntitiesAndFields()
 
     def getAllEntitiesAndFields(self) -> (set, list):
-        entitiesSnapshot = {entity['uid']: entity for entity in self.mainWindow.LENTDB.getAllEntities()
-                            if entity.get('Entity Type') != 'EntityGroup'}
+        entitiesSnapshot = {entity: self.databaseSnapshot.nodes[entity] for entity in self.databaseSnapshot.nodes
+                            if self.databaseSnapshot.nodes[entity].get('Entity Type') != 'EntityGroup'}
         entityFields = set()
         for entityUID in entitiesSnapshot:
             entityFields.update(entitiesSnapshot[entityUID].keys())
-        entityFields.update('*')
-        entityFields.remove('Entity Type')
-        entityFields.remove('uid')
+        for field in non_string_fields:
+            entityFields.remove(field)
         return entityFields, entitiesSnapshot
-
-    def getAllUIDs(self) -> set:
-        return self.mainWindow.LENTDB.getAllEntityUIDs()
 
     def getAllCanvasNames(self) -> list:
         canvasNames = list(self.mainWindow.centralWidget().tabbedPane.canvasTabs.keys())
@@ -59,7 +75,9 @@ class LQLQueryBuilder:
 
     def getEntitiesOnCanvas(self, canvasName: str):
         try:
-            return set(self.mainWindow.centralWidget().tabbedPane.canvasTabs[canvasName].sceneGraph.nodes)
+            # Ensure that we don't have nodes here that are not present in our database snapshot
+            canvasNodes = set(self.mainWindow.centralWidget().tabbedPane.canvasTabs[canvasName].sceneGraph.nodes)
+            return canvasNodes.intersection(self.databaseEntities)
         except KeyError:
             return None
 
@@ -79,18 +97,21 @@ class LQLQueryBuilder:
             if '*' in selectValue:
                 # No need to remove the '*'. Could cause errors if that's a field name (even though it is bad practice).
                 return self.allEntityFields
-            return [entityField for entityField in selectValue if entityField in self.allEntityFields]
+            return set([entityField for entityField in selectValue if entityField in self.allEntityFields])
         else:
             try:
                 clauseValue = re.compile(selectValue)
-                return [entityField for entityField in self.allEntityFields if clauseValue.match(entityField)]
+                return set([entityField for entityField in self.allEntityFields if clauseValue.match(entityField)])
             except re.error:
-                return []
+                return set()
 
-    def parseSource(self, sourceClause: str, sourceValues: Union[None, list]):
+    def parseSource(self, sourceClause: str, sourceValues: Union[None, list]) -> set:
         """
         sourceValues:
-        [[("AND"|"OR"|None), ("CANVAS"|"RCANVAS"), (True|False), <User Input>], ...]
+        [[("AND" | "OR" | None), ("CANVAS" | "RCANVAS"), (True | False), <User Input>], ...]
+        OR
+        None
+            if sourceClause == "FROMDB"
         """
         if sourceClause == "FROMDB":
             return self.databaseEntities
@@ -130,20 +151,21 @@ class LQLQueryBuilder:
 
             return resultEntitySet
 
-    def parseConditions(self, conditionClauses: Union[None, list], entitiesPool):
+    def parseConditions(self, conditionClauses: Union[None, list], entitiesPool) -> set:
         """
         conditionClauses:
-        [[("AND", "OR", None), ("VC"|"GC"), (True | False), conditionValue], ...]
+        [[("AND" | "OR" | None), ("VC" | "GC"), (True | False), conditionValue], ...]
 
         conditionValue:
             if VC:
                 [("ATTRIBUTE" | "RATTRIBUTE"), <User Input>,
                 ("EQ" | "CONTAINS" | "STARTSWITH" | "ENDSWITH" | "RMATCH"), <User Input>]
             if GC:
-                [("CHILDOF" <ENTITY> | "PARENTOF" <ENTITY> |
+                [("CHILDOF" <ENTITY> | "DESCENDANTOF " <ENTITY> |
+                "PARENTOF" <ENTITY> | "ANCESTOROF " <ENTITY> |
                 "NUMCHILDREN" (" < " | " <= " | " > " | " >= " | " == ") <DIGITS> |
                 "NUMPARENTS" (" < " | " <= " | " > " | " >= " | " == ") <DIGITS> |
-                "PATHTO" <ENTITY> | "ISOLATED" | "ISROOT" | "ISLEAF")]
+                "CONNECTEDTO" <ENTITY> | "ISOLATED" | "ISROOT" | "ISLEAF")]
         """
 
         self.allEntities = {uid: self.allEntities[uid] for uid in self.allEntities if uid in entitiesPool}
@@ -182,6 +204,12 @@ class LQLQueryBuilder:
 
             elif conditionClause[1] == "GC":
                 pass
+
+        uidsToRemove = set(self.allEntities).difference(uidsToSelect)
+        for entity in uidsToRemove:
+            self.allEntities.pop(entity, None)
+
+        return uidsToSelect
 
     def canvasOr(self, canvasSetA: set, canvasSetB: set):
         return canvasSetA.union(canvasSetB)
@@ -241,28 +269,179 @@ class LQLQueryBuilder:
         return returnVal
 
     def checkChildOf(self, valueA: str, valueB: str):
-        return False
+        return self.databaseSnapshot.has_successor(valueA, valueB)
 
-    def checkSuccessorOf(self, valueA: str, valueB: str):
+    def checkDescendantOf(self, valueA: str, valueB: str):
+        try:
+            if valueB in nx.descendants(self.databaseSnapshot, valueA):
+                return True
+        except nx.NetworkXError:
+            pass
         return False
 
     def checkParentOf(self, valueA: str, valueB: str):
+        return self.databaseSnapshot.has_predecessor(valueA, valueB)
+
+    def checkAncestorOf(self, valueA: str, valueB: str):
+        try:
+            if valueB in nx.ancestors(self.databaseSnapshot, valueA):
+                return True
+        except nx.NetworkXError:
+            pass
         return False
 
-    def checkPredecessorOf(self, valueA: str, valueB: str):
+    def checkNumChildren(self, valueA: str, valueB: str, valueC: int):
+        numChildren = len(list(self.databaseSnapshot.successors(valueA)))
+        returnValue = False
+        if valueB == "<":
+            if numChildren < valueC:
+                returnValue = True
+        elif valueB == "<=":
+            if numChildren <= valueC:
+                returnValue = True
+        elif valueB == ">":
+            if numChildren > valueC:
+                returnValue = True
+        elif valueB == ">=":
+            if numChildren >= valueC:
+                returnValue = True
+        elif valueB == "==":
+            if numChildren == valueC:
+                returnValue = True
+        return returnValue
+
+    def checkNumParents(self, valueA: str, valueB: str, valueC: int):
+        numParents = len(list(self.databaseSnapshot.predecessors(valueA)))
+        returnValue = False
+        if valueB == "<":
+            if numParents < valueC:
+                returnValue = True
+        elif valueB == "<=":
+            if numParents <= valueC:
+                returnValue = True
+        elif valueB == ">":
+            if numParents > valueC:
+                returnValue = True
+        elif valueB == ">=":
+            if numParents >= valueC:
+                returnValue = True
+        elif valueB == "==":
+            if numParents == valueC:
+                returnValue = True
+        return returnValue
+
+    def checkConnectedTo(self, valueA: str, valueB: str):
+        try:
+            if nx.has_path(self.databaseSnapshot, valueA, valueB):
+                return True
+        except nx.NetworkXError:
+            pass
+        return False
+
+    def checkIsolated(self, valueA: str):
+        try:
+            if valueA in self.databaseSnapshot.nodes and nx.is_isolate(self.databaseSnapshot, valueA):
+                return True
+        except nx.NetworkXError:
+            pass
+        return False
+
+    def checkIsRoot(self, valueA: str):
+        try:
+            if len(self.databaseSnapshot.in_edges(valueA)) == 0:
+                return True
+        except nx.NetworkXError:
+            pass
+        return False
+
+    def checkIsLeaf(self, valueA: str):
+        try:
+            if len(self.databaseSnapshot.out_edges(valueA)) == 0:
+                return True
+        except nx.NetworkXError:
+            pass
         return False
 
     def checkGCHelper(self, checkType: str, isNot: bool, args: list):
         returnVal = False
         if checkType == "CHILDOF":
             returnVal = self.checkChildOf(*args)
+        elif checkType == "DESCENDANTOF":
+            returnVal = self.checkDescendantOf(*args)
+        elif checkType == "PARENTOF":
+            returnVal = self.checkParentOf(*args)
+        elif checkType == "ANCESTOROF":
+            returnVal = self.checkAncestorOf(*args)
+        elif checkType == "NUMCHILDREN":
+            returnVal = self.checkNumChildren(*args)
+        elif checkType == "NUMPARENTS":
+            returnVal = self.checkNumParents(*args)
+        elif checkType == "CONNECTEDTO":
+            returnVal = self.checkConnectedTo(*args)
+        elif checkType == "ISOLATED":
+            returnVal = self.checkIsolated(*args)
+        elif checkType == "ISROOT":
+            returnVal = self.checkIsRoot(*args)
+        elif checkType == "ISLEAF":
+            returnVal = self.checkIsLeaf(*args)
         if isNot:
             return not returnVal
         return returnVal
 
-    def parseQuery(self, selectClause: str, selectValue: Union[str, list], sourceClause: str,
-                   sourceValues: Union[None, list], conditionClauses: Union[None, list]):
-        pass
+    def modifyNumify(self, valueA: str):
+        # Get the first number that shows up.
+        tempString = valueA.replace(',', '.')  # Making sure that floats are expressed the right way.
+        count = 0
+        for c in tempString:
+            if c not in string.digits:
+                count += 1
+            else:
+                break
 
-    def parseModify(self):
-        pass
+        count2 = 0
+        for c in tempString[count:]:
+            if c in string.digits or c == '.':
+                count2 += 1
+            else:
+                break
+
+        return float(tempString[count:count + count2])
+
+    def parseModify(self, resultsToModify: (set, set), update: Union[bool, None] = None,
+                    modifyQueries: Union[list, None] = None) -> (set, set):
+        """
+        modifyQueries:
+        [[("MODIFY" | "RMODIFY"), <User Input>, ("NUMIFY" | "UPPERCASE" | "LOWERCASE")], ...]
+        """
+
+        if modifyQueries is None:
+            return resultsToModify
+
+        modifiedEntities = {}
+
+        for modification in modifyQueries:
+            pass  # TODO
+
+    def parseQuery(self, selectClause: str, selectValue: Union[str, list], sourceClause: str,
+                   sourceValues: Union[None, list], conditionClauses: Union[None, list],
+                   modifyUpdate: Union[bool, None] = None,
+                   modifyQueries: Union[list, None] = None) -> Union[(set, set), None]:
+
+        if self.databaseSnapshot is None:
+            return None
+
+        returnValue = None
+        fieldsToSelect = self.parseSelect(selectClause, selectValue)
+        if fieldsToSelect:
+            entitiesToConsider = self.parseSource(sourceClause, sourceValues)
+            if entitiesToConsider:
+                finalSetOfUIDs = self.parseConditions(conditionClauses, entitiesToConsider)
+                if finalSetOfUIDs:
+                    if not modifyQueries:
+                        returnValue = (finalSetOfUIDs, fieldsToSelect)
+
+        queryUID = str(uuid4())
+        self.QUERIES_HISTORY[queryUID] = (selectClause, selectValue, sourceClause, sourceValues, conditionClauses)
+
+        return returnValue
+
