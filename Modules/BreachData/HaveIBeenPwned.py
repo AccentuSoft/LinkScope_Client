@@ -12,4 +12,4 @@ class HaveIBeenPwned:  # TODO https://haveibeenpwned.com/API/v3
 
     def resolution(self, entityJsonList, parameters):
         import requests
-        pass
+        return "Not yet implemented."
