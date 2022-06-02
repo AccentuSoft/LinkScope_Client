@@ -172,12 +172,14 @@ class LQLQueryBuilder:
         uidsToSelect = set()
 
         for conditionClause in conditionClauses:
+            isNot = conditionClause[2]
             conditionValue = conditionClause[3]
             userInput1 = conditionValue[1]
             userInput2 = conditionValue[3]
+            firstArgument = conditionValue[0]
             if conditionClause[1] == "VC":
                 matchingFields = []
-                if conditionValue[0] == "ATTRIBUTE":
+                if firstArgument == "ATTRIBUTE":
                     if userInput1 in self.allEntityFields:
                         matchingFields.append(userInput1)
                 else:
@@ -193,8 +195,7 @@ class LQLQueryBuilder:
                     entitiesToRemove = []
                     for entity in self.allEntities:
                         attributeKeyValue = str(self.allEntities[entity].get(matchingField))
-                        if not self.checkVCHelper(conditionValue[2], conditionClause[2], attributeKeyValue,
-                                                  userInput2):
+                        if not self.checkVCHelper(conditionValue[2], isNot, attributeKeyValue, userInput2):
                             if conditionClause[0] == "AND":
                                 entitiesToRemove.append(entity)
                         else:
@@ -203,7 +204,15 @@ class LQLQueryBuilder:
                         uidsToSelect.remove(entityToRemove)
 
             elif conditionClause[1] == "GC":
-                pass
+                entitiesToRemove = []
+                for entity in self.allEntities:
+                    if not self.checkGCHelper(firstArgument, isNot, conditionValue[1:]):
+                        if conditionClause[0] == "AND":
+                            entitiesToRemove.append(entity)
+                    else:
+                        uidsToSelect.add(entity)
+                for entityToRemove in entitiesToRemove:
+                    uidsToSelect.remove(entityToRemove)
 
         uidsToRemove = set(self.allEntities).difference(uidsToSelect)
         for entity in uidsToRemove:
@@ -405,43 +414,78 @@ class LQLQueryBuilder:
             else:
                 break
 
-        return float(tempString[count:count + count2])
+        return str(float(tempString[count:count + count2]))
 
-    def parseModify(self, resultsToModify: (set, set), update: Union[bool, None] = None,
-                    modifyQueries: Union[list, None] = None) -> (set, set):
+    def modifyUpperCase(self, valueA: str):
+        return valueA.upper()
+
+    def modifyLowerCase(self, valueA: str):
+        return valueA.lower()
+
+    def parseModify(self, resultsToModify: (set, set), modifyQueries: list) -> (set, set):
         """
         modifyQueries:
         [[("MODIFY" | "RMODIFY"), <User Input>, ("NUMIFY" | "UPPERCASE" | "LOWERCASE")], ...]
         """
 
-        if modifyQueries is None:
-            return resultsToModify
+        matchingFields = resultsToModify[1]
 
-        modifiedEntities = {}
+        modifiedUIDs = set()
+        numifiedFields = set()
 
         for modification in modifyQueries:
-            pass  # TODO
+            userInput1 = modification[1]
+            modificationType = modification[2]
+            modifyFields = []
+            if modification[0] == "MODIFY":
+                if userInput1 in resultsToModify[1]:
+                    modifyFields.append(userInput1)
+            else:
+                try:
+                    userInputRegex = re.compile(userInput1)
+                    modifyFields = [fieldMatch for fieldMatch in matchingFields if userInputRegex.match(fieldMatch)]
+                except (ValueError, re.error):
+                    continue
+            for entity in self.allEntities:
+                for modifyField in modifyFields:
+                    entityFieldValue = self.allEntities[entity].get(modifyField)
+                    if modificationType == "UPPERCASE":
+                        newFieldValue = self.modifyUpperCase(entityFieldValue) if entityFieldValue is not None else None
+                    elif modificationType == "LOWERCASE":
+                        newFieldValue = self.modifyLowerCase(entityFieldValue) if entityFieldValue is not None else None
+                    elif modificationType == "NUMIFY":
+                        newFieldValue = self.modifyNumify(entityFieldValue) if entityFieldValue is not None else None
+                        numifiedFields.add(modifyField)
+                    else:
+                        newFieldValue = None
+                    if newFieldValue is not None:
+                        modifiedUIDs.add(entity)
+                        self.allEntities[entity][modifyField] = newFieldValue
+
+        return modifiedUIDs, numifiedFields
 
     def parseQuery(self, selectClause: str, selectValue: Union[str, list], sourceClause: str,
                    sourceValues: Union[None, list], conditionClauses: Union[None, list],
-                   modifyUpdate: Union[bool, None] = None,
-                   modifyQueries: Union[list, None] = None) -> Union[(set, set), None]:
+                   modifyQueries: Union[list, None] = None) -> Union[(set, Union[set, None]), None]:
 
         if self.databaseSnapshot is None:
             return None
 
         returnValue = None
+        modifications = None
         fieldsToSelect = self.parseSelect(selectClause, selectValue)
         if fieldsToSelect:
             entitiesToConsider = self.parseSource(sourceClause, sourceValues)
             if entitiesToConsider:
-                finalSetOfUIDs = self.parseConditions(conditionClauses, entitiesToConsider)
-                if finalSetOfUIDs:
-                    if not modifyQueries:
-                        returnValue = (finalSetOfUIDs, fieldsToSelect)
+                if conditionClauses:
+                    entitiesToConsider = self.parseConditions(conditionClauses, entitiesToConsider)
+                returnValue = (entitiesToConsider, fieldsToSelect)
+                if modifyQueries:
+                    modifications = self.parseModify(returnValue, modifyQueries)
 
         queryUID = str(uuid4())
-        self.QUERIES_HISTORY[queryUID] = (selectClause, selectValue, sourceClause, sourceValues, conditionClauses)
+        self.QUERIES_HISTORY[queryUID] = (selectClause, selectValue, sourceClause, sourceValues, conditionClauses,
+                                          modifyQueries)
 
-        return returnValue
+        return returnValue, modifications
 

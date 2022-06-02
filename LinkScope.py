@@ -18,7 +18,7 @@ from msgpack import load
 from pathlib import Path
 from datetime import datetime
 from typing import Union
-from PySide6 import QtWidgets, QtGui, QtCore
+from PySide6 import QtWidgets, QtGui, QtCore, QtCharts
 
 from Core import MessageHandler, SettingsObject
 from Core import ResourceHandler
@@ -153,7 +153,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                       popUp=True, exc_info=False)
             return
         except FileNotFoundError:
-            self.MESSAGEHANDLER.error('Cannot save project into a non-existing parent directory.'
+            self.MESSAGEHANDLER.error('Cannot save project into a non-existing parent directory. '
                                       'Please create the required parent directories and try again.',
                                       popUp=True, exc_info=False)
             return
@@ -177,7 +177,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.SETTINGS.setValue("Project/Name", oldName)
             return
         except FileNotFoundError:
-            self.MESSAGEHANDLER.error('Cannot save project into a non-existing parent directory.'
+            self.MESSAGEHANDLER.error('Cannot save project into a non-existing parent directory. '
                                       'Please create the required parent directories and try again.',
                                       popUp=True, exc_info=False)
             self.SETTINGS.setValue("Project/BaseDir", oldBaseDir)
@@ -1778,7 +1778,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 return
             except FileNotFoundError:
                 QtWidgets.QMessageBox.warning(self, 'Cannot create project',
-                                              'Cannot save project into a non-existing parent directory.'
+                                              'Cannot save project into a non-existing parent directory. '
                                               'Please create the required parent directories and try again.',
                                               QtWidgets.QMessageBox.Ok)
                 return
@@ -3657,13 +3657,17 @@ class QueryBuilderWizard(QtWidgets.QDialog):
 
 class QueryResultsViewer(QtWidgets.QDialog):
 
-    def __init__(self, entitiesDict: dict, selectedUIDs: set, selectedFields: set):
+    def __init__(self, mainWindowObject: MainWindow, entitiesDict: dict, selectedUIDs: set, selectedFields: set):
         super(QueryResultsViewer, self).__init__()
+        self.mainWindowObject = mainWindowObject
         self.setModal(True)
         self.setWindowTitle('Query Results')
         self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         dialogLayout = QtWidgets.QGridLayout()
         self.setLayout(dialogLayout)
+
+        self.resultsTabbedPane = QtWidgets.QTabWidget(self)
+        dialogLayout.addWidget(self.resultsTabbedPane, 0, 0, 2, 2)
 
         self.resultsTable = QtWidgets.QTableWidget()
         headerFields = list(selectedFields)
@@ -3681,13 +3685,61 @@ class QueryResultsViewer(QtWidgets.QDialog):
                 self.resultsTable.setItem(count, index, entitiesDict[uid][field])  # TODO Check that this works
             count += 1
 
+        self.resultsTabbedPane.addTab(self.resultsTable, 'Table')
+
+        self.charts = {}
+        for headerField in headerFields[1:]:
+            fieldChart = QtCharts.QChart()
+            chartTitle = headerField + " Chart"
+            fieldChart.setTitle(chartTitle)
+            fieldChart.setTheme(QtCharts.QChart.ChartThemeBlueCerulean)
+            fieldChart.setMargins(QtCore.QMargins(0, 0, 0, 0))
+            chartView = QtCharts.QChartView(fieldChart)
+            chartView.setRubberBand(QtCharts.QChartView.NoRubberBand)
+            fieldChart.setAnimationOptions(QtCharts.QChart.AllAnimations)
+            fieldChart.setAnimationDuration(250)
+            fieldChart.legend().hide()
+            self.charts[headerField] = (fieldChart, chartView)
+            self.resultsTabbedPane.addTab(chartView, chartTitle)
+            # TODO - values
+
         closeButton = QtWidgets.QPushButton('Close')
         closeButton.clicked.connect(self.accept)
         exportButton = QtWidgets.QPushButton('Export')
         exportButton.clicked.connect(self.exportData)
 
+        dialogLayout.addWidget(closeButton, 3, 0, 1, 1)
+        dialogLayout.addWidget(exportButton, 3, 1, 1, 1)
+
     def exportData(self):
-        pass  # TODO  - Save dialog, write csv file.
+        # TODO - rename variables, change text etc.
+        exportDialog = QtWidgets.QFileDialog()
+        exportDialog.setOption(QtWidgets.QFileDialog.DontUseNativeDialog, True)
+        exportDialog.setViewMode(QtWidgets.QFileDialog.List)
+        exportDialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
+        exportDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+        exportDialog.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
+        exportDialog.setDirectory(str(Path.home()))
+
+        exportExec = exportDialog.exec()
+        if not exportExec:
+            self.mainWindowObject.setStatus('Export operation cancelled.')
+            return False
+        fileName = exportDialog.selectedFiles()[0]
+        exportFilePath = Path(fileName)
+        if not is_path_exists_or_creatable_portable(str(exportFilePath)):
+            self.mainWindowObject.MESSAGEHANDLER.error(
+                'Invalid export file name or path to save at.', popUp=True, exc_info=False)
+            return False
+
+        try:
+            with open(exportFilePath, 'w') as fileToWrite:
+                fileToWrite.write('TODO TODO')  # TODO
+        except FileNotFoundError:
+            self.mainWindowObject.MESSAGEHANDLER.error('Cannot write file into a non-existing parent directory. '
+                                                       'Please create the required parent directories and try again.',
+                                                       popUp=True, exc_info=False)
+            return False
 
 
 if __name__ == '__main__':
