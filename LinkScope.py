@@ -3646,13 +3646,171 @@ class QueryBuilderWizard(QtWidgets.QDialog):
 
     def __init__(self, mainWindowObject: MainWindow):
         super(QueryBuilderWizard, self).__init__()
+        self.mainWindowObject = mainWindowObject
         self.setModal(True)
         self.setWindowTitle('LQL Query Wizard')
         self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         dialogLayout = QtWidgets.QGridLayout()
         self.setLayout(dialogLayout)
+        self.queryTabbedPane = QtWidgets.QTabWidget()
+        dialogLayout.addWidget(self.queryTabbedPane)
 
-        mainWindowObject.LQLWIZARD.takeSnapshot()
+        #### SELECT
+        selectPane = QtWidgets.QWidget()
+        selectPaneLayout = QtWidgets.QGridLayout()
+        selectPane.setLayout(selectPaneLayout)
+        self.selectStatementPicker = QtWidgets.QComboBox()
+        self.selectStatementPicker.addItems(['SELECT', 'RSELECT'])
+        self.selectStatementPicker.setEditable(False)  # Default, but it's nice to be explicit.
+        self.selectStatementPicker.currentTextChanged.connect(self.selectionModeSwitch)
+        selectStatementValuePickerWidget = QtWidgets.QWidget()
+        self.selectStatementValuePickerLayout = QtWidgets.QStackedLayout()
+        selectStatementValuePickerWidget.setLayout(self.selectStatementValuePickerLayout)
+        self.selectStatementList = QtWidgets.QListWidget()
+        self.selectStatementList.setSelectionMode(QtWidgets.QListWidget.ExtendedSelection)
+        self.selectStatementList.setToolTip('Highlight all the fields you wish to select.')
+        self.selectStatementTextbox = QtWidgets.QLineEdit('')
+        self.selectStatementTextbox.setToolTip('Type the regex you want to use to specify the fields to select.')
+        self.selectStatementValuePickerLayout.addWidget(self.selectStatementList)
+        self.selectStatementValuePickerLayout.addWidget(self.selectStatementTextbox)
+
+        selectPaneLayout.addWidget(QtWidgets.QLabel('Selection mode: '), 0, 0, 1, 1)
+        selectPaneLayout.addWidget(self.selectStatementPicker, 0, 1, 1, 1)
+        selectPaneLayout.addWidget(QtWidgets.QLabel('Field selection:'), 1, 0, 1, 2)
+        selectPaneLayout.addWidget(selectStatementValuePickerWidget, 2, 0, 2, 2)
+
+        self.queryTabbedPane.addTab(selectPane, 'Selection')
+        ####
+
+        #### SOURCE
+        sourcePane = QtWidgets.QWidget()
+        sourcePaneLayout = QtWidgets.QGridLayout()
+        sourcePane.setLayout(sourcePaneLayout)
+        self.sourceStatementPicker = QtWidgets.QComboBox()
+        self.sourceStatementPicker.addItems(['FROMDB', 'FROM'])
+        self.sourceStatementPicker.setEditable(False)
+        self.sourceStatementPicker.currentTextChanged.connect(self.sourceModeSwitch)
+
+        self.sourceValues = []
+        self.sourceValuesArea = QtWidgets.QScrollArea()
+        self.sourceValuesArea.setWidgetResizable(True)
+        sourceValuesAreaWidget = QtWidgets.QWidget()
+        self.sourceValuesAreaWidgetLayout = QtWidgets.QVBoxLayout()
+        sourceValuesAreaWidget.setLayout(self.sourceValuesAreaWidgetLayout)
+        self.sourceValuesArea.setWidget(sourceValuesAreaWidget)
+        self.sourceValuesArea.setEnabled(False)
+        self.sourceValuesArea.setDisabled(True)
+        self.sourceValuesArea.setHidden(True)
+
+        buttonsWidget = QtWidgets.QWidget()
+        buttonsWidgetLayout = QtWidgets.QHBoxLayout()
+        buttonsWidget.setLayout(buttonsWidgetLayout)
+        self.addStatementButton = QtWidgets.QPushButton('Add Clause')
+        self.removeStatementButton = QtWidgets.QPushButton('Remove Last Clause')
+        self.addStatementButton.clicked.connect(self.addSourceClause)
+        self.removeStatementButton.clicked.connect(self.removeSourceClause)
+        buttonsWidgetLayout.addWidget(self.removeStatementButton)
+        buttonsWidgetLayout.addWidget(self.addStatementButton)
+
+        self.sourceValuesAreaWidgetLayout.addWidget(buttonsWidget)
+
+        sourcePaneLayout.addWidget(QtWidgets.QLabel('Source: '), 0, 0, 1, 1)
+        sourcePaneLayout.addWidget(self.sourceStatementPicker, 0, 1, 1, 1)
+        sourcePaneLayout.addWidget(self.sourceValuesArea, 1, 0, 2, 2)
+
+        self.queryTabbedPane.addTab(sourcePane, 'Source')
+        ####
+
+        #### CONDITIONS
+        # TODO
+        ####
+
+        self.updateValues()
+
+    def selectionModeSwitch(self, newText: str):
+        if newText == 'SELECT':
+            self.selectStatementValuePickerLayout.setCurrentIndex(0)
+        else:
+            self.selectStatementValuePickerLayout.setCurrentIndex(1)
+
+    def sourceModeSwitch(self, newText: str):
+        if newText == 'FROMDB':
+            self.sourceValuesArea.setEnabled(False)
+            self.sourceValuesArea.setDisabled(True)
+            self.sourceValuesArea.setHidden(True)
+        else:
+            self.sourceValuesArea.setEnabled(True)
+            self.sourceValuesArea.setDisabled(False)
+            self.sourceValuesArea.setHidden(False)
+
+    def addSourceClause(self):
+
+        clauseWidget = QtWidgets.QFrame()
+        clauseWidgetLayout = QtWidgets.QVBoxLayout()
+        clauseWidget.setLayout(clauseWidgetLayout)
+        clauseWidget.setFrameStyle(clauseWidget.Panel | clauseWidget.Raised)
+        clauseWidget.setLineWidth(3)
+
+        andOrClause = QtWidgets.QComboBox()
+        andOrClause.addItems(['OR', 'AND'])
+        specifier = QtWidgets.QComboBox()
+        specifier.addItems(['CANVAS', 'RCANVAS'])
+        negation = QtWidgets.QComboBox()
+        negation.addItems(['MATCHES', 'DOES NOT MATCH'])
+        inputDropdown = QtWidgets.QListWidget()
+        inputDropdown.setSelectionMode(QtWidgets.QListWidget.ExtendedSelection)
+        inputDropdown.addItems(self.mainWindowObject.LQLWIZARD.allCanvases)
+        inputText = QtWidgets.QLineEdit('')
+        inputWidget = QtWidgets.QWidget()
+        inputWidgetLayout = QtWidgets.QStackedLayout()
+        inputWidget.setLayout(inputWidgetLayout)
+        inputWidgetLayout.addWidget(inputDropdown)
+        inputWidgetLayout.addWidget(inputText)
+        specifier.currentIndexChanged.connect(lambda newIndex: inputWidgetLayout.setCurrentIndex(newIndex))
+
+        clauseWidgetLayout.addWidget(andOrClause)
+        clauseWidgetLayout.addWidget(specifier)
+        clauseWidgetLayout.addWidget(negation)
+        clauseWidgetLayout.addWidget(inputWidget)
+
+        if self.sourceValuesAreaWidgetLayout.count() == 1:
+            andOrClause.setDisabled(True)
+            andOrClause.setToolTip('Cannot edit the set modifier of the first source clause.')
+            self.sourceValuesAreaWidgetLayout.insertWidget(0, clauseWidget)
+            self.sourceValues.append(clauseWidget)
+        else:
+            self.sourceValuesAreaWidgetLayout.insertWidget(1, clauseWidget)
+            self.sourceValues.append(clauseWidget)
+
+    def removeSourceClause(self):
+        if self.sourceValuesAreaWidgetLayout.count() != 1:
+            # Remove clause that was added last.
+            itemToDel = self.sourceValuesAreaWidgetLayout.takeAt(self.sourceValuesAreaWidgetLayout.count() - 2)
+            itemToDel.widget().deleteLater()
+            widgetToDel = self.sourceValues.pop()
+            widgetToDel.deleteLater()
+
+    def updateValues(self):
+        self.mainWindowObject.LQLWIZARD.takeSnapshot()
+
+        self.selectStatementList.clear()
+        self.selectStatementList.addItems(self.mainWindowObject.LQLWIZARD.allEntityFields)
+        self.selectStatementTextbox.setText('')
+
+        for _ in range(len(self.sourceValues)):
+            widgetToDel = self.sourceValues.pop()
+            widgetToDel.deleteLater()
+
+        for _ in range(self.sourceValuesAreaWidgetLayout.count() - 1):
+            itemToDel = self.sourceValuesAreaWidgetLayout.takeAt(0)
+            itemToDel.widget().deleteLater()
+
+    def runQuery(self):
+        pass
+
+    def showResults(self):
+        pass
+        # qResultsViewer = QueryResultsViewer(self.mainWindowObject)
 
 
 class QueryResultsViewer(QtWidgets.QDialog):
@@ -3699,6 +3857,8 @@ class QueryResultsViewer(QtWidgets.QDialog):
             fieldChart.setAnimationOptions(QtCharts.QChart.AllAnimations)
             fieldChart.setAnimationDuration(250)
             fieldChart.legend().hide()
+            fieldChart.createDefaultAxes()
+
             self.charts[headerField] = (fieldChart, chartView)
             self.resultsTabbedPane.addTab(chartView, chartTitle)
             # TODO - values

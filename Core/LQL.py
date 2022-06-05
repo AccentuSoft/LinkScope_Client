@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import Union
+from typing import Union, Tuple
 from uuid import uuid4
 import re
 import networkx as nx
@@ -13,26 +13,7 @@ This class handles the backend stuff for the LinkScope Query Language.
 """
 
 
-class Query:
-    COMPONENTS = ["select-query"]
-
-    def __init__(self):
-        super(Query, self).__init__()
-
-
-class SelectQuery:
-
-    def __init__(self):
-        super(SelectQuery, self).__init__()
-
-
-class LQLQueryParser:
-    pass
-
-
 class LQLQueryBuilder:
-    QUERY_PARTS_DICT = {"query": Query,
-                        "select-query": SelectQuery}
 
     QUERIES_HISTORY = {}
 
@@ -65,7 +46,11 @@ class LQLQueryBuilder:
         for entityUID in entitiesSnapshot:
             entityFields.update(entitiesSnapshot[entityUID].keys())
         for field in non_string_fields:
-            entityFields.remove(field)
+            try:
+                entityFields.remove(field)
+            except KeyError:
+                # This typically only happens if there are no entities in the database.
+                continue
         return entityFields, entitiesSnapshot
 
     def getAllCanvasNames(self) -> list:
@@ -76,7 +61,8 @@ class LQLQueryBuilder:
     def getEntitiesOnCanvas(self, canvasName: str):
         try:
             # Ensure that we don't have nodes here that are not present in our database snapshot
-            canvasNodes = set(self.mainWindow.centralWidget().tabbedPane.canvasTabs[canvasName].sceneGraph.nodes)
+            canvasNodes = set(
+                self.mainWindow.centralWidget().tabbedPane.canvasTabs[canvasName].scene().sceneGraph.nodes)
             return canvasNodes.intersection(self.databaseEntities)
         except KeyError:
             return None
@@ -466,7 +452,7 @@ class LQLQueryBuilder:
 
     def parseQuery(self, selectClause: str, selectValue: Union[str, list], sourceClause: str,
                    sourceValues: Union[None, list], conditionClauses: Union[None, list],
-                   modifyQueries: Union[list, None] = None) -> Union[(set, Union[set, None]), None]:
+                   modifyQueries: Union[list, None] = None) -> Union[Tuple[set, Union[set, None]], None]:
 
         if self.databaseSnapshot is None:
             return None
@@ -487,5 +473,5 @@ class LQLQueryBuilder:
         self.QUERIES_HISTORY[queryUID] = (selectClause, selectValue, sourceClause, sourceValues, conditionClauses,
                                           modifyQueries)
 
-        return returnValue, modifications
+        return returnValue, modifications  # TODO: return value check
 
