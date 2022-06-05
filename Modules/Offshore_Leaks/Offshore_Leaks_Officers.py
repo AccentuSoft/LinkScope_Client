@@ -39,9 +39,9 @@ class Offshore_Leaks_Officers:
             try:
                 df_list = pd.read_html(future.result().text)
             except requests.exceptions.ConnectionError:
-                return "Please check your internet connection"
+                return "Please check your internet connection."
             except ValueError:
-                return "We couldn't retrieve any results pls try a different search query."
+                return "No Offshore Leaks results for this query."
             df = df_list[0]
             df = df.iloc[:]
             # print(df, list(df))

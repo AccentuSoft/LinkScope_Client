@@ -39,9 +39,9 @@ class Offshore_Leaks_Addresses:
             try:
                 df_list = pd.read_html(future.result().text)
             except requests.exceptions.ConnectionError:
-                return "Please check your internet connection"
+                return "Please check your internet connection."
             except ValueError:
-                return "We couldn't retrieve any results, please try a different search query."
+                return "No Offshore Leaks results for this query."
             df = df_list[0]
             df = df.iloc[:, :-1]
             for Address in range(len(df[:max_results])):
