@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from typing import Union, Tuple
+from typing import Union, Optional, Any
 from uuid import uuid4
 import re
 import networkx as nx
@@ -14,7 +14,6 @@ This class handles the backend stuff for the LinkScope Query Language.
 
 
 class LQLQueryBuilder:
-
     QUERIES_HISTORY = {}
 
     databaseSnapshot = None
@@ -108,7 +107,7 @@ class LQLQueryBuilder:
                     if sourceValue[1] == "CANVAS":
                         if sourceValue[3] not in self.allCanvases:
                             raise ValueError('Reference to nonexistent canvas.')
-                        matchingCanvases = [sourceValue]
+                        matchingCanvases = [sourceValue[3]]
                     else:
                         canvasRegex = re.compile(sourceValue[3])
                         matchingCanvases = [canvasMatch for canvasMatch in self.allCanvases
@@ -119,7 +118,7 @@ class LQLQueryBuilder:
                 # Not the most efficient way of phrasing this, but by far the most compact and legible.
                 for matchingCanvas in matchingCanvases:
                     if sourceValue[0] == 'AND':
-                        if sourceValue[2] is False:
+                        if sourceValue[2] is True:
                             resultEntitySet = self.canvasAndNot(resultEntitySet,
                                                                 self.canvasesEntitiesDict[matchingCanvas])
                         else:
@@ -127,7 +126,7 @@ class LQLQueryBuilder:
                                                              self.canvasesEntitiesDict[matchingCanvas])
                     else:
                         # If this is the first clause, or'ing the empty initial resultEntitySet is what we want.
-                        if sourceValue[2] is False:
+                        if sourceValue[2] is True:
                             resultEntitySet = self.canvasOrNot(resultEntitySet,
                                                                self.canvasesEntitiesDict[matchingCanvas],
                                                                self.databaseEntities)
@@ -140,13 +139,13 @@ class LQLQueryBuilder:
     def parseConditions(self, conditionClauses: Union[None, list], entitiesPool) -> set:
         """
         conditionClauses:
-        [[("AND" | "OR" | None), ("VC" | "GC"), (True | False), conditionValue], ...]
+        [[("AND" | "OR" | None), ("Value Condition" | "Graph Condition"), (True | False), conditionValue], ...]
 
         conditionValue:
-            if VC:
+            if Value Condition:
                 [("ATTRIBUTE" | "RATTRIBUTE"), <User Input>,
                 ("EQ" | "CONTAINS" | "STARTSWITH" | "ENDSWITH" | "RMATCH"), <User Input>]
-            if GC:
+            if Graph Condition:
                 [("CHILDOF" <ENTITY> | "DESCENDANTOF " <ENTITY> |
                 "PARENTOF" <ENTITY> | "ANCESTOROF " <ENTITY> |
                 "NUMCHILDREN" (" < " | " <= " | " > " | " >= " | " == ") <DIGITS> |
@@ -160,10 +159,15 @@ class LQLQueryBuilder:
         for conditionClause in conditionClauses:
             isNot = conditionClause[2]
             conditionValue = conditionClause[3]
-            userInput1 = conditionValue[1]
-            userInput2 = conditionValue[3]
+            try:
+                userInput1 = conditionValue[1]
+                userInput2 = conditionValue[3]
+            except IndexError:
+                # Not used in cases where a Graph Condition is specified
+                userInput1 = None
+                userInput2 = None
             firstArgument = conditionValue[0]
-            if conditionClause[1] == "VC":
+            if conditionClause[1] == "Value Condition":
                 matchingFields = []
                 if firstArgument == "ATTRIBUTE":
                     if userInput1 in self.allEntityFields:
@@ -189,10 +193,10 @@ class LQLQueryBuilder:
                     for entityToRemove in entitiesToRemove:
                         uidsToSelect.remove(entityToRemove)
 
-            elif conditionClause[1] == "GC":
+            elif conditionClause[1] == "Graph Condition":
                 entitiesToRemove = []
                 for entity in self.allEntities:
-                    if not self.checkGCHelper(firstArgument, isNot, conditionValue[1:]):
+                    if not self.checkGCHelper(firstArgument, isNot, [entity] + conditionValue[1:]):
                         if conditionClause[0] == "AND":
                             entitiesToRemove.append(entity)
                     else:
@@ -435,12 +439,14 @@ class LQLQueryBuilder:
             for entity in self.allEntities:
                 for modifyField in modifyFields:
                     entityFieldValue = self.allEntities[entity].get(modifyField)
-                    if modificationType == "UPPERCASE":
-                        newFieldValue = self.modifyUpperCase(entityFieldValue) if entityFieldValue is not None else None
+                    if entityFieldValue is None:
+                        newFieldValue = None
+                    elif modificationType == "UPPERCASE":
+                        newFieldValue = self.modifyUpperCase(entityFieldValue)
                     elif modificationType == "LOWERCASE":
-                        newFieldValue = self.modifyLowerCase(entityFieldValue) if entityFieldValue is not None else None
+                        newFieldValue = self.modifyLowerCase(entityFieldValue)
                     elif modificationType == "NUMIFY":
-                        newFieldValue = self.modifyNumify(entityFieldValue) if entityFieldValue is not None else None
+                        newFieldValue = self.modifyNumify(entityFieldValue)
                         numifiedFields.add(modifyField)
                     else:
                         newFieldValue = None
@@ -452,7 +458,9 @@ class LQLQueryBuilder:
 
     def parseQuery(self, selectClause: str, selectValue: Union[str, list], sourceClause: str,
                    sourceValues: Union[None, list], conditionClauses: Union[None, list],
-                   modifyQueries: Union[list, None] = None) -> Union[Tuple[set, Union[set, None]], None]:
+                   modifyQueries: Union[list, None] = None) -> \
+            Optional[tuple[Optional[tuple[set, Union[set[Any], set[Union[str, Any]]]]],
+                           Optional[tuple[set[Any], set[Any]]]]]:
 
         if self.databaseSnapshot is None:
             return None
@@ -473,5 +481,4 @@ class LQLQueryBuilder:
         self.QUERIES_HISTORY[queryUID] = (selectClause, selectValue, sourceClause, sourceValues, conditionClauses,
                                           modifyQueries)
 
-        return returnValue, modifications  # TODO: return value check
-
+        return returnValue, modifications
