@@ -386,6 +386,7 @@ class ChildListWidget(QtWidgets.QListWidget):
     def __init__(self) -> None:
         super(ChildListWidget, self).__init__()
         self.setAlternatingRowColors(True)
+        self.setSortingEnabled(True)
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
         itemDragged = self.itemAt(event.pos())

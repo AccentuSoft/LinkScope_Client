@@ -884,7 +884,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.RESOURCEHANDLER.loadModuleEntities()
         modulesBasePath = Path(self.SETTINGS.value("Program/BaseDir")).joinpath("Modules")
         for module in listdir(modulesBasePath):
-            self.RESOLUTIONMANAGER.loadResolutionsFromDir(modulesBasePath / module)
+            try:
+                self.RESOLUTIONMANAGER.loadResolutionsFromDir(modulesBasePath / module)
+            except TypeError:
+                self.RESOLUTIONMANAGER.loadResolutionsFromDir(modulesBasePath / module.decode('utf-8'))
         self.dockbarOne.existingEntitiesPalette.loadEntities()
         self.dockbarOne.resolutionsPalette.loadAllResolutions()
         self.dockbarOne.nodesPalette.loadEntities()
@@ -2528,6 +2531,7 @@ class ResolutionParametersSelector(QtWidgets.QDialog):
             entitySelectTab.layout().addWidget(entitySelectTabLabel)
 
             self.entitySelector = QtWidgets.QListWidget()
+            self.entitySelector.setSortingEnabled(True)
             self.entitySelector.addItems(includeEntitySelector)
 
             self.entitySelector.setSelectionMode(self.entitySelector.MultiSelection)
@@ -3237,6 +3241,7 @@ class ResolutionSearchResultsList(QtWidgets.QListWidget):
     def __init__(self, mainWindowObject: MainWindow):
         super(ResolutionSearchResultsList, self).__init__()
         self.mainWindow = mainWindowObject
+        self.setSortingEnabled(True)
 
     def mouseDoubleClickEvent(self, event: QtGui.QMouseEvent) -> None:
         super(ResolutionSearchResultsList, self).mouseDoubleClickEvent(event)
