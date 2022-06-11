@@ -3660,6 +3660,18 @@ class QueryBuilderWizard(QtWidgets.QDialog):
         self.queryTabbedPane = QtWidgets.QTabWidget()
         dialogLayout.addWidget(self.queryTabbedPane)
 
+        buttonsWidget = QtWidgets.QWidget()
+        buttonsWidgetLayout = QtWidgets.QHBoxLayout()
+        buttonsWidget.setLayout(buttonsWidgetLayout)
+        exitButton = QtWidgets.QPushButton('Close')
+        exitButton.clicked.connect(self.accept)
+        runButton = QtWidgets.QPushButton('Run Query')
+        runButton.clicked.connect(self.runQuery)
+        buttonsWidgetLayout.addWidget(exitButton)
+        buttonsWidgetLayout.addWidget(runButton)
+        dialogLayout.addWidget(buttonsWidget)
+
+
         #### SELECT
         selectPane = QtWidgets.QWidget()
         selectPaneLayout = QtWidgets.QGridLayout()
@@ -3667,11 +3679,13 @@ class QueryBuilderWizard(QtWidgets.QDialog):
         self.selectStatementPicker = QtWidgets.QComboBox()
         self.selectStatementPicker.addItems(['SELECT', 'RSELECT'])
         self.selectStatementPicker.setEditable(False)  # Default, but it's nice to be explicit.
-        self.selectStatementPicker.currentTextChanged.connect(self.selectionModeSwitch)
+        self.selectStatementPicker.currentIndexChanged.connect(
+            lambda newIndex: self.selectStatementValuePickerLayout.setCurrentIndex(newIndex))
         selectStatementValuePickerWidget = QtWidgets.QWidget()
         self.selectStatementValuePickerLayout = QtWidgets.QStackedLayout()
         selectStatementValuePickerWidget.setLayout(self.selectStatementValuePickerLayout)
         self.selectStatementList = QtWidgets.QListWidget()
+        self.selectStatementList.setSortingEnabled(True)
         self.selectStatementList.setSelectionMode(QtWidgets.QListWidget.ExtendedSelection)
         self.selectStatementList.setToolTip('Highlight all the fields you wish to select.')
         self.selectStatementTextbox = QtWidgets.QLineEdit('')
@@ -3707,17 +3721,17 @@ class QueryBuilderWizard(QtWidgets.QDialog):
         self.sourceValuesArea.setDisabled(True)
         self.sourceValuesArea.setHidden(True)
 
-        buttonsWidget = QtWidgets.QWidget()
-        buttonsWidgetLayout = QtWidgets.QHBoxLayout()
-        buttonsWidget.setLayout(buttonsWidgetLayout)
-        self.addStatementButton = QtWidgets.QPushButton('Add Clause')
-        self.removeStatementButton = QtWidgets.QPushButton('Remove Last Clause')
-        self.addStatementButton.clicked.connect(self.addSourceClause)
-        self.removeStatementButton.clicked.connect(self.removeSourceClause)
-        buttonsWidgetLayout.addWidget(self.removeStatementButton)
-        buttonsWidgetLayout.addWidget(self.addStatementButton)
+        sourceButtonsWidget = QtWidgets.QWidget()
+        sourceButtonsWidgetLayout = QtWidgets.QHBoxLayout()
+        sourceButtonsWidget.setLayout(sourceButtonsWidgetLayout)
+        sourceAddStatementButton = QtWidgets.QPushButton('Add Clause')
+        sourceRemoveStatementButton = QtWidgets.QPushButton('Remove Last Clause')
+        sourceAddStatementButton.clicked.connect(self.addSourceClause)
+        sourceRemoveStatementButton.clicked.connect(self.removeSourceClause)
+        sourceButtonsWidgetLayout.addWidget(sourceRemoveStatementButton)
+        sourceButtonsWidgetLayout.addWidget(sourceAddStatementButton)
 
-        self.sourceValuesAreaWidgetLayout.addWidget(buttonsWidget)
+        self.sourceValuesAreaWidgetLayout.addWidget(sourceButtonsWidget)
 
         sourcePaneLayout.addWidget(QtWidgets.QLabel('Source: '), 0, 0, 1, 1)
         sourcePaneLayout.addWidget(self.sourceStatementPicker, 0, 1, 1, 1)
@@ -3727,16 +3741,69 @@ class QueryBuilderWizard(QtWidgets.QDialog):
         ####
 
         #### CONDITIONS
-        # TODO
+        conditionsPane = QtWidgets.QWidget()
+        conditionsPaneLayout = QtWidgets.QGridLayout()
+        conditionsPane.setLayout(conditionsPaneLayout)
+
+        self.conditionValues = []
+        self.conditionValuesArea = QtWidgets.QScrollArea()
+        self.conditionValuesArea.setWidgetResizable(True)
+        conditionValuesAreaWidget = QtWidgets.QWidget()
+        self.conditionValuesAreaWidgetLayout = QtWidgets.QVBoxLayout()
+        conditionValuesAreaWidget.setLayout(self.conditionValuesAreaWidgetLayout)
+        self.conditionValuesArea.setWidget(conditionValuesAreaWidget)
+
+        conditionsButtonsWidget = QtWidgets.QWidget()
+        conditionsButtonsWidgetLayout = QtWidgets.QHBoxLayout()
+        conditionsButtonsWidget.setLayout(conditionsButtonsWidgetLayout)
+        conditionsAddStatementButton = QtWidgets.QPushButton('Add Condition')
+        conditionsRemoveStatementButton = QtWidgets.QPushButton('Remove Last Condition')
+        conditionsAddStatementButton.clicked.connect(self.addConditionClause)
+        conditionsRemoveStatementButton.clicked.connect(self.removeConditionClause)
+        conditionsButtonsWidgetLayout.addWidget(conditionsRemoveStatementButton)
+        conditionsButtonsWidgetLayout.addWidget(conditionsAddStatementButton)
+
+        self.conditionValuesAreaWidgetLayout.addWidget(conditionsButtonsWidget)
+
+        conditionsPaneLayout.addWidget(QtWidgets.QLabel('Conditions: '), 0, 0, 1, 1)
+        conditionsPaneLayout.addWidget(self.conditionValuesArea, 0, 0, 2, 2)
+
+        self.queryTabbedPane.addTab(conditionsPane, 'Conditions')
         ####
 
-        self.updateValues()
+        #### MODIFY
+        modificationsPane = QtWidgets.QWidget()
+        modificationsPaneLayout = QtWidgets.QGridLayout()
+        modificationsPane.setLayout(modificationsPaneLayout)
 
-    def selectionModeSwitch(self, newText: str):
-        if newText == 'SELECT':
-            self.selectStatementValuePickerLayout.setCurrentIndex(0)
-        else:
-            self.selectStatementValuePickerLayout.setCurrentIndex(1)
+        self.modificationValues = []
+        self.modificationValuesArea = QtWidgets.QScrollArea()
+        self.modificationValuesArea.setWidgetResizable(True)
+        modificationValuesAreaWidget = QtWidgets.QWidget()
+        self.modificationValuesAreaWidgetLayout = QtWidgets.QVBoxLayout()
+        modificationValuesAreaWidget.setLayout(self.modificationValuesAreaWidgetLayout)
+        self.modificationValuesArea.setWidget(modificationValuesAreaWidget)
+
+        modificationsButtonsWidget = QtWidgets.QWidget()
+        modificationsButtonsWidgetLayout = QtWidgets.QHBoxLayout()
+        modificationsButtonsWidget.setLayout(modificationsButtonsWidgetLayout)
+        modificationsAddStatementButton = QtWidgets.QPushButton('Add Modification')
+        modificationsRemoveStatementButton = QtWidgets.QPushButton('Remove Last Modification')
+        modificationsAddStatementButton.clicked.connect(self.addModificationClause)
+        modificationsRemoveStatementButton.clicked.connect(self.removeModificationClause)
+        modificationsButtonsWidgetLayout.addWidget(modificationsRemoveStatementButton)
+        modificationsButtonsWidgetLayout.addWidget(modificationsAddStatementButton)
+
+        self.modificationValuesAreaWidgetLayout.addWidget(modificationsButtonsWidget)
+
+        modificationsPaneLayout.addWidget(QtWidgets.QLabel('Modifications: '), 0, 0, 1, 1)
+        modificationsPaneLayout.addWidget(self.modificationValuesArea, 0, 0, 2, 2)
+
+        self.queryTabbedPane.addTab(modificationsPane, 'Modifications')
+        ####
+
+        self.entityDropdownTriplets = []
+        self.updateValues()
 
     def sourceModeSwitch(self, newText: str):
         if newText == 'FROMDB':
@@ -3763,7 +3830,8 @@ class QueryBuilderWizard(QtWidgets.QDialog):
         negation = QtWidgets.QComboBox()
         negation.addItems(['MATCHES', 'DOES NOT MATCH'])
         inputDropdown = QtWidgets.QListWidget()
-        inputDropdown.setSelectionMode(QtWidgets.QListWidget.ExtendedSelection)
+        inputDropdown.setSortingEnabled(True)
+        inputDropdown.setSelectionMode(QtWidgets.QListWidget.SingleSelection)
         inputDropdown.addItems(self.mainWindowObject.LQLWIZARD.allCanvases)
         inputText = QtWidgets.QLineEdit('')
         inputWidget = QtWidgets.QWidget()
@@ -3781,11 +3849,9 @@ class QueryBuilderWizard(QtWidgets.QDialog):
         if self.sourceValuesAreaWidgetLayout.count() == 1:
             andOrClause.setDisabled(True)
             andOrClause.setToolTip('Cannot edit the set modifier of the first source clause.')
-            self.sourceValuesAreaWidgetLayout.insertWidget(0, clauseWidget)
-            self.sourceValues.append(clauseWidget)
-        else:
-            self.sourceValuesAreaWidgetLayout.insertWidget(1, clauseWidget)
-            self.sourceValues.append(clauseWidget)
+
+        self.sourceValues.append(clauseWidget)
+        self.sourceValuesAreaWidgetLayout.insertWidget(self.sourceValuesAreaWidgetLayout.count() - 1, clauseWidget)
 
     def removeSourceClause(self):
         if self.sourceValuesAreaWidgetLayout.count() != 1:
@@ -3793,6 +3859,74 @@ class QueryBuilderWizard(QtWidgets.QDialog):
             itemToDel = self.sourceValuesAreaWidgetLayout.takeAt(self.sourceValuesAreaWidgetLayout.count() - 2)
             itemToDel.widget().deleteLater()
             widgetToDel = self.sourceValues.pop()
+            widgetToDel.deleteLater()
+
+    def addConditionClause(self):
+
+        clauseWidget = ConditionClauseWidget(self)
+
+        if self.conditionValuesAreaWidgetLayout.count() == 1:
+            clauseWidget.andOrClause.setDisabled(True)
+            clauseWidget.andOrClause.setToolTip('Cannot edit the set modifier of the first condition clause.')
+        self.conditionValues.append(clauseWidget)
+        self.conditionValuesAreaWidgetLayout.insertWidget(self.conditionValuesAreaWidgetLayout.count() - 1,
+                                                          clauseWidget)
+
+    def removeConditionClause(self):
+        if self.conditionValuesAreaWidgetLayout.count() != 1:
+            # Remove clause that was added last.
+            itemToDel = self.conditionValuesAreaWidgetLayout.takeAt(self.conditionValuesAreaWidgetLayout.count() - 2)
+            itemToDel.widget().deleteLater()
+            widgetToDel = self.conditionValues.pop()
+            widgetToDel.deleteLater()
+
+    def addModificationClause(self):
+
+        clauseWidget = QtWidgets.QFrame()
+        clauseWidgetLayout = QtWidgets.QVBoxLayout()
+        clauseWidget.setLayout(clauseWidgetLayout)
+        clauseWidget.setFrameStyle(clauseWidget.Panel | clauseWidget.Raised)
+        clauseWidget.setLineWidth(3)
+
+        andOrClause = QtWidgets.QLabel('AND')
+        specifier = QtWidgets.QComboBox()
+        specifier.addItems(['MODIFY', 'RMODIFY'])
+
+        modifyOption = QtWidgets.QComboBox()
+        modifyOption.addItems(['NUMIFY', 'UPPERCASE', 'LOWERCASE'])
+
+        inputWidget = QtWidgets.QWidget()
+        inputWidgetLayout = QtWidgets.QStackedLayout()
+
+        inputDropdown = QtWidgets.QListWidget()
+        inputDropdown.setSortingEnabled(True)
+        inputDropdown.setSelectionMode(QtWidgets.QListWidget.ExtendedSelection)
+        inputDropdown.addItems(self.mainWindowObject.LQLWIZARD.allEntityFields)
+        inputText = QtWidgets.QLineEdit('')
+        inputWidget.setLayout(inputWidgetLayout)
+        inputWidgetLayout.addWidget(inputDropdown)
+        inputWidgetLayout.addWidget(inputText)
+        specifier.currentIndexChanged.connect(lambda newIndex: inputWidgetLayout.setCurrentIndex(newIndex))
+
+        clauseWidgetLayout.addWidget(andOrClause)
+        clauseWidgetLayout.addWidget(specifier)
+        clauseWidgetLayout.addWidget(inputWidget)
+        clauseWidgetLayout.addWidget(modifyOption)
+
+        if self.modificationValuesAreaWidgetLayout.count() == 1:
+            andOrClause.setDisabled(True)
+            andOrClause.setToolTip('Cannot edit the set modifier of the first source clause.')
+        self.modificationValues.append(clauseWidget)
+        self.modificationValuesAreaWidgetLayout.insertWidget(self.modificationValuesAreaWidgetLayout.count() - 1,
+                                                             clauseWidget)
+
+    def removeModificationClause(self):
+        if self.modificationValuesAreaWidgetLayout.count() != 1:
+            # Remove clause that was added last.
+            itemToDel = self.modificationValuesAreaWidgetLayout.takeAt(
+                self.modificationValuesAreaWidgetLayout.count() - 2)
+            itemToDel.widget().deleteLater()
+            widgetToDel = self.modificationValues.pop()
             widgetToDel.deleteLater()
 
     def updateValues(self):
@@ -3810,17 +3944,116 @@ class QueryBuilderWizard(QtWidgets.QDialog):
             itemToDel = self.sourceValuesAreaWidgetLayout.takeAt(0)
             itemToDel.widget().deleteLater()
 
-    def runQuery(self):
-        pass
+        for _ in range(len(self.conditionValues)):
+            widgetToDel = self.conditionValues.pop()
+            widgetToDel.deleteLater()
 
-    def showResults(self):
-        pass
-        # qResultsViewer = QueryResultsViewer(self.mainWindowObject)
+        for _ in range(self.conditionValuesAreaWidgetLayout.count() - 1):
+            itemToDel = self.conditionValuesAreaWidgetLayout.takeAt(0)
+            itemToDel.widget().deleteLater()
+
+        for _ in range(self.modificationValuesAreaWidgetLayout.count() - 1):
+            itemToDel = self.modificationValuesAreaWidgetLayout.takeAt(0)
+            itemToDel.widget().deleteLater()
+
+        for _ in range(len(self.modificationValues)):
+            widgetToDel = self.modificationValues.pop()
+            widgetToDel.deleteLater()
+
+        self.entityDropdownTriplets.clear()
+        for entityUID in self.mainWindowObject.LQLWIZARD.databaseSnapshot.nodes:
+            nodeDetails = self.mainWindowObject.LQLWIZARD.databaseSnapshot.nodes[entityUID]
+            newItem = QtWidgets.QTreeWidgetItem()
+            newItem.setText(0, nodeDetails[list(nodeDetails)[1]])
+            newItem.setText(1, entityUID)
+            pixmapIcon = QtGui.QPixmap()
+            pixmapIcon.loadFromData(nodeDetails['Icon'])
+            newItem.setIcon(2, pixmapIcon)
+            self.entityDropdownTriplets.append(newItem)
+
+    def runQuery(self):
+        # Results
+        sourceResults = []
+        for sourceValue in self.sourceValues:
+            sourceResult = [sourceValue.layout().itemAt(0).widget().currentText(),
+                            sourceValue.layout().itemAt(1).widget().currentText(),
+                            False if sourceValue.layout().itemAt(2).widget().currentText() == 'MATCHES' else True]
+            if sourceValue.layout().itemAt(3).widget().layout().currentIndex() == 0:
+                try:
+                    sourceResult.append(
+                        sourceValue.layout().itemAt(3).widget().layout().itemAt(0).widget().selectedItems()[0].text())
+                except IndexError:
+                    continue
+            else:
+                sourceResult.append(sourceValue.layout().itemAt(3).widget().layout().itemAt(1).widget().text())
+            sourceResults.append(sourceResult)
+
+        conditionResults = []
+        for conditionValue in self.conditionValues:
+            conditionResult = conditionValue.getValue()
+            if conditionResult is not None:
+                conditionResults.append(conditionResult)
+        if not conditionResults:
+            conditionResults = None
+
+        modificationResults = []
+        for modificationValue in self.modificationValues:
+            modificationResult = []
+            specifierText = modificationValue.layout().itemAt(1).widget().currentText()
+            modificationResult.append(specifierText)
+            if specifierText == 'MODIFY':
+                try:
+                    modificationResult.append(
+                        modificationValue.layout().itemAt(2).widget().layout().itemAt(0).widget().selectedItems()[0].text())
+                except IndexError:
+                    continue
+            else:
+                modificationResult.append(
+                    modificationValue.layout().itemAt(2).widget().layout().itemAt(1).widget().text())
+            modificationResult.append(modificationValue.layout().itemAt(3).widget().currentText())
+            modificationResults.append(modificationResult)
+        if not modificationResults:
+            modificationResults = None
+
+        currentSelectStatement = self.selectStatementPicker.currentText()
+        if currentSelectStatement == 'SELECT':
+            selectedFields = []
+            for item in self.selectStatementList.selectedItems():
+                selectedFields.append(item.text())
+        else:
+            selectedFields = self.selectStatementTextbox.text()
+        sourceStatement = self.sourceStatementPicker.currentText()
+        sourceListOrNone = None if sourceStatement == 'FROMDB' else sourceResults
+
+        print(currentSelectStatement, selectedFields, sourceStatement, sourceListOrNone, conditionResults,
+              modificationResults)
+
+        resultsSet, modificationsSet = self.mainWindowObject.LQLWIZARD.parseQuery(currentSelectStatement,
+                                                                                  selectedFields, sourceStatement,
+                                                                                  sourceListOrNone, conditionResults,
+                                                                                  modificationResults)
+
+        self.showResults(resultsSet, modificationsSet)
+
+    def showResults(self, resultsSet, modificationsSet):
+        if not resultsSet:
+            self.mainWindowObject.MESSAGEHANDLER.warning('Query returned no results.', popUp=True)
+            return
+
+        if modificationsSet:
+            numified = modificationsSet[1]
+        else:
+            numified = None
+
+        qResultsViewer = QueryResultsViewer(self.mainWindowObject, self.mainWindowObject.LQLWIZARD.allEntities,
+                                            resultsSet[0], resultsSet[1], numified)
+        qResultsViewer.exec()
 
 
 class QueryResultsViewer(QtWidgets.QDialog):
 
-    def __init__(self, mainWindowObject: MainWindow, entitiesDict: dict, selectedUIDs: set, selectedFields: set):
+    def __init__(self, mainWindowObject: MainWindow, entitiesDict: dict, selectedUIDs: set, selectedFields: set,
+                 numifiedFields: set):
         super(QueryResultsViewer, self).__init__()
         self.mainWindowObject = mainWindowObject
         self.setModal(True)
@@ -3832,20 +4065,27 @@ class QueryResultsViewer(QtWidgets.QDialog):
         self.resultsTabbedPane = QtWidgets.QTabWidget(self)
         dialogLayout.addWidget(self.resultsTabbedPane, 0, 0, 2, 2)
 
-        self.resultsTable = QtWidgets.QTableWidget()
         headerFields = list(selectedFields)
         try:
             headerFields.remove('uid')
         except ValueError:
             pass
         headerFields.insert(0, 'uid')
+
+        # -1 to selectedUIDs, otherwise we have an empty line at the end.
+        self.resultsTable = QtWidgets.QTableWidget(len(selectedUIDs) - 1, len(headerFields), self)
         self.resultsTable.setHorizontalHeaderLabels(headerFields)
+        self.resultsTable.setAcceptDrops(False)
+        self.resultsTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.resultsTable.verticalHeader().setCascadingSectionResizes(True)
+        for index in range(1, len(headerFields)):
+            self.resultsTable.horizontalHeader().setSectionResizeMode(index, QtWidgets.QHeaderView.Stretch)
 
         count = 0
         for uid in selectedUIDs:
             self.resultsTable.insertRow(count)
             for index, field in enumerate(headerFields):
-                self.resultsTable.setItem(count, index, entitiesDict[uid][field])  # TODO Check that this works
+                self.resultsTable.setItem(count, index, QtWidgets.QTableWidgetItem(str(entitiesDict[uid][field])))
             count += 1
 
         self.resultsTabbedPane.addTab(self.resultsTable, 'Table')
@@ -3905,6 +4145,133 @@ class QueryResultsViewer(QtWidgets.QDialog):
                                                        'Please create the required parent directories and try again.',
                                                        popUp=True, exc_info=False)
             return False
+
+
+class ConditionClauseWidget(QtWidgets.QFrame):
+
+    def __init__(self, parentWizard: QueryBuilderWizard):
+        super(ConditionClauseWidget, self).__init__()
+        clauseWidgetLayout = QtWidgets.QVBoxLayout()
+        self.setLayout(clauseWidgetLayout)
+        self.setFrameStyle(self.Panel | self.Raised)
+        self.setLineWidth(3)
+
+        self.andOrClause = QtWidgets.QComboBox()
+        self.andOrClause.addItems(['OR', 'AND'])
+        self.specifier = QtWidgets.QComboBox()
+        self.specifier.addItems(['Value Condition', 'Graph Condition'])
+        self.negation = QtWidgets.QComboBox()
+        self.negation.addItems(['MATCHES', 'DOES NOT MATCH'])
+
+        inputWidget = QtWidgets.QWidget()
+        inputWidgetLayout = QtWidgets.QStackedLayout()
+        inputWidget.setLayout(inputWidgetLayout)
+
+        vcWidget = QtWidgets.QFrame()
+        vcWidgetLayout = QtWidgets.QVBoxLayout()
+        vcWidget.setLayout(vcWidgetLayout)
+
+        valueInputDropdownAttr = QtWidgets.QComboBox()
+        valueInputDropdownAttr.addItems(["ATTRIBUTE", "RATTRIBUTE"])
+        userInputDropdownAttr = QtWidgets.QLineEdit('')
+        valueInputDropdownCondition = QtWidgets.QComboBox()
+        valueInputDropdownCondition.addItems(["EQ", "CONTAINS", "STARTSWITH", "ENDSWITH", "RMATCH"])
+        userInputDropdownCondition = QtWidgets.QLineEdit('')
+
+        vcWidgetLayout.addWidget(valueInputDropdownAttr)
+        vcWidgetLayout.addWidget(userInputDropdownAttr)
+        vcWidgetLayout.addWidget(valueInputDropdownCondition)
+        vcWidgetLayout.addWidget(userInputDropdownCondition)
+
+        gcWidget = QtWidgets.QFrame()
+        gcWidgetLayout = QtWidgets.QVBoxLayout()
+        gcWidget.setLayout(gcWidgetLayout)
+
+        graphDropdownCondition = QtWidgets.QComboBox()
+        graphDropdownCondition.addItems(['CHILDOF', 'DESCENDANTOF', 'PARENTOF', 'ANCESTOROF', 'CONNECTEDTO',
+                                         'NUMCHILDREN', 'NUMPARENTS', 'ISOLATED', 'ISROOT', 'ISLEAF'])
+        gcWidgetLayout.addWidget(graphDropdownCondition)
+
+        gcSecondaryInput = QtWidgets.QWidget()
+        self.gcSecondaryInputLayout = QtWidgets.QStackedLayout()
+        gcSecondaryInput.setLayout(self.gcSecondaryInputLayout)
+
+        graphEntitiesDropdown = QtWidgets.QTreeWidget()
+        graphEntitiesDropdown.setHeaderLabels(['Primary Field', 'UID', 'Icon'])
+        graphEntitiesDropdown.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        graphEntitiesDropdown.addTopLevelItems(parentWizard.entityDropdownTriplets)
+
+        self.gcSecondaryInputLayout.addWidget(graphEntitiesDropdown)
+
+        graphNumComparisonsWidget = QtWidgets.QWidget()
+        graphNumComparisonsWidgetLayout = QtWidgets.QHBoxLayout()
+        graphNumComparisonsWidget.setLayout(graphNumComparisonsWidgetLayout)
+
+        graphNumComparisonDropdown = QtWidgets.QComboBox()
+        graphNumComparisonDropdown.addItems(['<', '<=', '>', '>=', '=='])
+        graphNumInput = QtWidgets.QSpinBox()
+        graphNumInput.setMinimum(0)
+        graphNumInput.setMaximum(1000000)  # Can be adjusted higher if need be.
+        graphNumInput.setValue(0)
+        graphNumComparisonsWidgetLayout.addWidget(graphNumComparisonDropdown)
+        graphNumComparisonsWidgetLayout.addWidget(graphNumInput)
+
+        self.gcSecondaryInputLayout.addWidget(graphNumComparisonsWidget)
+
+        emptyWidget = QtWidgets.QWidget()
+        self.gcSecondaryInputLayout.addWidget(emptyWidget)
+
+        gcWidgetLayout.addWidget(gcSecondaryInput)
+
+        inputWidgetLayout.addWidget(vcWidget)
+        inputWidgetLayout.addWidget(gcWidget)
+        self.specifier.currentIndexChanged.connect(lambda newIndex: inputWidgetLayout.setCurrentIndex(newIndex))
+        graphDropdownCondition.currentIndexChanged.connect(self.determineSecondaryInput)
+
+        clauseWidgetLayout.addWidget(self.andOrClause)
+        clauseWidgetLayout.addWidget(self.specifier)
+        clauseWidgetLayout.addWidget(self.negation)
+        clauseWidgetLayout.addWidget(inputWidget)
+
+    def determineSecondaryInput(self, conditionIndex: int):
+        if conditionIndex < 5:
+            self.gcSecondaryInputLayout.setCurrentIndex(0)
+        elif conditionIndex < 7:
+            self.gcSecondaryInputLayout.setCurrentIndex(1)
+        else:
+            self.gcSecondaryInputLayout.setCurrentIndex(2)
+
+    def getValue(self):
+        specifierValue = self.specifier.currentText()
+        returnValues = [self.andOrClause.currentText(),
+                        specifierValue]
+        if self.negation.currentText() == 'MATCHES':
+            returnValues.append(False)
+        else:
+            returnValues.append(True)
+        conditionValue = []
+
+        if specifierValue == 'Value Condition':
+            conditionValue.append(self.layout().itemAt(3).widget().layout().itemAt(0).widget().layout().itemAt(0).widget().currentText())
+            conditionValue.append(self.layout().itemAt(3).widget().layout().itemAt(0).widget().layout().itemAt(1).widget().text())
+            conditionValue.append(self.layout().itemAt(3).widget().layout().itemAt(0).widget().layout().itemAt(2).widget().currentText())
+            conditionValue.append(self.layout().itemAt(3).widget().layout().itemAt(0).widget().layout().itemAt(3).widget().text())
+        else:
+            conditionValue.append(self.layout().itemAt(3).widget().layout().itemAt(1).widget().layout().itemAt(0).widget().currentText())
+            if self.gcSecondaryInputLayout.currentIndex() == 0:
+                try:
+                    conditionValue.append(self.gcSecondaryInputLayout.itemAt(0).widget().selectedItems()[0].text())
+                except IndexError:
+                    return None
+            elif self.gcSecondaryInputLayout.currentIndex() == 1:
+                conditionValue.append(
+                    self.gcSecondaryInputLayout.itemAt(1).widget().layout().itemAt(0).widget().currentText())
+                conditionValue.append(
+                    self.gcSecondaryInputLayout.itemAt(1).widget().layout().itemAt(1).widget().value())
+
+        returnValues.append(conditionValue)
+
+        return returnValues
 
 
 if __name__ == '__main__':
