@@ -14,8 +14,10 @@ from ast import literal_eval
 from base64 import b64decode
 from dateutil import parser
 
-from PySide6.QtGui import QIcon
-from PySide6.QtCore import QByteArray
+from PySide6.QtCore import QByteArray, QSize
+from PySide6 import QtWidgets, QtGui
+
+from Core.Interface import Stylesheets
 
 
 class ResourceHandler:
@@ -357,11 +359,11 @@ class ResourceHandler:
 
     def getLinkPicture(self):
         picture = Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) / "Resources" / "Icons" / "Resolution.png"
-        return QIcon(str(picture)).pixmap(40, 40)
+        return QtGui.QIcon(str(picture)).pixmap(40, 40)
 
     def getLinkArrowPicture(self):
         picture = Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) / "Resources" / "Icons" / "Right-Arrow.svg"
-        return QIcon(str(picture)).pixmap(40, 40)
+        return QtGui.QIcon(str(picture)).pixmap(40, 40)
 
     def deconstructGraph(self, graph: nx.DiGraph) -> tuple:
         nodes = {}
@@ -416,3 +418,114 @@ class ResourceHandler:
             returnGraph.add_edge(*edgeUID, **graphEdges[edge])
 
         return returnGraph
+
+
+class StringPropertyInput(QtWidgets.QLineEdit):
+
+    def __init__(self, placeholderText, defaultText):
+        super(StringPropertyInput, self).__init__()
+        self.setPlaceholderText(placeholderText)
+        if defaultText is not None:
+            self.setText(defaultText)
+
+    def getValue(self):
+        return self.text()
+
+
+class FilePropertyInput(QtWidgets.QLineEdit):
+
+    def __init__(self, placeholderText, defaultText):
+        super(FilePropertyInput, self).__init__()
+        self.setPlaceholderText(placeholderText)
+        if defaultText is not None:
+            self.setText(defaultText)
+        self.fileDialog = QtWidgets.QFileDialog()
+
+    def getValue(self):
+        return self.text()
+
+    def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
+        fileChosen = self.fileDialog.getOpenFileName(self,
+                                                     "Open File",
+                                                     str(Path.home()),
+                                                     options=QtWidgets.QFileDialog.DontUseNativeDialog)
+        self.setText(fileChosen[0])
+
+
+class SingleChoicePropertyInput(QtWidgets.QGroupBox):
+
+    def __init__(self, optionsSet: set, defaultOption):
+        # Ensure that the options given are an actual set (i.e. each one is unique)
+        enforceOptionsSet = set(optionsSet)
+        super(SingleChoicePropertyInput, self).__init__(title='Option Selection')
+        vboxLayout = QtWidgets.QVBoxLayout()
+        self.setLayout(vboxLayout)
+
+        self.options = []
+        if defaultOption is None:
+            defaultOption = ''
+
+        for option in enforceOptionsSet:
+            radioButton = QtWidgets.QRadioButton(option)
+            radioButton.setStyleSheet(Stylesheets.RADIO_BUTTON_STYLESHEET)
+            if option == defaultOption:
+                radioButton.setChecked(True)
+            else:
+                radioButton.setChecked(False)
+            self.options.append(radioButton)
+            vboxLayout.addWidget(radioButton)
+
+    def getValue(self):
+        for option in self.options:
+            if option.isChecked():
+                return option.text()
+
+        return ''
+
+
+class MultiChoicePropertyInput(QtWidgets.QGroupBox):
+
+    def __init__(self, optionsSet: set, defaultOptions):
+        # Ensure that the options given are an actual set (i.e. each one is unique)
+        enforceOptionsSet = set(optionsSet)
+        super(MultiChoicePropertyInput, self).__init__(title='Option Selection')
+        vboxLayout = QtWidgets.QVBoxLayout()
+        self.setLayout(vboxLayout)
+
+        self.options = []
+        if defaultOptions is None:
+            defaultOptions = []
+
+        for option in enforceOptionsSet:
+            checkBox = QtWidgets.QCheckBox(option)
+            checkBox.setStyleSheet(Stylesheets.CHECK_BOX_STYLESHEET)
+            if option in defaultOptions:
+                checkBox.setChecked(True)
+            else:
+                checkBox.setChecked(False)
+            self.options.append(checkBox)
+            vboxLayout.addWidget(checkBox)
+
+    def getValue(self):
+        valuesSelected = []
+        for option in self.options:
+            if option.isChecked():
+                valuesSelected.append(option.text())
+
+        return valuesSelected
+
+
+class MinSizeStackedLayout(QtWidgets.QStackedLayout):
+    """
+    Resize the layout to always take up the appropriate space for the currently selected widget.
+    Otherwise, large widgets (due to selecting entities with long strings of text) will stretch
+    out the ScrollArea and make the other, non-selected widgets to look bad when the layout
+    switches over.
+
+    https://stackoverflow.com/a/34300567
+    """
+    def sizeHint(self) -> QSize:
+        return self.currentWidget().sizeHint()
+
+    def minimumSize(self) -> QSize:
+        return self.currentWidget().minimumSize()

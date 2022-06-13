@@ -4,6 +4,7 @@ from pathlib import Path
 import magic
 from PySide6 import QtWidgets, QtCore, QtGui
 from Core.Interface import Stylesheets
+from Core.ResourceHandler import MinSizeStackedLayout
 
 
 class DockBarTwo(QtWidgets.QDockWidget):
@@ -375,22 +376,6 @@ class EntityDetails(QtWidgets.QWidget):
                 self.nodeLinkL.setCurrentIndex(1)
         else:
             self.detailsLayout.setCurrentIndex(2)
-
-
-class MinSizeStackedLayout(QtWidgets.QStackedLayout):
-    """
-    Resize the layout to always take up the appropriate space for the currently selected widget.
-    Otherwise, large widgets (due to selecting entities with long strings of text) will stretch
-    out the ScrollArea and make the other, non-selected widgets to look bad when the layout
-    switches over.
-
-    https://stackoverflow.com/a/34300567
-    """
-    def sizeHint(self) -> QtCore.QSize:
-        return self.currentWidget().sizeHint()
-
-    def minimumSize(self) -> QtCore.QSize:
-        return self.currentWidget().minimumSize()
 
 
 class SingleLinkItem(QtWidgets.QWidget):

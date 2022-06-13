@@ -29,7 +29,7 @@ from PySide6 import QtWidgets, QtGui, QtCore
 from Core.GlobalVariables import user_agents
 from Core.Interface import Stylesheets
 from Core.Interface.Entity import BaseNode
-from Core.ResolutionManager import StringPropertyInput, FilePropertyInput, SingleChoicePropertyInput, \
+from Core.ResourceHandler import StringPropertyInput, FilePropertyInput, SingleChoicePropertyInput, \
     MultiChoicePropertyInput
 
 

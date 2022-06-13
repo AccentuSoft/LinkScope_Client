@@ -29,7 +29,7 @@ from Core import EntityDB
 from Core import ResolutionManager
 from Core import URLManager
 from Core import FrontendCommunicationsHandler
-from Core.ResolutionManager import StringPropertyInput, FilePropertyInput, SingleChoicePropertyInput, \
+from Core.ResourceHandler import StringPropertyInput, FilePropertyInput, SingleChoicePropertyInput, \
     MultiChoicePropertyInput
 from Core.Interface import CentralPane
 from Core.Interface import DockBarOne, DockBarTwo, DockBarThree
