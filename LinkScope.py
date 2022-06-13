@@ -3823,6 +3823,7 @@ class QueryBuilderWizard(QtWidgets.QDialog):
         self.queryNewOrHistory.addTab(self.historyTable, 'History')
 
         self.updateValues()
+        self.resize(1000, 600)
 
     def sourceModeSwitch(self, newText: str):
         if newText == 'FROMDB':
