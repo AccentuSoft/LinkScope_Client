@@ -404,7 +404,12 @@ class LQLQueryBuilder:
             else:
                 break
 
-        return str(float(tempString[count:count + count2]))
+        # If there are no numbers in the string, its numeric value is 0.
+        try:
+            floatValue = float(tempString[count:count + count2])
+        except ValueError:
+            floatValue = 0.0
+        return str(floatValue)
 
     def modifyUpperCase(self, valueA: str):
         return valueA.upper()
