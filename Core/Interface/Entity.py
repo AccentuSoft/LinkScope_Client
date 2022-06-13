@@ -184,10 +184,13 @@ class GroupNode(BaseNode):
         incomingLinks = self.scene().parent().entityDB.getIncomingLinks(uid)
         outgoingLinks = self.scene().parent().entityDB.getOutgoingLinks(uid)
 
+        # Suppress exceptions, as these give false alarms when initially drawing the graph on the canvas.
         for link in incomingLinks:
-            self.scene().addLinkProgrammatic(link, self.scene().parent().entityDB.getLink(link)['Resolution'])
+            self.scene().addLinkProgrammatic(link, self.scene().parent().entityDB.getLink(link)['Resolution'],
+                                             suppressNonExistentEntityException=True)
         for link in outgoingLinks:
-            self.scene().addLinkProgrammatic(link, self.scene().parent().entityDB.getLink(link)['Resolution'])
+            self.scene().addLinkProgrammatic(link, self.scene().parent().entityDB.getLink(link)['Resolution'],
+                                             suppressNonExistentEntityException=True)
 
     def removeSpecificItemFromGroupIfExists(self, uid) -> bool:
         if uid in self.groupedNodesUid:

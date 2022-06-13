@@ -1629,13 +1629,14 @@ class CanvasScene(QtWidgets.QGraphicsScene):
         if not fromServer:
             self.parent().mainWindow.sendLocalCanvasUpdateToServer(self.getSelfName(), linkUID)
 
-    def addLinkProgrammatic(self, uid: tuple, name: str = 'None', fromServer: bool = False) -> None:
+    def addLinkProgrammatic(self, uid: tuple, name: str = 'None', fromServer: bool = False,
+                            suppressNonExistentEntityException: bool = False) -> None:
         if uid is None:
             self.parent().messageHandler.error("Cannot add link to canvas: Invalid link UID.")
             return
 
-        parentItem = self.getVisibleNodeForUID(uid[0])
-        childItem = self.getVisibleNodeForUID(uid[1])
+        parentItem = self.getVisibleNodeForUID(uid[0], suppressNonExistentEntityException)
+        childItem = self.getVisibleNodeForUID(uid[1], suppressNonExistentEntityException)
         if parentItem is None or childItem is None:
             return
 
@@ -1653,12 +1654,13 @@ class CanvasScene(QtWidgets.QGraphicsScene):
         if not fromServer:
             self.parent().mainWindow.sendLocalCanvasUpdateToServer(self.getSelfName(), uid)
 
-    def getVisibleNodeForUID(self, uid: str):
+    def getVisibleNodeForUID(self, uid: str, suppressNonExistentEntityException: bool = False):
         """
         This gets the node on the canvas that the uid corresponds to, or the visible group node that the entity
         with the given uid is in.
 
         :param uid:
+        :param suppressNonExistentEntityException: Suppresses errors where entities that should exist, do not (yet).
         :return:
         """
         # There is an assumption made here: That a canvas that contains a grouped node will also contain the group
@@ -1673,8 +1675,9 @@ class CanvasScene(QtWidgets.QGraphicsScene):
             try:
                 return self.nodesDict[uid]
             except KeyError:
-                self.parent().messageHandler.error('Canvas state is undefined: Tried to get a node not present in the '
-                                                   'canvas, uid: ' + str(uid))
+                if not suppressNonExistentEntityException:
+                    self.parent().messageHandler.error('Canvas state may be undefined: Tried to get a node not '
+                                                       'present in the canvas, with uid: ' + str(uid))
         return None
 
     def getVisibleLinkForUID(self, uid: tuple):
