@@ -6,6 +6,8 @@ import sys
 import tempfile
 import threading
 import time
+import csv
+import statistics
 
 import networkx as nx
 from ast import literal_eval
@@ -3657,18 +3659,22 @@ class QueryBuilderWizard(QtWidgets.QDialog):
         self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         dialogLayout = QtWidgets.QGridLayout()
         self.setLayout(dialogLayout)
+
+        # Add a tab to create a new query, and a tab to re-run old queries.
+        self.queryNewOrHistory = QtWidgets.QTabWidget()
         self.queryTabbedPane = QtWidgets.QTabWidget()
-        dialogLayout.addWidget(self.queryTabbedPane)
+        self.queryNewOrHistory.addTab(self.queryTabbedPane, 'New Query')
+        dialogLayout.addWidget(self.queryNewOrHistory)
 
         buttonsWidget = QtWidgets.QWidget()
         buttonsWidgetLayout = QtWidgets.QHBoxLayout()
         buttonsWidget.setLayout(buttonsWidgetLayout)
         exitButton = QtWidgets.QPushButton('Close')
         exitButton.clicked.connect(self.accept)
-        runButton = QtWidgets.QPushButton('Run Query')
-        runButton.clicked.connect(self.runQuery)
+        self.runButton = QtWidgets.QPushButton('Run Query')
+        self.runButton.clicked.connect(self.runButtonPressed)
         buttonsWidgetLayout.addWidget(exitButton)
-        buttonsWidgetLayout.addWidget(runButton)
+        buttonsWidgetLayout.addWidget(self.runButton)
         dialogLayout.addWidget(buttonsWidget)
 
 
@@ -3803,6 +3809,19 @@ class QueryBuilderWizard(QtWidgets.QDialog):
         ####
 
         self.entityDropdownTriplets = []
+
+        self.historyTable = QtWidgets.QTableWidget(0, 7, self)
+        self.historyTable.setSelectionBehavior(self.historyTable.SelectRows)
+        self.historyTable.setSelectionMode(self.historyTable.SingleSelection)
+        self.historyTable.setAcceptDrops(False)
+        self.historyTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.historyTable.verticalHeader().setCascadingSectionResizes(True)
+        for index in range(1, 7):
+            self.historyTable.horizontalHeader().setSectionResizeMode(index, QtWidgets.QHeaderView.Stretch)
+        self.historyTable.setHorizontalHeaderLabels(['Query UID', 'Select Clause', 'Select Value(s)', 'Source Clause',
+                                                     'Source Value(s)', 'Condition Clause(s)', 'Modification Values'])
+        self.queryNewOrHistory.addTab(self.historyTable, 'History')
+
         self.updateValues()
 
     def sourceModeSwitch(self, newText: str):
@@ -3900,7 +3919,7 @@ class QueryBuilderWizard(QtWidgets.QDialog):
 
         inputDropdown = QtWidgets.QListWidget()
         inputDropdown.setSortingEnabled(True)
-        inputDropdown.setSelectionMode(QtWidgets.QListWidget.ExtendedSelection)
+        inputDropdown.setSelectionMode(QtWidgets.QListWidget.SingleSelection)
         inputDropdown.addItems(self.mainWindowObject.LQLWIZARD.allEntityFields)
         inputText = QtWidgets.QLineEdit('')
         inputWidget.setLayout(inputWidgetLayout)
@@ -3928,6 +3947,14 @@ class QueryBuilderWizard(QtWidgets.QDialog):
             itemToDel.widget().deleteLater()
             widgetToDel = self.modificationValues.pop()
             widgetToDel.deleteLater()
+
+    def runButtonPressed(self):
+        if self.runButton.text() == 'Run Query':
+            self.runButton.setText('Reset Query Wizard')
+            self.runQuery()
+        else:
+            self.updateValues()
+            self.runButton.setText('Run Query')
 
     def updateValues(self):
         self.mainWindowObject.LQLWIZARD.takeSnapshot()
@@ -3971,67 +3998,84 @@ class QueryBuilderWizard(QtWidgets.QDialog):
             newItem.setIcon(2, pixmapIcon)
             self.entityDropdownTriplets.append(newItem)
 
+        for _ in range(self.historyTable.rowCount()):
+            self.historyTable.removeRow(0)
+
+        for oldQueryUID in self.mainWindowObject.LQLWIZARD.QUERIES_HISTORY:
+            self.historyTable.insertRow(0)
+            self.historyTable.setItem(0, 0, QtWidgets.QTableWidgetItem(str(oldQueryUID)))
+            for valueIndex in range(6):
+                self.historyTable.setItem(0, valueIndex + 1, QtWidgets.QTableWidgetItem(
+                    str(self.mainWindowObject.LQLWIZARD.QUERIES_HISTORY[oldQueryUID][valueIndex])))
+
     def runQuery(self):
         # Results
-        sourceResults = []
-        for sourceValue in self.sourceValues:
-            sourceResult = [sourceValue.layout().itemAt(0).widget().currentText(),
-                            sourceValue.layout().itemAt(1).widget().currentText(),
-                            False if sourceValue.layout().itemAt(2).widget().currentText() == 'MATCHES' else True]
-            if sourceValue.layout().itemAt(3).widget().layout().currentIndex() == 0:
-                try:
-                    sourceResult.append(
-                        sourceValue.layout().itemAt(3).widget().layout().itemAt(0).widget().selectedItems()[0].text())
-                except IndexError:
-                    continue
-            else:
-                sourceResult.append(sourceValue.layout().itemAt(3).widget().layout().itemAt(1).widget().text())
-            sourceResults.append(sourceResult)
+        if self.queryNewOrHistory.currentIndex() == 0:
+            sourceResults = []
+            for sourceValue in self.sourceValues:
+                sourceResult = [sourceValue.layout().itemAt(0).widget().currentText(),
+                                sourceValue.layout().itemAt(1).widget().currentText(),
+                                False if sourceValue.layout().itemAt(2).widget().currentText() == 'MATCHES' else True]
+                if sourceValue.layout().itemAt(3).widget().layout().currentIndex() == 0:
+                    try:
+                        sourceResult.append(
+                            sourceValue.layout().itemAt(3).widget().layout().itemAt(0).widget().selectedItems()[0].text())
+                    except IndexError:
+                        continue
+                else:
+                    sourceResult.append(sourceValue.layout().itemAt(3).widget().layout().itemAt(1).widget().text())
+                sourceResults.append(sourceResult)
 
-        conditionResults = []
-        for conditionValue in self.conditionValues:
-            conditionResult = conditionValue.getValue()
-            if conditionResult is not None:
-                conditionResults.append(conditionResult)
-        if not conditionResults:
-            conditionResults = None
+            conditionResults = []
+            for conditionValue in self.conditionValues:
+                conditionResult = conditionValue.getValue()
+                if conditionResult is not None:
+                    conditionResults.append(conditionResult)
+            if not conditionResults:
+                conditionResults = None
 
-        modificationResults = []
-        for modificationValue in self.modificationValues:
-            modificationResult = []
-            specifierText = modificationValue.layout().itemAt(1).widget().currentText()
-            modificationResult.append(specifierText)
-            if specifierText == 'MODIFY':
-                try:
+            modificationResults = []
+            for modificationValue in self.modificationValues:
+                modificationResult = []
+                specifierText = modificationValue.layout().itemAt(1).widget().currentText()
+                modificationResult.append(specifierText)
+                if specifierText == 'MODIFY':
+                    try:
+                        modificationResult.append(
+                            modificationValue.layout().itemAt(2).widget().layout().itemAt(0).widget().selectedItems()[0].text())
+                    except IndexError:
+                        continue
+                else:
                     modificationResult.append(
-                        modificationValue.layout().itemAt(2).widget().layout().itemAt(0).widget().selectedItems()[0].text())
-                except IndexError:
-                    continue
+                        modificationValue.layout().itemAt(2).widget().layout().itemAt(1).widget().text())
+                modificationResult.append(modificationValue.layout().itemAt(3).widget().currentText())
+                modificationResults.append(modificationResult)
+            if not modificationResults:
+                modificationResults = None
+
+            currentSelectStatement = self.selectStatementPicker.currentText()
+            if currentSelectStatement == 'SELECT':
+                selectedFields = []
+                for item in self.selectStatementList.selectedItems():
+                    selectedFields.append(item.text())
             else:
-                modificationResult.append(
-                    modificationValue.layout().itemAt(2).widget().layout().itemAt(1).widget().text())
-            modificationResult.append(modificationValue.layout().itemAt(3).widget().currentText())
-            modificationResults.append(modificationResult)
-        if not modificationResults:
-            modificationResults = None
+                selectedFields = self.selectStatementTextbox.text()
+            sourceStatement = self.sourceStatementPicker.currentText()
+            sourceListOrNone = None if sourceStatement == 'FROMDB' else sourceResults
 
-        currentSelectStatement = self.selectStatementPicker.currentText()
-        if currentSelectStatement == 'SELECT':
-            selectedFields = []
-            for item in self.selectStatementList.selectedItems():
-                selectedFields.append(item.text())
+            resultsSet, modificationsSet = self.mainWindowObject.LQLWIZARD.parseQuery(currentSelectStatement,
+                                                                                      selectedFields, sourceStatement,
+                                                                                      sourceListOrNone,
+                                                                                      conditionResults,
+                                                                                      modificationResults)
         else:
-            selectedFields = self.selectStatementTextbox.text()
-        sourceStatement = self.sourceStatementPicker.currentText()
-        sourceListOrNone = None if sourceStatement == 'FROMDB' else sourceResults
-
-        print(currentSelectStatement, selectedFields, sourceStatement, sourceListOrNone, conditionResults,
-              modificationResults)
-
-        resultsSet, modificationsSet = self.mainWindowObject.LQLWIZARD.parseQuery(currentSelectStatement,
-                                                                                  selectedFields, sourceStatement,
-                                                                                  sourceListOrNone, conditionResults,
-                                                                                  modificationResults)
+            try:
+                selectedHistoryUID = self.historyTable.selectedItems()[0].text()
+                resultsSet, modificationsSet = self.mainWindowObject.LQLWIZARD.parseQuery(
+                    *self.mainWindowObject.LQLWIZARD.QUERIES_HISTORY[selectedHistoryUID])
+            except IndexError:
+                self.mainWindowObject.MESSAGEHANDLER.error('No Query selected from history.', popUp=True)
+                return
 
         self.showResults(resultsSet, modificationsSet)
 
@@ -4065,33 +4109,32 @@ class QueryResultsViewer(QtWidgets.QDialog):
         self.resultsTabbedPane = QtWidgets.QTabWidget(self)
         dialogLayout.addWidget(self.resultsTabbedPane, 0, 0, 2, 2)
 
-        headerFields = list(selectedFields)
+        self.headerFields = list(selectedFields)
         try:
-            headerFields.remove('uid')
+            self.headerFields.remove('uid')
         except ValueError:
             pass
-        headerFields.insert(0, 'uid')
+        self.headerFields.insert(0, 'uid')
 
-        # -1 to selectedUIDs, otherwise we have an empty line at the end.
-        self.resultsTable = QtWidgets.QTableWidget(len(selectedUIDs) - 1, len(headerFields), self)
-        self.resultsTable.setHorizontalHeaderLabels(headerFields)
+        self.resultsTable = QtWidgets.QTableWidget(0, len(self.headerFields), self)
+        self.resultsTable.setHorizontalHeaderLabels(self.headerFields)
         self.resultsTable.setAcceptDrops(False)
         self.resultsTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.resultsTable.verticalHeader().setCascadingSectionResizes(True)
-        for index in range(1, len(headerFields)):
+        for index in range(1, len(self.headerFields)):
             self.resultsTable.horizontalHeader().setSectionResizeMode(index, QtWidgets.QHeaderView.Stretch)
 
         count = 0
         for uid in selectedUIDs:
             self.resultsTable.insertRow(count)
-            for index, field in enumerate(headerFields):
+            for index, field in enumerate(self.headerFields):
                 self.resultsTable.setItem(count, index, QtWidgets.QTableWidgetItem(str(entitiesDict[uid][field])))
             count += 1
 
         self.resultsTabbedPane.addTab(self.resultsTable, 'Table')
 
         self.charts = {}
-        for headerField in headerFields[1:]:
+        for headerField in self.headerFields[1:]:
             fieldChart = QtCharts.QChart()
             chartTitle = headerField + " Chart"
             fieldChart.setTitle(chartTitle)
@@ -4099,25 +4142,94 @@ class QueryResultsViewer(QtWidgets.QDialog):
             fieldChart.setMargins(QtCore.QMargins(0, 0, 0, 0))
             chartView = QtCharts.QChartView(fieldChart)
             chartView.setRubberBand(QtCharts.QChartView.NoRubberBand)
+            chartView.setRenderHint(QtGui.QPainter.Antialiasing)
             fieldChart.setAnimationOptions(QtCharts.QChart.AllAnimations)
             fieldChart.setAnimationDuration(250)
-            fieldChart.legend().hide()
-            fieldChart.createDefaultAxes()
+            fieldChart.legend().setVisible(True)
+            fieldChart.legend().setAlignment(QtCore.Qt.AlignBottom)
 
             self.charts[headerField] = (fieldChart, chartView)
             self.resultsTabbedPane.addTab(chartView, chartTitle)
-            # TODO - values
+            values = {}
+
+            for entity in entitiesDict:
+                entityValue = str(entitiesDict[entity].get(headerField))
+                if entityValue not in values:
+                    values[entityValue] = 1
+                else:
+                    values[entityValue] += 1
+
+            barSeries = QtCharts.QBarSeries()
+            barSeries.setName(headerField)
+            for barValue in values:
+                barSet = QtCharts.QBarSet(barValue)
+                barSet.append(values[barValue])
+                barSeries.append(barSet)
+
+            fieldChart.addSeries(barSeries)
+
+            xAxis = QtCharts.QBarCategoryAxis()
+            xAxis.append([headerField])
+            fieldChart.addAxis(xAxis, QtCore.Qt.AlignBottom)
+            barSeries.attachAxis(xAxis)
+
+            yAxis = QtCharts.QValueAxis()
+            yAxis.setRange(0, max(values.values()) + 1)
+            yAxis.applyNiceNumbers()
+            fieldChart.addAxis(yAxis, QtCore.Qt.AlignLeft)
+            barSeries.attachAxis(yAxis)
+
+        if numifiedFields:
+            for field in numifiedFields:
+                fieldValues = []
+                for entity in entitiesDict:
+                    entityValue = float(entitiesDict[entity].get(field))
+                    fieldValues.append(entityValue)
+                numValues = len(fieldValues)
+                maxValue = max(fieldValues)
+                minValue = min(fieldValues)
+                meanValue = statistics.fmean(fieldValues)
+                medianValue = statistics.median(fieldValues)
+                modeValue = statistics.mode(fieldValues)
+                sumValue = sum(fieldValues)
+                rangeValue = maxValue - minValue
+                varianceValue = statistics.pvariance(fieldValues)
+                standardDeviationValue = statistics.pstdev(fieldValues)
+
+                numifiedFieldWidget = QtWidgets.QWidget()
+                numifiedFieldWidgetLayout = QtWidgets.QVBoxLayout()
+                numifiedFieldWidget.setLayout(numifiedFieldWidgetLayout)
+                fieldLabel = QtWidgets.QLabel('Numerical Information for field: ' + field)
+                numifiedValuesWidget = QtWidgets.QWidget()
+                numifiedValuesWidgetLayout = QtWidgets.QFormLayout()
+                numifiedValuesWidget.setLayout(numifiedValuesWidgetLayout)
+
+                numifiedValuesWidgetLayout.addRow('Number of Values: ', QtWidgets.QLabel(str(numValues)))
+                numifiedValuesWidgetLayout.addRow('Biggest Value: ', QtWidgets.QLabel(str(maxValue)))
+                numifiedValuesWidgetLayout.addRow('Smallest Value: ', QtWidgets.QLabel(str(minValue)))
+                numifiedValuesWidgetLayout.addRow('Mean Value: ', QtWidgets.QLabel(str(meanValue)))
+                numifiedValuesWidgetLayout.addRow('Median Value: ', QtWidgets.QLabel(str(medianValue)))
+                numifiedValuesWidgetLayout.addRow('Mode Value: ', QtWidgets.QLabel(str(modeValue)))
+                numifiedValuesWidgetLayout.addRow('Sum of Values: ', QtWidgets.QLabel(str(sumValue)))
+                numifiedValuesWidgetLayout.addRow('Range of Values: ', QtWidgets.QLabel(str(rangeValue)))
+                numifiedValuesWidgetLayout.addRow('Variance of Values: ', QtWidgets.QLabel(str(varianceValue)))
+                numifiedValuesWidgetLayout.addRow('Standard Deviation of Values: ',
+                                                  QtWidgets.QLabel(str(standardDeviationValue)))
+
+                numifiedFieldWidgetLayout.addWidget(fieldLabel, 0)
+                numifiedFieldWidgetLayout.addWidget(numifiedValuesWidget, 1)
+
+                self.resultsTabbedPane.addTab(numifiedFieldWidget, field + ' Field Values Information')
 
         closeButton = QtWidgets.QPushButton('Close')
         closeButton.clicked.connect(self.accept)
-        exportButton = QtWidgets.QPushButton('Export')
+        exportButton = QtWidgets.QPushButton('Export Table')
         exportButton.clicked.connect(self.exportData)
 
         dialogLayout.addWidget(closeButton, 3, 0, 1, 1)
         dialogLayout.addWidget(exportButton, 3, 1, 1, 1)
 
     def exportData(self):
-        # TODO - rename variables, change text etc.
         exportDialog = QtWidgets.QFileDialog()
         exportDialog.setOption(QtWidgets.QFileDialog.DontUseNativeDialog, True)
         exportDialog.setViewMode(QtWidgets.QFileDialog.List)
@@ -4139,12 +4251,21 @@ class QueryResultsViewer(QtWidgets.QDialog):
 
         try:
             with open(exportFilePath, 'w') as fileToWrite:
-                fileToWrite.write('TODO TODO')  # TODO
+                csvWriter = csv.writer(fileToWrite, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                csvWriter.writerow(self.headerFields)
+                for rowIndex in range(self.resultsTable.rowCount()):
+                    currColumnValues = []
+                    for columnIndex in range(self.resultsTable.columnCount()):
+                        currColumnValues.append(self.resultsTable.item(rowIndex, columnIndex).text())
+                    csvWriter.writerow(currColumnValues)
         except FileNotFoundError:
             self.mainWindowObject.MESSAGEHANDLER.error('Cannot write file into a non-existing parent directory. '
                                                        'Please create the required parent directories and try again.',
                                                        popUp=True, exc_info=False)
             return False
+
+        self.mainWindowObject.MESSAGEHANDLER.info('Table exported successfully.', popUp=True, exc_info=False)
+        return True
 
 
 class ConditionClauseWidget(QtWidgets.QFrame):
