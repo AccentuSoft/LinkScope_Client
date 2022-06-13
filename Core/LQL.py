@@ -38,6 +38,9 @@ class LQLQueryBuilder:
         self.canvasesEntitiesDict = self.getCanvasesEntitiesDict(self.allCanvases)
         self.allEntityFields, self.allEntities = self.getAllEntitiesAndFields()
 
+        # Re-define database entities to remove Group Entities
+        self.databaseEntities = set(self.allEntities.keys())
+
     def getAllEntitiesAndFields(self) -> (set, list):
         entitiesSnapshot = {entity: self.databaseSnapshot.nodes[entity] for entity in self.databaseSnapshot.nodes
                             if self.databaseSnapshot.nodes[entity].get('Entity Type') != 'EntityGroup'}
