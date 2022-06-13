@@ -2,10 +2,10 @@
     <Data_Breach>
         <Attributes>
             <Attribute default="Breach Name" check="String" primary="True">Breach Name</Attribute>
-            <Attribute default="Breach Title" check="String" primary="False">Title</Attribute>
-            <Attribute default="Breach Domain" check="String" primary="False">Domain</Attribute>
-            <Attribute default="0" check="Numbers" primary="False">Pwn Count</Attribute>
-            <Attribute default="Breach Description" check="String" primary="False">Description</Attribute>
+            <Attribute default="Breach Title" check="String" primary="False">Breach Title</Attribute>
+            <Attribute default="Breach Domain" check="String" primary="False">Breach Domain</Attribute>
+            <Attribute default="0" check="Numbers" primary="False">Breach Pwn Count</Attribute>
+            <Attribute default="Breach Description" check="String" primary="False">Breach Description</Attribute>
         </Attributes>
         <Icon>
             Default.svg
@@ -14,10 +14,10 @@
     <Paste_Data_Leak>
         <Attributes>
             <Attribute default="Paste Identifier" check="String" primary="True">Paste Identifier</Attribute>
-            <Attribute default="Paste Title" check="String" primary="False">Title</Attribute>
-            <Attribute default="Paste Source" check="String" primary="False">Source</Attribute>
+            <Attribute default="Paste Title" check="String" primary="False">Paste Title</Attribute>
+            <Attribute default="Paste Source" check="String" primary="False">Paste Source</Attribute>
             <Attribute default="Paste ID" check="String" primary="False">Paste ID</Attribute>
-            <Attribute default="0" check="Numbers" primary="False">Email Count</Attribute>
+            <Attribute default="0" check="Numbers" primary="False">Paste Email Count</Attribute>
         </Attributes>
         <Icon>
             Default.svg

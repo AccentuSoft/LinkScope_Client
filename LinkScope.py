@@ -3835,8 +3835,7 @@ class QueryBuilderWizard(QtWidgets.QDialog):
         self.historyTable.setAcceptDrops(False)
         self.historyTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
         self.historyTable.verticalHeader().setCascadingSectionResizes(True)
-        for index in range(1, 7):
-            self.historyTable.horizontalHeader().setSectionResizeMode(index, QtWidgets.QHeaderView.Stretch)
+        self.historyTable.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
         self.historyTable.setHorizontalHeaderLabels(['Query UID', 'Select Clause', 'Select Value(s)', 'Source Clause',
                                                      'Source Value(s)', 'Condition Clause(s)', 'Modification Values'])
         self.queryNewOrHistory.addTab(self.historyTable, 'History')
@@ -4148,7 +4147,8 @@ class QueryResultsViewer(QtWidgets.QDialog):
         for uid in selectedUIDs:
             self.resultsTable.insertRow(count)
             for index, field in enumerate(self.headerFields):
-                self.resultsTable.setItem(count, index, QtWidgets.QTableWidgetItem(str(entitiesDict[uid][field])))
+                self.resultsTable.setItem(count, index, QtWidgets.QTableWidgetItem(
+                    str(entitiesDict[uid].get(field, 'None'))))
             count += 1
 
         self.resultsTabbedPane.addTab(self.resultsTable, 'Table')
@@ -4203,8 +4203,13 @@ class QueryResultsViewer(QtWidgets.QDialog):
             for field in numifiedFields:
                 fieldValues = []
                 for entity in entitiesDict:
-                    entityValue = float(entitiesDict[entity].get(field))
+                    try:
+                        entityValue = float(entitiesDict[entity].get(field))
+                    except TypeError:
+                        continue
                     fieldValues.append(entityValue)
+                if not fieldValues:
+                    continue
                 numValues = len(fieldValues)
                 maxValue = max(fieldValues)
                 minValue = min(fieldValues)
@@ -4408,7 +4413,7 @@ class ConditionClauseWidget(QtWidgets.QFrame):
             conditionValue.append(self.layout().itemAt(3).widget().layout().itemAt(1).widget().layout().itemAt(0).widget().currentText())
             if self.gcSecondaryInputLayout.currentIndex() == 0:
                 try:
-                    conditionValue.append(self.gcSecondaryInputLayout.itemAt(0).widget().selectedItems()[0].text())
+                    conditionValue.append(self.gcSecondaryInputLayout.itemAt(0).widget().selectedItems()[0].text(1))
                 except IndexError:
                     return None
             elif self.gcSecondaryInputLayout.currentIndex() == 1:

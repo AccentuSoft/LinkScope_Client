@@ -90,7 +90,7 @@ class LQLQueryBuilder:
             except re.error:
                 return set()
 
-    def parseSource(self, sourceClause: str, sourceValues: Union[None, list]) -> set:
+    def parseSource(self, sourceClause: str, sourceValues: Union[None, list], fieldsToSelect: set) -> set:
         """
         sourceValues:
         [[("AND" | "OR" | None), ("CANVAS" | "RCANVAS"), (True | False), <User Input>], ...]
@@ -99,7 +99,7 @@ class LQLQueryBuilder:
             if sourceClause == "FROMDB"
         """
         if sourceClause == "FROMDB":
-            return self.databaseEntities
+            resultEntitySet = set(self.databaseEntities)
         else:
             resultEntitySet = set()
             for sourceValue in sourceValues:
@@ -134,7 +134,17 @@ class LQLQueryBuilder:
                             resultEntitySet = self.canvasOr(resultEntitySet,
                                                             self.canvasesEntitiesDict[matchingCanvas])
 
-            return resultEntitySet
+        # Filter out all entities that do not contain at least one of the selected fields.
+        for entity in list(resultEntitySet):
+            validEntity = False
+            for field in fieldsToSelect:
+                if field in self.allEntities[entity].keys():
+                    validEntity = True
+                    break
+            if not validEntity:
+                resultEntitySet.remove(entity)
+                self.allEntities.pop(entity)
+        return resultEntitySet
 
     def parseConditions(self, conditionClauses: Union[None, list], entitiesPool) -> set:
         """
@@ -474,7 +484,7 @@ class LQLQueryBuilder:
         modifications = None
         fieldsToSelect = self.parseSelect(selectClause, selectValue)
         if fieldsToSelect:
-            entitiesToConsider = self.parseSource(sourceClause, sourceValues)
+            entitiesToConsider = self.parseSource(sourceClause, sourceValues, fieldsToSelect)
             if entitiesToConsider:
                 if conditionClauses:
                     entitiesToConsider = self.parseConditions(conditionClauses, entitiesToConsider)

@@ -49,10 +49,10 @@ class HaveIBeenPwnedPastes:
                     pasteEmails = str(paste['EmailCount'])
 
                     returnResults.append([{'Paste Identifier': pasteSource + ' | ' + pasteID,
-                                           'Title': pasteTitle,
-                                           'Source': pasteSource,
+                                           'Paste Title': pasteTitle,
+                                           'Paste Source': pasteSource,
                                            'Paste ID': pasteID,
-                                           'Email Count': pasteEmails,
+                                           'Paste Email Count': pasteEmails,
                                            'Entity Type': 'Paste Data Leak',
                                            'Date Created': pasteDate},
                                           {entity['uid']: {'Resolution': 'Contained in Paste',
