@@ -3693,8 +3693,10 @@ class QueryBuilderWizard(QtWidgets.QDialog):
         self.selectStatementList = QtWidgets.QListWidget()
         self.selectStatementList.setSortingEnabled(True)
         self.selectStatementList.setSelectionMode(QtWidgets.QListWidget.ExtendedSelection)
+        self.selectStatementList.setMinimumHeight(125)
         self.selectStatementList.setToolTip('Highlight all the fields you wish to select.')
         self.selectStatementTextbox = QtWidgets.QLineEdit('')
+        self.selectStatementTextbox.setFixedHeight(26)
         self.selectStatementTextbox.setToolTip('Type the regex you want to use to specify the fields to select.')
         self.selectStatementValuePickerLayout.addWidget(self.selectStatementList)
         self.selectStatementValuePickerLayout.addWidget(self.selectStatementTextbox)
@@ -3711,6 +3713,7 @@ class QueryBuilderWizard(QtWidgets.QDialog):
         sourcePane = QtWidgets.QWidget()
         sourcePaneLayout = QtWidgets.QGridLayout()
         sourcePane.setLayout(sourcePaneLayout)
+
         self.sourceStatementPicker = QtWidgets.QComboBox()
         self.sourceStatementPicker.addItems(['FROMDB', 'FROM'])
         self.sourceStatementPicker.setEditable(False)
@@ -3719,6 +3722,8 @@ class QueryBuilderWizard(QtWidgets.QDialog):
         self.sourceValues = []
         self.sourceValuesArea = QtWidgets.QScrollArea()
         self.sourceValuesArea.setWidgetResizable(True)
+        self.sourceValuesArea.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+
         sourceValuesAreaWidget = QtWidgets.QWidget()
         self.sourceValuesAreaWidgetLayout = QtWidgets.QVBoxLayout()
         sourceValuesAreaWidget.setLayout(self.sourceValuesAreaWidgetLayout)
@@ -3758,6 +3763,7 @@ class QueryBuilderWizard(QtWidgets.QDialog):
         self.conditionValuesAreaWidgetLayout = QtWidgets.QVBoxLayout()
         conditionValuesAreaWidget.setLayout(self.conditionValuesAreaWidgetLayout)
         self.conditionValuesArea.setWidget(conditionValuesAreaWidget)
+        self.conditionValuesArea.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
 
         conditionsButtonsWidget = QtWidgets.QWidget()
         conditionsButtonsWidgetLayout = QtWidgets.QHBoxLayout()
@@ -3785,6 +3791,8 @@ class QueryBuilderWizard(QtWidgets.QDialog):
         self.modificationValues = []
         self.modificationValuesArea = QtWidgets.QScrollArea()
         self.modificationValuesArea.setWidgetResizable(True)
+        self.modificationValuesArea.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+
         modificationValuesAreaWidget = QtWidgets.QWidget()
         self.modificationValuesAreaWidgetLayout = QtWidgets.QVBoxLayout()
         modificationValuesAreaWidget.setLayout(self.modificationValuesAreaWidgetLayout)
@@ -3852,8 +3860,10 @@ class QueryBuilderWizard(QtWidgets.QDialog):
         inputDropdown = QtWidgets.QListWidget()
         inputDropdown.setSortingEnabled(True)
         inputDropdown.setSelectionMode(QtWidgets.QListWidget.SingleSelection)
+        inputDropdown.setMinimumHeight(125)
         inputDropdown.addItems(self.mainWindowObject.LQLWIZARD.allCanvases)
         inputText = QtWidgets.QLineEdit('')
+        inputText.setFixedHeight(26)
         inputWidget = QtWidgets.QWidget()
         inputWidgetLayout = QtWidgets.QStackedLayout()
         inputWidget.setLayout(inputWidgetLayout)
@@ -3922,7 +3932,9 @@ class QueryBuilderWizard(QtWidgets.QDialog):
         inputDropdown.setSortingEnabled(True)
         inputDropdown.setSelectionMode(QtWidgets.QListWidget.SingleSelection)
         inputDropdown.addItems(self.mainWindowObject.LQLWIZARD.allEntityFields)
+        inputDropdown.setMinimumHeight(125)
         inputText = QtWidgets.QLineEdit('')
+        inputText.setFixedHeight(26)
         inputWidget.setLayout(inputWidgetLayout)
         inputWidgetLayout.addWidget(inputDropdown)
         inputWidgetLayout.addWidget(inputText)
@@ -3991,13 +4003,9 @@ class QueryBuilderWizard(QtWidgets.QDialog):
         self.entityDropdownTriplets.clear()
         for entityUID in self.mainWindowObject.LQLWIZARD.databaseSnapshot.nodes:
             nodeDetails = self.mainWindowObject.LQLWIZARD.databaseSnapshot.nodes[entityUID]
-            newItem = QtWidgets.QTreeWidgetItem()
-            newItem.setText(0, nodeDetails[list(nodeDetails)[1]])
-            newItem.setText(1, entityUID)
             pixmapIcon = QtGui.QPixmap()
             pixmapIcon.loadFromData(nodeDetails['Icon'])
-            newItem.setIcon(2, pixmapIcon)
-            self.entityDropdownTriplets.append(newItem)
+            self.entityDropdownTriplets.append((nodeDetails[list(nodeDetails)[1]], entityUID, pixmapIcon))
 
         for _ in range(self.historyTable.rowCount()):
             self.historyTable.removeRow(0)
@@ -4296,9 +4304,11 @@ class ConditionClauseWidget(QtWidgets.QFrame):
         valueInputDropdownAttr = QtWidgets.QComboBox()
         valueInputDropdownAttr.addItems(["ATTRIBUTE", "RATTRIBUTE"])
         userInputDropdownAttr = QtWidgets.QLineEdit('')
+        userInputDropdownAttr.setFixedHeight(26)
         valueInputDropdownCondition = QtWidgets.QComboBox()
         valueInputDropdownCondition.addItems(["EQ", "CONTAINS", "STARTSWITH", "ENDSWITH", "RMATCH"])
         userInputDropdownCondition = QtWidgets.QLineEdit('')
+        userInputDropdownCondition.setFixedHeight(26)
 
         vcWidgetLayout.addWidget(valueInputDropdownAttr)
         vcWidgetLayout.addWidget(userInputDropdownAttr)
@@ -4321,7 +4331,12 @@ class ConditionClauseWidget(QtWidgets.QFrame):
         graphEntitiesDropdown = QtWidgets.QTreeWidget()
         graphEntitiesDropdown.setHeaderLabels(['Primary Field', 'UID', 'Icon'])
         graphEntitiesDropdown.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
-        graphEntitiesDropdown.addTopLevelItems(parentWizard.entityDropdownTriplets)
+        for entityDropdownTriplet in parentWizard.entityDropdownTriplets:
+            newItem = QtWidgets.QTreeWidgetItem()
+            newItem.setText(0, entityDropdownTriplet[0])
+            newItem.setText(1, entityDropdownTriplet[1])
+            newItem.setIcon(2, entityDropdownTriplet[2])
+            graphEntitiesDropdown.addTopLevelItem(newItem)
 
         self.gcSecondaryInputLayout.addWidget(graphEntitiesDropdown)
 
