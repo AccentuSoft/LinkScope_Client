@@ -93,13 +93,13 @@ class ToolBarOne(QtWidgets.QToolBar):
         self.addAction(splitEntity)
         self.insertSeparator(splitEntity)
 
-        generateReport = QtGui.QAction('Generate Report',
-                                       self,
-                                       statusTip="Generate Report of selected entities.",
-                                       triggered=self.generateReports,
-                                       icon=QtGui.QIcon(self.parent().RESOURCEHANDLER.getIcon('generateReport')))
-        self.addAction(generateReport)
-        self.insertSeparator(generateReport)
+        generateReportAction = QtGui.QAction('Generate Report',
+                                             self,
+                                             statusTip="Generate Report from the selected nodes.",
+                                             triggered=self.generateReport,
+                                             icon=QtGui.QIcon(self.parent().RESOURCEHANDLER.getIcon('generateReport')))
+        self.addAction(generateReportAction)
+        self.insertSeparator(generateReportAction)
 
         rearrangeCanvas = QtGui.QAction('Rearrange Canvas',
                                         self,
@@ -148,5 +148,5 @@ class ToolBarOne(QtWidgets.QToolBar):
     def splitEntity(self):
         self.parent().splitEntity()
 
-    def generateReports(self):
+    def generateReport(self):
         self.parent().generateReport()

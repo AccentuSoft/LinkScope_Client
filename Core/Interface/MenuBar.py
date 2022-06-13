@@ -26,9 +26,10 @@ from uuid import uuid4
 from playwright.sync_api import sync_playwright, Error, TimeoutError
 
 from PySide6 import QtWidgets, QtGui, QtCore
+from Core.GlobalVariables import user_agents
 from Core.Interface import Stylesheets
 from Core.Interface.Entity import BaseNode
-from Core.ResolutionManager import StringPropertyInput, FilePropertyInput, SingleChoicePropertyInput, \
+from Core.ResourceHandler import StringPropertyInput, FilePropertyInput, SingleChoicePropertyInput, \
     MultiChoicePropertyInput
 
 
@@ -205,7 +206,7 @@ class MenuBar(QtWidgets.QMenuBar):
         viewMenu.addAction(resolutionFindAction)
         viewMenu.addSeparator()
 
-        rearrangeGraphAction = QtGui.QAction("Rearrange Graph",
+        rearrangeGraphAction = QtGui.QAction("Rearrange Canvas Graph",
                                              self,
                                              statusTip="Rearrange the nodes on the current Canvas to a default "
                                                        "configuration according to the currently configured graphing "
@@ -213,7 +214,7 @@ class MenuBar(QtWidgets.QMenuBar):
                                              triggered=self.rearrangeGraph)
         viewMenu.addAction(rearrangeGraphAction)
 
-        rearrangeAsTimelineAction = QtGui.QAction("Rearrange Graph as Timeline",
+        rearrangeAsTimelineAction = QtGui.QAction("Rearrange Canvas Graph as Timeline",
                                                   self,
                                                   statusTip="Rearrange the nodes on the current Canvas to a "
                                                             "Left-to-Right half-tree according to the entities' "
@@ -286,6 +287,20 @@ class MenuBar(QtWidgets.QMenuBar):
                                                statusTip="Save the 'Notes' fields of the selected nodes as text files.",
                                                triggered=self.entityNotesToTextFile)
         nodeOperationsMenu.addAction(notesToTextFilesAction)
+
+        projectMenu = self.addMenu("Project Operations")
+        projectMenu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
+        generateReportAction = QtGui.QAction("Generate Report",
+                                             self,
+                                             statusTip="Generate a report from the set of currently selected nodes.",
+                                             triggered=self.generateReport)
+        projectMenu.addAction(generateReportAction)
+
+        queryAction = QtGui.QAction("Query Wizard",
+                                    self,
+                                    statusTip="Run LQL Queries.",
+                                    triggered=self.queryWizard)
+        projectMenu.addAction(queryAction)
 
         modulesMenu = self.addMenu("Modules")
         modulesMenu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
@@ -954,6 +969,12 @@ class MenuBar(QtWidgets.QMenuBar):
     def rearrangeGraphToTimeLine(self) -> None:
         self.parent().centralWidget().tabbedPane.getCurrentScene().rearrangeGraphTimeline()
 
+    def generateReport(self):
+        self.parent().generateReport()
+
+    def queryWizard(self):
+        self.parent().launchQueryWizard()
+
     def downloadWebsites(self) -> None:
         websiteEntities = []
 
@@ -1071,14 +1092,13 @@ class MenuBar(QtWidgets.QMenuBar):
                         if platform.system() == 'Linux':
                             context = browser.new_context(
                                 viewport={'width': 1920, 'height': 1080},
-                                user_agent='Mozilla/5.0 (X11; Linux i686; rv:94.0) Gecko/20100101 Firefox/94.0'
+                                user_agent=user_agents['Firefox']['Linux'][0]
                             )
                             urlPath = Path.home() / '.mozilla' / 'firefox'
                         else:  # We already checked before that the platform is either 'Linux' or 'Windows'.
                             context = browser.new_context(
                                 viewport={'width': 1920, 'height': 1080},
-                                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:94.0) Gecko/20100101 '
-                                           'Firefox/94.0'
+                                user_agent=user_agents['Firefox']['Windows'][0]
                             )
                             urlPath = Path(os.environ['APPDATA']) / 'Mozilla' / 'Firefox' / 'Profiles'
 
@@ -1194,8 +1214,7 @@ class MenuBar(QtWidgets.QMenuBar):
                         if platform.system() == 'Linux':
                             context = browser.new_context(
                                 viewport={'width': 1920, 'height': 1080},
-                                user_agent="Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) "
-                                           "Chrome/96.0.4664.45 Safari/537.36"
+                                user_agent=user_agents['Chrome']['Linux'][0]
                             )
                             sessionFilePath = Path.home() / '.config' / 'google-chrome' / 'Default' / 'Sessions'
                             if not sessionFilePath.exists():
@@ -1204,8 +1223,7 @@ class MenuBar(QtWidgets.QMenuBar):
                         else:  # We already checked before that the platform is either 'Linux' or 'Windows'.
                             context = browser.new_context(
                                 viewport={'width': 1920, 'height': 1080},
-                                user_agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
-                                           "(KHTML, like Gecko) Chrome/96.0.4664.45 Safari/537.36"
+                                user_agent=user_agents['Chrome']['Windows'][0]
                             )
                             sessionFilePath = Path.home() / 'AppData' / 'Local' / 'Google' / 'Chrome' / 'User Data' / \
                                               'Default'
@@ -2625,13 +2643,13 @@ class ScreenshotWebsiteThread(QtCore.QThread):
             if platform.system() == 'Linux':
                 context = browser.new_context(
                     viewport={'width': 1920, 'height': 1080},
-                    user_agent='Mozilla/5.0 (X11; Linux i686; rv:96.0) Gecko/20100101 Firefox/96.0'
+                    user_agent=user_agents['Firefox']['Linux'][0]
                 )
                 urlPath = Path.home() / '.mozilla' / 'firefox'
             else:  # We already checked before that the platform is either 'Linux' or 'Windows'.
                 context = browser.new_context(
                     viewport={'width': 1920, 'height': 1080},
-                    user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:96.0) Gecko/20100101 Firefox/96.0'
+                    user_agent=user_agents['Firefox']['Windows'][0]
                 )
                 urlPath = Path(os.environ['APPDATA']) / 'Mozilla' / 'Firefox' / 'Profiles'
 
@@ -2711,13 +2729,13 @@ class SaveWebsiteThread(QtCore.QThread):
             if platform.system() == 'Linux':
                 context = browser.new_context(
                     viewport={'width': 1920, 'height': 1080},
-                    user_agent='Mozilla/5.0 (X11; Linux i686; rv:96.0) Gecko/20100101 Firefox/96.0'
+                    user_agent=user_agents['Firefox']['Linux'][0]
                 )
                 urlPath = Path.home() / '.mozilla' / 'firefox'
             else:  # We already checked before that the platform is either 'Linux' or 'Windows'.
                 context = browser.new_context(
                     viewport={'width': 1920, 'height': 1080},
-                    user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:96.0) Gecko/20100101 Firefox/96.0'
+                    user_agent=user_agents['Firefox']['Windows'][0]
                 )
                 urlPath = Path(os.environ['APPDATA']) / 'Mozilla' / 'Firefox' / 'Profiles'
 

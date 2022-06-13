@@ -6,6 +6,8 @@ import sys
 import tempfile
 import threading
 import time
+import csv
+import statistics
 
 import networkx as nx
 from ast import literal_eval
@@ -18,7 +20,7 @@ from msgpack import load
 from pathlib import Path
 from datetime import datetime
 from typing import Union
-from PySide6 import QtWidgets, QtGui, QtCore
+from PySide6 import QtWidgets, QtGui, QtCore, QtCharts
 
 from Core import MessageHandler, SettingsObject
 from Core import ResourceHandler
@@ -27,7 +29,7 @@ from Core import EntityDB
 from Core import ResolutionManager
 from Core import URLManager
 from Core import FrontendCommunicationsHandler
-from Core.ResolutionManager import StringPropertyInput, FilePropertyInput, SingleChoicePropertyInput, \
+from Core.ResourceHandler import StringPropertyInput, FilePropertyInput, SingleChoicePropertyInput, \
     MultiChoicePropertyInput
 from Core.Interface import CentralPane
 from Core.Interface import DockBarOne, DockBarTwo, DockBarThree
@@ -35,6 +37,7 @@ from Core.Interface import ToolBarOne
 from Core.Interface import MenuBar
 from Core.Interface import Stylesheets
 from Core.Interface.Entity import BaseNode, BaseConnector, GroupNode
+from Core.LQL import LQLQueryBuilder
 from Core.PathHelper import is_path_exists_or_creatable_portable
 
 
@@ -152,7 +155,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                       popUp=True, exc_info=False)
             return
         except FileNotFoundError:
-            self.MESSAGEHANDLER.error('Cannot save project into a non-existing parent directory.'
+            self.MESSAGEHANDLER.error('Cannot save project into a non-existing parent directory. '
                                       'Please create the required parent directories and try again.',
                                       popUp=True, exc_info=False)
             return
@@ -176,7 +179,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.SETTINGS.setValue("Project/Name", oldName)
             return
         except FileNotFoundError:
-            self.MESSAGEHANDLER.error('Cannot save project into a non-existing parent directory.'
+            self.MESSAGEHANDLER.error('Cannot save project into a non-existing parent directory. '
                                       'Please create the required parent directories and try again.',
                                       popUp=True, exc_info=False)
             self.SETTINGS.setValue("Project/BaseDir", oldBaseDir)
@@ -474,28 +477,22 @@ class MainWindow(QtWidgets.QMainWindow):
         Select all the nodes that have no links coming into or going out of them.
         :return:
         """
-        self.centralWidget().tabbedPane.getCurrentScene().clearSelection()
-        currentCanvasGraph = self.centralWidget().tabbedPane.getCurrentScene().sceneGraph
-        nodes = [x for x in currentCanvasGraph.nodes()
-                 if currentCanvasGraph.out_degree(x) == 0 and currentCanvasGraph.in_degree(x) == 0]
-        for item in [node for node in self.centralWidget().tabbedPane.getCurrentScene().items()
-                     if isinstance(node, BaseNode)]:
-            if item.uid in nodes:
-                item.setSelected(True)
+        currentScene = self.centralWidget().tabbedPane.getCurrentScene()
+        currentScene.clearSelection()
+        for isolatedNodeUID in nx.isolates(currentScene.sceneGraph):
+            currentScene.nodesDict[isolatedNodeUID].setSelected(True)
 
     def selectNonIsolatedNodes(self) -> None:
         """
         Select all nodes with at least one link going into or out of them.
         :return:
         """
-        self.centralWidget().tabbedPane.getCurrentScene().clearSelection()
-        currentCanvasGraph = self.centralWidget().tabbedPane.getCurrentScene().sceneGraph
-        nodes = [x for x in currentCanvasGraph.nodes()
-                 if currentCanvasGraph.out_degree(x) > 0 or currentCanvasGraph.in_degree(x) > 0]
-        for item in [node for node in self.centralWidget().tabbedPane.getCurrentScene().items()
-                     if isinstance(node, BaseNode)]:
-            if item.uid in nodes:
-                item.setSelected(True)
+        currentScene = self.centralWidget().tabbedPane.getCurrentScene()
+        currentScene.clearSelection()
+        isolatedNodes = list(nx.isolates(currentScene.sceneGraph))
+        for node in currentScene.nodesDict:
+            if node not in isolatedNodes:
+                currentScene.nodesDict[node].setSelected(True)
 
     def findShortestPath(self) -> None:
         """
@@ -503,13 +500,14 @@ class MainWindow(QtWidgets.QMainWindow):
         Exactly two nodes must be selected.
         :return:
         """
-        endPoints = [item.uid for item in self.centralWidget().tabbedPane.getCurrentScene().selectedItems()
+        currentScene = self.centralWidget().tabbedPane.getCurrentScene()
+        endPoints = [item.uid for item in currentScene.selectedItems()
                      if isinstance(item, BaseNode)]
         if len(endPoints) != 2:
             self.MESSAGEHANDLER.warning('Exactly two entities must be selected for the Shortest Path function to work.',
                                         popUp=True)
             return
-        currentCanvasGraph = self.centralWidget().tabbedPane.getCurrentScene().sceneGraph
+        currentCanvasGraph = currentScene.sceneGraph
         try:
             shortestPath = nx.shortest_path(currentCanvasGraph, endPoints[0], endPoints[1])
         except nx.NetworkXNoPath:
@@ -523,14 +521,14 @@ class MainWindow(QtWidgets.QMainWindow):
             self.setStatus(messagePathNotFound)
             self.MESSAGEHANDLER.info(messagePathNotFound, popUp=True)
         else:
-            self.centralWidget().tabbedPane.getCurrentScene().clearSelection()
-            for item in [node for node in self.centralWidget().tabbedPane.getCurrentScene().items()
-                         if isinstance(node, BaseNode)]:
-                if item.uid in shortestPath:
-                    item.setSelected(True)
+            currentScene.clearSelection()
+
+            for itemUID in currentScene.nodesDict:
+                if itemUID in shortestPath:
+                    currentScene.nodesDict[itemUID].setSelected(True)
+
             linksToSelect = [(a, b) for a, b in zip(shortestPath, shortestPath[1:])]
-            for linkItem in [link for link in self.centralWidget().tabbedPane.getCurrentScene().items()
-                             if isinstance(link, BaseConnector)]:
+            for linkItem in [link for link in currentScene.items() if isinstance(link, BaseConnector)]:
                 if linkItem.uid.intersection(linksToSelect):
                     linkItem.setSelected(True)
             self.setStatus('Shortest path found.')
@@ -738,6 +736,10 @@ class MainWindow(QtWidgets.QMainWindow):
             for scene in allScenesWithNode:
                 scene.rearrangeGraph()
 
+    def launchQueryWizard(self):
+        queryWizard = QueryBuilderWizard(self)
+        queryWizard.exec()
+
     def handleGroupNodeUpdateAfterEntityDeletion(self, entityUID) -> None:
         for canvas in self.centralWidget().tabbedPane.canvasTabs:
             self.centralWidget().tabbedPane.canvasTabs[canvas].cleanDeletedNodeFromGroupsIfExists(entityUID)
@@ -884,7 +886,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.RESOURCEHANDLER.loadModuleEntities()
         modulesBasePath = Path(self.SETTINGS.value("Program/BaseDir")).joinpath("Modules")
         for module in listdir(modulesBasePath):
-            self.RESOLUTIONMANAGER.loadResolutionsFromDir(modulesBasePath / module)
+            try:
+                self.RESOLUTIONMANAGER.loadResolutionsFromDir(modulesBasePath / module)
+            except TypeError:
+                self.RESOLUTIONMANAGER.loadResolutionsFromDir(modulesBasePath / module.decode('utf-8'))
         self.dockbarOne.existingEntitiesPalette.loadEntities()
         self.dockbarOne.resolutionsPalette.loadAllResolutions()
         self.dockbarOne.nodesPalette.loadEntities()
@@ -1789,7 +1794,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 return
             except FileNotFoundError:
                 QtWidgets.QMessageBox.warning(self, 'Cannot create project',
-                                              'Cannot save project into a non-existing parent directory.'
+                                              'Cannot save project into a non-existing parent directory. '
                                               'Please create the required parent directories and try again.',
                                               QtWidgets.QMessageBox.Ok)
                 return
@@ -1812,6 +1817,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.URLMANAGER = URLManager.URLManager(self)
         self.RESOLUTIONMANAGER = ResolutionManager.ResolutionManager(self, self.MESSAGEHANDLER)
         self.FCOM = FrontendCommunicationsHandler.CommunicationsHandler(self)
+        self.LQLWIZARD = LQLQueryBuilder(self)
 
         # Have the project auto-save on regular intervals by default.
         self.saveTimer = QtCore.QTimer(self)
@@ -2538,6 +2544,7 @@ class ResolutionParametersSelector(QtWidgets.QDialog):
             entitySelectTab.layout().addWidget(entitySelectTabLabel)
 
             self.entitySelector = QtWidgets.QListWidget()
+            self.entitySelector.setSortingEnabled(True)
             self.entitySelector.addItems(includeEntitySelector)
 
             self.entitySelector.setSelectionMode(self.entitySelector.MultiSelection)
@@ -3247,6 +3254,7 @@ class ResolutionSearchResultsList(QtWidgets.QListWidget):
     def __init__(self, mainWindowObject: MainWindow):
         super(ResolutionSearchResultsList, self).__init__()
         self.mainWindow = mainWindowObject
+        self.setSortingEnabled(True)
 
     def mouseDoubleClickEvent(self, event: QtGui.QMouseEvent) -> None:
         super(ResolutionSearchResultsList, self).mouseDoubleClickEvent(event)
@@ -3650,6 +3658,768 @@ class SplitEntitiesDialog(QtWidgets.QDialog):
         # Clear out this list, no more need for it
         self.splitEntities = []
         super(SplitEntitiesDialog, self).accept()
+
+
+class QueryBuilderWizard(QtWidgets.QDialog):
+
+    def __init__(self, mainWindowObject: MainWindow):
+        super(QueryBuilderWizard, self).__init__()
+        self.mainWindowObject = mainWindowObject
+        self.setModal(True)
+        self.setWindowTitle('LQL Query Wizard')
+        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
+        dialogLayout = QtWidgets.QGridLayout()
+        self.setLayout(dialogLayout)
+
+        # Add a tab to create a new query, and a tab to re-run old queries.
+        self.queryNewOrHistory = QtWidgets.QTabWidget()
+        self.queryTabbedPane = QtWidgets.QTabWidget()
+        self.queryNewOrHistory.addTab(self.queryTabbedPane, 'New Query')
+        dialogLayout.addWidget(self.queryNewOrHistory)
+
+        buttonsWidget = QtWidgets.QWidget()
+        buttonsWidgetLayout = QtWidgets.QHBoxLayout()
+        buttonsWidget.setLayout(buttonsWidgetLayout)
+        exitButton = QtWidgets.QPushButton('Close')
+        exitButton.clicked.connect(self.accept)
+        self.runButton = QtWidgets.QPushButton('Run Query')
+        self.runButton.clicked.connect(self.runButtonPressed)
+        buttonsWidgetLayout.addWidget(exitButton)
+        buttonsWidgetLayout.addWidget(self.runButton)
+        dialogLayout.addWidget(buttonsWidget)
+
+
+        #### SELECT
+        selectPane = QtWidgets.QWidget()
+        selectPaneLayout = QtWidgets.QGridLayout()
+        selectPane.setLayout(selectPaneLayout)
+        self.selectStatementPicker = QtWidgets.QComboBox()
+        self.selectStatementPicker.addItems(['SELECT', 'RSELECT'])
+        self.selectStatementPicker.setEditable(False)  # Default, but it's nice to be explicit.
+        self.selectStatementPicker.currentIndexChanged.connect(
+            lambda newIndex: self.selectStatementValuePickerLayout.setCurrentIndex(newIndex))
+        selectStatementValuePickerWidget = QtWidgets.QWidget()
+        self.selectStatementValuePickerLayout = QtWidgets.QStackedLayout()
+        selectStatementValuePickerWidget.setLayout(self.selectStatementValuePickerLayout)
+        self.selectStatementList = QtWidgets.QListWidget()
+        self.selectStatementList.setSortingEnabled(True)
+        self.selectStatementList.setSelectionMode(QtWidgets.QListWidget.ExtendedSelection)
+        self.selectStatementList.setMinimumHeight(125)
+        self.selectStatementList.setToolTip('Highlight all the fields you wish to select.')
+        self.selectStatementTextbox = QtWidgets.QLineEdit('')
+        self.selectStatementTextbox.setFixedHeight(26)
+        self.selectStatementTextbox.setToolTip('Type the regex you want to use to specify the fields to select.')
+        self.selectStatementValuePickerLayout.addWidget(self.selectStatementList)
+        self.selectStatementValuePickerLayout.addWidget(self.selectStatementTextbox)
+
+        selectPaneLayout.addWidget(QtWidgets.QLabel('Selection mode: '), 0, 0, 1, 1)
+        selectPaneLayout.addWidget(self.selectStatementPicker, 0, 1, 1, 1)
+        selectPaneLayout.addWidget(QtWidgets.QLabel('Field selection:'), 1, 0, 1, 2)
+        selectPaneLayout.addWidget(selectStatementValuePickerWidget, 2, 0, 2, 2)
+
+        self.queryTabbedPane.addTab(selectPane, 'Selection')
+        ####
+
+        #### SOURCE
+        sourcePane = QtWidgets.QWidget()
+        sourcePaneLayout = QtWidgets.QGridLayout()
+        sourcePane.setLayout(sourcePaneLayout)
+
+        self.sourceStatementPicker = QtWidgets.QComboBox()
+        self.sourceStatementPicker.addItems(['FROMDB', 'FROM'])
+        self.sourceStatementPicker.setEditable(False)
+        self.sourceStatementPicker.currentTextChanged.connect(self.sourceModeSwitch)
+
+        self.sourceValues = []
+        self.sourceValuesArea = QtWidgets.QScrollArea()
+        self.sourceValuesArea.setWidgetResizable(True)
+        self.sourceValuesArea.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+
+        sourceValuesAreaWidget = QtWidgets.QWidget()
+        self.sourceValuesAreaWidgetLayout = QtWidgets.QVBoxLayout()
+        sourceValuesAreaWidget.setLayout(self.sourceValuesAreaWidgetLayout)
+        self.sourceValuesArea.setWidget(sourceValuesAreaWidget)
+        self.sourceValuesArea.setEnabled(False)
+        self.sourceValuesArea.setDisabled(True)
+        self.sourceValuesArea.setHidden(True)
+
+        sourceButtonsWidget = QtWidgets.QWidget()
+        sourceButtonsWidgetLayout = QtWidgets.QHBoxLayout()
+        sourceButtonsWidget.setLayout(sourceButtonsWidgetLayout)
+        sourceAddStatementButton = QtWidgets.QPushButton('Add Clause')
+        sourceRemoveStatementButton = QtWidgets.QPushButton('Remove Last Clause')
+        sourceAddStatementButton.clicked.connect(self.addSourceClause)
+        sourceRemoveStatementButton.clicked.connect(self.removeSourceClause)
+        sourceButtonsWidgetLayout.addWidget(sourceRemoveStatementButton)
+        sourceButtonsWidgetLayout.addWidget(sourceAddStatementButton)
+
+        self.sourceValuesAreaWidgetLayout.addWidget(sourceButtonsWidget)
+
+        sourcePaneLayout.addWidget(QtWidgets.QLabel('Source: '), 0, 0, 1, 1)
+        sourcePaneLayout.addWidget(self.sourceStatementPicker, 0, 1, 1, 1)
+        sourcePaneLayout.addWidget(self.sourceValuesArea, 1, 0, 2, 2)
+
+        self.queryTabbedPane.addTab(sourcePane, 'Source')
+        ####
+
+        #### CONDITIONS
+        conditionsPane = QtWidgets.QWidget()
+        conditionsPaneLayout = QtWidgets.QGridLayout()
+        conditionsPane.setLayout(conditionsPaneLayout)
+
+        self.conditionValues = []
+        self.conditionValuesArea = QtWidgets.QScrollArea()
+        self.conditionValuesArea.setWidgetResizable(True)
+        conditionValuesAreaWidget = QtWidgets.QWidget()
+        self.conditionValuesAreaWidgetLayout = QtWidgets.QVBoxLayout()
+        conditionValuesAreaWidget.setLayout(self.conditionValuesAreaWidgetLayout)
+        self.conditionValuesArea.setWidget(conditionValuesAreaWidget)
+        self.conditionValuesArea.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+
+        conditionsButtonsWidget = QtWidgets.QWidget()
+        conditionsButtonsWidgetLayout = QtWidgets.QHBoxLayout()
+        conditionsButtonsWidget.setLayout(conditionsButtonsWidgetLayout)
+        conditionsAddStatementButton = QtWidgets.QPushButton('Add Condition')
+        conditionsRemoveStatementButton = QtWidgets.QPushButton('Remove Last Condition')
+        conditionsAddStatementButton.clicked.connect(self.addConditionClause)
+        conditionsRemoveStatementButton.clicked.connect(self.removeConditionClause)
+        conditionsButtonsWidgetLayout.addWidget(conditionsRemoveStatementButton)
+        conditionsButtonsWidgetLayout.addWidget(conditionsAddStatementButton)
+
+        self.conditionValuesAreaWidgetLayout.addWidget(conditionsButtonsWidget)
+
+        conditionsPaneLayout.addWidget(QtWidgets.QLabel('Conditions: '), 0, 0, 1, 1)
+        conditionsPaneLayout.addWidget(self.conditionValuesArea, 0, 0, 2, 2)
+
+        self.queryTabbedPane.addTab(conditionsPane, 'Conditions')
+        ####
+
+        #### MODIFY
+        modificationsPane = QtWidgets.QWidget()
+        modificationsPaneLayout = QtWidgets.QGridLayout()
+        modificationsPane.setLayout(modificationsPaneLayout)
+
+        self.modificationValues = []
+        self.modificationValuesArea = QtWidgets.QScrollArea()
+        self.modificationValuesArea.setWidgetResizable(True)
+        self.modificationValuesArea.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+
+        modificationValuesAreaWidget = QtWidgets.QWidget()
+        self.modificationValuesAreaWidgetLayout = QtWidgets.QVBoxLayout()
+        modificationValuesAreaWidget.setLayout(self.modificationValuesAreaWidgetLayout)
+        self.modificationValuesArea.setWidget(modificationValuesAreaWidget)
+
+        modificationsButtonsWidget = QtWidgets.QWidget()
+        modificationsButtonsWidgetLayout = QtWidgets.QHBoxLayout()
+        modificationsButtonsWidget.setLayout(modificationsButtonsWidgetLayout)
+        modificationsAddStatementButton = QtWidgets.QPushButton('Add Modification')
+        modificationsRemoveStatementButton = QtWidgets.QPushButton('Remove Last Modification')
+        modificationsAddStatementButton.clicked.connect(self.addModificationClause)
+        modificationsRemoveStatementButton.clicked.connect(self.removeModificationClause)
+        modificationsButtonsWidgetLayout.addWidget(modificationsRemoveStatementButton)
+        modificationsButtonsWidgetLayout.addWidget(modificationsAddStatementButton)
+
+        self.modificationValuesAreaWidgetLayout.addWidget(modificationsButtonsWidget)
+
+        modificationsPaneLayout.addWidget(QtWidgets.QLabel('Modifications: '), 0, 0, 1, 1)
+        modificationsPaneLayout.addWidget(self.modificationValuesArea, 0, 0, 2, 2)
+
+        self.queryTabbedPane.addTab(modificationsPane, 'Modifications')
+        ####
+
+        self.entityDropdownTriplets = []
+
+        self.historyTable = QtWidgets.QTableWidget(0, 7, self)
+        self.historyTable.setSelectionBehavior(self.historyTable.SelectRows)
+        self.historyTable.setSelectionMode(self.historyTable.SingleSelection)
+        self.historyTable.setAcceptDrops(False)
+        self.historyTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.historyTable.verticalHeader().setCascadingSectionResizes(True)
+        for index in range(1, 7):
+            self.historyTable.horizontalHeader().setSectionResizeMode(index, QtWidgets.QHeaderView.Stretch)
+        self.historyTable.setHorizontalHeaderLabels(['Query UID', 'Select Clause', 'Select Value(s)', 'Source Clause',
+                                                     'Source Value(s)', 'Condition Clause(s)', 'Modification Values'])
+        self.queryNewOrHistory.addTab(self.historyTable, 'History')
+
+        self.updateValues()
+        self.resize(1000, 600)
+
+    def sourceModeSwitch(self, newText: str):
+        if newText == 'FROMDB':
+            self.sourceValuesArea.setEnabled(False)
+            self.sourceValuesArea.setDisabled(True)
+            self.sourceValuesArea.setHidden(True)
+        else:
+            self.sourceValuesArea.setEnabled(True)
+            self.sourceValuesArea.setDisabled(False)
+            self.sourceValuesArea.setHidden(False)
+
+    def addSourceClause(self):
+
+        clauseWidget = QtWidgets.QFrame()
+        clauseWidgetLayout = QtWidgets.QVBoxLayout()
+        clauseWidget.setLayout(clauseWidgetLayout)
+        clauseWidget.setFrameStyle(clauseWidget.Panel | clauseWidget.Raised)
+        clauseWidget.setLineWidth(3)
+
+        andOrClause = QtWidgets.QComboBox()
+        andOrClause.addItems(['OR', 'AND'])
+        specifier = QtWidgets.QComboBox()
+        specifier.addItems(['CANVAS', 'RCANVAS'])
+        negation = QtWidgets.QComboBox()
+        negation.addItems(['MATCHES', 'DOES NOT MATCH'])
+        inputDropdown = QtWidgets.QListWidget()
+        inputDropdown.setSortingEnabled(True)
+        inputDropdown.setSelectionMode(QtWidgets.QListWidget.SingleSelection)
+        inputDropdown.setMinimumHeight(125)
+        inputDropdown.addItems(self.mainWindowObject.LQLWIZARD.allCanvases)
+        inputText = QtWidgets.QLineEdit('')
+        inputText.setFixedHeight(26)
+        inputWidget = QtWidgets.QWidget()
+        inputWidgetLayout = QtWidgets.QStackedLayout()
+        inputWidget.setLayout(inputWidgetLayout)
+        inputWidgetLayout.addWidget(inputDropdown)
+        inputWidgetLayout.addWidget(inputText)
+        specifier.currentIndexChanged.connect(lambda newIndex: inputWidgetLayout.setCurrentIndex(newIndex))
+
+        clauseWidgetLayout.addWidget(andOrClause)
+        clauseWidgetLayout.addWidget(specifier)
+        clauseWidgetLayout.addWidget(negation)
+        clauseWidgetLayout.addWidget(inputWidget)
+
+        if self.sourceValuesAreaWidgetLayout.count() == 1:
+            andOrClause.setDisabled(True)
+            andOrClause.setToolTip('Cannot edit the set modifier of the first source clause.')
+
+        self.sourceValues.append(clauseWidget)
+        self.sourceValuesAreaWidgetLayout.insertWidget(self.sourceValuesAreaWidgetLayout.count() - 1, clauseWidget)
+
+    def removeSourceClause(self):
+        if self.sourceValuesAreaWidgetLayout.count() != 1:
+            # Remove clause that was added last.
+            itemToDel = self.sourceValuesAreaWidgetLayout.takeAt(self.sourceValuesAreaWidgetLayout.count() - 2)
+            itemToDel.widget().deleteLater()
+            widgetToDel = self.sourceValues.pop()
+            widgetToDel.deleteLater()
+
+    def addConditionClause(self):
+
+        clauseWidget = ConditionClauseWidget(self)
+
+        if self.conditionValuesAreaWidgetLayout.count() == 1:
+            clauseWidget.andOrClause.setDisabled(True)
+            clauseWidget.andOrClause.setToolTip('Cannot edit the set modifier of the first condition clause.')
+        self.conditionValues.append(clauseWidget)
+        self.conditionValuesAreaWidgetLayout.insertWidget(self.conditionValuesAreaWidgetLayout.count() - 1,
+                                                          clauseWidget)
+
+    def removeConditionClause(self):
+        if self.conditionValuesAreaWidgetLayout.count() != 1:
+            # Remove clause that was added last.
+            itemToDel = self.conditionValuesAreaWidgetLayout.takeAt(self.conditionValuesAreaWidgetLayout.count() - 2)
+            itemToDel.widget().deleteLater()
+            widgetToDel = self.conditionValues.pop()
+            widgetToDel.deleteLater()
+
+    def addModificationClause(self):
+
+        clauseWidget = QtWidgets.QFrame()
+        clauseWidgetLayout = QtWidgets.QVBoxLayout()
+        clauseWidget.setLayout(clauseWidgetLayout)
+        clauseWidget.setFrameStyle(clauseWidget.Panel | clauseWidget.Raised)
+        clauseWidget.setLineWidth(3)
+
+        andOrClause = QtWidgets.QLabel('AND')
+        specifier = QtWidgets.QComboBox()
+        specifier.addItems(['MODIFY', 'RMODIFY'])
+
+        modifyOption = QtWidgets.QComboBox()
+        modifyOption.addItems(['NUMIFY', 'UPPERCASE', 'LOWERCASE'])
+
+        inputWidget = QtWidgets.QWidget()
+        inputWidgetLayout = QtWidgets.QStackedLayout()
+
+        inputDropdown = QtWidgets.QListWidget()
+        inputDropdown.setSortingEnabled(True)
+        inputDropdown.setSelectionMode(QtWidgets.QListWidget.SingleSelection)
+        inputDropdown.addItems(self.mainWindowObject.LQLWIZARD.allEntityFields)
+        inputDropdown.setMinimumHeight(125)
+        inputText = QtWidgets.QLineEdit('')
+        inputText.setFixedHeight(26)
+        inputWidget.setLayout(inputWidgetLayout)
+        inputWidgetLayout.addWidget(inputDropdown)
+        inputWidgetLayout.addWidget(inputText)
+        specifier.currentIndexChanged.connect(lambda newIndex: inputWidgetLayout.setCurrentIndex(newIndex))
+
+        clauseWidgetLayout.addWidget(andOrClause)
+        clauseWidgetLayout.addWidget(specifier)
+        clauseWidgetLayout.addWidget(inputWidget)
+        clauseWidgetLayout.addWidget(modifyOption)
+
+        if self.modificationValuesAreaWidgetLayout.count() == 1:
+            andOrClause.setDisabled(True)
+            andOrClause.setToolTip('Cannot edit the set modifier of the first source clause.')
+        self.modificationValues.append(clauseWidget)
+        self.modificationValuesAreaWidgetLayout.insertWidget(self.modificationValuesAreaWidgetLayout.count() - 1,
+                                                             clauseWidget)
+
+    def removeModificationClause(self):
+        if self.modificationValuesAreaWidgetLayout.count() != 1:
+            # Remove clause that was added last.
+            itemToDel = self.modificationValuesAreaWidgetLayout.takeAt(
+                self.modificationValuesAreaWidgetLayout.count() - 2)
+            itemToDel.widget().deleteLater()
+            widgetToDel = self.modificationValues.pop()
+            widgetToDel.deleteLater()
+
+    def runButtonPressed(self):
+        if self.runButton.text() == 'Run Query':
+            self.runButton.setText('Reset Query Wizard')
+            self.runQuery()
+        else:
+            self.updateValues()
+            self.runButton.setText('Run Query')
+
+    def updateValues(self):
+        self.mainWindowObject.LQLWIZARD.takeSnapshot()
+
+        self.selectStatementList.clear()
+        self.selectStatementList.addItems(self.mainWindowObject.LQLWIZARD.allEntityFields)
+        self.selectStatementTextbox.setText('')
+
+        for _ in range(len(self.sourceValues)):
+            widgetToDel = self.sourceValues.pop()
+            widgetToDel.deleteLater()
+
+        for _ in range(self.sourceValuesAreaWidgetLayout.count() - 1):
+            itemToDel = self.sourceValuesAreaWidgetLayout.takeAt(0)
+            itemToDel.widget().deleteLater()
+
+        for _ in range(len(self.conditionValues)):
+            widgetToDel = self.conditionValues.pop()
+            widgetToDel.deleteLater()
+
+        for _ in range(self.conditionValuesAreaWidgetLayout.count() - 1):
+            itemToDel = self.conditionValuesAreaWidgetLayout.takeAt(0)
+            itemToDel.widget().deleteLater()
+
+        for _ in range(self.modificationValuesAreaWidgetLayout.count() - 1):
+            itemToDel = self.modificationValuesAreaWidgetLayout.takeAt(0)
+            itemToDel.widget().deleteLater()
+
+        for _ in range(len(self.modificationValues)):
+            widgetToDel = self.modificationValues.pop()
+            widgetToDel.deleteLater()
+
+        self.entityDropdownTriplets.clear()
+        for entityUID in self.mainWindowObject.LQLWIZARD.databaseSnapshot.nodes:
+            nodeDetails = self.mainWindowObject.LQLWIZARD.databaseSnapshot.nodes[entityUID]
+            pixmapIcon = QtGui.QPixmap()
+            pixmapIcon.loadFromData(nodeDetails['Icon'])
+            self.entityDropdownTriplets.append((nodeDetails[list(nodeDetails)[1]], entityUID, pixmapIcon))
+
+        for _ in range(self.historyTable.rowCount()):
+            self.historyTable.removeRow(0)
+
+        for oldQueryUID in self.mainWindowObject.LQLWIZARD.QUERIES_HISTORY:
+            self.historyTable.insertRow(0)
+            self.historyTable.setItem(0, 0, QtWidgets.QTableWidgetItem(str(oldQueryUID)))
+            for valueIndex in range(6):
+                self.historyTable.setItem(0, valueIndex + 1, QtWidgets.QTableWidgetItem(
+                    str(self.mainWindowObject.LQLWIZARD.QUERIES_HISTORY[oldQueryUID][valueIndex])))
+
+    def runQuery(self):
+        # Results
+        if self.queryNewOrHistory.currentIndex() == 0:
+            sourceResults = []
+            for sourceValue in self.sourceValues:
+                sourceResult = [sourceValue.layout().itemAt(0).widget().currentText(),
+                                sourceValue.layout().itemAt(1).widget().currentText(),
+                                False if sourceValue.layout().itemAt(2).widget().currentText() == 'MATCHES' else True]
+                if sourceValue.layout().itemAt(3).widget().layout().currentIndex() == 0:
+                    try:
+                        sourceResult.append(
+                            sourceValue.layout().itemAt(3).widget().layout().itemAt(0).widget().selectedItems()[0].text())
+                    except IndexError:
+                        continue
+                else:
+                    sourceResult.append(sourceValue.layout().itemAt(3).widget().layout().itemAt(1).widget().text())
+                sourceResults.append(sourceResult)
+
+            conditionResults = []
+            for conditionValue in self.conditionValues:
+                conditionResult = conditionValue.getValue()
+                if conditionResult is not None:
+                    conditionResults.append(conditionResult)
+            if not conditionResults:
+                conditionResults = None
+
+            modificationResults = []
+            for modificationValue in self.modificationValues:
+                modificationResult = []
+                specifierText = modificationValue.layout().itemAt(1).widget().currentText()
+                modificationResult.append(specifierText)
+                if specifierText == 'MODIFY':
+                    try:
+                        modificationResult.append(
+                            modificationValue.layout().itemAt(2).widget().layout().itemAt(0).widget().selectedItems()[0].text())
+                    except IndexError:
+                        continue
+                else:
+                    modificationResult.append(
+                        modificationValue.layout().itemAt(2).widget().layout().itemAt(1).widget().text())
+                modificationResult.append(modificationValue.layout().itemAt(3).widget().currentText())
+                modificationResults.append(modificationResult)
+            if not modificationResults:
+                modificationResults = None
+
+            currentSelectStatement = self.selectStatementPicker.currentText()
+            if currentSelectStatement == 'SELECT':
+                selectedFields = []
+                for item in self.selectStatementList.selectedItems():
+                    selectedFields.append(item.text())
+            else:
+                selectedFields = self.selectStatementTextbox.text()
+            sourceStatement = self.sourceStatementPicker.currentText()
+            sourceListOrNone = None if sourceStatement == 'FROMDB' else sourceResults
+
+            resultsSet, modificationsSet = self.mainWindowObject.LQLWIZARD.parseQuery(currentSelectStatement,
+                                                                                      selectedFields, sourceStatement,
+                                                                                      sourceListOrNone,
+                                                                                      conditionResults,
+                                                                                      modificationResults)
+        else:
+            try:
+                selectedHistoryUID = self.historyTable.selectedItems()[0].text()
+                resultsSet, modificationsSet = self.mainWindowObject.LQLWIZARD.parseQuery(
+                    *self.mainWindowObject.LQLWIZARD.QUERIES_HISTORY[selectedHistoryUID])
+            except IndexError:
+                self.mainWindowObject.MESSAGEHANDLER.error('No Query selected from history.', popUp=True)
+                return
+
+        self.showResults(resultsSet, modificationsSet)
+
+    def showResults(self, resultsSet, modificationsSet):
+        if not resultsSet:
+            self.mainWindowObject.MESSAGEHANDLER.warning('Query returned no results.', popUp=True)
+            return
+
+        if modificationsSet:
+            numified = modificationsSet[1]
+        else:
+            numified = None
+
+        qResultsViewer = QueryResultsViewer(self.mainWindowObject, self.mainWindowObject.LQLWIZARD.allEntities,
+                                            resultsSet[0], resultsSet[1], numified)
+        qResultsViewer.exec()
+
+
+class QueryResultsViewer(QtWidgets.QDialog):
+
+    def __init__(self, mainWindowObject: MainWindow, entitiesDict: dict, selectedUIDs: set, selectedFields: set,
+                 numifiedFields: set):
+        super(QueryResultsViewer, self).__init__()
+        self.mainWindowObject = mainWindowObject
+        self.setModal(True)
+        self.setWindowTitle('Query Results')
+        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
+        dialogLayout = QtWidgets.QGridLayout()
+        self.setLayout(dialogLayout)
+
+        self.resultsTabbedPane = QtWidgets.QTabWidget(self)
+        dialogLayout.addWidget(self.resultsTabbedPane, 0, 0, 2, 2)
+
+        self.headerFields = list(selectedFields)
+        try:
+            self.headerFields.remove('uid')
+        except ValueError:
+            pass
+        self.headerFields.insert(0, 'uid')
+
+        self.resultsTable = QtWidgets.QTableWidget(0, len(self.headerFields), self)
+        self.resultsTable.setHorizontalHeaderLabels(self.headerFields)
+        self.resultsTable.setAcceptDrops(False)
+        self.resultsTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.resultsTable.verticalHeader().setCascadingSectionResizes(True)
+        for index in range(1, len(self.headerFields)):
+            self.resultsTable.horizontalHeader().setSectionResizeMode(index, QtWidgets.QHeaderView.Stretch)
+
+        count = 0
+        for uid in selectedUIDs:
+            self.resultsTable.insertRow(count)
+            for index, field in enumerate(self.headerFields):
+                self.resultsTable.setItem(count, index, QtWidgets.QTableWidgetItem(str(entitiesDict[uid][field])))
+            count += 1
+
+        self.resultsTabbedPane.addTab(self.resultsTable, 'Table')
+
+        self.charts = {}
+        for headerField in self.headerFields[1:]:
+            fieldChart = QtCharts.QChart()
+            chartTitle = headerField + " Chart"
+            fieldChart.setTitle(chartTitle)
+            fieldChart.setTheme(QtCharts.QChart.ChartThemeBlueCerulean)
+            fieldChart.setMargins(QtCore.QMargins(0, 0, 0, 0))
+            chartView = QtCharts.QChartView(fieldChart)
+            chartView.setRubberBand(QtCharts.QChartView.NoRubberBand)
+            chartView.setRenderHint(QtGui.QPainter.Antialiasing)
+            fieldChart.setAnimationOptions(QtCharts.QChart.AllAnimations)
+            fieldChart.setAnimationDuration(250)
+            fieldChart.legend().setVisible(True)
+            fieldChart.legend().setAlignment(QtCore.Qt.AlignBottom)
+
+            self.charts[headerField] = (fieldChart, chartView)
+            self.resultsTabbedPane.addTab(chartView, chartTitle)
+            values = {}
+
+            for entity in entitiesDict:
+                entityValue = str(entitiesDict[entity].get(headerField))
+                if entityValue not in values:
+                    values[entityValue] = 1
+                else:
+                    values[entityValue] += 1
+
+            barSeries = QtCharts.QBarSeries()
+            barSeries.setName(headerField)
+            for barValue in values:
+                barSet = QtCharts.QBarSet(barValue)
+                barSet.append(values[barValue])
+                barSeries.append(barSet)
+
+            fieldChart.addSeries(barSeries)
+
+            xAxis = QtCharts.QBarCategoryAxis()
+            xAxis.append([headerField])
+            fieldChart.addAxis(xAxis, QtCore.Qt.AlignBottom)
+            barSeries.attachAxis(xAxis)
+
+            yAxis = QtCharts.QValueAxis()
+            yAxis.setRange(0, max(values.values()) + 1)
+            yAxis.applyNiceNumbers()
+            fieldChart.addAxis(yAxis, QtCore.Qt.AlignLeft)
+            barSeries.attachAxis(yAxis)
+
+        if numifiedFields:
+            for field in numifiedFields:
+                fieldValues = []
+                for entity in entitiesDict:
+                    entityValue = float(entitiesDict[entity].get(field))
+                    fieldValues.append(entityValue)
+                numValues = len(fieldValues)
+                maxValue = max(fieldValues)
+                minValue = min(fieldValues)
+                meanValue = statistics.fmean(fieldValues)
+                medianValue = statistics.median(fieldValues)
+                modeValue = statistics.mode(fieldValues)
+                sumValue = sum(fieldValues)
+                rangeValue = maxValue - minValue
+                varianceValue = statistics.pvariance(fieldValues)
+                standardDeviationValue = statistics.pstdev(fieldValues)
+
+                numifiedFieldWidget = QtWidgets.QWidget()
+                numifiedFieldWidgetLayout = QtWidgets.QVBoxLayout()
+                numifiedFieldWidget.setLayout(numifiedFieldWidgetLayout)
+                fieldLabel = QtWidgets.QLabel('Numerical Information for field: ' + field)
+                numifiedValuesWidget = QtWidgets.QWidget()
+                numifiedValuesWidgetLayout = QtWidgets.QFormLayout()
+                numifiedValuesWidget.setLayout(numifiedValuesWidgetLayout)
+
+                numifiedValuesWidgetLayout.addRow('Number of Values: ', QtWidgets.QLabel(str(numValues)))
+                numifiedValuesWidgetLayout.addRow('Biggest Value: ', QtWidgets.QLabel(str(maxValue)))
+                numifiedValuesWidgetLayout.addRow('Smallest Value: ', QtWidgets.QLabel(str(minValue)))
+                numifiedValuesWidgetLayout.addRow('Mean Value: ', QtWidgets.QLabel(str(meanValue)))
+                numifiedValuesWidgetLayout.addRow('Median Value: ', QtWidgets.QLabel(str(medianValue)))
+                numifiedValuesWidgetLayout.addRow('Mode Value: ', QtWidgets.QLabel(str(modeValue)))
+                numifiedValuesWidgetLayout.addRow('Sum of Values: ', QtWidgets.QLabel(str(sumValue)))
+                numifiedValuesWidgetLayout.addRow('Range of Values: ', QtWidgets.QLabel(str(rangeValue)))
+                numifiedValuesWidgetLayout.addRow('Variance of Values: ', QtWidgets.QLabel(str(varianceValue)))
+                numifiedValuesWidgetLayout.addRow('Standard Deviation of Values: ',
+                                                  QtWidgets.QLabel(str(standardDeviationValue)))
+
+                numifiedFieldWidgetLayout.addWidget(fieldLabel, 0)
+                numifiedFieldWidgetLayout.addWidget(numifiedValuesWidget, 1)
+
+                self.resultsTabbedPane.addTab(numifiedFieldWidget, field + ' Field Values Information')
+
+        closeButton = QtWidgets.QPushButton('Close')
+        closeButton.clicked.connect(self.accept)
+        exportButton = QtWidgets.QPushButton('Export Table')
+        exportButton.clicked.connect(self.exportData)
+
+        dialogLayout.addWidget(closeButton, 3, 0, 1, 1)
+        dialogLayout.addWidget(exportButton, 3, 1, 1, 1)
+
+    def exportData(self):
+        exportDialog = QtWidgets.QFileDialog()
+        exportDialog.setOption(QtWidgets.QFileDialog.DontUseNativeDialog, True)
+        exportDialog.setViewMode(QtWidgets.QFileDialog.List)
+        exportDialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
+        exportDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+        exportDialog.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
+        exportDialog.setDirectory(str(Path.home()))
+
+        exportExec = exportDialog.exec()
+        if not exportExec:
+            self.mainWindowObject.setStatus('Export operation cancelled.')
+            return False
+        fileName = exportDialog.selectedFiles()[0]
+        exportFilePath = Path(fileName)
+        if not is_path_exists_or_creatable_portable(str(exportFilePath)):
+            self.mainWindowObject.MESSAGEHANDLER.error(
+                'Invalid export file name or path to save at.', popUp=True, exc_info=False)
+            return False
+
+        try:
+            with open(exportFilePath, 'w') as fileToWrite:
+                csvWriter = csv.writer(fileToWrite, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
+                csvWriter.writerow(self.headerFields)
+                for rowIndex in range(self.resultsTable.rowCount()):
+                    currColumnValues = []
+                    for columnIndex in range(self.resultsTable.columnCount()):
+                        currColumnValues.append(self.resultsTable.item(rowIndex, columnIndex).text())
+                    csvWriter.writerow(currColumnValues)
+        except FileNotFoundError:
+            self.mainWindowObject.MESSAGEHANDLER.error('Cannot write file into a non-existing parent directory. '
+                                                       'Please create the required parent directories and try again.',
+                                                       popUp=True, exc_info=False)
+            return False
+
+        self.mainWindowObject.MESSAGEHANDLER.info('Table exported successfully.', popUp=True, exc_info=False)
+        return True
+
+
+class ConditionClauseWidget(QtWidgets.QFrame):
+
+    def __init__(self, parentWizard: QueryBuilderWizard):
+        super(ConditionClauseWidget, self).__init__()
+        clauseWidgetLayout = QtWidgets.QVBoxLayout()
+        self.setLayout(clauseWidgetLayout)
+        self.setFrameStyle(self.Panel | self.Raised)
+        self.setLineWidth(3)
+
+        self.andOrClause = QtWidgets.QComboBox()
+        self.andOrClause.addItems(['OR', 'AND'])
+        self.specifier = QtWidgets.QComboBox()
+        self.specifier.addItems(['Value Condition', 'Graph Condition'])
+        self.negation = QtWidgets.QComboBox()
+        self.negation.addItems(['MATCHES', 'DOES NOT MATCH'])
+
+        inputWidget = QtWidgets.QWidget()
+        inputWidgetLayout = QtWidgets.QStackedLayout()
+        inputWidget.setLayout(inputWidgetLayout)
+
+        vcWidget = QtWidgets.QFrame()
+        vcWidgetLayout = QtWidgets.QVBoxLayout()
+        vcWidget.setLayout(vcWidgetLayout)
+
+        valueInputDropdownAttr = QtWidgets.QComboBox()
+        valueInputDropdownAttr.addItems(["ATTRIBUTE", "RATTRIBUTE"])
+        userInputDropdownAttr = QtWidgets.QLineEdit('')
+        userInputDropdownAttr.setFixedHeight(26)
+        valueInputDropdownCondition = QtWidgets.QComboBox()
+        valueInputDropdownCondition.addItems(["EQ", "CONTAINS", "STARTSWITH", "ENDSWITH", "RMATCH"])
+        userInputDropdownCondition = QtWidgets.QLineEdit('')
+        userInputDropdownCondition.setFixedHeight(26)
+
+        vcWidgetLayout.addWidget(valueInputDropdownAttr)
+        vcWidgetLayout.addWidget(userInputDropdownAttr)
+        vcWidgetLayout.addWidget(valueInputDropdownCondition)
+        vcWidgetLayout.addWidget(userInputDropdownCondition)
+
+        gcWidget = QtWidgets.QFrame()
+        gcWidgetLayout = QtWidgets.QVBoxLayout()
+        gcWidget.setLayout(gcWidgetLayout)
+
+        graphDropdownCondition = QtWidgets.QComboBox()
+        graphDropdownCondition.addItems(['CHILDOF', 'DESCENDANTOF', 'PARENTOF', 'ANCESTOROF', 'CONNECTEDTO',
+                                         'NUMCHILDREN', 'NUMPARENTS', 'ISOLATED', 'ISROOT', 'ISLEAF'])
+        gcWidgetLayout.addWidget(graphDropdownCondition)
+
+        gcSecondaryInput = QtWidgets.QWidget()
+        self.gcSecondaryInputLayout = QtWidgets.QStackedLayout()
+        gcSecondaryInput.setLayout(self.gcSecondaryInputLayout)
+
+        graphEntitiesDropdown = QtWidgets.QTreeWidget()
+        graphEntitiesDropdown.setHeaderLabels(['Primary Field', 'UID', 'Icon'])
+        graphEntitiesDropdown.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        for entityDropdownTriplet in parentWizard.entityDropdownTriplets:
+            newItem = QtWidgets.QTreeWidgetItem()
+            newItem.setText(0, entityDropdownTriplet[0])
+            newItem.setText(1, entityDropdownTriplet[1])
+            newItem.setIcon(2, entityDropdownTriplet[2])
+            graphEntitiesDropdown.addTopLevelItem(newItem)
+
+        self.gcSecondaryInputLayout.addWidget(graphEntitiesDropdown)
+
+        graphNumComparisonsWidget = QtWidgets.QWidget()
+        graphNumComparisonsWidgetLayout = QtWidgets.QHBoxLayout()
+        graphNumComparisonsWidget.setLayout(graphNumComparisonsWidgetLayout)
+
+        graphNumComparisonDropdown = QtWidgets.QComboBox()
+        graphNumComparisonDropdown.addItems(['<', '<=', '>', '>=', '=='])
+        graphNumInput = QtWidgets.QSpinBox()
+        graphNumInput.setMinimum(0)
+        graphNumInput.setMaximum(1000000)  # Can be adjusted higher if need be.
+        graphNumInput.setValue(0)
+        graphNumComparisonsWidgetLayout.addWidget(graphNumComparisonDropdown)
+        graphNumComparisonsWidgetLayout.addWidget(graphNumInput)
+
+        self.gcSecondaryInputLayout.addWidget(graphNumComparisonsWidget)
+
+        emptyWidget = QtWidgets.QWidget()
+        self.gcSecondaryInputLayout.addWidget(emptyWidget)
+
+        gcWidgetLayout.addWidget(gcSecondaryInput)
+
+        inputWidgetLayout.addWidget(vcWidget)
+        inputWidgetLayout.addWidget(gcWidget)
+        self.specifier.currentIndexChanged.connect(lambda newIndex: inputWidgetLayout.setCurrentIndex(newIndex))
+        graphDropdownCondition.currentIndexChanged.connect(self.determineSecondaryInput)
+
+        clauseWidgetLayout.addWidget(self.andOrClause)
+        clauseWidgetLayout.addWidget(self.specifier)
+        clauseWidgetLayout.addWidget(self.negation)
+        clauseWidgetLayout.addWidget(inputWidget)
+
+    def determineSecondaryInput(self, conditionIndex: int):
+        if conditionIndex < 5:
+            self.gcSecondaryInputLayout.setCurrentIndex(0)
+        elif conditionIndex < 7:
+            self.gcSecondaryInputLayout.setCurrentIndex(1)
+        else:
+            self.gcSecondaryInputLayout.setCurrentIndex(2)
+
+    def getValue(self):
+        specifierValue = self.specifier.currentText()
+        returnValues = [self.andOrClause.currentText(),
+                        specifierValue]
+        if self.negation.currentText() == 'MATCHES':
+            returnValues.append(False)
+        else:
+            returnValues.append(True)
+        conditionValue = []
+
+        if specifierValue == 'Value Condition':
+            conditionValue.append(self.layout().itemAt(3).widget().layout().itemAt(0).widget().layout().itemAt(0).widget().currentText())
+            conditionValue.append(self.layout().itemAt(3).widget().layout().itemAt(0).widget().layout().itemAt(1).widget().text())
+            conditionValue.append(self.layout().itemAt(3).widget().layout().itemAt(0).widget().layout().itemAt(2).widget().currentText())
+            conditionValue.append(self.layout().itemAt(3).widget().layout().itemAt(0).widget().layout().itemAt(3).widget().text())
+        else:
+            conditionValue.append(self.layout().itemAt(3).widget().layout().itemAt(1).widget().layout().itemAt(0).widget().currentText())
+            if self.gcSecondaryInputLayout.currentIndex() == 0:
+                try:
+                    conditionValue.append(self.gcSecondaryInputLayout.itemAt(0).widget().selectedItems()[0].text())
+                except IndexError:
+                    return None
+            elif self.gcSecondaryInputLayout.currentIndex() == 1:
+                conditionValue.append(
+                    self.gcSecondaryInputLayout.itemAt(1).widget().layout().itemAt(0).widget().currentText())
+                conditionValue.append(
+                    self.gcSecondaryInputLayout.itemAt(1).widget().layout().itemAt(1).widget().value())
+
+        returnValues.append(conditionValue)
+
+        return returnValues
 
 
 if __name__ == '__main__':
