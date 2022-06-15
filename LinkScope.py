@@ -8,6 +8,7 @@ import threading
 import time
 import csv
 import statistics
+import itertools
 
 import networkx as nx
 from ast import literal_eval
@@ -532,6 +533,62 @@ class MainWindow(QtWidgets.QMainWindow):
                 if linkItem.uid.intersection(linksToSelect):
                     linkItem.setSelected(True)
             self.setStatus('Shortest path found.')
+
+    def extractCycles(self) -> None:
+        """
+        Find cycles in the graph, optionally involving selected nodes.
+        :return:
+        """
+        currentScene = self.centralWidget().tabbedPane.getCurrentScene()
+        canvasName = currentScene.getSelfName()
+        endPoints = [item.uid for item in currentScene.selectedItems()
+                     if isinstance(item, BaseNode)]
+        currentCanvasGraph = currentScene.sceneGraph
+        tempGraph = currentCanvasGraph.copy()
+        # Just in case.
+        tempGraph.remove_edges_from(nx.selfloop_edges(currentCanvasGraph))
+
+        newCyclesThread = ExtractCyclesThread(tempGraph, endPoints, canvasName)
+        newCyclesThread.cyclesSignal.connect(self.extractCyclesResultHandler)
+        self.MESSAGEHANDLER.info('Extracting Cycles from Canvas: ' + canvasName)
+        newCyclesThread.start()
+        self.cycleExtractionThreads.append(newCyclesThread)
+
+    def extractCyclesResultHandler(self, results: list, canvasName: str) -> None:
+        if not results:
+            self.MESSAGEHANDLER.info('No Cycles in Canvas: ' + canvasName)
+        else:
+            count = 0
+            while True:
+                newCanvasName = canvasName + ' Cycles #' + str(count)
+                if self.centralWidget().tabbedPane.addCanvas(newCanvasName):
+                    break
+                else:
+                    count += 1
+
+            nodesToAdd = results[0]
+            groupsToMake = results[1]
+            newCanvas = self.centralWidget().tabbedPane.canvasTabs[newCanvasName].scene()
+
+            for node in nodesToAdd:
+                newCanvas.addNodeProgrammatic(node)
+
+            count = 1
+            entitiesAlreadyInGroups = set()
+            for group in groupsToMake:
+                newGroup = set()
+                for groupEntity in group:
+                    if groupEntity not in entitiesAlreadyInGroups:
+                        newGroup.add(groupEntity)
+                        entitiesAlreadyInGroups.add(groupEntity)
+                newCanvas.groupItemsProgrammatic(newGroup, 'Group ' + str(count))
+                count += 1
+            newCanvas.rearrangeGraph('neato')
+
+        for cycleThread in list(self.cycleExtractionThreads):
+            if cycleThread.isFinished():
+                cycleThread.deleteLater()
+                self.cycleExtractionThreads.remove(cycleThread)
 
     def findEntityOrLinkOnCanvas(self, regex: bool = False) -> None:
         currentScene = self.centralWidget().tabbedPane.getCurrentScene()
@@ -1165,6 +1222,7 @@ class MainWindow(QtWidgets.QMainWindow):
         """
         for resolutionThread in list(self.resolutions):
             if resolutionThread[0].isFinished() and resolutionThread[1] is False:
+                resolutionThread[0].deleteLater()
                 self.resolutions.remove(resolutionThread)
 
     def getClientCollectors(self) -> dict:
@@ -1271,6 +1329,7 @@ class MainWindow(QtWidgets.QMainWindow):
         for resolutionThread in list(self.resolutions):
             if resolutionThread[0].uid == resolution_uid and resolutionThread[1] is True:
                 if resolutionThread[0].isFinished():
+                    resolutionThread[0].deleteLater()
                     self.resolutions.remove(resolutionThread)
                 break
 
@@ -1833,6 +1892,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.serverCollectorsLock = threading.Lock()
         self.collectors = {}
         self.runningCollectors = {}
+        self.cycleExtractionThreads = []
 
         self.RESOLUTIONMANAGER.loadResolutionsFromDir(
             Path(self.SETTINGS.value("Program/BaseDir")) / "Core" / "Resolutions" / "Core")
@@ -3688,7 +3748,6 @@ class QueryBuilderWizard(QtWidgets.QDialog):
         buttonsWidgetLayout.addWidget(self.runButton)
         dialogLayout.addWidget(buttonsWidget)
 
-
         #### SELECT
         selectPane = QtWidgets.QWidget()
         selectPaneLayout = QtWidgets.QGridLayout()
@@ -4038,7 +4097,8 @@ class QueryBuilderWizard(QtWidgets.QDialog):
                 if sourceValue.layout().itemAt(3).widget().layout().currentIndex() == 0:
                     try:
                         sourceResult.append(
-                            sourceValue.layout().itemAt(3).widget().layout().itemAt(0).widget().selectedItems()[0].text())
+                            sourceValue.layout().itemAt(3).widget().layout().itemAt(0).widget().selectedItems()[
+                                0].text())
                     except IndexError:
                         continue
                 else:
@@ -4061,7 +4121,8 @@ class QueryBuilderWizard(QtWidgets.QDialog):
                 if specifierText == 'MODIFY':
                     try:
                         modificationResult.append(
-                            modificationValue.layout().itemAt(2).widget().layout().itemAt(0).widget().selectedItems()[0].text())
+                            modificationValue.layout().itemAt(2).widget().layout().itemAt(0).widget().selectedItems()[
+                                0].text())
                     except IndexError:
                         continue
                 else:
@@ -4405,12 +4466,17 @@ class ConditionClauseWidget(QtWidgets.QFrame):
         conditionValue = []
 
         if specifierValue == 'Value Condition':
-            conditionValue.append(self.layout().itemAt(3).widget().layout().itemAt(0).widget().layout().itemAt(0).widget().currentText())
-            conditionValue.append(self.layout().itemAt(3).widget().layout().itemAt(0).widget().layout().itemAt(1).widget().text())
-            conditionValue.append(self.layout().itemAt(3).widget().layout().itemAt(0).widget().layout().itemAt(2).widget().currentText())
-            conditionValue.append(self.layout().itemAt(3).widget().layout().itemAt(0).widget().layout().itemAt(3).widget().text())
+            conditionValue.append(
+                self.layout().itemAt(3).widget().layout().itemAt(0).widget().layout().itemAt(0).widget().currentText())
+            conditionValue.append(
+                self.layout().itemAt(3).widget().layout().itemAt(0).widget().layout().itemAt(1).widget().text())
+            conditionValue.append(
+                self.layout().itemAt(3).widget().layout().itemAt(0).widget().layout().itemAt(2).widget().currentText())
+            conditionValue.append(
+                self.layout().itemAt(3).widget().layout().itemAt(0).widget().layout().itemAt(3).widget().text())
         else:
-            conditionValue.append(self.layout().itemAt(3).widget().layout().itemAt(1).widget().layout().itemAt(0).widget().currentText())
+            conditionValue.append(
+                self.layout().itemAt(3).widget().layout().itemAt(1).widget().layout().itemAt(0).widget().currentText())
             if self.gcSecondaryInputLayout.currentIndex() == 0:
                 try:
                     conditionValue.append(self.gcSecondaryInputLayout.itemAt(0).widget().selectedItems()[0].text(1))
@@ -4425,6 +4491,53 @@ class ConditionClauseWidget(QtWidgets.QFrame):
         returnValues.append(conditionValue)
 
         return returnValues
+
+
+class ExtractCyclesThread(QtCore.QThread):
+    cyclesSignal = QtCore.Signal(list, str)
+
+    def __init__(self, tempGraph: nx.DiGraph, nodesList: list, canvasName: str):
+        super().__init__()
+        self.tempGraph = tempGraph
+        self.nodesList = nodesList
+        self.canvasName = canvasName
+
+    def run(self) -> None:
+        allCycles = list(nx.simple_cycles(self.tempGraph))
+        if not allCycles:
+            self.cyclesSignal.emit([], self.canvasName)
+
+        if self.nodesList:
+            startNode = self.nodesList[0]
+        else:
+            mostCommonDict = {}
+            for cycle in allCycles:
+                for node in cycle:
+                    mostCommonDict[node] = mostCommonDict.get(node, 0) + 1
+            startNode = max(mostCommonDict, key=mostCommonDict.get)
+
+        reorderedCycles = []
+        for cycle in allCycles:
+            try:
+                reorderedCycles.append(cycle[cycle.index(startNode):] + cycle[:cycle.index(startNode)])
+            except ValueError:
+                reorderedCycles.append(cycle)
+
+        groups = []
+        allElements = set()
+        skipGrouping = True
+        for cycle in list(itertools.zip_longest(*reorderedCycles)):
+            cycleSet = set()
+            for cycleElement in cycle:
+                if cycleElement is not None:
+                    cycleSet.add(cycleElement)
+                    allElements.add(cycleElement)
+            if len(cycleSet) > 1 and not skipGrouping:
+                groups.append(cycleSet)
+            elif skipGrouping:
+                skipGrouping = False
+
+        self.cyclesSignal.emit([allElements, groups], self.canvasName)
 
 
 if __name__ == '__main__':

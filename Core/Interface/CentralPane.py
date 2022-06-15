@@ -4,7 +4,7 @@ import re
 import json
 import sys
 import threading
-from typing import Union
+from typing import Union, Optional
 from datetime import datetime
 
 import folium
@@ -1447,11 +1447,12 @@ class CanvasScene(QtWidgets.QGraphicsScene):
 
         return newNode
 
-    def rearrangeGraph(self) -> None:
+    def rearrangeGraph(self, graphAlgorithm: str = None) -> None:
         # https://gitlab.com/graphviz/graphviz/-/merge_requests/2236
         # No triangulation library on windows yet, so sfdp can't be used there.
 
-        graphAlgorithm = self.parent().mainWindow.SETTINGS.value("Program/GraphLayout", 'dot')
+        if graphAlgorithm is None or graphAlgorithm not in ('sfdp', 'neato', 'dot'):
+            graphAlgorithm = self.parent().mainWindow.SETTINGS.value("Program/GraphLayout", 'dot')
         try:
             if graphAlgorithm == 'sfdp':
                 self.scenePos = nx.nx_pydot.graphviz_layout(self.sceneGraph, 'sfdp')
@@ -1794,7 +1795,7 @@ class CanvasScene(QtWidgets.QGraphicsScene):
 
     # Because the entities on each canvas are stored in dicts, and dicts are ordered, group nodes will always
     # come after the nodes they contain.
-    def groupSelectedItems(self) -> None:
+    def groupSelectedItems(self) -> Optional[Entity.GroupNode]:
         items = [item for item in self.selectedItems() if isinstance(item, Entity.BaseNode)]
         for item in items:
             if isinstance(item, Entity.GroupNode):
@@ -1814,6 +1815,16 @@ class CanvasScene(QtWidgets.QGraphicsScene):
             return groupNode
         else:
             self.parent().mainWindow.setStatus('Please select more than one node to create a Group node.')
+
+    def groupItemsProgrammatic(self, itemUIDs: set, groupName: str = 'Entity Group') -> Optional[Entity.GroupNode]:
+        newGroupUIDs = [uid for uid in itemUIDs if not uid.endswith('@')]
+        if len(newGroupUIDs) > 1:
+            newEntity = self.parent().entityDB.addEntity(
+                {'Group Name': groupName, 'Child UIDs': newGroupUIDs, 'Entity Type': 'EntityGroup'})
+            uid = newEntity['uid']
+            [self.removeNode(self.nodesDict[uid]) for uid in newGroupUIDs]
+            return self.addNodeProgrammatic(uid, itemUIDs)
+        return None
 
     def ungroupSelectedItems(self) -> None:
         groups = [item for item in self.selectedItems() if isinstance(item, Entity.GroupNode)]

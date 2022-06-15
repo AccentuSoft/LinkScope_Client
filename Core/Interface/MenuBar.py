@@ -288,6 +288,15 @@ class MenuBar(QtWidgets.QMenuBar):
                                                triggered=self.entityNotesToTextFile)
         nodeOperationsMenu.addAction(notesToTextFilesAction)
 
+        nodeOperationsMenu.addSeparator()
+
+        detectCyclesAction = QtGui.QAction("Extract Cycles",
+                                           self,
+                                           statusTip="Discover cycles in the graph that include the selected nodes, "
+                                                     "and extract them to different canvases.",
+                                           triggered=self.extractCycles)
+        nodeOperationsMenu.addAction(detectCyclesAction)
+
         projectMenu = self.addMenu("Project Operations")
         projectMenu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
         generateReportAction = QtGui.QAction("Generate Report",
@@ -1057,6 +1066,9 @@ class MenuBar(QtWidgets.QMenuBar):
                                       'Entity Type': 'Document'},
                                      {itemJSON['uid']: {'Resolution': 'Notes to Text File', 'Notes': ''}}])
         self.parent().facilitateResolutionSignalListener.emit('Notes to Text File Operation', newNodes)
+
+    def extractCycles(self) -> None:
+        self.parent().extractCycles()
 
     def importFromBrowser(self) -> None:
         """
