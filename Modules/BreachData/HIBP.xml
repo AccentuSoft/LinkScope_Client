@@ -6,6 +6,14 @@
             <Attribute default="Breach Domain" check="String" primary="False">Breach Domain</Attribute>
             <Attribute default="0" check="Numbers" primary="False">Breach Pwn Count</Attribute>
             <Attribute default="Breach Description" check="String" primary="False">Breach Description</Attribute>
+            <Attribute default="False" check="String" primary="False">Breach Is Sensitive</Attribute>
+            <Attribute default="False" check="String" primary="False">Breach Is Verified</Attribute>
+            <Attribute default="False" check="String" primary="False">Breach Is Fabricated</Attribute>
+            <Attribute default="False" check="String" primary="False">Breach Is Retired</Attribute>
+            <Attribute default="False" check="String" primary="False">Breach Is Spam List</Attribute>
+            <Attribute default="False" check="String" primary="False">Breach Is Malware</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Breach Added Date</Attribute>
+            <Attribute default="Unknown" check="String" primary="False">Breach Modified Date</Attribute>
         </Attributes>
         <Icon>
             Default.svg

@@ -44,17 +44,15 @@ class HaveIBeenPwnedPastes:
                 for paste in pasteContent:
                     pasteID = paste['Id']
                     pasteSource = paste['Source']
-                    pasteTitle = paste['Title']
-                    pasteDate = paste['Date']  # If None, will be the date that this entity was created.
-                    pasteEmails = str(paste['EmailCount'])
 
+                    # If Paste Date is None, then default to entity creation date.
                     returnResults.append([{'Paste Identifier': pasteSource + ' | ' + pasteID,
-                                           'Paste Title': pasteTitle,
+                                           'Paste Title': paste['Title'],
                                            'Paste Source': pasteSource,
                                            'Paste ID': pasteID,
-                                           'Paste Email Count': pasteEmails,
+                                           'Paste Email Count': str(paste['EmailCount']),
                                            'Entity Type': 'Paste Data Leak',
-                                           'Date Created': pasteDate},
+                                           'Date Created': paste['Date']},
                                           {entity['uid']: {'Resolution': 'Contained in Paste',
                                                            'Notes': ''}}])
             sleep(1.7)
