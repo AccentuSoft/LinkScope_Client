@@ -42,8 +42,8 @@ xcopy buildEnv\Lib\site-packages\PySide6\resources\qtwebengine_resources_200p.pa
 xcopy buildEnv\Lib\site-packages\PySide6\resources\icudtl.dat dist\LinkScope /Y
 :: Copy web libraries to a location that can be found by the system automatically.
 :: Can't do globbing on cmd shell. Will need to update this later on.
-xcopy dist\LinkScope\site-packages\playwright\driver\package\.local-browsers\firefox-1322\firefox\* dist\LinkScope /S /Y
-xcopy dist\LinkScope\site-packages\playwright\driver\package\.local-browsers\firefox-1322\firefox\* dist\LinkScope\playwright\driver\package\.local-browsers\firefox-1322\firefox /S /Y
+xcopy buildEnv\lib\python3.9\site-packages\playwright\driver\package\.local-browsers\firefox-1323\firefox\* dist\LinkScope /S /Y
+xcopy buildEnv\lib\python3.9\site-packages\playwright\driver\package\.local-browsers\firefox-1323\firefox\* dist\LinkScope\playwright\driver\package\.local-browsers\firefox-1323\firefox /S /Y
 xcopy Icon.ico dist\LinkScope /Y
 
 call buildEnv\Scripts\deactivate.bat

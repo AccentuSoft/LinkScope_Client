@@ -37,8 +37,8 @@ cp buildEnv/lib/python3.9/site-packages/PySide6/Qt/resources/qtwebengine_resourc
 cp buildEnv/lib/python3.9/site-packages/PySide6/Qt/resources/qtwebengine_resources_200p.pak dist/LinkScope
 cp buildEnv/lib/python3.9/site-packages/PySide6/Qt/resources/icudtl.dat dist/LinkScope
 # Copy web libraries to a location that can be found by the system automatically.
-cp -r dist/LinkScope/site-packages/playwright/driver/package/.local-browsers/firefox-*/firefox/* dist/LinkScope
-cp -r dist/LinkScope/site-packages/playwright/driver/package/.local-browsers/firefox-*/firefox/* dist/LinkScope/playwright/driver/package/.local-browsers/firefox-*/firefox
+cp -r buildEnv/lib/python3.9/site-packages/playwright/driver/package/.local-browsers/firefox-*/firefox/* dist/LinkScope
+cp -r buildEnv/lib/python3.9/site-packages/playwright/driver/package/.local-browsers/firefox-*/firefox/* dist/LinkScope/playwright/driver/package/.local-browsers/firefox-*/firefox
 # Include the Icon.
 cp Icon.ico dist/LinkScope
 
