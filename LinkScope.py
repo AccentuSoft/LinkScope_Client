@@ -1792,7 +1792,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setMenuBar(MenuBar.MenuBar(self))
 
         # Set the main window title and show it to the user.
-        self.setWindowTitle("LinkScope - " + self.SETTINGS.get('Project/Name', 'Untitled'))
+        self.setWindowTitle("LinkScope 1.3 - " + self.SETTINGS.get('Project/Name', 'Untitled'))
         iconPath = Path(self.SETTINGS.get('Program/BaseDir')) / 'Icon.ico'
         appIcon = QtGui.QIcon(str(iconPath))
         self.setWindowIcon(appIcon)
