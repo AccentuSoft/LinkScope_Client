@@ -4216,6 +4216,18 @@ class QueryResultsViewer(QtWidgets.QDialog):
 
         self.charts = {}
         for headerField in self.headerFields[1:]:
+            values = {}
+            for entity in entitiesDict:
+                entityValue = str(entitiesDict[entity].get(headerField))
+                if entityValue not in values:
+                    values[entityValue] = 1
+                else:
+                    values[entityValue] += 1
+
+            if not values:
+                # Do not make charts if there are no values to make charts out of.
+                continue
+
             fieldChart = QtCharts.QChart()
             chartTitle = headerField + " Chart"
             fieldChart.setTitle(chartTitle)
@@ -4231,14 +4243,6 @@ class QueryResultsViewer(QtWidgets.QDialog):
 
             self.charts[headerField] = (fieldChart, chartView)
             self.resultsTabbedPane.addTab(chartView, chartTitle)
-            values = {}
-
-            for entity in entitiesDict:
-                entityValue = str(entitiesDict[entity].get(headerField))
-                if entityValue not in values:
-                    values[entityValue] = 1
-                else:
-                    values[entityValue] += 1
 
             barSeries = QtCharts.QBarSeries()
             barSeries.setName(headerField)
