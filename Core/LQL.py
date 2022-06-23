@@ -280,10 +280,10 @@ class LQLQueryBuilder:
             return not returnVal
         return returnVal
 
-    def checkChildOf(self, valueA: str, valueB: str):
+    def checkParentOf(self, valueA: str, valueB: str):
         return self.databaseSnapshot.has_successor(valueA, valueB)
 
-    def checkDescendantOf(self, valueA: str, valueB: str):
+    def checkAncestorOf(self, valueA: str, valueB: str):
         try:
             if valueB in nx.descendants(self.databaseSnapshot, valueA):
                 return True
@@ -291,10 +291,10 @@ class LQLQueryBuilder:
             pass
         return False
 
-    def checkParentOf(self, valueA: str, valueB: str):
+    def checkChildOf(self, valueA: str, valueB: str):
         return self.databaseSnapshot.has_predecessor(valueA, valueB)
 
-    def checkAncestorOf(self, valueA: str, valueB: str):
+    def checkDescendantOf(self, valueA: str, valueB: str):
         try:
             if valueB in nx.ancestors(self.databaseSnapshot, valueA):
                 return True
