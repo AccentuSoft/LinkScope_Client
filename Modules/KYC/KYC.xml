@@ -72,4 +72,26 @@
           Sanctioned_CryptoWallet.svg
         </Icon>
     </Sanctioned_Crypto_Wallet>
+    <Sanctioned_Vessel>
+        <Attributes>
+            <Attribute default="IMO 0" check="String" primary="True">Vessel Registration</Attribute>
+            <Attribute default="Vessel" check="String" primary="False">Vessel Name</Attribute>
+            <Attribute default="000000" check="String" primary="False">Vessel CallSign</Attribute>
+            <Attribute default="XX" check="String" primary="False">Vessel Flag</Attribute>
+        </Attributes>
+        <Icon>
+            Sanctioned_Vessel.svg
+        </Icon>
+    </Sanctioned_Vessel>
+    <Sanctioned_Aircraft>
+        <Attributes>
+            <Attribute default="0000" check="String" primary="True">Aircraft Serial Number</Attribute>
+            <Attribute default="00-000" check="String" primary="False">Aircraft Registration</Attribute>
+            <Attribute default="Aircraft" check="String" primary="False">Aircraft Name</Attribute>
+            <Attribute default="Aircraft Model" check="String" primary="False">Aircraft Model</Attribute>
+        </Attributes>
+        <Icon>
+            Sanctioned_Aircraft.svg
+        </Icon>
+    </Sanctioned_Aircraft>
 </KYC>
