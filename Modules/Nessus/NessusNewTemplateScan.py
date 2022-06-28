@@ -168,7 +168,7 @@ class NessusNewTemplateScan:
 
                     else:
                         return_results.append([{
-                            'Port': hostAddress + "|" + reportItem.attrib['port'] + "|" + reportItem.attrib['protocol'],
+                            'Port': hostAddress + ":" + reportItem.attrib['port'] + ":" + reportItem.attrib['protocol'],
                             'Entity Type': 'Port'},
                             {hostUID: {'Resolution': 'Nessus Scan', 'Notes': ''}}])
 

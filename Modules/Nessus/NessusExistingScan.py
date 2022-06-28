@@ -152,7 +152,7 @@ class NessusExistingScan:
 
                         else:
                             return_results.append([{
-                                'Port': hostAddress + "|" + reportItem.attrib['port'] + "|" + reportItem.attrib[
+                                'Port': hostAddress + ":" + reportItem.attrib['port'] + ":" + reportItem.attrib[
                                     'protocol'],
                                 'Entity Type': 'Port'},
                                 {childIndex: {'Resolution': 'Nessus Scan', 'Notes': ''}}])
