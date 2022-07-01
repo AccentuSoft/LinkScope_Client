@@ -156,8 +156,7 @@ class TwitterUser:
                                           {selfItemIndex: {'Resolution': 'Users mentioned in Tweet'}}])
             if tweetItem.inReplyToTweetId:
                 returnResults.append([{'Tweet ID': str(tweetItem.inReplyToTweetId),
-                                       'Entity Type': 'Tweet',
-                                       'Notes': str(tweetItem.content)},
+                                       'Entity Type': 'Tweet'},
                                       {selfItemIndex: {'Resolution': 'Replying to this Tweet'}}])
             if tweetItem.inReplyToUser:
                 try:

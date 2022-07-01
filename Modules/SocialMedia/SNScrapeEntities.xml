@@ -3,7 +3,7 @@
         <Attributes>
             <Attribute default="@AccentuSoft" check="String" primary="True">Twitter Handle</Attribute>
             <Attribute default="Unknown" check="String" primary="False">User ID</Attribute>
-            <Attribute default="https://twitter.com/accentusoft" check="URL" primary="False">User URL</Attribute>
+            <Attribute default="https://twitter.com/UKNOWN" check="URL" primary="False">User URL</Attribute>
             <Attribute default="Unknown" check="String" primary="False">Verified</Attribute>
             <Attribute default="Unknown" check="String" primary="False">Display Name</Attribute>
             <Attribute default="Unknown" check="String" primary="False">Location</Attribute>
@@ -22,7 +22,7 @@
     <Tweet>
         <Attributes>
             <Attribute default="1491141777361113088" check="Numbers" primary="True">Tweet ID</Attribute>
-            <Attribute default="https://twitter.com/accentusoft/status/1491141777361113088" check="URL" primary="False">Tweet URL</Attribute>
+            <Attribute default="https://twitter.com/UKNOWN/status/0" check="URL" primary="False">Tweet URL</Attribute>
             <Attribute default="0" check="Numbers" primary="False">Replies</Attribute>
             <Attribute default="0" check="Numbers" primary="False">Retweets</Attribute>
             <Attribute default="0" check="Numbers" primary="False">Likes</Attribute>
