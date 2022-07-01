@@ -29,6 +29,11 @@ class ShodanDomainScan:
                 results = api.dns.domain_info(
                     domain=primary_field, history=False, page=1)
             except shodan.exception.APIError as err:
+                if 'No information available' in str(err):
+                    return_result.append([{'Phrase': 'No information in Shodan database.',
+                                           'Entity Type': 'Phrase'},
+                                          {uid: {'Resolution': 'Shodan 404', 'Notes': ''}}])
+                    continue
                 return "Error: " + str(err)
             for subdomain_dict in results['data']:
                 value = subdomain_dict['value']

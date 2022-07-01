@@ -116,6 +116,11 @@ class ShodanIPScan:
             try:
                 host = api.host(primary_field)
             except shodan.exception.APIError as err:
+                if 'No information available' in str(err):
+                    return_result.append([{'Phrase': 'No information in Shodan database.',
+                                           'Entity Type': 'Phrase'},
+                                          {uid: {'Resolution': 'Shodan 404', 'Notes': ''}}])
+                    continue
                 return "Error: " + str(err)
             self.parsing(host, return_result, uid)
 

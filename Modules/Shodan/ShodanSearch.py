@@ -38,6 +38,11 @@ class ShodanSearch:
             try:
                 search = api.search(primary_field)
             except shodan.exception.APIError as err:
+                if 'No information available' in str(err):
+                    return_result.append([{'Phrase': 'No information in Shodan database.',
+                                           'Entity Type': 'Phrase'},
+                                          {uid: {'Resolution': 'Shodan 404', 'Notes': ''}}])
+                    continue
                 return "Error: " + str(err)
             for match in search['matches'][:max_results]:
                 ipMatch = str(match['ip_str'])
