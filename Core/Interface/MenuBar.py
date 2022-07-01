@@ -236,6 +236,17 @@ class MenuBar(QtWidgets.QMenuBar):
                                                                 "Browser tabs.",
                                                       triggered=self.openWebsite)
         viewMenu.addAction(openWebsiteInBrowserTabAction)
+        openWebsiteInBrowserTabAction.setShortcut("Ctrl+W")
+
+        openURLInBrowserTabAction = QtGui.QAction("Open Contents of URL Attributes in Browser",
+                                                  self,
+                                                  statusTip="Open new browser tabs for each valid URL value in all "
+                                                            "attributes of all selected entities that contain the "
+                                                            "string 'URL' (case insensitive).",
+                                                  triggered=self.openURLs)
+        viewMenu.addAction(openURLInBrowserTabAction)
+        openURLInBrowserTabAction.setShortcut("Ctrl+Shift+W")
+
         viewMenu.addSeparator()
 
         dockbarVisibilityMenu = viewMenu.addMenu("Toggle Dockbar Visibility")
@@ -971,6 +982,22 @@ class MenuBar(QtWidgets.QMenuBar):
                         webbrowser.open(itemJSON['URL'], new=0, autoraise=True)
                     except KeyError:
                         continue
+
+    def openURLs(self) -> None:
+        currentScene = self.parent().centralWidget().tabbedPane.getCurrentScene()
+        for item in currentScene.selectedItems():
+            if isinstance(item, BaseNode):
+                itemJSON = self.parent().LENTDB.getEntity(item.uid)
+                for attribute in itemJSON:
+                    if 'url' in attribute.lower():
+                        value = itemJSON[attribute]
+                        if isinstance(value, str):
+                            try:
+                                parsedValue = parse.urlparse(value)
+                                if all([parsedValue.scheme, parsedValue.netloc]):
+                                    webbrowser.open(value, new=0, autoraise=True)
+                            except (KeyError, AttributeError):
+                                continue
 
     def rearrangeGraph(self) -> None:
         self.parent().centralWidget().tabbedPane.getCurrentScene().rearrangeGraph()
