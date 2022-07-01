@@ -7,6 +7,7 @@ from os import symlink
 from shutil import copy2
 from hashlib import sha3_512
 from binascii import hexlify
+from urllib.parse import urlparse
 
 from PySide6 import QtCore
 
@@ -30,19 +31,15 @@ class URLManager:
         Takes a list of QUrls and returns a list of entities that correspond
         to them.
         """
-        if len(urls) == 1:
-            url = urls[0]
-            entityJson = self.handleURL(url)
-            return [entityJson]
-
         returnValue = []
         for url in urls:
-            returnValue += [self.handleURL(url)]
+            returnValue.append(self.handleURL(url))
 
         return returnValue
 
     def handleURL(self, url):
-        if not url.isValid():
+        parsedURL = urlparse(url.toString())
+        if not url.isValid() or not all([parsedURL.scheme, parsedURL.netloc]):
             return None
         if url.isLocalFile():
             return self.handleLocalURL(url)
@@ -50,7 +47,7 @@ class URLManager:
             return self.handleRemoteURL(url)
 
     def handleURLString(self, urlString):
-        self.handleURL(QtCore.QUrl(urlString))
+        return self.handleURL(QtCore.QUrl(urlString))
 
     def handleLocalURL(self, url):
         urlPath = Path(url.toLocalFile())

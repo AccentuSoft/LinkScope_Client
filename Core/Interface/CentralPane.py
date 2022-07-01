@@ -822,11 +822,18 @@ class CanvasView(QtWidgets.QGraphicsView):
         if mimeData.hasUrls():
             jsonData = self.urlManager.handleURLs(mimeData.urls())
         elif mimeData.hasText():
+            mimeText = mimeData.text()
             try:
-                jsonData = [json.loads(mimeData.text())]
+                jsonData = [json.loads(mimeText)]
             except json.decoder.JSONDecodeError:
-                # Import as a Phrase entity
-                jsonData = [{'Phrase': mimeData.text(), 'Entity Type': 'Phrase'}]
+                # User has dragged in some text.
+                # Check if we should treat it as an url:
+                jsonData = self.urlManager.handleURLString(mimeText)
+                if jsonData is not None:
+                    jsonData = [jsonData]
+                elif jsonData:
+                    # If not, import as a Phrase entity, as long as the string is not blank.
+                    jsonData = [{'Phrase': mimeText, 'Entity Type': 'Phrase'}]
 
         if jsonData is None:
             return
