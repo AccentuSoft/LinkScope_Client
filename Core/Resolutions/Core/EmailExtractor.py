@@ -14,18 +14,7 @@ class EmailExtractor:
 
     resultTypes = {'Email Address'}
 
-    parameters = {'Max Depth': {'description': 'Each link leading to another website in the same domain can be '
-                                               'explored to discover more entities. Each entity discovered after '
-                                               'exploring sites linked in the original website or domain is said to '
-                                               'have a "depth" value of 1. Entities found from exploring the links on '
-                                               'this page would have a "depth" of 2, and so on. A larger value could '
-                                               'result in EXPONENTIALLY more time taken to finish the resolution.\n'
-                                               'The default value is "0", which means only the provided website, or '
-                                               'the index page of the domain provided, is explored.',
-                                'type': 'String',
-                                'value': '0',
-                                'default': '0'},
-                  'Use Regex': {'description': 'Extraction of emails is done by finding "mailto" links in the source '
+    parameters = {'Use Regex': {'description': 'Extraction of emails is done by finding "mailto" links in the source '
                                                'code of the website. However, not all emails on the site may exist in '
                                                'that format. Using Regex can result in more emails being extracted, '
                                                'however it is possible that some false positives may be extracted '
@@ -48,7 +37,6 @@ class EmailExtractor:
     def resolution(self, entityJsonList, parameters):
         from playwright.sync_api import sync_playwright, TimeoutError, Error
         from bs4 import BeautifulSoup
-        import tldextract
         import re
         from email_validator import validate_email, caching_resolver, EmailNotValidError
 
@@ -68,12 +56,10 @@ class EmailExtractor:
         resolver = caching_resolver(timeout=10)
         verifyDomain = True if parameters['Verify Email Domain Validity'] == 'Yes' else False
 
-        exploredDepth = set()
-
         # The software can deduplicate, but handling it here is better.
         allEmails = set()
 
-        def extractEmails(currentUID: str, site: str, depth: int):
+        def extractEmails(currentUID: str, site: str):
             page = context.new_page()
             pageResolved = False
             for _ in range(3):
@@ -138,23 +124,6 @@ class EmailExtractor:
                                                                     'Notes': ''}}])
                         except EmailNotValidError:
                             pass
-                    elif newLink.startswith('http'):
-                        newLink = newLink.split('#')[0]
-                        newDepth = depth - 1
-                        if domain in newLink and newLink not in exploredDepth and newDepth > 0:
-                            exploredDepth.add(newLink)
-                            extractEmails(currentUID, newLink, newDepth)
-
-            linksInLinkHref = soupContents.find_all('link')
-            for tag in linksInLinkHref:
-                newLink = tag.get('href', None)
-                if newLink is not None:
-                    if newLink.startswith('http'):
-                        newLink = newLink.split('#')[0]
-                        newDepth = depth - 1
-                        if domain in newLink and newLink not in exploredDepth and newDepth > 0:
-                            exploredDepth.add(newLink)
-                            extractEmails(currentUID, newLink, newDepth)
 
         with sync_playwright() as p:
             browser = p.chromium.launch()
@@ -171,8 +140,7 @@ class EmailExtractor:
                     continue
                 if not url.startswith('http://') and not url.startswith('https://'):
                     url = 'http://' + url
-                domain = tldextract.extract(url).fqdn
-                extractEmails(uid, url, maxDepth)
+                extractEmails(uid, url)
             browser.close()
 
         return returnResults

@@ -19,22 +19,11 @@ class PhoneNumbersExtractor:
 
     resultTypes = {'Phone Number'}
 
-    parameters = {'Max Depth': {'description': 'Each link leading to another website in the same domain can be '
-                                               'explored to discover more entities. Each entity discovered after '
-                                               'exploring sites linked in the original website or domain is said to '
-                                               'have a "depth" value of 1. Entities found from exploring the links on '
-                                               'this page would have a "depth" of 2, and so on. A larger value could '
-                                               'result in EXPONENTIALLY more time taken to finish the resolution.\n'
-                                               'The default value is "0", which means only the provided website, or '
-                                               'the index page of the domain provided, is explored.',
-                                'type': 'String',
-                                'value': '0',
-                                'default': '0'}}
+    parameters = {}
 
     def resolution(self, entityJsonList, parameters):
         from playwright.sync_api import sync_playwright, TimeoutError, Error
         from bs4 import BeautifulSoup
-        import tldextract
         import re
 
         cleanTagsRegex = re.compile(r'<.*?>')
@@ -42,15 +31,7 @@ class PhoneNumbersExtractor:
 
         returnResults = []
 
-        # Numbers less than zero are the same as zero, but we should try to prevent overflows.
-        try:
-            maxDepth = max(int(parameters['Max Depth']), 0)
-        except ValueError:
-            return "Invalid value provided for Max Webpages to follow."
-
-        exploredDepth = set()
-
-        def extractTels(currentUID: str, site: str, depth: int):
+        def extractTels(currentUID: str, site: str):
             page = context.new_page()
             pageResolved = False
             for _ in range(3):
@@ -80,23 +61,7 @@ class PhoneNumbersExtractor:
                                                'Entity Type': 'Phone Number'},
                                               {currentUID: {'Resolution': 'Phone Number Found',
                                                             'Notes': ''}}])
-                    elif newLink.startswith('http'):
-                        newLink = newLink.split('#')[0]
-                        newDepth = depth - 1
-                        if domain in newLink and newLink not in exploredDepth and newDepth > 0:
-                            exploredDepth.add(newLink)
-                            extractTels(currentUID, newLink, newDepth)
 
-            linksInLinkHref = soupContents.find_all('link')
-            for tag in linksInLinkHref:
-                newLink = tag.get('href', None)
-                if newLink is not None:
-                    if newLink.startswith('http'):
-                        newLink = newLink.split('#')[0]
-                        newDepth = depth - 1
-                        if domain in newLink and newLink not in exploredDepth and newDepth > 0:
-                            exploredDepth.add(newLink)
-                            extractTels(currentUID, newLink, newDepth)
             textTags = soupContents.find_all('p')
             for tag in textTags:
                 tagContents = tag.text
@@ -124,8 +89,7 @@ class PhoneNumbersExtractor:
                     continue
                 if not url.startswith('http://') and not url.startswith('https://'):
                     url = 'http://' + url
-                domain = tldextract.extract(url).fqdn
-                extractTels(uid, url, maxDepth)
+                extractTels(uid, url)
             browser.close()
 
         return returnResults
