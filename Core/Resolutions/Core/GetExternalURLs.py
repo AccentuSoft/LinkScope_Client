@@ -39,7 +39,7 @@ class GetExternalURLs:
         from playwright.sync_api import sync_playwright, TimeoutError, Error
         from bs4 import BeautifulSoup
         import re
-        import urllib
+        import urllib.parse
 
         onionRegex = re.compile(r"""^https?://\w{56}\.onion/?(\S(?<!\.))*(\.(\S(?<!\.))*)?$""")
         returnResult = []
@@ -59,16 +59,15 @@ class GetExternalURLs:
                 user_agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) '
                            'Chrome/101.0.4951.64 Safari/537.36'
             )
-            allPages = []
             page = context.new_page()
+            externalUrls = {}
 
             for site in entityJsonList:
                 uid = site['uid']
                 url = site['URL']
-                if url is None:
+                parsedURL = urllib.parse.urlparse(url)
+                if not all([parsedURL.scheme, parsedURL.netloc]):
                     continue
-                if not url.startswith('http://') and not url.startswith('https://'):
-                    url = 'http://' + url
                 domain = tldextract.extract(url).fqdn
 
                 # Try to load the page a few times, in case of timeouts.
@@ -76,57 +75,81 @@ class GetExternalURLs:
                 for _ in range(3):
                     try:
                         page.goto(url, wait_until="networkidle", timeout=10000)
-                        allPages.append((domain, page, uid))
+                        soupContents = BeautifulSoup(page.content(), 'lxml')
+
+                        if extract_a:
+                            linksInAHref = soupContents.find_all('a')
+                            for tag in linksInAHref:
+                                link = tag.get('href', None)
+                                parsedURL = urllib.parse.urlparse(link)
+                                if all([parsedURL.scheme, parsedURL.netloc]):
+                                    if domain not in link:
+                                        newLink = link.split('#')[0].split('?')[0]
+                                        try:
+                                            externalUrls[newLink].add(uid)
+                                        except KeyError:
+                                            externalUrls[newLink] = {uid}
+                                    else:
+                                        redirectLinks = redirectRegex.findall(link)
+                                        if 'redirect' in link and len(redirectLinks) > 0:
+                                            try:
+                                                newLink = str(urllib.parse.unquote(redirectLinks[0]))[2:]
+                                                try:
+                                                    externalUrls[newLink].add(uid)
+                                                except KeyError:
+                                                    externalUrls[newLink] = {uid}
+                                            except IndexError:
+                                                try:
+                                                    externalUrls[redirectLinks[0]].add(uid)
+                                                except KeyError:
+                                                    externalUrls[redirectLinks[0]] = {uid}
+                                            except Exception:
+                                                pass
+
+                        if extract_img:
+                            linksInImgSrc = soupContents.find_all('img')
+                            for tag in linksInImgSrc:
+                                link = tag.get('src', None)
+                                parsedURL = urllib.parse.urlparse(link)
+                                if all([parsedURL.scheme, parsedURL.netloc]):
+                                    if domain not in link:
+                                        newLink = link.split('#')[0].split('?')[0]
+                                        try:
+                                            externalUrls[newLink].add(uid)
+                                        except KeyError:
+                                            externalUrls[newLink] = {uid}
+
+                        if extract_link:
+                            linksInLinkHref = soupContents.find_all('link')
+                            for tag in linksInLinkHref:
+                                link = tag.get('href', None)
+                                parsedURL = urllib.parse.urlparse(link)
+                                if all([parsedURL.scheme, parsedURL.netloc]):
+                                    if domain not in link:
+                                        newLink = link.split('#')[0].split('?')[0]
+                                        try:
+                                            externalUrls[newLink].add(uid)
+                                        except KeyError:
+                                            externalUrls[newLink] = {uid}
                         break
                     except TimeoutError:
                         pass
                     except Error:
                         break
-            for urlVisited in allPages:
-                externalUrls = set()
-                soupContents = BeautifulSoup(urlVisited[1].content(), 'lxml')
 
-                if extract_a:
-                    linksInAHref = soupContents.find_all('a')
-                    for tag in linksInAHref:
-                        link = tag.get('href', None)
-                        if link is not None:
-                            if link.startswith('http'):
-                                if urlVisited[0] not in link:
-                                    externalUrls.add(link.split('#')[0])
-                                else:
-                                    redirLinks = redirectRegex.findall(link)
-                                    if 'redirect' in link and len(redirLinks) > 0:
-                                        newLink = str(urllib.parse.unquote(redirLinks[0]))[2:]
-                                        externalUrls.add(newLink)
-
-                if extract_img:
-                    linksInImgSrc = soupContents.find_all('img')
-                    for tag in linksInImgSrc:
-                        link = tag.get('src', None)
-                        if link is not None:
-                            if link.startswith('http'):
-                                if urlVisited[0] not in link:
-                                    externalUrls.add(link.split('#')[0])
-
-                if extract_link:
-                    linksInLinkHref = soupContents.find_all('link')
-                    for tag in linksInLinkHref:
-                        link = tag.get('href', None)
-                        if link is not None:
-                            if link.startswith('http'):
-                                if urlVisited[0] not in link:
-                                    externalUrls.add(link.split('#')[0])
-
-                for externalUrl in externalUrls:
-                    onionCheck = onionRegex.findall(externalUrl)
-                    if len(onionCheck) == 1:
-                        returnResult.append([{'Onion URL': externalUrl, 'Entity Type': 'Onion Website'},
-                                             {urlVisited[2]: {'Resolution': 'External Link', 'Notes': ''}}])
-                    else:
-                        returnResult.append([{'URL': externalUrl, 'Entity Type': 'Website'},
-                                             {urlVisited[2]: {'Resolution': 'External Link', 'Notes': ''}}])
             page.close()
+            context.close()
             browser.close()
+
+        for externalUrl in externalUrls:
+            onionCheck = onionRegex.findall(externalUrl)
+            if len(onionCheck) == 1:
+                for urlUid in externalUrls[externalUrl]:
+                    returnResult.append([{'Onion URL': externalUrl, 'Entity Type': 'Onion Website'},
+                                         {urlUid: {'Resolution': 'External Link', 'Notes': ''}}])
+            else:
+                for urlUid in externalUrls[externalUrl]:
+                    returnResult.append([{'URL': externalUrl, 'Entity Type': 'Website'},
+                                         {urlUid: {'Resolution': 'External Link', 'Notes': ''}}])
 
         return returnResult
