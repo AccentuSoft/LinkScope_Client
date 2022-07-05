@@ -293,6 +293,17 @@ class MenuBar(QtWidgets.QMenuBar):
                                                  triggered=self.screenshotWebsites)
         nodeOperationsMenu.addAction(screenshotWebsitesAction)
 
+        nodeOperationsMenu.addSeparator()
+
+        searchOnlineAction = QtGui.QAction("Search Engine Query for Selected Entities",
+                                           self,
+                                           statusTip="Open Browser tabs running search engine queries on a variety of "
+                                                     "search engines for the primary fields of the selected entities.",
+                                           triggered=self.searchOnline)
+        nodeOperationsMenu.addAction(searchOnlineAction)
+
+        nodeOperationsMenu.addSeparator()
+
         notesToTextFilesAction = QtGui.QAction("Save Notes Fields to Text Files",
                                                self,
                                                statusTip="Save the 'Notes' fields of the selected nodes as text files.",
@@ -998,6 +1009,28 @@ class MenuBar(QtWidgets.QMenuBar):
                                     webbrowser.open(value, new=0, autoraise=True)
                             except (KeyError, AttributeError):
                                 continue
+
+    def searchOnline(self) -> None:
+        currentScene = self.parent().centralWidget().tabbedPane.getCurrentScene()
+        selectedURLs = SearchEngineDialog(self)
+
+        if selectedURLs.exec_():
+            selectedEngineURLs = []
+            for engineCheckbox in selectedURLs.searchEngineWidgets:
+                if engineCheckbox.isChecked():
+                    selectedEngineURLs.append(engineCheckbox.searchAttr)
+            searchTerms = []
+            for item in currentScene.selectedItems():
+                if isinstance(item, BaseNode):
+                    itemJSON = self.parent().LENTDB.getEntity(item.uid)
+                    primaryField = str(itemJSON[list(itemJSON)[1]])
+                    primaryField = parse.quote(primaryField, "")
+                    searchTerms.append('"' + primaryField + '"')
+            for searchEngineURL in selectedEngineURLs:
+                try:
+                    webbrowser.open(searchEngineURL + " ".join(searchTerms), new=0, autoraise=False)
+                except KeyError:
+                    continue
 
     def rearrangeGraph(self) -> None:
         self.parent().centralWidget().tabbedPane.getCurrentScene().rearrangeGraph()
@@ -2654,6 +2687,45 @@ class CanvasPictureDialog(QtWidgets.QDialog):
             if Path(self.fileDirectory).suffix != 'png':
                 self.fileDirectory = str(Path(self.fileDirectory).with_suffix('.png'))
             self.fileDirectoryLine.setText(self.fileDirectory)
+
+
+class SearchEngineDialog(QtWidgets.QDialog):
+    searchEngines = ['https://www.startpage.com/sp/search?q=', 'https://html.duckduckgo.com/html?q=',
+                     'https://www.google.com/search?q=', 'https://www.bing.com/search?q=',
+                     'https://www.yandex.com/search/?text=', 'https://gigablast.com/search?q=',
+                     'https://www.etools.ch/searchSubmit.do?query=', 'https://lite.qwant.com/?q=',
+                     'https://www.izito.com/search?q=', 'https://searx.org/search?q=']
+
+    def __init__(self, parent):
+        super(SearchEngineDialog, self).__init__(parent=parent)
+        self.setWindowTitle('Search Engine Lookup')
+        self.setModal(True)
+        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
+
+        layout = QtWidgets.QVBoxLayout()
+        self.setLayout(layout)
+        dialogLabel = QtWidgets.QLabel('Select the search engines to use:')
+        layout.addWidget(dialogLabel)
+
+        self.searchEngineWidgets = []
+
+        for engine in self.searchEngines:
+            engineCheckbox = QtWidgets.QCheckBox('/'.join(engine.split('/')[:3]))
+            engineCheckbox.searchAttr = engine
+            layout.addWidget(engineCheckbox)
+            self.searchEngineWidgets.append(engineCheckbox)
+
+        buttonsWidget = QtWidgets.QWidget()
+        buttonsWidgetLayout = QtWidgets.QHBoxLayout()
+        buttonsWidget.setLayout(buttonsWidgetLayout)
+        acceptButton = QtWidgets.QPushButton('Confirm')
+        cancelButton = QtWidgets.QPushButton('Cancel')
+        cancelButton.clicked.connect(self.reject)
+        acceptButton.clicked.connect(self.accept)
+        buttonsWidgetLayout.addWidget(cancelButton)
+        buttonsWidgetLayout.addWidget(acceptButton)
+
+        layout.addWidget(buttonsWidget)
 
 
 class ScreenshotWebsiteThread(QtCore.QThread):
