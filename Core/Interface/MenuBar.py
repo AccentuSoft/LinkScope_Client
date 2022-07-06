@@ -302,6 +302,14 @@ class MenuBar(QtWidgets.QMenuBar):
                                            triggered=self.searchOnline)
         nodeOperationsMenu.addAction(searchOnlineAction)
 
+        searchImageOnlineAction = QtGui.QAction("Open Image Reverse Search Engines in Browser",
+                                                self,
+                                                statusTip="Open Browser tabs running image search engines. This is a "
+                                                          "helper function to save time, it does not search "
+                                                          "automatically.",
+                                                triggered=self.searchImageOnline)
+        nodeOperationsMenu.addAction(searchImageOnlineAction)
+
         nodeOperationsMenu.addSeparator()
 
         notesToTextFilesAction = QtGui.QAction("Save Notes Fields to Text Files",
@@ -1029,6 +1037,20 @@ class MenuBar(QtWidgets.QMenuBar):
             for searchEngineURL in selectedEngineURLs:
                 try:
                     webbrowser.open(searchEngineURL + " ".join(searchTerms), new=0, autoraise=False)
+                except KeyError:
+                    continue
+
+    def searchImageOnline(self) -> None:
+        selectedURLs = SearchImageEngineDialog(self)
+
+        if selectedURLs.exec_():
+            selectedEngineURLs = []
+            for engineCheckbox in selectedURLs.searchEngineWidgets:
+                if engineCheckbox.isChecked():
+                    selectedEngineURLs.append(engineCheckbox.searchAttr)
+            for searchEngineURL in selectedEngineURLs:
+                try:
+                    webbrowser.open(searchEngineURL, new=0, autoraise=False)
                 except KeyError:
                     continue
 
@@ -2705,6 +2727,43 @@ class SearchEngineDialog(QtWidgets.QDialog):
         layout = QtWidgets.QVBoxLayout()
         self.setLayout(layout)
         dialogLabel = QtWidgets.QLabel('Select the search engines to use:')
+        layout.addWidget(dialogLabel)
+
+        self.searchEngineWidgets = []
+
+        for engine in self.searchEngines:
+            engineCheckbox = QtWidgets.QCheckBox('/'.join(engine.split('/')[:3]))
+            engineCheckbox.searchAttr = engine
+            layout.addWidget(engineCheckbox)
+            self.searchEngineWidgets.append(engineCheckbox)
+
+        buttonsWidget = QtWidgets.QWidget()
+        buttonsWidgetLayout = QtWidgets.QHBoxLayout()
+        buttonsWidget.setLayout(buttonsWidgetLayout)
+        acceptButton = QtWidgets.QPushButton('Confirm')
+        cancelButton = QtWidgets.QPushButton('Cancel')
+        cancelButton.clicked.connect(self.reject)
+        acceptButton.clicked.connect(self.accept)
+        buttonsWidgetLayout.addWidget(cancelButton)
+        buttonsWidgetLayout.addWidget(acceptButton)
+
+        layout.addWidget(buttonsWidget)
+
+
+class SearchImageEngineDialog(QtWidgets.QDialog):
+    searchEngines = ['https://pimeyes.com/en', 'https://yandex.com/images/',
+                     'https://www.bing.com/visualsearch ', 'https://www.google.com/imghp',
+                     'https://tineye.com/']
+
+    def __init__(self, parent):
+        super(SearchImageEngineDialog, self).__init__(parent=parent)
+        self.setWindowTitle('Image Search Engine Lookup')
+        self.setModal(True)
+        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
+
+        layout = QtWidgets.QVBoxLayout()
+        self.setLayout(layout)
+        dialogLabel = QtWidgets.QLabel('Select the image search engines to open in tabs:')
         layout.addWidget(dialogLabel)
 
         self.searchEngineWidgets = []
