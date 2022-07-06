@@ -2,11 +2,11 @@
 
 
 class OpenCorporateCompanyOfficers:
-    name = "OpenCorporate Officers Lookup"
+    name = "OpenCorporate Company Officers Lookup"
 
     category = "OpenCorporates"
 
-    description = "Returns Nodes of Officers"
+    description = "Returns the Officers of the specified company."
 
     originTypes = {'Open Corporate Company'}
 
@@ -19,7 +19,7 @@ class OpenCorporateCompanyOfficers:
                                   'value': '',
                                   'default': '5'},
 
-                  'Inactive Officers': {'description': 'Display Inactive Officers',
+                  'Inactive Companies': {'description': 'Display Inactive Companies',
                                         'type': 'SingleChoice',
                                         'value': {'Yes', 'No'}
                                         },
@@ -39,11 +39,13 @@ class OpenCorporateCompanyOfficers:
         import time
         returnResults = []
         try:
-            linkNumbers = int(parameters['Max Results'])
+            maxResults = int(parameters['Max Results'])
         except ValueError:
             return "Invalid integer provided in 'Max Results' parameter"
-        if linkNumbers <= 0:
+        if maxResults <= 0:
             return []
+
+        considerInactive = parameters['Inactive Companies'] == 'No'
 
         for entity in entityJsonList:
             jurisdictionCode = entity[list(entity)[3]]
@@ -79,48 +81,27 @@ class OpenCorporateCompanyOfficers:
                 return 'API Limit Reached'
 
             try:
-                openCorporatesResults = data['results']['company']['officers']
+                openCorporatesResults = data['results']['company']['officers'][:maxResults]
             except KeyError:
-                return returnResults
+                continue
 
-            if linkNumbers >= len(openCorporatesResults):
-                linkNumbers = int(len(openCorporatesResults))
+            for result in openCorporatesResults:
+                if (result['officer']['inactive'] and considerInactive) or not result['officer']['inactive']:
+                    index_of_child = len(returnResults)
 
-            if parameters['Inactive Officers'] == 'Yes':
-                for i in range(linkNumbers):
-                    returnResults.append([{'Full Name': openCorporatesResults[i]['officer']['Resolution'],
+                    returnResults.append([{'Full Name': result['officer']['name'],
                                            'Entity Type': 'Person'},
                                           {uid: {'Resolution': 'Officer',
-                                                 'Notes': openCorporatesResults[i]['officer']['position']}}])
+                                                 'Notes': result['officer']['position']}}])
 
-                    index_of_child = len(returnResults)
+                    if result['officer']['end_date'] is not None:
+                        returnResults.append(
+                            [{'Date': result['officer']['end_date'], 'Entity Type': 'Date'},
+                             {index_of_child: {'Resolution': 'Start Date', 'Notes': ''}}])
 
-                    if openCorporatesResults[i]['officer']['start_date'] is not None:
-                        for k in range(linkNumbers):
-                            returnResults.append(
-                                [{'Date': openCorporatesResults[k]['officer']['end_date'], 'Entity Type': 'Date'},
-                                 {index_of_child: {'Resolution': 'Start Date', 'Notes': ''}}])
-
-                    if openCorporatesResults[i]['officer']['start_date'] is not None:
-                        for j in range(linkNumbers):
-                            returnResults.append(
-                                [{'Date': openCorporatesResults[j]['officer']['start_date'], 'Entity Type': 'Date'},
-                                 {index_of_child: {'Resolution': 'Start Date', 'Notes': ''}}])
-
-            elif parameters['Inactive Officers'] == 'No':
-                for i in range(linkNumbers):
-                    if not openCorporatesResults[i]['officer']['inactive']:
-                        returnResults.append([{'Full Name': openCorporatesResults[i]['officer']['Resolution'],
-                                               'Entity Type': 'Person'},
-                                              {uid: {'Resolution': 'Officer',
-                                                     'Notes': openCorporatesResults[i]['officer']['position']}}])
-
-                    index_of_child = len(returnResults)
-
-                    if openCorporatesResults[i]['officer']['start_date'] is not None:
-                        for j in range(linkNumbers):
-                            returnResults.append(
-                                [{'Date': openCorporatesResults[j]['officer']['start_date'], 'Entity Type': 'Date'},
-                                 {index_of_child: {'Resolution': 'Start Date', 'Notes': ''}}])
+                    if result['officer']['start_date'] is not None:
+                        returnResults.append(
+                            [{'Date': result['officer']['start_date'], 'Entity Type': 'Date'},
+                             {index_of_child: {'Resolution': 'Start Date', 'Notes': ''}}])
 
         return returnResults

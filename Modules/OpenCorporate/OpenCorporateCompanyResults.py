@@ -6,7 +6,7 @@ class OpenCorporateCompanyResults:
 
     category = "OpenCorporates"
 
-    description = "Returns Results per Company"
+    description = "Look up Companies in the OpenCorporates data set."
 
     originTypes = {'Phrase', 'Company', 'Open Corporate Company'}
 
@@ -38,10 +38,10 @@ class OpenCorporateCompanyResults:
         returnResults = []
         officer_url = 'https://api.opencorporates.com/v0.4/companies/search'
         try:
-            linkNumbers = int(parameters['Max Results'])
+            maxResults = int(parameters['Max Results'])
         except ValueError:
             return "Invalid integer provided in 'Max Results' parameter"
-        if linkNumbers <= 0:
+        if maxResults <= 0:
             return []
 
         for entity in entityJsonList:
@@ -83,41 +83,38 @@ class OpenCorporateCompanyResults:
             elif r.status_code == 403:
                 return 'API Limit Reached'
 
-            openCorporatesResults = data['results']['companies']
-
-            if linkNumbers >= len(openCorporatesResults):
-                linkNumbers = int(len(openCorporatesResults))
+            openCorporatesResults = data['results']['companies'][:maxResults]
 
             if parameters['Inactive Companies'] == 'Yes':
-                for i in range(linkNumbers):
-                    returnResults.append([{'Company Name': openCorporatesResults[i]['company']['name'],
-                                           'Company Number': openCorporatesResults[i]['company']['company_number'],
-                                           'Jurisdiction Code': openCorporatesResults[i]['company'][
+                for result in openCorporatesResults:
+                    returnResults.append([{'Company Name': result['company']['name'],
+                                           'Company Number': result['company']['company_number'],
+                                           'Jurisdiction Code': result['company'][
                                                'jurisdiction_code'],
-                                           'Current Status': openCorporatesResults[i]['company']['current_status'],
-                                           'Incorporation Date': openCorporatesResults[i]['company'][
+                                           'Current Status': result['company']['current_status'],
+                                           'Incorporation Date': result['company'][
                                                'incorporation_date'],
-                                           'Dissolution Date': openCorporatesResults[i]['company']['dissolution_date'],
-                                           'Company Type': openCorporatesResults[i]['company']['company_type'],
-                                           'Registry URL': openCorporatesResults[i]['company']['registry_url'],
+                                           'Dissolution Date': result['company']['dissolution_date'],
+                                           'Company Type': result['company']['company_type'],
+                                           'Registry URL': result['company']['registry_url'],
                                            'Entity Type': 'Open Corporate Company'},
-                                          {uid: {'Resolution': 'OpenCorpRes', 'Notes': ''}}])
+                                          {uid: {'Resolution': 'OpenCorporate Company Resolution', 'Notes': ''}}])
 
             elif parameters['Inactive Companies'] == 'No':
-                for i in range(linkNumbers):
-                    if not openCorporatesResults[i]['company']['inactive']:
-                        returnResults.append([{'Company Name': openCorporatesResults[i]['company']['name'],
-                                               'Company Number': openCorporatesResults[i]['company']['company_number'],
-                                               'Jurisdiction Code': openCorporatesResults[i]['company'][
+                for result in openCorporatesResults:
+                    if not result['company']['inactive']:
+                        returnResults.append([{'Company Name': result['company']['name'],
+                                               'Company Number': result['company']['company_number'],
+                                               'Jurisdiction Code': result['company'][
                                                    'jurisdiction_code'],
-                                               'Current Status': openCorporatesResults[i]['company']['current_status'],
-                                               'Incorporation Date': openCorporatesResults[i]['company'][
+                                               'Current Status': result['company']['current_status'],
+                                               'Incorporation Date': result['company'][
                                                    'incorporation_date'],
-                                               'Dissolution Date': openCorporatesResults[i]['company'][
+                                               'Dissolution Date': result['company'][
                                                    'dissolution_date'],
-                                               'Company Type': openCorporatesResults[i]['company']['company_type'],
-                                               'Registry URL': openCorporatesResults[i]['company']['registry_url'],
+                                               'Company Type': result['company']['company_type'],
+                                               'Registry URL': result['company']['registry_url'],
                                                'Entity Type': 'Open Corporate Company'},
-                                              {uid: {'Resolution': 'OpenCorpRes', 'Notes': ''}}])
+                                              {uid: {'Resolution': 'OpenCorporate Company Resolution', 'Notes': ''}}])
 
         return returnResults

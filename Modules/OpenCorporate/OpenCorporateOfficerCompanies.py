@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
 
-class OpenCorporateOfficerOccupation:
-    name = "Get OpenCorporate Officers"
+class OpenCorporateOfficerCompanies:
+    name = "Get OpenCorporate Officer's Companies"
 
     category = "OpenCorporates"
 
-    description = "Returns Nodes of Companies where the Person is an Officer"
+    description = "Returns Nodes of Companies where the Person is an Officer."
 
     originTypes = {'Person', 'Phrase'}
 
@@ -16,10 +16,10 @@ class OpenCorporateOfficerOccupation:
                                   'type': 'String',
                                   'value': ''},
 
-                  'Inactive Officers': {'description': 'Display Inactive Officers',
-                                        'type': 'SingleChoice',
-                                        'value': {'Yes', 'No'}
-                                        },
+                  'Inactive Companies': {'description': 'Display Inactive Companies',
+                                         'type': 'SingleChoice',
+                                         'value': {'Yes', 'No'}
+                                         },
                   'OpenCorporates API Key': {
                       'description': 'Enter your API Key. If you do not have one, type: No Key (case sensitive).\n'
                                      'Standard Free API limits: 50 requests per day, 5 requests per second.\n'
@@ -38,10 +38,10 @@ class OpenCorporateOfficerOccupation:
         returnResults = []
         officer_url = 'https://api.opencorporates.com/v0.4/officers/search'
         try:
-            linkNumbers = int(parameters['Max Results'])
+            maxResults = int(parameters['Max Results'])
         except ValueError:
             return "Invalid integer provided in 'Max Results' parameter"
-        if linkNumbers <= 0:
+        if maxResults <= 0:
             return []
 
         for entity in entityJsonList:
@@ -84,24 +84,21 @@ class OpenCorporateOfficerOccupation:
             elif r.status_code == 403:
                 return 'API Limit Reached'
 
-            openCorporateResults = data['results']['officers']
+            openCorporateResults = data['results']['officers'][:maxResults]
 
-            if linkNumbers >= len(openCorporateResults):
-                linkNumbers = int(len(openCorporateResults))
-
-            if parameters['Inactive Officers'] == 'Yes':
-                for i in range(linkNumbers):
-                    returnResults.append([{'Company Name': openCorporateResults[i]['officer']['company']['name'],
+            if parameters['Inactive Companies'] == 'Yes':
+                for result in openCorporateResults:
+                    returnResults.append([{'Company Name': result['officer']['company']['name'],
                                            'Entity Type': 'Company'},
-                                          {uid: {'Resolution': openCorporateResults[i]['officer']['occupation'],
+                                          {uid: {'Resolution': result['officer']['occupation'],
                                                  'Notes': ''}}])
 
-            elif parameters['Inactive Officers'] == 'No':
-                for i in range(linkNumbers):
-                    if not data['results']['officers'][i]['officer']['inactive']:
+            elif parameters['Inactive Companies'] == 'No':
+                for result in openCorporateResults:
+                    if not result['officer']['inactive']:
                         returnResults.append(
-                            [{'Company Name': openCorporateResults[i]['officer']['company']['name'],
+                            [{'Company Name': result['officer']['company']['name'],
                               'Entity Type': 'Company'},
-                             {uid: {'Resolution': openCorporateResults[i]['officer']['occupation'],
+                             {uid: {'Resolution': result['officer']['occupation'],
                                     'Notes': ''}}])
         return returnResults
