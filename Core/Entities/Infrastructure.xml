@@ -9,7 +9,7 @@
   </Operating_System>
   <Network>
     <Attributes>
-      <Attribute default="127:0:0:1" check="String" primary="True">IP Address</Attribute>
+      <Attribute default="127.0.0.0" check="String" primary="True">IP Address</Attribute>
       <Attribute default="Unknown" check="String" primary="False">Range</Attribute>
     </Attributes>
     <Icon>
