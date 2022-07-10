@@ -88,8 +88,29 @@ MAIN_WINDOW_STYLESHEET = """
                         border-radius: 3px;
                         border-top-color: rgb(0, 173, 238);
                         }
+                        
                         QComboBox { combobox-popup: 0; }
                         
+                        QMenu::item{
+                         background-color: rgb(41, 45, 62);
+                         color: rgba(248, 248, 242, 1) !important;
+                         border-left: 1px solid rgb(0, 173, 238);
+                         padding-right: 4px;
+                         padding-bottom: 4px;
+                         padding-top: 4px;
+                         font-size: 15px;
+                         text-align: left;
+                         padding-left: 4px;
+                         }
+                        
+                         QMenu::item:selected{
+                         background-color: rgb(0, 85, 127);
+                         color: rgb(255, 255, 255);
+                         }
+                         
+                         QMenu::item:disabled {
+                         background-color:rgb(81, 87, 114);
+                         }
                         """
 
 DOCK_BAR_TWO_LINK = """
