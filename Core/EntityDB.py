@@ -51,7 +51,7 @@ class EntitiesDB:
 
     def resetTimeline(self) -> None:
         """
-        Reset the timeline on dockBarThree to reflect the current state of the entities database.
+        Reset the timeline on dockBarThree to reflect the current state of the database.
         """
         self.dbLock.acquire()
         if self.database is not None:
@@ -60,7 +60,7 @@ class EntitiesDB:
 
     def updateTimeline(self, node, added: bool, updateGraph: bool = True) -> None:
         """
-        Update the timeline on dockBarThree to reflect the newest change of the entities database.
+        Update the timeline on dockBarThree to reflect the newest change of the database.
         """
         self.dbLock.acquire()
         self.mainWindow.updateTimeline(node, added, updateGraph)
@@ -87,10 +87,6 @@ class EntitiesDB:
     def addEntity(self, entJson: dict, fromServer: bool = False, updateTimeline: bool = True) -> Union[dict, None]:
         """
         Adds the entity represented by the json dictionary to the database.
-        :param updateTimeline:
-        :param entJson:
-        :param fromServer:
-        :return:
         """
         self.dbLock.acquire()
         returnValue = None
@@ -107,7 +103,7 @@ class EntitiesDB:
         if entity is None:
             self.dbLock.release()
             return returnValue
-        # Use uid as key. Code is holdover from time where primary field == uid.
+        # Use uid as key. Code is holdover from the time when primary field == uid.
         self.database.add_node(entity['uid'], **entity)
         returnValue = entity
         if exists:
@@ -126,11 +122,11 @@ class EntitiesDB:
 
         return returnValue
 
-    def addEntities(self, entsJsonList: Union[list, set, tuple], fromServer: bool = False) -> list:
+    def addEntities(self, entitiesJsonList: Union[list, set, tuple], fromServer: bool = False) -> list:
         self.dbLock.acquire()
         returnValue = []
 
-        for entJson in entsJsonList:
+        for entJson in entitiesJsonList:
             # Check if we're overwriting an existing entity
             exists = None
             if entJson.get('uid') is not None:
@@ -142,7 +138,7 @@ class EntitiesDB:
 
             if entity is None:
                 continue
-            # Use uid as key. Code is holdover from time where primary field == uid.
+            # Use uid as key. Code is holdover from the time when primary field == uid.
             self.database.add_node(entity['uid'], **entity)
             returnValue.append(entity)
             if exists:
