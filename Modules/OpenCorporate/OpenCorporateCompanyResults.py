@@ -2,15 +2,15 @@
 
 
 class OpenCorporateCompanyResults:
-    name = "OpenCorporate Company Lookup"
+    name = "OpenCorporates Company Lookup"
 
     category = "OpenCorporates"
 
     description = "Look up Companies in the OpenCorporates data set."
 
-    originTypes = {'Phrase', 'Company', 'Open Corporate Company'}
+    originTypes = {'Phrase', 'Company', 'Open Corporates Company'}
 
-    resultTypes = {'Open Corporate Company'}
+    resultTypes = {'Open Corporates Company'}
 
     parameters = {'Max Results': {'description': 'Please enter the maximum number of results to return.',
                                   'type': 'String',
@@ -97,8 +97,8 @@ class OpenCorporateCompanyResults:
                                            'Dissolution Date': result['company']['dissolution_date'],
                                            'Company Type': result['company']['company_type'],
                                            'Registry URL': result['company']['registry_url'],
-                                           'Entity Type': 'Open Corporate Company'},
-                                          {uid: {'Resolution': 'OpenCorporate Company Resolution', 'Notes': ''}}])
+                                           'Entity Type': 'Open Corporates Company'},
+                                          {uid: {'Resolution': 'OpenCorporates Company Resolution', 'Notes': ''}}])
 
             elif parameters['Inactive Companies'] == 'No':
                 for result in openCorporatesResults:
@@ -114,7 +114,7 @@ class OpenCorporateCompanyResults:
                                                    'dissolution_date'],
                                                'Company Type': result['company']['company_type'],
                                                'Registry URL': result['company']['registry_url'],
-                                               'Entity Type': 'Open Corporate Company'},
-                                              {uid: {'Resolution': 'OpenCorporate Company Resolution', 'Notes': ''}}])
+                                               'Entity Type': 'Open Corporates Company'},
+                                              {uid: {'Resolution': 'OpenCorporates Company Resolution', 'Notes': ''}}])
 
         return returnResults

@@ -2,13 +2,13 @@
 
 
 class OpenCorporateOfficerCompanies:
-    name = "Get OpenCorporate Officer's Companies"
+    name = "Get OpenCorporates Officer's Companies"
 
     category = "OpenCorporates"
 
     description = "Returns Nodes of Companies where the Person is an Officer."
 
-    originTypes = {'Person', 'Phrase'}
+    originTypes = {'Person', 'Phrase', 'Open Corporates Officer'}
 
     resultTypes = {'Company'}
 
@@ -46,11 +46,14 @@ class OpenCorporateOfficerCompanies:
 
         for entity in entityJsonList:
             uid = entity['uid']
+            primaryField = entity[list(entity)[1]]
+            if entity['Entity Type'] == 'Open Corporates Officer':
+                primaryField = primaryField.split(' | ')[0]  # Nobody has ' | ' in their name - 2022/7/10
 
             if parameters['OpenCorporates API Key'] == 'No Key':
                 # Set up parameters
                 data_params = parse.urlencode({
-                    'q': entity[list(entity)[1]]
+                    'q': primaryField
                 })
                 # Perform and process get request
                 try:
@@ -62,7 +65,7 @@ class OpenCorporateOfficerCompanies:
                 data = r.json()
             else:
                 data_params = parse.urlencode({
-                    'q': entity[list(entity)[1]],
+                    'q': primaryField,
                     'api_token': parameters['OpenCorporates API Key']
                 })
                 try:
@@ -88,17 +91,26 @@ class OpenCorporateOfficerCompanies:
 
             if parameters['Inactive Companies'] == 'Yes':
                 for result in openCorporateResults:
-                    returnResults.append([{'Company Name': result['officer']['company']['name'],
-                                           'Entity Type': 'Company'},
-                                          {uid: {'Resolution': result['officer']['occupation'],
-                                                 'Notes': ''}}])
+                    occupation = result['officer']['occupation']
+                    returnResults.append(
+                        [{'Company Name': result['officer']['company']['name'],
+                          'Registration Number': result['officer']['company']['company_number'],
+                          'Jurisdiction Code': result['officer']['company']['jurisdiction_code'],
+                          'OpenCorporates URL': result['officer']['company']['opencorporates_url'],
+                          'Entity Type': 'Company'},
+                         {uid: {'Resolution': occupation if occupation else 'Unknown Position in Company',
+                                'Notes': ''}}])
 
             elif parameters['Inactive Companies'] == 'No':
                 for result in openCorporateResults:
                     if not result['officer']['inactive']:
+                        occupation = result['officer']['occupation']
                         returnResults.append(
                             [{'Company Name': result['officer']['company']['name'],
+                              'Registration Number': result['officer']['company']['company_number'],
+                              'Jurisdiction Code': result['officer']['company']['jurisdiction_code'],
+                              'OpenCorporates URL': result['officer']['company']['opencorporates_url'],
                               'Entity Type': 'Company'},
-                             {uid: {'Resolution': result['officer']['occupation'],
+                             {uid: {'Resolution': occupation if occupation else 'Unknown Position in Company',
                                     'Notes': ''}}])
         return returnResults

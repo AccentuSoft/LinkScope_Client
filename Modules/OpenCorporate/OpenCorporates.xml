@@ -1,5 +1,5 @@
 <Collectives>
-    <Open_Corporate_Company>
+    <Open_Corporates_Company>
         <Attributes>
             <Attribute default="Company Name" check="String" primary="True">Company Name</Attribute>
             <Attribute default="Unknown" check="String" primary="False">Company Number</Attribute>
@@ -13,5 +13,14 @@
         <Icon>
             Company.svg
         </Icon>
-    </Open_Corporate_Company>
+    </Open_Corporates_Company>
+    <Open_Corporates_Officer>
+        <Attributes>
+          <Attribute default="Firstname Lastname | ID" check="String" primary="True">Full Name and ID</Attribute>
+          <Attribute default="Unknown" check="String" primary="False">Occupation</Attribute>
+        </Attributes>
+        <Icon>
+            Person.svg
+        </Icon>
+    </Open_Corporates_Officer>
 </Collectives>

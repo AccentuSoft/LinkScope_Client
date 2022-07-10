@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 
 
-class OpenCorporatesCorporation_To_Corporation:
-    name = "OpenCorporateCompany to Company"
+class OpenCorporatesCorporationToCorporation:
+    name = "OpenCorporates Company to Company Conversion"
 
     category = "OpenCorporates"
 
-    description = "OpenCorporateCompany Entity to Company Entity"
+    description = "Convert Open Corporates Company Entities to Company Entities."
 
-    originTypes = {'Open Corporate Company'}
+    originTypes = {'Open Corporates Company'}
 
-    resultTypes = {'Company, Date'}
+    resultTypes = {'Company', 'Date'}
 
     parameters = {}
 
@@ -19,17 +19,19 @@ class OpenCorporatesCorporation_To_Corporation:
         for entity in entityJsonList:
             uid = entity['uid']
             index_of_child = len(returnResults)
+            companyStatus = entity['Current Status'].lower()
             returnResults.append(
-                [{'Company Name': entity[list(entity)[2]],
+                [{'Company Name': entity['Company Name'],
+                  'Registration Number': entity['Company Number'],
                   'Entity Type': 'Company'},
                  {uid: {'Resolution': 'Company', 'Notes': ''}}])
             returnResults.append(
-                [{'Date': entity[list(entity)[5]],
+                [{'Date': entity['Incorporation Date'],
                   'Entity Type': 'Date'},
                  {index_of_child: {'Resolution': 'Incorporation Date', 'Notes': 'Incorporation Date'}}])
-            if entity[list(entity)[3]] == 'Dissolved' or entity[list(entity)[3]] == 'Removed':
+            if companyStatus == 'dissolved' or companyStatus == 'removed':
                 returnResults.append(
-                    [{'Date': entity[list(entity)[6]],
+                    [{'Date': entity.get('Dissolution Date'),
                       'Entity Type': 'Date'},
                      {index_of_child: {'Resolution': 'Dissolution Date', 'Notes': 'Dissolution Date'}}])
 

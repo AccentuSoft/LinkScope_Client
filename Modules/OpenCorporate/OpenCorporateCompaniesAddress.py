@@ -2,13 +2,13 @@
 
 
 class OpenCorporateCompaniesAddress:
-    name = "Get OpenCorporate Company's Address"
+    name = "Get OpenCorporates Company's Address"
 
     category = "OpenCorporates"
 
-    description = "Returns Address per company."
+    description = "Returns the Address of an OpenCorporates Company."
 
-    originTypes = {'Phrase', 'Company', 'Open Corporate Company'}
+    originTypes = {'Open Corporates Company'}
 
     resultTypes = {'Address'}
 
@@ -34,12 +34,12 @@ class OpenCorporateCompaniesAddress:
         from urllib import parse
         returnResult = []
 
-        officer_url = 'https://api.opencorporates.com/v0.4/companies/search'
+        company_url = 'https://api.opencorporates.com/v0.4/companies/search'
         try:
-            linkNumbers = int(parameters['Max Results'])
+            maxResults = int(parameters['Max Results'])
         except ValueError:
             return "Invalid integer provided in 'Max Results' parameter"
-        if linkNumbers <= 0:
+        if maxResults <= 0:
             return []
 
         for entity in entityJsonList:
@@ -48,11 +48,11 @@ class OpenCorporateCompaniesAddress:
             if parameters['OpenCorporates API Key'] == 'No Key':
                 # Set up parameters
                 data_params = parse.urlencode({
-                    'q': entity[list(entity)[2]]
+                    'q': entity['Company Name']
                 })
                 # Perform and process get request
                 try:
-                    r = requests.get(url=officer_url, params=data_params)
+                    r = requests.get(url=company_url, params=data_params)
                 except requests.exceptions.ConnectionError:
                     return "Please check your internet connection"
                 time.sleep(0.25)
@@ -60,11 +60,11 @@ class OpenCorporateCompaniesAddress:
                 data = r.json()
             else:
                 data_params = parse.urlencode({
-                    'q': entity[list(entity)[2]],
+                    'q': entity['Company Name'],
                     'api_token': parameters['API Key']
                 })
                 r = requests.get(
-                    url=officer_url,
+                    url=company_url,
                     params=data_params,
                     timeout=80,  # High timeouts as they can sometimes take a while
                 )
@@ -78,20 +78,21 @@ class OpenCorporateCompaniesAddress:
             elif r.status_code == 403:
                 return 'API Limit Reached'
 
-            openCorporatesResults = data['results']['companies']
-            if linkNumbers >= len(openCorporatesResults):
-                linkNumbers = int(len(openCorporatesResults))
+            try:
+                openCorporatesResults = data['results']['companies'][:maxResults]
+            except KeyError:
+                continue
 
-            for j in range(linkNumbers):
-                if data['results']['companies'][j]['company']['registered_address'] is None:
+            for result in openCorporatesResults:
+                if result['company']['registered_address'] is None:
                     continue
                 else:
                     returnResult.append(
-                        [{'Street Address': openCorporatesResults[j]['company']['registered_address']['street_address'],
-                          'Locality': openCorporatesResults[j]['company']['registered_address']['locality'],
-                          'Postal Code': openCorporatesResults[j]['company']['registered_address']['postal_code'],
-                          'Country': openCorporatesResults[j]['company']['registered_address']['country'],
+                        [{'Street Address': result['company']['registered_address']['street_address'],
+                          'Locality': result['company']['registered_address']['locality'],
+                          'Postal Code': result['company']['registered_address']['postal_code'],
+                          'Country': result['company']['registered_address']['country'],
                           'Entity Type': 'Address'},
-                         {uid: {'Resolution': 'Location', 'Notes': ''}}])
+                         {uid: {'Resolution': 'Company Location', 'Notes': ''}}])
 
         return returnResult

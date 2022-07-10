@@ -2,15 +2,15 @@
 
 
 class OpenCorporateCompanyOfficers:
-    name = "OpenCorporate Company Officers Lookup"
+    name = "OpenCorporates Company Officers Lookup"
 
     category = "OpenCorporates"
 
-    description = "Returns the Officers of the specified company."
+    description = "Returns the Officers of the specified OpenCorporates Company."
 
-    originTypes = {'Open Corporate Company'}
+    originTypes = {'Open Corporates Company'}
 
-    resultTypes = {'Person', 'Date'}
+    resultTypes = {'Open Corporates Officer', 'Date'}
 
     parameters = {'Max Results': {'description': 'Please enter the maximum number of results to return. '
                                                  'Officer data may not be available for some jurisdictions. '
@@ -20,9 +20,9 @@ class OpenCorporateCompanyOfficers:
                                   'default': '5'},
 
                   'Inactive Companies': {'description': 'Display Inactive Companies',
-                                        'type': 'SingleChoice',
-                                        'value': {'Yes', 'No'}
-                                        },
+                                         'type': 'SingleChoice',
+                                         'value': {'Yes', 'No'}
+                                         },
                   'OpenCorporates API Key': {
                       'description': 'Enter your API Key. If you do not have one, type: No Key (case sensitive).\n'
                                      'Standard Free API limits: 50 requests per day, 5 requests per second.\n'
@@ -48,8 +48,8 @@ class OpenCorporateCompanyOfficers:
         considerInactive = parameters['Inactive Companies'] == 'No'
 
         for entity in entityJsonList:
-            jurisdictionCode = entity[list(entity)[3]]
-            companyCode = entity[list(entity)[1]]
+            jurisdictionCode = entity['Jurisdiction Code']
+            companyCode = entity['Company Number']
             uid = entity['uid']
 
             if parameters['OpenCorporates API Key'] == 'No Key':
@@ -72,7 +72,6 @@ class OpenCorporateCompanyOfficers:
                 # Rate limited to the Starter API rate.
                 time.sleep(80)
                 data = r.json
-                # print(data)
 
             if r.status_code == 401:
                 return 'Invalid API Key'
@@ -88,20 +87,23 @@ class OpenCorporateCompanyOfficers:
             for result in openCorporatesResults:
                 if (result['officer']['inactive'] and considerInactive) or not result['officer']['inactive']:
                     index_of_child = len(returnResults)
+                    officerName = result['officer']['name']
+                    officerID = result['officer']['id']
 
-                    returnResults.append([{'Full Name': result['officer']['name'],
-                                           'Entity Type': 'Person'},
+                    returnResults.append([{'Full Name and ID': officerName + " | " + officerID,
+                                           'Occupation': str(result['officer']['position']),
+                                           'Entity Type': 'Open Corporates Officer'},
                                           {uid: {'Resolution': 'Officer',
-                                                 'Notes': result['officer']['position']}}])
+                                                 'Notes': ''}}])
 
                     if result['officer']['end_date'] is not None:
                         returnResults.append(
                             [{'Date': result['officer']['end_date'], 'Entity Type': 'Date'},
-                             {index_of_child: {'Resolution': 'Start Date', 'Notes': ''}}])
+                             {index_of_child: {'Resolution': 'Officer End Date', 'Notes': ''}}])
 
                     if result['officer']['start_date'] is not None:
                         returnResults.append(
                             [{'Date': result['officer']['start_date'], 'Entity Type': 'Date'},
-                             {index_of_child: {'Resolution': 'Start Date', 'Notes': ''}}])
+                             {index_of_child: {'Resolution': 'Officer Start Date', 'Notes': ''}}])
 
         return returnResults
