@@ -1958,7 +1958,7 @@ class ReportWizard(QtWidgets.QWizard):
                               if isinstance(entity, BaseNode)]
         for selectedNode in self.selectedNodes:
             # used in wizard
-            self.primaryField = selectedNode.labelItem.text()
+            self.primaryField = selectedNode.labelItem.toPlainText()
             self.uid = selectedNode.uid
 
             # used in report generation

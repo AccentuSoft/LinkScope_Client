@@ -1159,9 +1159,9 @@ class CanvasScene(QtWidgets.QGraphicsScene):
         for item in self.items():
             if isinstance(item, Entity.BaseNode):
                 item.labelItem.setFont(self.entityTextFont)
-                item.labelItem.setBrush(self.entityTextBrush)
+                item.labelItem.setDefaultTextColor(self.entityTextBrush.color())
                 # Re-Center the Label
-                item.updateLabel(item.labelItem.text())
+                item.updateLabel(item.labelItem.toPlainText())
             elif isinstance(item, Entity.BaseConnector):
                 item.labelItem.setFont(self.linkTextFont)
                 item.labelItem.setBrush(self.linkTextBrush)
@@ -1191,7 +1191,8 @@ class CanvasScene(QtWidgets.QGraphicsScene):
         self.nodesDict[item.uid] = item
         self.addItem(item)
         item.setPos(QtCore.QPointF(x, y))
-        self.parent().mainWindow.MESSAGEHANDLER.info('Added node: ' + str(item.uid) + ' | ' + item.labelItem.text())
+        self.parent().mainWindow.MESSAGEHANDLER.info('Added node: ' + str(item.uid) + ' | ' +
+                                                     item.labelItem.toPlainText())
 
     def addLinkToScene(self, link: Entity.BaseConnector) -> None:
         self.linksDict[link.startItem().uid + link.endItem().uid] = link

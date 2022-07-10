@@ -6,7 +6,7 @@ from typing import Any, Optional
 
 from PySide6 import QtCore, QtGui, QtWidgets
 from PySide6.QtWidgets import QGraphicsItem
-from PySide6.QtWidgets import QGraphicsItemGroup, QGraphicsSimpleTextItem, QGraphicsPixmapItem
+from PySide6.QtWidgets import QGraphicsItemGroup, QGraphicsSimpleTextItem, QGraphicsPixmapItem, QGraphicsTextItem
 from PySide6.QtSvgWidgets import QGraphicsSvgItem
 
 ENTITY_TEXT_FONT = QtGui.QFont("Mono", 11, 700)
@@ -33,7 +33,16 @@ class BaseNode(QGraphicsItemGroup):
         else:
             self.iconItem = QGraphicsPixmapItem(self.pixmapItem)
 
-        self.labelItem = QGraphicsSimpleTextItem('')
+        self.labelItem = QGraphicsTextItem('')
+        # Have to do it this way; directly assigning stuff does not work due to how PySide6 works.
+        labelDocument = self.labelItem.document()
+        labelDocument.setTextWidth(280)
+        textOption = labelDocument.defaultTextOption()
+        textOption.setWrapMode(QtGui.QTextOption.WrapAtWordBoundaryOrAnywhere)
+        textOption.setAlignment(QtCore.Qt.AlignHCenter)
+        labelDocument.setDefaultTextOption(textOption)
+        self.labelItem.setDocument(labelDocument)
+
         self.addToGroup(self.iconItem)
         self.addToGroup(self.labelItem)
         if font is not None:
@@ -41,8 +50,9 @@ class BaseNode(QGraphicsItemGroup):
         else:
             self.labelItem.setFont(ENTITY_TEXT_FONT)
         if brush is not None:
-            self.labelItem.setBrush(brush)
+            self.labelItem.setDefaultTextColor(brush.color())
 
+        self.labelItem.setPos(self.iconItem.x() - 120, self.iconItem.y() + 45)
         self.updateLabel(primaryAttribute)
 
         self.uid = uid
@@ -63,9 +73,7 @@ class BaseNode(QGraphicsItemGroup):
         if newText != '':
             if len(newText) > 50:
                 newText = newText[:47] + "..."
-            self.labelItem.setText(newText)
-            labelWidth = self.labelItem.boundingRect().width()
-            self.labelItem.setPos(self.iconItem.x() + 20 - (labelWidth / 2), self.iconItem.y() + 45)
+            self.labelItem.setPlainText(newText)
 
     def removeConnector(self, connector) -> None:
         # Exception could be thrown if the connector is already deleted.
