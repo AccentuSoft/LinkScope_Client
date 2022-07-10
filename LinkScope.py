@@ -4497,6 +4497,16 @@ class ConditionClauseWidget(QtWidgets.QFrame):
         return returnValues
 
 
+class MacroDialog(QtWidgets.QDialog):
+    
+    def __init__(self, mainWindowObject: MainWindow):
+        super(MacroDialog, self).__init__()
+        self.setModal(True)
+        macroLabel = QtWidgets.QLabel("This is a list of all currently configured Macros. Click on a Macro to view the "
+                                      "resolutions included in it.")
+        macroTree = QtWidgets.QTreeWidget(self)
+
+
 class ExtractCyclesThread(QtCore.QThread):
     cyclesSignal = QtCore.Signal(list, str)
 
