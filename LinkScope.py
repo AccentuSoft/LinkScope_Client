@@ -1777,6 +1777,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dockbarThree.chatBox.receiveMessage(message)
 
     def initializeLayout(self) -> None:
+        # Have to show the window here, otherwise Seg Fault.
+        self.show()
 
         self.restoreGeometry(QtCore.QByteArray(self.SETTINGS.value("MainWindow/Geometry")))
         self.restoreState(QtCore.QByteArray(self.SETTINGS.value("MainWindow/WindowState")))
@@ -1807,8 +1809,6 @@ class MainWindow(QtWidgets.QMainWindow):
         # Autosave approximately once every ten minutes.
         # Margin of error: 500 ms.
         self.saveTimer.start(600000)
-
-        self.show()
 
         # Moved this here so the software doesn't crash if there are a ton of nodes.
         self.centralWidget().tabbedPane.open()
