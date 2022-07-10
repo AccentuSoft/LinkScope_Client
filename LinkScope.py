@@ -46,6 +46,8 @@ from Core.PathHelper import is_path_exists_or_creatable_portable
 class MainWindow(QtWidgets.QMainWindow):
     facilitateResolutionSignalListener = QtCore.Signal(str, list)
     notifyUserSignalListener = QtCore.Signal(str, str, bool)
+    statusBarSignalListener = QtCore.Signal(str)
+    warningSignalListener = QtCore.Signal(str, bool)
 
     # Redefining the function to adjust its signature.
     def centralWidget(self) -> Union[QtWidgets.QWidget, QtWidgets.QWidget, CentralPane.WorkspaceWidget]:
@@ -1938,6 +1940,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.trayIcon = None
         # Cannot specify icon if notification spawned from signal.
         self.notifyUserSignalListener.connect(self.notifyUser)
+
+        # Allow threads to set statuses.
+        self.statusBarSignalListener.connect(self.setStatus)
+
+        # Allow threads to issue warnings.
+        self.warningSignalListener.connect(self.MESSAGEHANDLER.warning)
 
         self.initializeLayout()
 
