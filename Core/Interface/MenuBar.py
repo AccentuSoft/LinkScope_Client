@@ -1180,6 +1180,7 @@ class MenuBar(QtWidgets.QMenuBar):
             progress.setValue(1)
             with sync_playwright() as p:
                 if importDialog.firefoxChoice.isChecked():
+                    recordSession = importDialog.firefoxSessionChoice.isChecked()
                     try:
                         browser = p.firefox.launch()
 
@@ -1210,11 +1211,16 @@ class MenuBar(QtWidgets.QMenuBar):
                             tabsJson = json.loads(tabsBytes)
                             for browserWindow in tabsJson['windows']:
                                 for browserTab in browserWindow['tabs']:
-                                    if importDialog.firefoxSessionChoice.isChecked():
-                                        for browserEntry in browserTab['entries']:
+                                    if recordSession:
+                                        first = True
+                                        for browserEntry in browserTab['entries'][::-1]:
                                             url = browserEntry['url']
                                             if not url.startswith('about:'):
-                                                tabsToOpen.add((url, browserEntry['title']))
+                                                if first:
+                                                    tabsToOpen.add((url, browserEntry['title'], True))
+                                                    first = False
+                                                else:
+                                                    tabsToOpen.add((url, browserEntry['title'], False))
                                     else:
                                         browserEntry = browserTab['entries'][-1]
                                         url = browserEntry['url']
@@ -1229,6 +1235,7 @@ class MenuBar(QtWidgets.QMenuBar):
                             self.parent().MESSAGEHANDLER.debug('Tabs to open: ' + str(tabsToOpen))
                             projectFilesDir = Path(self.parent().SETTINGS.value("Project/FilesDir"))
 
+                            historyMark = -1
                             for tabToOpen in tabsToOpen:
                                 urlTitle = tabToOpen[1]
                                 actualURL = tabToOpen[0]
@@ -1244,25 +1251,25 @@ class MenuBar(QtWidgets.QMenuBar):
                                         continue
 
                                     if 'application' in pathType:
-                                        returnResults.append([{'Document Name': urlTitle,
-                                                               'File Path': urlPath,
-                                                               'Entity Type': 'Document'}])
+                                        newEntity = [{'Document Name': urlTitle,
+                                                      'File Path': urlPath,
+                                                      'Entity Type': 'Document'}]
                                     elif 'image' in pathType:
-                                        returnResults.append([{'Image Name': urlTitle,
-                                                               'File Path': urlPath,
-                                                               'Entity Type': 'Image'}])
+                                        newEntity = [{'Image Name': urlTitle,
+                                                      'File Path': urlPath,
+                                                      'Entity Type': 'Image'}]
                                     elif 'video' in pathType:
-                                        returnResults.append([{'Video Name': urlTitle,
-                                                               'File Path': urlPath,
-                                                               'Entity Type': 'Video'}])
+                                        newEntity = [{'Video Name': urlTitle,
+                                                      'File Path': urlPath,
+                                                      'Entity Type': 'Video'}]
                                     elif 'archive' in pathType:
-                                        returnResults.append([{'Archive Name': urlTitle,
-                                                               'File Path': urlPath,
-                                                               'Entity Type': 'Archive'}])
+                                        newEntity = [{'Archive Name': urlTitle,
+                                                      'File Path': urlPath,
+                                                      'Entity Type': 'Archive'}]
 
                                 elif parsedURL.scheme.startswith('http'):
-                                    returnResults.append([{'URL': actualURL,
-                                                           'Entity Type': 'Website'}])
+                                    newEntity = [{'URL': actualURL,
+                                                  'Entity Type': 'Website'}]
 
                                     if importDialog.importScreenshotsCheckbox.isChecked():
                                         # If we time out, take a screenshot of the page as-is.
@@ -1290,8 +1297,14 @@ class MenuBar(QtWidgets.QMenuBar):
                                                 [{'Image Name': decodedPath + ' Screenshot ' + timeNow,
                                                   'File Path': screenshotSavePath,
                                                   'Entity Type': 'Image'},
-                                                 {len(returnResults) - 1: {'Resolution': 'Screenshot of Tab',
+                                                 {len(returnResults) + 1: {'Resolution': 'Screenshot of Tab',
                                                                            'Notes': ''}}])
+                                if len(tabToOpen) == 3:
+                                    if tabToOpen[2]:
+                                        historyMark = len(returnResults)
+                                    elif historyMark != -1:
+                                        newEntity.append({historyMark: {'Resolution': 'Next Page'}})
+                                returnResults.append(newEntity)
 
                         browser.close()
                     except Error as e:
