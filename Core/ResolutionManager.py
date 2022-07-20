@@ -18,7 +18,7 @@ class ResolutionManager:
         self.mainWindow = mainWindow
         self.resolutions = {}
 
-    def loadResolutionsFromDir(self, directory: Path):
+    def loadResolutionsFromDir(self, directory: Path) -> None:
         exceptionsCount = 0
         for resolution in listdir(directory):
             resolution = str(resolution)
@@ -86,14 +86,14 @@ class ResolutionManager:
                 return resolutionDescription
         return None
 
-    def loadResolutionsFromServer(self, serverRes):
+    def loadResolutionsFromServer(self, serverRes) -> None:
         for category in serverRes:
             if category not in self.resolutions:
                 self.resolutions[category] = {}
             for serverResolution in serverRes[category]:
                 self.resolutions[category][serverResolution] = serverRes[category][serverResolution]
 
-    def removeServerResolutions(self):
+    def removeServerResolutions(self) -> None:
         for category in dict(self.resolutions):
             for resolution in dict(self.resolutions[category]):
                 # If resolution class does not exist locally, then assume it exists on the server.
@@ -103,13 +103,10 @@ class ResolutionManager:
             if len(self.resolutions[category]) == 0:
                 self.resolutions.pop(category)
 
-    def getResolutionCategories(self):
-        result = []
-        for category in self.resolutions:
-            result.append(category)
-        return result
+    def getResolutionCategories(self) -> list:
+        return list(self.resolutions)
 
-    def getResolutionsForEntityTypesByCategory(self, eTypes):
+    def getResolutionsForEntityTypesByCategory(self, eTypes) -> dict:
         """
         Gets a set of entity types, and returns a dictionary with all the resolutions that can take all
         included types as input.
@@ -124,12 +121,12 @@ class ResolutionManager:
                     result[category].append(resolution)
         return result
 
-    def getResolutionsInCategory(self, category):
+    def getResolutionsInCategory(self, category) -> list:
         if category in self.resolutions:
             return list(self.resolutions[category])
         return []
 
-    def getAllResolutions(self):
+    def getAllResolutions(self) -> list:
         categories = self.getResolutionCategories()
         result = []
         for category in categories:
