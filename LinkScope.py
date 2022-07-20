@@ -585,7 +585,7 @@ class MainWindow(QtWidgets.QMainWindow):
                         entitiesAlreadyInGroups.add(groupEntity)
                 newCanvas.groupItemsProgrammatic(newGroup, 'Group ' + str(count))
                 count += 1
-            newCanvas.rearrangeGraph('neato')
+            newCanvas.rearrangeGraph('circular')
 
         for cycleThread in list(self.cycleExtractionThreads):
             if cycleThread.isFinished():
@@ -4547,17 +4547,14 @@ class ExtractCyclesThread(QtCore.QThread):
 
         groups = []
         allElements = set()
-        skipGrouping = True
         for cycle in list(itertools.zip_longest(*reorderedCycles)):
             cycleSet = set()
             for cycleElement in cycle:
                 if cycleElement is not None:
                     cycleSet.add(cycleElement)
                     allElements.add(cycleElement)
-            if len(cycleSet) > 1 and not skipGrouping:
+            if len(cycleSet) > 1:
                 groups.append(cycleSet)
-            elif skipGrouping:
-                skipGrouping = False
 
         self.cyclesSignal.emit([allElements, groups], self.canvasName)
 

@@ -1460,69 +1460,69 @@ class CanvasScene(QtWidgets.QGraphicsScene):
         # https://gitlab.com/graphviz/graphviz/-/merge_requests/2236
         # No triangulation library on windows yet, so sfdp can't be used there.
 
-        if graphAlgorithm is None or graphAlgorithm not in ('sfdp', 'neato', 'dot'):
+        if graphAlgorithm is None or graphAlgorithm not in ('sfdp', 'neato', 'dot', 'circular'):
             graphAlgorithm = self.parent().mainWindow.SETTINGS.value("Program/GraphLayout", 'dot')
+
+        # No real 'links' to group nodes by default (links to internal nodes don't count). This means that the
+        #   graph algorithms can create odd graphs where group nodes are concerned.
+        # To fix this, we will duplicate the scene graph, add links between the group nodes and the
+        #   outside world, and use that clone for positions.
+        currGraphClone = nx.DiGraph(self.sceneGraph)
+
+        nodesToDel = set()
+        for edgeParentUID, edgeChild in dict(currGraphClone.edges):
+            potentialGroupIDOne = currGraphClone.nodes[edgeParentUID].get('groupID', edgeParentUID)
+            potentialGroupIDTwo = currGraphClone.nodes[edgeChild].get('groupID', edgeChild)
+            if potentialGroupIDOne != edgeParentUID:
+                nodesToDel.add(edgeParentUID)
+            if potentialGroupIDTwo != edgeChild:
+                nodesToDel.add(edgeChild)
+            # Nothing happens if edge already exists. If not, edge is created.
+            # These edges will not be visible on the actual graph generated.
+            currGraphClone.add_edge(potentialGroupIDOne, potentialGroupIDTwo)
+
+        # Only use nodes that are represented on the graph, else we can end up with nodes on the
+        #   other side of the world.
+        currGraphClone.remove_nodes_from(nodesToDel)
+
+        pdGraph = nx.nx_pydot.to_pydot(currGraphClone)
+
         try:
             if graphAlgorithm == 'sfdp':
-                self.scenePos = nx.nx_pydot.graphviz_layout(self.sceneGraph, 'sfdp')
+                pdGraph.set_layout('sfdp')
+                pdGraphNX = nx.nx_pydot.from_pydot(pdGraph)
+                self.scenePos = nx.nx_pydot.pydot_layout(pdGraphNX)
                 xFactor = (0.40 + min(len(self.nodesDict) / 100, 10))
                 yFactor = (0.40 + min(len(self.nodesDict) / 100, 10))
             elif graphAlgorithm == 'neato':
-                self.scenePos = nx.nx_pydot.graphviz_layout(self.sceneGraph, 'neato')
+                pdGraph.set_layout('neato')
+                pdGraphNX = nx.nx_pydot.from_pydot(pdGraph)
+                self.scenePos = nx.nx_pydot.pydot_layout(pdGraphNX)
                 xFactor = (3 + (0.30 + min(len(self.nodesDict) / 100, 10)))
                 yFactor = (3 + (0.30 + min(len(self.nodesDict) / 100, 10)))
+            elif graphAlgorithm == 'circular':
+                pdGraph.set_layout('circo')
+                pdGraphNX = nx.nx_pydot.from_pydot(pdGraph)
+                self.scenePos = nx.nx_pydot.pydot_layout(pdGraphNX)
+                xFactor = (0.40 + (0.30 + min(len(self.nodesDict) / 100, 10)))
+                yFactor = (0.40 + (0.30 + min(len(self.nodesDict) / 100, 10)))
             else:
                 # Default algorithm is 'dot', when nothing else is selected.
-
-                # No real 'links' to group nodes by default (links to internal nodes don't count). This means that the
-                #   'dot' algorithm can create odd graphs where group nodes are concerned.
-                # To fix this, we will duplicate the scene graph, add links between the group nodes and the
-                #   outside world, and use that clone for positions.
-                currGraphClone = nx.DiGraph(self.sceneGraph)
-
-                for edgeParentUID, edgeChild in dict(currGraphClone.edges):
-                    potentialGroupIDOne = currGraphClone.nodes[edgeParentUID].get('groupID', edgeParentUID)
-                    potentialGroupIDTwo = currGraphClone.nodes[edgeChild].get('groupID', edgeChild)
-                    # Nothing happens if edge already exists. If not, edge is created.
-                    # These edges will not be visible on the actual graph generated.
-                    currGraphClone.add_edge(potentialGroupIDOne, potentialGroupIDTwo)
-
-                # Only use nodes that are represented on the graph, else we can end up with nodes on the
-                #   other side of the world.
-                currGraphClone = nx.DiGraph(self.sceneGraph)
-                for node in dict(currGraphClone.nodes):
-                    if currGraphClone.nodes[node].get('groupID') is not None:
-                        currGraphClone.remove_node(node)
-
-                pdGraph = nx.drawing.nx_pydot.to_pydot(currGraphClone)
                 pdGraph.set_layout('dot')
                 pdGraph.set_rankdir('BT')
                 pdGraphNX = nx.nx_pydot.from_pydot(pdGraph)
-                self.scenePos = nx.drawing.nx_pydot.pydot_layout(pdGraphNX)
+                self.scenePos = nx.nx_pydot.pydot_layout(pdGraphNX)
                 xFactor = 0.70
                 yFactor = 2.75
         except Exception as exc:
             self.parent().mainWindow.MESSAGEHANDLER.error('Failed drawing graph with selected algorithm, falling back '
                                                           'to using "dot" algorithm: ' + str(exc), popUp=False)
             # If something goes wrong (e.g. the selected algorithm isn't found), use the dot algorithm.
-            # See comments for 'dot' algorithm.
-            currGraphClone = nx.DiGraph(self.sceneGraph)
 
-            for edgeParentUID, edgeChild in dict(currGraphClone.edges):
-                potentialGroupIDOne = currGraphClone.nodes[edgeParentUID].get('groupID', edgeParentUID)
-                potentialGroupIDTwo = currGraphClone.nodes[edgeChild].get('groupID', edgeChild)
-                currGraphClone.add_edge(potentialGroupIDOne, potentialGroupIDTwo)
-
-            currGraphClone = nx.DiGraph(self.sceneGraph)
-            for node in dict(currGraphClone.nodes):
-                if currGraphClone.nodes[node].get('groupID') is not None:
-                    currGraphClone.remove_node(node)
-
-            pdGraph = nx.drawing.nx_pydot.to_pydot(currGraphClone)
             pdGraph.set_layout('dot')
             pdGraph.set_rankdir('BT')
             pdGraphNX = nx.nx_pydot.from_pydot(pdGraph)
-            self.scenePos = nx.drawing.nx_pydot.pydot_layout(pdGraphNX)
+            self.scenePos = nx.nx_pydot.pydot_layout(pdGraphNX)
             xFactor = 0.70
             yFactor = 2.75
 
