@@ -6,9 +6,6 @@ from os import listdir
 from pathlib import Path
 from typing import Union
 
-from PySide6 import QtWidgets, QtGui
-from Core.Interface import Stylesheets
-
 
 class ResolutionManager:
 
