@@ -2605,20 +2605,28 @@ class SaveWebsiteThread(QtCore.QThread):
     def run(self) -> None:
         newNodes = []
         baseFilesPath = Path(self.mainWindow.SETTINGS.value('Project/FilesDir'))
-        currTempDir = Path.home()
+        currTempDir = Path.home()  # Failsafe in case we can't make directories in TEMP / tmp.
 
         progressValue = 1
         self.progressSignal.emit(progressValue)
 
         def handle_response(response):
+            responseURL = response.url
+            responseURLFragments = responseURL.split('/')[3:]
+            savePath = currTempDir
             try:
                 if response.ok:
-                    filename = os.path.basename(response.url)
+                    for fragment in responseURLFragments[:-1]:
+                        savePath /= fragment
+                        savePath.mkdir(exist_ok=True)
+                    try:
+                        filename = responseURLFragments[-1]
+                    except IndexError:
+                        filename = ''
                     if filename == '':
-                        filename = tldextract.extract(response.url).fqdn + ' ' + str(time.time_ns()) + '.html'
-                    f = open(currTempDir / filename, "wb")
-                    f.write(response.body())
-                    f.close()
+                        filename = 'index.html'
+                    with open(savePath / filename, "wb") as fileToWrite:
+                        fileToWrite.write(response.body())
             except Exception:
                 pass
 
