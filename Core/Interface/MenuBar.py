@@ -14,7 +14,6 @@ import time
 import magic
 import lz4.block
 import pandas as pd
-import webbrowser
 import tldextract
 
 from typing import Union
@@ -1001,7 +1000,7 @@ class MenuBar(QtWidgets.QMenuBar):
                 itemJSON = self.parent().LENTDB.getEntity(item.uid)
                 if itemJSON.get('Entity Type') == 'Website':
                     try:
-                        webbrowser.open(itemJSON['URL'], new=0, autoraise=True)
+                        QtGui.QDesktopServices.openUrl(itemJSON['URL'])
                     except KeyError:
                         continue
 
@@ -1017,7 +1016,7 @@ class MenuBar(QtWidgets.QMenuBar):
                             try:
                                 parsedValue = parse.urlparse(value)
                                 if all([parsedValue.scheme, parsedValue.netloc]):
-                                    webbrowser.open(value, new=0, autoraise=True)
+                                    QtGui.QDesktopServices.openUrl(value)
                             except (KeyError, AttributeError):
                                 continue
 
@@ -1039,7 +1038,7 @@ class MenuBar(QtWidgets.QMenuBar):
                     searchTerms.append('"' + primaryField + '"')
             for searchEngineURL in selectedEngineURLs:
                 try:
-                    webbrowser.open(searchEngineURL + " ".join(searchTerms), new=0, autoraise=False)
+                    QtGui.QDesktopServices.openUrl(searchEngineURL + " ".join(searchTerms))
                 except KeyError:
                     continue
 
@@ -1053,7 +1052,7 @@ class MenuBar(QtWidgets.QMenuBar):
                     selectedEngineURLs.append(engineCheckbox.searchAttr)
             for searchEngineURL in selectedEngineURLs:
                 try:
-                    webbrowser.open(searchEngineURL, new=0, autoraise=False)
+                    QtGui.QDesktopServices.openUrl(searchEngineURL)
                 except KeyError:
                     continue
 
