@@ -126,6 +126,10 @@ MAIN_WINDOW_STYLESHEET = """
                         QMenu::item:disabled {
                          background-color:rgb(81, 87, 114);
                         }
+                        
+                        QTextBrowser {
+                         background-color:rgb(60, 60, 80);
+                        }
                         """
 
 DOCK_BAR_TWO_LINK = """

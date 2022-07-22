@@ -6,6 +6,8 @@ from PySide6 import QtWidgets, QtCore, QtGui
 from Core.Interface import Stylesheets
 from Core.ResourceHandler import MinSizeStackedLayout
 
+from typing import Union
+
 
 class DockBarTwo(QtWidgets.QDockWidget):
 
@@ -21,6 +23,7 @@ class DockBarTwo(QtWidgets.QDockWidget):
 
         childWidget.addTab(scrollAreaWidget, 'Entity Details')
         childWidget.addTab(self.oracle, 'Oracle')
+        childWidget.addTab(self.tabNotes, 'Notes')
 
     def __init__(self,
                  mainWindow,
@@ -44,8 +47,75 @@ class DockBarTwo(QtWidgets.QDockWidget):
                                         self.entityDB,
                                         self.parent(),
                                         self)
+        self.tabNotes = TabNotesPanel(self)
 
         self.initialiseLayout()
+
+
+class TabNotesPanel(QtWidgets.QWidget):
+    """
+    This class is used to allow the user to take notes on a tab by tab
+    basis.
+    """
+
+    def __init__(self, parent=None):
+        super(TabNotesPanel, self).__init__(parent=parent)
+        tabNotesLayout = QtWidgets.QVBoxLayout()
+
+        self.textEditor = TabNotesEditor(self)
+
+        tabNotesLayout.addWidget(self.textEditor)
+        self.setLayout(tabNotesLayout)
+
+
+class TabNotesEditor(QtWidgets.QTextBrowser):
+
+    def __init__(self, parent):
+        super(TabNotesEditor, self).__init__(parent=parent)
+        self.setReadOnly(True)
+        self.setUndoRedoEnabled(True)
+        self.setTextInteractionFlags(QtCore.Qt.TextBrowserInteraction |
+                                     QtCore.Qt.TextSelectableByKeyboard)
+
+        self.contents = '#### Type notes here.\n'
+        self.setMarkdown(self.contents)
+        self.textFormat = self.currentCharFormat()
+
+    def startEditing(self) -> None:
+        if self.isReadOnly():
+            # Reset char format to plain text.
+            self.setCurrentCharFormat(self.textFormat)
+            self.setPlainText(self.contents)
+            self.setReadOnly(False)
+
+    def stopEditing(self) -> None:
+        if not self.isReadOnly():
+            self.contents = self.toPlainText()
+            self.setMarkdown(self.contents)
+            self.setReadOnly(True)
+
+    def dropEvent(self, e: QtGui.QDropEvent) -> None:
+        editingBefore = self.isReadOnly()
+        self.startEditing()
+        super(TabNotesEditor, self).dropEvent(e)
+        if editingBefore:
+            self.stopEditing()
+
+    def mousePressEvent(self, ev: QtGui.QMouseEvent) -> None:
+        potentialLink = self.anchorAt(ev.pos())
+        if not potentialLink:
+            if ev.button() == QtGui.Qt.LeftButton:
+                self.startEditing()
+        super(TabNotesEditor, self).mousePressEvent(ev)
+
+    def focusOutEvent(self, ev: QtGui.QFocusEvent) -> None:
+        if not self.underMouse():
+            if self.isActiveWindow():
+                self.stopEditing()
+        super(TabNotesEditor, self).focusOutEvent(ev)
+
+    def doSetSource(self, name: Union[QtCore.QUrl, str], resourceType: QtGui.QTextDocument.ResourceType = ...) -> None:
+        QtGui.QDesktopServices.openUrl(name)
 
 
 class EntityDetails(QtWidgets.QWidget):
@@ -384,10 +454,10 @@ class SingleLinkItem(QtWidgets.QWidget):
         super().__init__(parent=parent)
 
         self.linkItemPic = QtWidgets.QLabel()
-        
+
         self.linkItemPic.setAlignment(QtCore.Qt.AlignCenter)
         self.linkItemName = QtWidgets.QLabel()
-        
+
         self.linkItemName.setAlignment(QtCore.Qt.AlignCenter)
         self.linkItemUid = ""
         self.setMaximumHeight(90)
