@@ -4536,7 +4536,12 @@ class ExtractCyclesThread(QtCore.QThread):
             for cycle in allCycles:
                 for node in cycle:
                     mostCommonDict[node] = mostCommonDict.get(node, 0) + 1
-            startNode = max(mostCommonDict, key=mostCommonDict.get)
+            try:
+                startNode = max(mostCommonDict, key=mostCommonDict.get)
+            except ValueError:
+                # No cycles exist.
+                self.cyclesSignal.emit([set(), []], self.canvasName)
+                return
 
         reorderedCycles = []
         for cycle in allCycles:
