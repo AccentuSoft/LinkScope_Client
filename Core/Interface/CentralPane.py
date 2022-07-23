@@ -250,8 +250,7 @@ class TabbedPane(QtWidgets.QTabWidget):
         return True
 
     def renameCanvas(self, currName: str, newName: str) -> None:
-        self.canvasTabs = {newName if key == currName else
-                           key: value for key, value in self.canvasTabs.items()}
+        self.canvasTabs[newName] = self.canvasTabs.pop(currName)
         self.canvasTabs[newName].name = newName
 
     def getViewAtIndex(self, index: int):
@@ -588,13 +587,12 @@ class TabbedPane(QtWidgets.QTabWidget):
 
         if Path(canvasDBPath).exists():
             try:
-                canvasDBFile = open(canvasDBPath, "rb")
-                savedJson = load(canvasDBFile)
-                for canvasName in savedJson:
-                    self.addCanvas(canvasName,
-                                   self.resourceHandler.reconstructGraphFullFromFile(savedJson[canvasName][0]),
-                                   savedJson[canvasName][1])
-                canvasDBFile.close()
+                with open(canvasDBPath, "rb") as canvasDBFile:
+                    savedJson = load(canvasDBFile)
+                    for canvasName in savedJson:
+                        self.addCanvas(canvasName,
+                                       self.resourceHandler.reconstructGraphFullFromFile(savedJson[canvasName][0]),
+                                       savedJson[canvasName][1])
             except Exception as exc:
                 self.messageHandler.error("Exception occurred when opening tabs: " + str(exc) +
                                           "\nSkipping opening tabs.", popUp=True)
@@ -960,7 +958,7 @@ class CanvasView(QtWidgets.QGraphicsView):
                 self.zoom += 1
             else:
                 # Prevent user from zooming out indefinitely.
-                if self.zoom < -10:
+                if self.zoom < -11:
                     return
                 factor = 0.8
                 self.zoom -= 1
