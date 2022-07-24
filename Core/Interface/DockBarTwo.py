@@ -4,9 +4,7 @@ from pathlib import Path
 import magic
 from PySide6 import QtWidgets, QtCore, QtGui
 from Core.Interface import Stylesheets
-from Core.ResourceHandler import MinSizeStackedLayout
-
-from typing import Union
+from Core.ResourceHandler import MinSizeStackedLayout, RichNotesEditor
 
 
 class DockBarTwo(QtWidgets.QDockWidget):
@@ -51,6 +49,22 @@ class DockBarTwo(QtWidgets.QDockWidget):
 
         self.initialiseLayout()
 
+    def setNotesText(self, newText: str) -> None:
+        if self.tabNotes.textEditor.isReadOnly():
+            self.tabNotes.textEditor.contents = newText
+            self.tabNotes.textEditor.setMarkdown(newText)
+        else:
+            self.tabNotes.textEditor.setReadOnly(True)
+            self.tabNotes.textEditor.contents = newText
+            self.tabNotes.textEditor.setMarkdown(newText)
+
+    def getNotesText(self) -> str:
+        """
+        Get text with the Markdown control characters.
+        @return:
+        """
+        return self.tabNotes.textEditor.toMarkdown()
+
 
 class TabNotesPanel(QtWidgets.QWidget):
     """
@@ -62,60 +76,10 @@ class TabNotesPanel(QtWidgets.QWidget):
         super(TabNotesPanel, self).__init__(parent=parent)
         tabNotesLayout = QtWidgets.QVBoxLayout()
 
-        self.textEditor = TabNotesEditor(self)
+        self.textEditor = RichNotesEditor(self)
 
         tabNotesLayout.addWidget(self.textEditor)
         self.setLayout(tabNotesLayout)
-
-
-class TabNotesEditor(QtWidgets.QTextBrowser):
-
-    def __init__(self, parent):
-        super(TabNotesEditor, self).__init__(parent=parent)
-        self.setReadOnly(True)
-        self.setUndoRedoEnabled(True)
-        self.setTextInteractionFlags(QtCore.Qt.TextBrowserInteraction |
-                                     QtCore.Qt.TextSelectableByKeyboard)
-
-        self.contents = '#### Type notes here.\n'
-        self.setMarkdown(self.contents)
-        self.textFormat = self.currentCharFormat()
-
-    def startEditing(self) -> None:
-        if self.isReadOnly():
-            # Reset char format to plain text.
-            self.setCurrentCharFormat(self.textFormat)
-            self.setPlainText(self.contents)
-            self.setReadOnly(False)
-
-    def stopEditing(self) -> None:
-        if not self.isReadOnly():
-            self.contents = self.toPlainText()
-            self.setMarkdown(self.contents)
-            self.setReadOnly(True)
-
-    def dropEvent(self, e: QtGui.QDropEvent) -> None:
-        editingBefore = self.isReadOnly()
-        self.startEditing()
-        super(TabNotesEditor, self).dropEvent(e)
-        if editingBefore:
-            self.stopEditing()
-
-    def mousePressEvent(self, ev: QtGui.QMouseEvent) -> None:
-        potentialLink = self.anchorAt(ev.pos())
-        if not potentialLink:
-            if ev.button() == QtGui.Qt.LeftButton:
-                self.startEditing()
-        super(TabNotesEditor, self).mousePressEvent(ev)
-
-    def focusOutEvent(self, ev: QtGui.QFocusEvent) -> None:
-        if not self.underMouse():
-            if self.isActiveWindow():
-                self.stopEditing()
-        super(TabNotesEditor, self).focusOutEvent(ev)
-
-    def doSetSource(self, name: Union[QtCore.QUrl, str], resourceType: QtGui.QTextDocument.ResourceType = ...) -> None:
-        QtGui.QDesktopServices.openUrl(name)
 
 
 class EntityDetails(QtWidgets.QWidget):
@@ -318,8 +282,7 @@ class EntityDetails(QtWidgets.QWidget):
             if key == "uid" or key == "Child UIDs" or key == "Icon":
                 continue
             elif key == "Notes":
-                notesTextArea = QtWidgets.QPlainTextEdit(jsonDict[key])
-                notesTextArea.setReadOnly(True)
+                notesTextArea = RichNotesEditor(self, jsonDict[key], False)
                 self.detailsLayoutOneNode.addWidget(QtWidgets.QLabel(key), rowCount, 0)
                 self.detailsLayoutOneNode.addWidget(notesTextArea, rowCount, 1, 10, 1)
                 rowCount += 9

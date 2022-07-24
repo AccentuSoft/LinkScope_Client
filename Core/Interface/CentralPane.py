@@ -18,7 +18,9 @@ from PySide6 import QtWidgets, QtGui, QtCore
 from PySide6.QtWidgets import QGraphicsPixmapItem
 from PySide6.QtSvgWidgets import QGraphicsSvgItem
 from PySide6.QtWebEngineWidgets import QWebEngineView
+
 from Core.Interface import Entity, Stylesheets
+from Core.ResourceHandler import RichNotesEditor
 
 
 class WorkspaceWidget(QtWidgets.QWidget):
@@ -188,6 +190,13 @@ class TabbedPane(QtWidgets.QTabWidget):
         self.syncedTabs = []
         self.nodeCreationThreads = []
 
+        self.canvasDBPath = Path(self.mainWindow.SETTINGS.value("Project/BaseDir")) / "Project Files" / "CanvasTabs.lscanvas"
+        self.tabsNotesPath = Path(self.mainWindow.SETTINGS.value("Project/FilesDir")).joinpath("CanvasNotes.lsnotes")
+        self.tabsNotesDict = {}
+        self.previousTab = None
+
+        self.currentChanged.connect(self.currentTabChangedListener)
+
     def addCanvas(self, canvasName='New Graph', graph=None, positions=None, a=0, b=0, c=0, d=0) -> bool:
         if not self.isCanvasNameAvailable(canvasName):
             return False
@@ -257,11 +266,20 @@ class TabbedPane(QtWidgets.QTabWidget):
         return self.canvasTabs[self.tabText(index)]
 
     def closeTab(self, tabName: str) -> None:
+        """
+        Delete tab with name tabName.
+        @param tabName:
+        @return:
+        """
         for tabIndex in range(self.count()):
             if self.tabText(tabIndex) == tabName:
                 self.removeTab(tabIndex)
                 break
         self.canvasTabs.pop(tabName)
+        try:
+            self.tabsNotesDict.pop(tabName)
+        except KeyError:
+            pass
 
     def hideTab(self, index) -> None:
         self.removeTab(index)
@@ -569,25 +587,50 @@ class TabbedPane(QtWidgets.QTabWidget):
     def save(self) -> None:
         if len(self.canvasTabs) == 0:
             return
-        canvasDBPath = Path(self.mainWindow.SETTINGS.value("Project/BaseDir")) / "Project Files" / "canvasTabs.lscanvas"
-        canvasDBPathTmp = canvasDBPath.with_suffix(canvasDBPath.suffix + '.tmp')
 
-        canvasDBFile = open(canvasDBPathTmp, "wb")
-        saveJson = {}
-        for canvasName in self.canvasTabs:
-            saveJson[canvasName] = [
-                self.resourceHandler.deconstructGraphForFileDump(self.canvasTabs[canvasName].scene().sceneGraph),
-                self.canvasTabs[canvasName].scene().scenePos]
-        dump(saveJson, canvasDBFile)
-        canvasDBFile.close()
-        move(canvasDBPathTmp, canvasDBPath)
+        canvasDBPathTmp = self.canvasDBPath.with_suffix(self.canvasDBPath.suffix + '.tmp')
+        canvasNotesPathTmp = self.tabsNotesPath.with_suffix(self.tabsNotesPath.suffix + '.tmp')
+
+        # Save canvases
+        with open(canvasDBPathTmp, "wb") as canvasDBFile:
+            saveJson = {}
+            for canvasName in self.canvasTabs:
+                saveJson[canvasName] = [
+                    self.resourceHandler.deconstructGraphForFileDump(self.canvasTabs[canvasName].scene().sceneGraph),
+                    self.canvasTabs[canvasName].scene().scenePos]
+            dump(saveJson, canvasDBFile)
+        move(canvasDBPathTmp, self.canvasDBPath)
+
+        # Save canvas notes
+        currIndex = self.currentIndex()
+        if currIndex != -1:
+            canvasTabName = self.tabText(currIndex)
+            if canvasTabName in self.canvasTabs:
+                self.tabsNotesDict[canvasTabName] = self.mainWindow.dockbarTwo.getNotesText()
+        with open(canvasNotesPathTmp, "wb") as canvasNotesFileTmp:
+            dump(self.tabsNotesDict, canvasNotesFileTmp)
+        move(canvasNotesPathTmp, self.tabsNotesPath)
 
     def open(self) -> None:
-        canvasDBPath = Path(self.mainWindow.SETTINGS.value("Project/BaseDir")) / "Project Files" / "canvasTabs.lscanvas"
-
-        if Path(canvasDBPath).exists():
+        try:
+            with open(self.tabsNotesPath, 'rb') as notesFile:
+                # Load the content into the Notes pane.
+                self.tabsNotesDict = load(notesFile)
+        except ValueError:
+            # If the Tab Notes file is empty or contains invalid input, ignore it.
+            pass
+        except FileNotFoundError:
+            # Create new placeholder notes file if it doesn't exist.
             try:
-                with open(canvasDBPath, "rb") as canvasDBFile:
+                self.tabsNotesPath.touch(0o700, exist_ok=False)
+                self.mainWindow.MESSAGEHANDLER.info('Created new Tab Notes file.')
+            except FileExistsError:
+                self.mainWindow.MESSAGEHANDLER.error('Race condition occurred while trying to create '
+                                                     'Tab Notes file.')
+
+        if Path(self.canvasDBPath).exists():
+            try:
+                with open(self.canvasDBPath, "rb") as canvasDBFile:
                     savedJson = load(canvasDBFile)
                     for canvasName in savedJson:
                         self.addCanvas(canvasName,
@@ -596,6 +639,20 @@ class TabbedPane(QtWidgets.QTabWidget):
             except Exception as exc:
                 self.messageHandler.error("Exception occurred when opening tabs: " + str(exc) +
                                           "\nSkipping opening tabs.", popUp=True)
+
+    def currentTabChangedListener(self, newIndex: int) -> None:
+        if self.previousTab in self.canvasTabs:
+            # Will never have 'None' canvas, or consider deleted tabs.
+            self.tabsNotesDict[self.previousTab] = self.mainWindow.dockbarTwo.getNotesText()
+
+        if newIndex != -1:
+            canvasName = self.tabText(newIndex)
+            tabNotes = self.tabsNotesDict.get(canvasName, '#### Type notes here.\n')
+            self.mainWindow.dockbarTwo.setNotesText(tabNotes)
+            self.previousTab = canvasName
+        else:
+            self.mainWindow.dockbarTwo.setNotesText("")
+            self.previousTab = None
 
 
 class DocWorldPane(QtWidgets.QWidget):
@@ -1948,7 +2005,7 @@ class PropertiesEditor(QtWidgets.QDialog):
                 continue
             keyField = QtWidgets.QLabel(key)
             if key == "Notes":
-                valueField = QtWidgets.QPlainTextEdit(objectJson[key])
+                valueField = RichNotesEditor(self, objectJson["Notes"])
             elif key == 'Icon':
                 valueField = PropertiesEditorIconField(objectJson[key], objectJson['uid'], self.canvas)
             elif key == 'File Path':
@@ -1974,7 +2031,7 @@ class PropertiesEditor(QtWidgets.QDialog):
                 row, self.itemProperties.LabelRole).widget().text()
             if key == "Notes":
                 value = self.itemProperties.itemAt(
-                    row, self.itemProperties.FieldRole).widget().toPlainText()
+                    row, self.itemProperties.FieldRole).widget().toMarkdown()
             elif key == 'Icon':
                 value = self.itemProperties.itemAt(
                     row, self.itemProperties.FieldRole).widget().pictureByteArray

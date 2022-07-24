@@ -14,7 +14,7 @@ from ast import literal_eval
 from base64 import b64decode
 from dateutil import parser
 
-from PySide6.QtCore import QByteArray, QSize
+from PySide6.QtCore import QByteArray, QSize, QUrl, Qt
 from PySide6 import QtWidgets, QtGui
 
 from Core.Interface import Stylesheets
@@ -529,3 +529,60 @@ class MinSizeStackedLayout(QtWidgets.QStackedLayout):
 
     def minimumSize(self) -> QSize:
         return self.currentWidget().minimumSize()
+
+
+class RichNotesEditor(QtWidgets.QTextBrowser):
+
+    def __init__(self, parent=None, currentText: str = '#### Type notes here.\n', allowEditing: bool = True):
+        super(RichNotesEditor, self).__init__(parent=parent)
+        self.allowEditing = allowEditing
+        self.setReadOnly(True)
+        if allowEditing:
+            self.setUndoRedoEnabled(True)
+            self.setTextInteractionFlags(Qt.TextBrowserInteraction | Qt.TextSelectableByKeyboard)
+        else:
+            self.setUndoRedoEnabled(False)
+            self.setTextInteractionFlags(Qt.TextSelectableByMouse | Qt.TextSelectableByKeyboard
+                                         | Qt.LinksAccessibleByMouse | Qt.LinksAccessibleByKeyboard)
+
+        self.contents = currentText
+        self.setMarkdown(self.contents)
+        self.textFormat = self.currentCharFormat()
+
+    def startEditing(self) -> None:
+        if self.allowEditing:
+            if self.isReadOnly():
+                # Reset char format to plain text.
+                self.setCurrentCharFormat(self.textFormat)
+                self.setPlainText(self.contents)
+                self.setReadOnly(False)
+
+    def stopEditing(self) -> None:
+        if not self.isReadOnly():
+            self.contents = self.toPlainText()
+            self.setMarkdown(self.contents)
+            self.setReadOnly(True)
+
+    def dropEvent(self, e: QtGui.QDropEvent) -> None:
+        if self.allowEditing:
+            editingBefore = self.isReadOnly()
+            self.startEditing()
+            super(RichNotesEditor, self).dropEvent(e)
+            if editingBefore:
+                self.stopEditing()
+
+    def mousePressEvent(self, ev: QtGui.QMouseEvent) -> None:
+        potentialLink = self.anchorAt(ev.pos())
+        if not potentialLink:
+            if ev.button() == QtGui.Qt.LeftButton:
+                self.startEditing()
+        super(RichNotesEditor, self).mousePressEvent(ev)
+
+    def focusOutEvent(self, ev: QtGui.QFocusEvent) -> None:
+        if not self.underMouse():
+            if self.isActiveWindow():
+                self.stopEditing()
+        super(RichNotesEditor, self).focusOutEvent(ev)
+
+    def doSetSource(self, name: Union[QUrl, str], resourceType: QtGui.QTextDocument.ResourceType = ...) -> None:
+        QtGui.QDesktopServices.openUrl(name)
