@@ -94,8 +94,8 @@ class SteamGroupMembersChecker:
                             continue
                     try:
                         # If we get a warning about age restriction, click the checkbox and view the actual page.
-                        # Click text=Don't warn me again for Verdun
-                        page.locator("text=Don't warn me again for Verdun").click()
+                        # Click text=Don't warn me again for
+                        page.locator("text=Don't warn me again for").click()
                         # Click text=View Page
                         page.locator("text=View Page").click()
                     except Error:
