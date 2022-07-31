@@ -1227,6 +1227,11 @@ class MainWindow(QtWidgets.QMainWindow):
                 resolutionThread[0].deleteLater()
                 self.resolutions.remove(resolutionThread)
 
+    def showMacrosDialog(self) -> None:
+        macrosDialog = MacroDialog(self)
+        if macrosDialog.exec():
+            pass
+
     def getClientCollectors(self) -> dict:
         with self.serverCollectorsLock:
             try:
@@ -4510,9 +4515,61 @@ class MacroDialog(QtWidgets.QDialog):
     def __init__(self, mainWindowObject: MainWindow):
         super(MacroDialog, self).__init__()
         self.setModal(True)
+        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
+
+        currentScene = mainWindowObject.centralWidget().tabbedPane.getCurrentScene()
+        canvasName = currentScene.getSelfName()
+        endPoints = [item.uid for item in currentScene.selectedItems()
+                     if isinstance(item, BaseNode)]
+        currentCanvasGraph = currentScene.sceneGraph
+
+        # allResolutions = mainWindowObject.RESOLUTIONMANAGER.getAllResolutions()  - need categories too.
+        allMacros = mainWindowObject.RESOLUTIONMANAGER.macros
+
+        layout = QtWidgets.QVBoxLayout()
+        self.setLayout(layout)
+
         macroLabel = QtWidgets.QLabel("This is a list of all currently configured Macros. Click on a Macro to view the "
-                                      "resolutions included in it.")
+                                      "Resolutions included in it.")
+        macroLabel.setWordWrap(True)
         macroTree = QtWidgets.QTreeWidget(self)
+        macroTree.setSelectionMode(macroTree.SingleSelection)
+        macroTree.setSelectionBehavior(macroTree.SelectRows)
+        macroTree.setHeaderLabels(['Macro UID', 'Delete'])
+
+        for macro in allMacros:
+            newMacro = QtWidgets.QTreeWidgetItem()
+            macroTree.addTopLevelItem(newMacro)
+            newMacro.setText(0, macro)
+            newMacro.setText(1, 'DELETE BUTTON TODO')
+            for resolution in allMacros[macro]:
+                resolutionItem = QtWidgets.QTreeWidgetItem(newMacro)
+                resolutionItem.setText(0, resolution)
+
+        buttonsWidget = QtWidgets.QWidget()
+        buttonsWidgetLayout = QtWidgets.QHBoxLayout()
+        buttonsWidget.setLayout(buttonsWidgetLayout)
+        closeButton = QtWidgets.QPushButton('Close')
+        closeButton.clicked.connect(self.reject)
+        runSelectedButton = QtWidgets.QPushButton('Run Selected Macros')
+        runSelectedButton.clicked.connect(self.accept)
+        buttonsWidgetLayout.addWidget(closeButton)
+        buttonsWidgetLayout.addWidget(runSelectedButton)
+
+        layout.addWidget(macroLabel)
+        layout.addWidget(macroTree)
+        layout.addWidget(buttonsWidget)
+
+    def createMacro(self) -> None:
+        pass
+
+    def deleteMacro(self) -> None:
+        pass
+
+    def accept(self) -> None:
+        pass  # TODO - run resolutions - function in main / thread?
+
+        super(MacroDialog, self).accept()
 
 
 class ExtractCyclesThread(QtCore.QThread):

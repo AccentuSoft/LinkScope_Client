@@ -4,6 +4,7 @@ import importlib
 import sys
 from os import listdir
 from pathlib import Path
+from uuid import uuid4
 from typing import Union
 
 
@@ -14,6 +15,8 @@ class ResolutionManager:
         self.messageHandler = messageHandler
         self.mainWindow = mainWindow
         self.resolutions = {}
+        # Macro dict item contents: tuple of (category, resolution name)
+        self.macros = {}
 
     def loadResolutionsFromDir(self, directory: Path) -> None:
         exceptionsCount = 0
@@ -145,3 +148,9 @@ class ResolutionManager:
                     resolutionClass = self.resolutions[category][resolution]['resolution']()
                     result = resolutionClass.resolution(resolutionEntitiesInput, parameters)
                     return result
+
+    def createMacro(self, resolutionList: list) -> str:
+        macroUID = str(uuid4())
+        self.macros[macroUID] = resolutionList
+
+        return macroUID
