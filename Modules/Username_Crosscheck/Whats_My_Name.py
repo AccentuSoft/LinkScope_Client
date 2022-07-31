@@ -34,6 +34,10 @@ class Whats_My_Name:
         futures = {}
         return_result = []
 
+        directory = Path(__file__).parent.resolve()
+        with open(directory / 'web_accounts_list.json') as web_accounts_list:
+            file = json.load(web_accounts_list)
+
         with sync_playwright() as p:
             browser = p.firefox.launch()
             context = browser.new_context(
@@ -49,9 +53,6 @@ class Whats_My_Name:
                 social_field = entity[list(entity)[1]].strip().lower()
                 if entity['Entity Type'] == 'Social Media Handle' and social_field.startswith('@'):
                     social_field = social_field[1:]
-                directory = Path(__file__).parent.resolve()
-                with open(directory / 'web_accounts_list.json') as web_accounts_list:
-                    file = json.load(web_accounts_list)
 
                 with FuturesSession(max_workers=15) as session:
                     for site in file['sites']:
