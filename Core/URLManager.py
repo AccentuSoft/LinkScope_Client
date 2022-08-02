@@ -39,7 +39,7 @@ class URLManager:
 
     def handleURL(self, url):
         parsedURL = urlparse(url.toString())
-        if not url.isValid() or not all([parsedURL.scheme, parsedURL.netloc]):
+        if not url.isValid() or (not all([parsedURL.scheme, parsedURL.netloc]) and parsedURL.scheme != 'file'):
             return None
         if url.isLocalFile():
             return self.handleLocalURL(url)

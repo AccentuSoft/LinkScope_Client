@@ -19,9 +19,9 @@ playwright install
 :: Just in case this was not uncommented in the requirements.txt file.
 python -m pip install --upgrade python-magic-bin
 
-:: Numpy cannot be loaded without the 'noarchive' debug flag - bug?
-python -m PyInstaller --clean --icon="Icon.ico" --noconsole --noconfirm --onedir --noupx -d noarchive ^
+python -m PyInstaller --clean --icon="Icon.ico" --noconsole --noconfirm --onedir --noupx ^
 --add-data "Modules;Modules" --add-data "Resources;Resources" --add-data "Core;Core" ^
+--add-data "buildEnv\Lib\site-packages\playwright;playwright" ^
 --collect-all "PySide6" --collect-all "networkx" --collect-all "pydot" --collect-all "msgpack" ^
 --hidden-import "_cffi_backend" --collect-all "folium" --collect-all "shodan" --collect-all "vtapi3" ^
 --collect-all "docker" --collect-all "exif" --collect-all "dns" --collect-all "pycountry" ^

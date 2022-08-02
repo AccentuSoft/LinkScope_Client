@@ -15,9 +15,9 @@ python3.9 -m pip install -r requirements.txt
 
 PLAYWRIGHT_BROWSERS_PATH=0 python3.9 -m playwright install
 
-# Numpy cannot be loaded without the 'noarchive' debug flag - bug?
-python3.9 -m PyInstaller --clean --icon="./Icon.ico" --noconsole --noconfirm --onedir --noupx -d noarchive \
+python3.9 -m PyInstaller --clean --icon="./Icon.ico" --noconsole --noconfirm --onedir --noupx \
 --add-data "./Modules:Modules/" --add-data "./Resources:Resources/" --add-data "./Core:Core/" \
+--add-data "buildEnv/lib/python3.9/site-packages/playwright:playwright" \
 --collect-all "PySide6" --collect-all "networkx" --collect-all "pydot" --collect-all "msgpack" \
 --hidden-import "_cffi_backend" --collect-all "folium" --collect-all "shodan" --collect-all "vtapi3" \
 --collect-all "docker" --collect-all "exif" --collect-all "pycountry" --collect-all "tldextract" \
