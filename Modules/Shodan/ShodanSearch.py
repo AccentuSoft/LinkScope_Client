@@ -13,7 +13,7 @@ class ShodanSearch:
                                                     'plans: https://account.shodan.io/billing',
                                      'type': 'String',
                                      'value': '',
-                                     'globals': True},
+                                     'global': True},
 
                   'Number of results': {'description': 'Enter the maximum number of results you want returned.',
                                         'type': 'String',
