@@ -1522,7 +1522,7 @@ class CanvasScene(QtWidgets.QGraphicsScene):
         #   graph algorithms can create odd graphs where group nodes are concerned.
         # To fix this, we will duplicate the scene graph, add links between the group nodes and the
         #   outside world, and use that clone for positions.
-        currGraphClone = nx.DiGraph(self.sceneGraph)
+        currGraphClone = self.sceneGraph.copy()
 
         nodesToDel = set()
         for edgeParentUID, edgeChild in dict(currGraphClone.edges):

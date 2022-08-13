@@ -29,7 +29,7 @@ class LQLQueryBuilder:
     def takeSnapshot(self):
         self.mainWindow.LENTDB.dbLock.acquire()
         # Create a copy
-        self.databaseSnapshot = nx.DiGraph(self.mainWindow.LENTDB.database)
+        self.databaseSnapshot = self.mainWindow.LENTDB.database.copy()
         self.mainWindow.LENTDB.dbLock.release()
 
         self.databaseEntities = set(self.databaseSnapshot.nodes)

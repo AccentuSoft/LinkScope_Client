@@ -261,7 +261,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def exportDatabaseToGraphML(self):
         # Need to create a new database to remove the icons
         self.LENTDB.dbLock.acquire()
-        currentDatabase = nx.DiGraph(self.LENTDB.database)
+        currentDatabase = self.LENTDB.database.copy()
         self.LENTDB.dbLock.release()
 
         for node in currentDatabase.nodes:
