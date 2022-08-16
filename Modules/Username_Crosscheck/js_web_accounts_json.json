@@ -12,7 +12,8 @@
     "travel",
     "art",
     "hobby",
-    "social"
+    "social",
+    "business"
   ],
   "sites": [
     {
@@ -183,6 +184,23 @@
       "accepts_phone": false,
       "accepts_username": false,
       "noisy": true,
+      "enabled": true
+     },
+    {
+      "name": "PayPal",
+      "login_page": "https://www.paypal.com/bizsignup/#/checkAccount",
+      "preparation_locators": [],
+      "login_username_locator": "input[name=\"email\"]",
+      "username_submit_locator": "",
+      "password_locator": "",
+      "login_submit_locator": "button:has-text(\"Continue\")",
+      "account_existence_locators": ["text=This email is already being used "],
+      "account_missing_locator": "input[name=\"password\"]",
+      "category": "business",
+      "accepts_email": true,
+      "accepts_phone": false,
+      "accepts_username": false,
+      "noisy": false,
       "enabled": true
      },
     {
