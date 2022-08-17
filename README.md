@@ -63,6 +63,11 @@ Some dependencies need to be installed in order for the software to work properl
 The software comes packaged in a 7zip archive. Uncompress the archive, and double-click the executable to start the software. On Windows, the executable should be named 'LinkScope.exe'. On Linux, it should be named 'LinkScope'.
 
 
+## Instructions & Resources
+The Wiki page contains a manual on using the tool, available here: https://github.com/AccentuSoft/LinkScope_Client/wiki
+
+We have an introductory blog post that explains the basics of using the tool, available here: https://accentusoft.com/tutorials/first-steps-with-linkscope-client/
+
 ## Extending the software
 LinkScope was built from the ground up to be modular! In this repository's wiki, there are instructions on how to create your own modules, which can contain custom Entities and Resolutions. There is also an example module in the Modules directory that can act as a template, and has a verbose description of most things that a module creator should need to consider.
 
