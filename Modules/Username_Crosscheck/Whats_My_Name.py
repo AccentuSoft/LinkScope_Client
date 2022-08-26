@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 """
-Credits in web_accounts_list.json
+Credits in wmn-data.json
 """
 
 
@@ -35,7 +35,7 @@ class Whats_My_Name:
         return_result = []
 
         directory = Path(__file__).parent.resolve()
-        with open(directory / 'web_accounts_list.json') as web_accounts_list:
+        with open(directory / 'wmn-data.json') as web_accounts_list:
             file = json.load(web_accounts_list)
 
         with sync_playwright() as p:
@@ -56,12 +56,12 @@ class Whats_My_Name:
 
                 with FuturesSession(max_workers=15) as session:
                     for site in file['sites']:
-                        original_uri = site['check_uri'].replace('{account}', social_field)
-                        account_existence_code = str(site['account_existence_code'])
-                        account_existence_string = site['account_existence_string']
+                        original_uri = site['uri_check'].replace('{account}', social_field)
+                        account_existence_code = site['e_code']
+                        account_existence_string = site['e_string']
                         requires_javascript = site.get('requires_javascript', False)
                         if site['valid']:
-                            account_existence_string = re.escape(str(account_existence_string))
+                            account_existence_string = re.escape(account_existence_string)
                             account_existence_string = re.compile(account_existence_string)
                             if requires_javascript:
                                 for _ in range(3):
@@ -69,7 +69,7 @@ class Whats_My_Name:
                                         response = page.goto(original_uri, wait_until="networkidle", timeout=10000)
                                         status_code = response.status
                                         page_source = page.content()
-                                        if status_code == int(account_existence_code) and \
+                                        if status_code == account_existence_code and \
                                             account_existence_string != "" and \
                                                 len(account_existence_string.findall(page_source)) > 0:
                                             return_result.append([{'URL': original_uri,
@@ -92,7 +92,7 @@ class Whats_My_Name:
                     except RequestException:
                         continue
                     page_source = first_response.text
-                    if first_response.status_code == int(account_existence_code) and \
+                    if first_response.status_code == account_existence_code and \
                             account_existence_string != "" and \
                             len(account_existence_string.findall(page_source)) > 0:
                         return_result.append([{'URL': first_response.url,
