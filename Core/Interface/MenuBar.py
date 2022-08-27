@@ -1561,7 +1561,7 @@ class ViewAndStopResolutionsDialog(QtWidgets.QDialog):
                 stopResolutionButton = ViewAndStopResolutionsDialogOption(resolution[0],
                                                                           resolution[1], mainWindowObject)
                 scrollAreaLayout.addRow(QtWidgets.QLabel(resolutionName), stopResolutionButton)
-            elif not resolution[0].done:
+            elif (not resolution[0].done) and resolution[0].return_results:
                 resolutionName = 'Local Resolution: ' + resolution[0].resolution
                 stopResolutionButton = ViewAndStopResolutionsDialogOption(resolution[0],
                                                                           resolution[1], mainWindowObject)
