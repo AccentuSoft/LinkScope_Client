@@ -4,18 +4,18 @@
 import re
 import sys
 import tempfile
-import threading
 import time
 import csv
 import statistics
 import itertools
+from threading import Lock, enumerate
 
 import networkx as nx
 from ast import literal_eval
 from uuid import uuid4
 from shutil import move
 from inspect import getsourcefile
-from os import listdir, access, R_OK, W_OK
+from os import listdir, access, R_OK, W_OK, getpid, kill
 from os.path import abspath, dirname
 from msgpack import load
 from pathlib import Path
@@ -100,6 +100,12 @@ class MainWindow(QtWidgets.QMainWindow):
         while not self.dockbarThree.logViewerUpdateThread.isFinished():
             time.sleep(0.01)
         super(MainWindow, self).closeEvent(event)
+        # Terminating ThreadPoolExecutor threads, so that the application quits.
+        for thread in enumerate():
+            if 'ThreadPoolExecutor' in thread.name:
+                # Yes, this is terrible. Whenever ThreadPoolExecutor allows for the creation of actual daemon threads
+                #   that don't cause the program to hang, this will be removed.
+                kill(getpid(), 9)
 
     def saveProject(self) -> None:
         try:
@@ -1892,11 +1898,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.saveTimer.setTimerType(QtCore.Qt.VeryCoarseTimer)
 
         self.syncedCanvases = []
-        self.syncedCanvasesLock = threading.Lock()
+        self.syncedCanvasesLock = Lock()
         self.serverProjects = []
-        self.serverProjectsLock = threading.Lock()
+        self.serverProjectsLock = Lock()
         self.resolutions = []
-        self.serverCollectorsLock = threading.Lock()
+        self.serverCollectorsLock = Lock()
         self.collectors = {}
         self.runningCollectors = {}
         self.cycleExtractionThreads = []
