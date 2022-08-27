@@ -309,6 +309,8 @@ class ResolutionList(QtWidgets.QTreeWidget):
         self.setHeaderLabels(['Resolutions'])
         self.setAlternatingRowColors(False)
         self.setMinimumWidth(200)
+        self.setSortingEnabled(True)
+        self.sortByColumn(0, QtCore.Qt.AscendingOrder)
 
         self.loadAllResolutions()
 
@@ -371,6 +373,8 @@ class NodeList(QtWidgets.QTreeWidget):
         self.setDragEnabled(True)
         self.setHeaderLabels(['Entities'])
         self.setAlternatingRowColors(False)
+        self.setSortingEnabled(True)
+        self.sortByColumn(0, QtCore.Qt.AscendingOrder)
         self.allEntities = []
 
         self.loadEntities()
