@@ -2,6 +2,8 @@
 
 """
 Note: Creates log files in temp folders in /tmp. Files are only readable by the person running the software.
+
+This module is not very fast or efficient - take care when running it.
 """
 
 
@@ -26,6 +28,9 @@ class Social_Analyzer_Detector:
         import random
         import string
         import re
+
+        SocialAnalyzer = import_module("social-analyzer").SocialAnalyzer(silent=True)
+
         commentsRegex = re.compile('<!--.*?-->', re.DOTALL)
         websites = parameters['websites'].lower()
 
@@ -74,8 +79,6 @@ class Social_Analyzer_Detector:
 
         return_result = []
         for entity in entityJsonList:
-            # Have to keep re-importing so that it works for entities beyond the first.
-            SocialAnalyzer = import_module("social-analyzer").SocialAnalyzer(silent=True)
             uid = entity['uid']
             if entity['Entity Type'] == 'Phrase':
                 social_field = entity['Phrase']
@@ -86,7 +89,7 @@ class Social_Analyzer_Detector:
             social_field = social_field.strip().lower()
             results = SocialAnalyzer.run_as_object(
                 username=social_field, silent=True, output="json", filter='good', metadata=False, logs_dir='',
-                websites=websites, mode='fast', timeout=15, profiles='detected')
+                websites=websites, mode='fast', timeout=15, method='find', profiles='detected')
 
             # Social Analyzer can return false positives. Verifying the results cuts down on those.
             # In some *very* rare cases this might result in false negatives, but we have not been able to find any
