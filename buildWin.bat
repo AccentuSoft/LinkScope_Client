@@ -31,7 +31,7 @@ python -m PyInstaller --clean --icon="Icon.ico" --noconsole --noconfirm --onedir
 --hidden-import "PIL" --hidden-import "lz4" --hidden-import "lxml" --hidden-import "jellyfish" ^
 --hidden-import "logging" --hidden-import "defusedxml" --hidden-import "dateutil" --hidden-import "xmltodict" ^
 --hidden-import "urllib3" --hidden-import "cchardet" --hidden-import "ipwhois" --hidden-import "holehe" ^
---hidden-import "httpx" --collect-all "snscrape" --hidden-import "pytz" --hidden-import "name-that-hash" ^
+--hidden-import "httpx" --collect-all "snscrape" --hidden-import "pytz" --hidden-import "name_that_hash" ^
 --hidden-import "python-magic-bin" ".\LinkScope.py"
 
 :: Copy web engine resources in final package, so that the map tool works.
