@@ -32,6 +32,7 @@ class SettingsObject(dict):
         self.setValue("Program/Graphics/LinkTextFontBoldness", "700")
         self.setValue("Program/Graphics/EntityTextColor", "#000000")  # RGB
         self.setValue("Program/Graphics/LinkTextColor", "#000000")  # RGB
+        self.setValue("Program/Graphics/LabelFade", "3")
         self.setValue("Project/Name", "Untitled")
         self.setValue("Project/BaseDir", "")
         self.setValue("Project/FilesDir", "")

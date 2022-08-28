@@ -8,7 +8,7 @@ import time
 import csv
 import statistics
 import itertools
-from threading import Lock, enumerate
+import threading
 
 import networkx as nx
 from ast import literal_eval
@@ -101,7 +101,7 @@ class MainWindow(QtWidgets.QMainWindow):
             time.sleep(0.01)
         super(MainWindow, self).closeEvent(event)
         # Terminating ThreadPoolExecutor threads, so that the application quits.
-        for thread in enumerate():
+        for thread in threading.enumerate():
             if 'ThreadPoolExecutor' in thread.name:
                 # Yes, this is terrible. Whenever ThreadPoolExecutor allows for the creation of actual daemon threads
                 #   that don't cause the program to hang, this will be removed.
@@ -901,33 +901,36 @@ class MainWindow(QtWidgets.QMainWindow):
             newSettings = settingsDialog.newSettings
             try:
                 etfVal = int(newSettings["ETF"])
-                self.entityTextFont.setPointSize(etfVal)
+                self.centralWidget().tabbedPane.entityTextFont.setPointSize(etfVal)
                 self.SETTINGS.setValue("Program/Graphics/EntityTextFontSize", str(newSettings["ETF"]))
             except ValueError:
                 pass
             try:
                 ltfVal = int(newSettings["LTF"])
-                self.linkTextFont.setPointSize(ltfVal)
+                self.centralWidget().tabbedPane.linkTextFont.setPointSize(ltfVal)
                 self.SETTINGS.setValue("Program/Graphics/LinkTextFontSize", str(newSettings["LTF"]))
+            except ValueError:
+                pass
+            try:
+                lfVal = int(newSettings["LF"])
+                self.centralWidget().tabbedPane.hideZoom = - int(lfVal)
+                self.centralWidget().tabbedPane.updateCanvasHideZoom()
+                self.SETTINGS.setValue("Program/Graphics/LabelFade", str(newSettings["LF"]))
             except ValueError:
                 pass
 
             etcVal = newSettings["ETC"]
             newEtcColor = QtGui.QColor(etcVal)
             if newEtcColor.isValid():
-                self.entityTextBrush.setColor(newEtcColor)
+                self.centralWidget().tabbedPane.entityTextBrush.setColor(newEtcColor)
                 self.SETTINGS.setValue("Program/Graphics/EntityTextColor", newEtcColor.name())
             ltcVal = newSettings["LTC"]
             newLtcColor = QtGui.QColor(ltcVal)
             if newLtcColor.isValid():
-                self.linkTextBrush.setColor(newLtcColor)
+                self.centralWidget().tabbedPane.linkTextBrush.setColor(newLtcColor)
                 self.SETTINGS.setValue("Program/Graphics/LinkTextColor", newLtcColor.name())
 
-            for viewKey in self.centralWidget().tabbedPane.canvasTabs:
-                scene = self.centralWidget().tabbedPane.canvasTabs[viewKey].scene()
-                scene.updateNodeGraphics(self.entityTextFont, self.entityTextBrush, self.linkTextFont,
-                                         self.linkTextBrush)
-
+            self.centralWidget().tabbedPane.updateCanvasGraphics()
             self.saveProject()
 
     def loadModules(self) -> None:
@@ -1898,11 +1901,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.saveTimer.setTimerType(QtCore.Qt.VeryCoarseTimer)
 
         self.syncedCanvases = []
-        self.syncedCanvasesLock = Lock()
+        self.syncedCanvasesLock = threading.Lock()
         self.serverProjects = []
-        self.serverProjectsLock = Lock()
+        self.serverProjectsLock = threading.Lock()
         self.resolutions = []
-        self.serverCollectorsLock = Lock()
+        self.serverCollectorsLock = threading.Lock()
         self.collectors = {}
         self.runningCollectors = {}
         self.cycleExtractionThreads = []
@@ -1910,24 +1913,27 @@ class MainWindow(QtWidgets.QMainWindow):
         self.RESOLUTIONMANAGER.loadResolutionsFromDir(
             Path(self.SETTINGS.value("Program/BaseDir")) / "Core" / "Resolutions" / "Core")
 
-        self.entityTextFont = QtGui.QFont(self.SETTINGS.value("Program/Graphics/EntityTextFontType"),
-                                          int(self.SETTINGS.value("Program/Graphics/EntityTextFontSize")),
-                                          int(self.SETTINGS.value("Program/Graphics/EntityTextFontBoldness")))
-        self.entityTextBrush = QtGui.QBrush(self.SETTINGS.value("Program/Graphics/EntityTextColor"))
-        self.linkTextFont = QtGui.QFont(self.SETTINGS.value("Program/Graphics/LinkTextFontType"),
-                                        int(self.SETTINGS.value("Program/Graphics/LinkTextFontSize")),
-                                        int(self.SETTINGS.value("Program/Graphics/LinkTextFontBoldness")))
-        self.linkTextBrush = QtGui.QBrush(self.SETTINGS.value("Program/Graphics/LinkTextColor"))
+        entityTextFont = QtGui.QFont(self.SETTINGS.value("Program/Graphics/EntityTextFontType"),
+                                     int(self.SETTINGS.value("Program/Graphics/EntityTextFontSize")),
+                                     int(self.SETTINGS.value("Program/Graphics/EntityTextFontBoldness")))
+        entityTextBrush = QtGui.QBrush(self.SETTINGS.value("Program/Graphics/EntityTextColor"))
+        linkTextFont = QtGui.QFont(self.SETTINGS.value("Program/Graphics/LinkTextFontType"),
+                                   int(self.SETTINGS.value("Program/Graphics/LinkTextFontSize")),
+                                   int(self.SETTINGS.value("Program/Graphics/LinkTextFontBoldness")))
+        linkTextBrush = QtGui.QBrush(self.SETTINGS.value("Program/Graphics/LinkTextColor"))
+        zoomHide = - int(self.SETTINGS.value("Program/Graphics/LabelFade"))
 
         self.setCentralWidget(CentralPane.WorkspaceWidget(self,
                                                           self.MESSAGEHANDLER,
                                                           self.URLMANAGER,
                                                           self.LENTDB,
                                                           self.RESOURCEHANDLER,
-                                                          self.entityTextFont,
-                                                          self.entityTextBrush,
-                                                          self.linkTextFont,
-                                                          self.linkTextBrush))
+                                                          entityTextFont,
+                                                          entityTextBrush,
+                                                          linkTextFont,
+                                                          linkTextBrush,
+                                                          zoomHide
+                                                          ))
 
         self.facilitateResolutionSignalListener.connect(self.centralWidget().tabbedPane.facilitateResolution)
 
@@ -2784,6 +2790,13 @@ class GraphicsEditDialog(QtWidgets.QDialog):
         ltfSettingTextbox.setStyleSheet(Stylesheets.TEXT_BOX_STYLESHEET)
         self.settingsValueTextboxes.append(ltfSettingTextbox)
         self.resolutionCategoryLayout.addRow("Link Text Font Size", ltfSettingTextbox)
+
+        labelFadeSettingTextbox = SettingsIntegerEditTextBox(int(self.settings.value("Program/Graphics/LabelFade")),
+                                                             "LF",
+                                                             12, 0)
+        labelFadeSettingTextbox.setStyleSheet(Stylesheets.TEXT_BOX_STYLESHEET)
+        self.settingsValueTextboxes.append(labelFadeSettingTextbox)
+        self.resolutionCategoryLayout.addRow("Label Fade Threshold", labelFadeSettingTextbox)
 
         self.colorPicker = QtWidgets.QColorDialog()
         self.colorPicker.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)

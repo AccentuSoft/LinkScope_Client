@@ -34,7 +34,8 @@ class WorkspaceWidget(QtWidgets.QWidget):
                  entityTextFont,
                  entityTextBrush,
                  linkTextFont,
-                 linkTextBrush):
+                 linkTextBrush,
+                 hideZoom):
 
         super(WorkspaceWidget, self).__init__(parent=mainWindow)
 
@@ -53,6 +54,7 @@ class WorkspaceWidget(QtWidgets.QWidget):
                                      entityTextBrush,
                                      linkTextFont,
                                      linkTextBrush,
+                                     hideZoom,
                                      mainWindow)
 
         self.docAndCanvasLayout.addWidget(self.tabbedPane, 0, 1)
@@ -169,6 +171,7 @@ class TabbedPane(QtWidgets.QTabWidget):
                  entityTextBrush,
                  linkTextFont,
                  linkTextBrush,
+                 hideZoom,
                  mainWindow):
 
         super(TabbedPane, self).__init__(parent)
@@ -180,6 +183,7 @@ class TabbedPane(QtWidgets.QTabWidget):
         self.entityTextBrush = entityTextBrush
         self.linkTextFont = linkTextFont
         self.linkTextBrush = linkTextBrush
+        self.hideZoom = hideZoom
         self.mainWindow = mainWindow
 
         self.setAcceptDrops(True)
@@ -190,7 +194,8 @@ class TabbedPane(QtWidgets.QTabWidget):
         self.syncedTabs = []
         self.nodeCreationThreads = []
 
-        self.canvasDBPath = Path(self.mainWindow.SETTINGS.value("Project/BaseDir")) / "Project Files" / "CanvasTabs.lscanvas"
+        self.canvasDBPath = Path(
+            self.mainWindow.SETTINGS.value("Project/BaseDir")) / "Project Files" / "CanvasTabs.lscanvas"
         self.tabsNotesPath = Path(self.mainWindow.SETTINGS.value("Project/FilesDir")).joinpath("CanvasNotes.lsnotes")
         self.tabsNotesDict = {}
         self.previousTab = None
@@ -200,8 +205,8 @@ class TabbedPane(QtWidgets.QTabWidget):
     def addCanvas(self, canvasName='New Graph', graph=None, positions=None, a=0, b=0, c=0, d=0) -> bool:
         if not self.isCanvasNameAvailable(canvasName):
             return False
-        scene = CanvasScene(self, graph, positions, a, b, c, d, canvasName,
-                            self.entityTextFont, self.entityTextBrush, self.linkTextFont, self.linkTextBrush)
+        scene = CanvasScene(self, graph, positions, a, b, c, d, canvasName, self.entityTextFont, self.entityTextBrush,
+                            self.linkTextFont, self.linkTextBrush, self.hideZoom)
         view = CanvasView(self,
                           scene,
                           canvasName,
@@ -261,6 +266,16 @@ class TabbedPane(QtWidgets.QTabWidget):
     def renameCanvas(self, currName: str, newName: str) -> None:
         self.canvasTabs[newName] = self.canvasTabs.pop(currName)
         self.canvasTabs[newName].name = newName
+
+    def updateCanvasGraphics(self):
+        for viewKey in self.canvasTabs:
+            scene = self.canvasTabs[viewKey].scene()
+            scene.updateNodeGraphics(self.entityTextFont, self.entityTextBrush, self.linkTextFont, self.linkTextBrush)
+
+    def updateCanvasHideZoom(self):
+        for viewKey in self.canvasTabs:
+            scene = self.canvasTabs[viewKey].scene()
+            scene.hideZoom = self.hideZoom
 
     def getViewAtIndex(self, index: int):
         return self.canvasTabs[self.tabText(index)]
@@ -1177,7 +1192,7 @@ class CanvasView(QtWidgets.QGraphicsView):
 class CanvasScene(QtWidgets.QGraphicsScene):
 
     def __init__(self, parent, graph=None, positions=None, a=0, b=0, c=0, d=0, canvasName: str = 'New Canvas',
-                 entityTextFont=None, entityTextBrush=None, linkTextFont=None, linkTextBrush=None) -> None:
+                 entityTextFont=None, entityTextBrush=None, linkTextFont=None, linkTextBrush=None, hideZoom=-3) -> None:
         super(CanvasScene, self).__init__(a, b, c, d, parent)
         self.itemsToLink = []
         self.linking = False
@@ -1189,6 +1204,7 @@ class CanvasScene(QtWidgets.QGraphicsScene):
         self.entityTextBrush = entityTextBrush
         self.linkTextFont = linkTextFont
         self.linkTextBrush = linkTextBrush
+        self.hideZoom = hideZoom
 
         # All the nodes on the canvas. Easier than looping through self.items().
         self.nodesDict = {}

@@ -119,6 +119,10 @@ class BaseNode(QGraphicsItemGroup):
     def paint(self, painter: QtGui.QPainter, option: QtWidgets.QStyleOptionGraphicsItem,
               widget: Optional[QtWidgets.QWidget] = ...) -> None:
         painter.setPen(QtCore.Qt.NoPen)
+        if self.scene().views()[0].zoom < self.scene().hideZoom:
+            self.labelItem.hide()
+        else:
+            self.labelItem.show()
         if self.isSelected():
             centerPoint = QtCore.QPointF(self.iconItem.x() + 20, self.iconItem.y() + 20)
             selectionBackgroundGradient = QtGui.QRadialGradient(centerPoint, 80, centerPoint)
@@ -316,6 +320,10 @@ class BaseConnector(QGraphicsItemGroup):
             painter.setBrush(self.myColor)
             painter.drawLine(self.line)
             painter.drawPolygon(self.arrowHead)
+            if self.scene().views()[0].zoom < self.scene().hideZoom:
+                self.labelItem.hide()
+            else:
+                self.labelItem.show()
             return
 
         self.oldStartPos = currentStartPos
@@ -332,7 +340,8 @@ class BaseConnector(QGraphicsItemGroup):
 
         angle = math.atan2(line.dy(), - line.dx())
 
-        if line.length() < 50 + len(self.labelItem.text()) * 15:
+        if (line.length() < 50 + len(self.labelItem.text()) * 15) or \
+                self.scene().views()[0].zoom < self.scene().hideZoom:
             self.labelItem.hide()
         else:
             self.labelItem.show()
