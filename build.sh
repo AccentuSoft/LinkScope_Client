@@ -26,7 +26,7 @@ python3.9 -m PyInstaller --clean --icon="./Icon.ico" --noconsole --noconfirm --o
 --collect-all "email_validator" --collect-all "social-analyzer" --collect-all "tld" \
 --hidden-import "PIL" --hidden-import "lz4" --hidden-import "lxml" --hidden-import "jellyfish" \
 --hidden-import "defusedxml" --hidden-import "cchardet" --hidden-import "ipwhois" --hidden-import "xmltodict" \
---hidden-import "dateutil" --hidden-import "urllib3" --hidden-import "logging" --hidden-import "holehe" \
+--hidden-import "dateutil" --hidden-import "urllib3" --hidden-import "logging" --collect-all "holehe" \
 --hidden-import "httpx" --collect-all "snscrape" --hidden-import "pytz" --hidden-import "name_that_hash" \
 "./LinkScope.py"
 
