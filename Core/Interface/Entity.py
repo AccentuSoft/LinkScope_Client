@@ -250,10 +250,6 @@ class BaseConnector(QGraphicsItemGroup):
         self.myStartItem.addConnector(self)
         self.myEndItem.addConnector(self)
 
-        # Set as the wrong positions to force drawing.
-        self.oldStartPos = QtCore.QPointF(self.myStartItem.pos().x() + 1, 0)
-        self.oldEndPos = QtCore.QPointF(self.myEndItem.pos().x() + 1, 0)
-
         self.colorSelected = QtGui.QColor(0, 173, 238)
         self.colorDefault = QtGui.QColor(200, 200, 200)
         self.myColor = self.colorDefault
@@ -314,23 +310,8 @@ class BaseConnector(QGraphicsItemGroup):
 
         self.myColor = self.colorSelected if self.isSelected() else self.colorDefault
 
-        if currentEndPos == self.oldEndPos and currentStartPos == self.oldStartPos:
-            myPen = QtGui.QPen(self.myColor)
-            painter.setPen(myPen)
-            painter.setBrush(self.myColor)
-            painter.drawLine(self.line)
-            painter.drawPolygon(self.arrowHead)
-            if self.scene().views()[0].zoom < self.scene().hideZoom:
-                self.labelItem.hide()
-            else:
-                self.labelItem.show()
-            return
-
-        self.oldStartPos = currentStartPos
-        self.oldEndPos = currentEndPos
-
-        p1 = QtCore.QPointF(self.myStartItem.pos().x() + 20, self.myStartItem.pos().y() + 20)
-        p2 = QtCore.QPointF(self.myEndItem.pos().x() + 20, self.myEndItem.pos().y() + 20)
+        p1 = QtCore.QPointF(currentStartPos.x() + 20, currentStartPos.y() + 20)
+        p2 = QtCore.QPointF(currentEndPos.x() + 20, currentEndPos.y() + 20)
 
         line = QtCore.QLineF(p1, p2)
 
