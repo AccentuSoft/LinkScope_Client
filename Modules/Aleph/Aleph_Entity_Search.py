@@ -7,11 +7,10 @@ class Aleph_Entity_Search:
     description = "Find information about a given search parameter"
     originTypes = {'Phrase', 'Person', 'Politically Exposed Person'}
     resultTypes = {'Phrase'}
-    parameters = {'Number of results': {'description': 'Creating a lot of nodes could slow down the software. Please '
-                                                       'be mindful of the value you enter.',
-                                        'type': 'String',
-                                        'value': 'Enter the number of results you want returned',
-                                        'default': '1'},
+    parameters = {'Max Results': {'description': 'The maximum number of results to return.',
+                                  'type': 'String',
+                                  'value': 'Enter the number of results you want returned',
+                                  'default': '1'},
                   'Aleph Disclaimer': {'description': 'The content on Aleph is provided for general information only.\n'
                                                       'It is not intended to amount to advice on which you should place'
                                                       'sole and entire reliance.\n'
@@ -43,9 +42,13 @@ class Aleph_Entity_Search:
             return "Please Accept the Terms for Aleph."
 
         try:
-            max_results = int(parameters['Number of results'])
+            max_results = int(parameters['Max Results'])
         except ValueError:
             return "The value for parameter 'Max Results' is not a valid integer."
+
+        if max_results <= 0:
+            return []
+
         with FuturesSession(max_workers=15) as session:
             for entity in entityJsonList:
                 uidList.append(entity['uid'])

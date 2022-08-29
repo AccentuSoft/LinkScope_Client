@@ -7,7 +7,7 @@ class GetCollectionsInfo:
     description = "Find information about Collections and their IDs"
     originTypes = {'Phrase'}
     resultTypes = {'Phrase, Aleph ID'}
-    parameters = {'Max Results': {'description': 'Please enter the maximum number of results to return. ',
+    parameters = {'Max Results': {'description': 'Please enter the maximum number of results to return.',
                                   'type': 'String',
                                   'default': '1'},
                   'Aleph Disclaimer': {'description': 'The content on Aleph is provided for general information only.\n'
@@ -38,10 +38,10 @@ class GetCollectionsInfo:
         headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 
         try:
-            linkNumbers = int(parameters['Max Results'])
+            maxResults = int(parameters['Max Results'])
         except ValueError:
             return "The value for parameter 'Max Results' is not a valid integer."
-        if linkNumbers <= 0:
+        if maxResults <= 0:
             return []
         with FuturesSession(max_workers=15) as session:
             for entity in entityJsonList:
@@ -56,11 +56,7 @@ class GetCollectionsInfo:
             except requests.exceptions.ConnectionError:
                 return "Please check your internet connection"
 
-            max_results = int(len(response['results']))
-            if linkNumbers >= max_results:
-                collections = response['results']
-            else:
-                collections = response['results'][0: linkNumbers]
+            collections = response['results'][:maxResults]
 
             for collection in collections:
                 index_of_child = len(returnResults)
