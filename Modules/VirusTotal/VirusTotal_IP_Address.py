@@ -9,7 +9,7 @@ class VirusTotal_IP_Address:
     resultTypes = {"Country", "Company", "Autonomous System"}
     parameters = {'VirusTotal API Key': {'description': 'Enter your api key under your profile after '
                                                         'signing up on https://virustotal.com. '
-                                                        'Free usage of the API is limited to 1,000 requests '
+                                                        'Free usage of the API is limited to 500 requests per day '
                                                         'with a rate of 4 per minute.',
                                          'type': 'String',
                                          'value': '',
@@ -21,7 +21,7 @@ class VirusTotal_IP_Address:
         from vtapi3 import VirusTotalAPIIPAddresses, VirusTotalAPIError
 
         return_result = []
-        api_key = parameters['VirusTotal API Key']
+        api_key = parameters['VirusTotal API Key'].strip()
         vt_api_ip_addresses = VirusTotalAPIIPAddresses(api_key)
         for entity in entityJsonList:
             uid = entity['uid']

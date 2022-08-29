@@ -9,7 +9,7 @@ class VirusTotal_Domain:
     resultTypes = {'Country', 'Domain', 'Company', 'Email Address', 'Phrase'}
     parameters = {'VirusTotal API Key': {'description': 'Enter your api key under your profile after'
                                                         ' signing up on https://virustotal.com. '
-                                                        'Free usage of the API is limited to 1,000 requests '
+                                                        'Free usage of the API is limited to 500 requests per day '
                                                         'with a rate of 4 per minute.',
                                          'type': 'String',
                                          'value': '',

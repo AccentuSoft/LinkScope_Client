@@ -9,7 +9,7 @@ class VirusTotal_File:
     resultTypes = {'Hash'}
     parameters = {'VirusTotal API Key': {'description': 'Enter your api key under your profile after'
                                                         ' signing up on https://virustotal.com. '
-                                                        'Free usage of the API is limited to 1,000 requests '
+                                                        'Free usage of the API is limited to 500 requests per day '
                                                         'with a rate of 4 per minute.',
                                          'type': 'String',
                                          'value': '',
@@ -24,7 +24,7 @@ class VirusTotal_File:
         from vtapi3 import VirusTotalAPIFiles, VirusTotalAPIError
 
         return_result = []
-        api_key = parameters['VirusTotal API Key']
+        api_key = parameters['VirusTotal API Key'].strip()
         vt_files = VirusTotalAPIFiles(str(api_key))
         url = "https://www.virustotal.com/api/v3/analyses/"
         for entity in entityJsonList:
