@@ -7,20 +7,21 @@ class Offshore_Leaks_Entities:
     description = "Find information about OffShore Entities."
     originTypes = {'Phrase', 'Person', 'Company', 'Organization'}
     resultTypes = {'Company, Country', 'Phrase'}
-    parameters = {'Max Results': {'description': 'Please enter the maximum number of results to return. ',
+    parameters = {'Max Results': {'description': 'Please enter the maximum number of results to return per input '
+                                                 'entity. Note that these are the number of results that will be '
+                                                 'processed from Offshore Leaks - if there are duplicates in the '
+                                                 'data set, less results may be returned.',
                                   'type': 'String',
-                                  'default': '10',
+                                  'default': '50',
                                   'value': 'Creating a lot of nodes could slow down the software. Please be mindful '
                                            'of the value you enter.'}}
 
     def resolution(self, entityJsonList, parameters):
         import requests
+        import math
         import pandas as pd
-        from requests_futures.sessions import FuturesSession
-        from concurrent.futures import as_completed
+        from time import sleep
 
-        futures = []
-        uidList = []
         return_result = []
 
         url = "https://offshoreleaks.icij.org/"
@@ -28,48 +29,63 @@ class Offshore_Leaks_Entities:
             max_results = int(parameters['Max Results'])
         except ValueError:
             return "The value for parameter 'Max Results' is not a valid integer."
-        with FuturesSession(max_workers=15) as session:
-            for entity in entityJsonList:
-                uidList.append(entity['uid'])
-                primary_field = entity[list(entity)[1]].strip()
-                crafted_url = url + f"search?cat=0&e=&from={max_results}&q={primary_field}&utf8=✓"
-                futures.append(session.get(crafted_url))
-        for future in as_completed(futures):
-            uid = uidList[futures.index(future)]
-            try:
-                df_list = pd.read_html(future.result().text)
-            except requests.exceptions.ConnectionError:
-                return "Please check your internet connection."
-            except ValueError:
-                return "No Offshore Leaks results for this query."
-            df = df_list[0]
-            df = df.iloc[:]
-            # print(df)
-            for company in range(len(df[:max_results])):
-                # print(company)
-                index_of_child = len(return_result)
-                return_result.append([{'Company Name': df['Unnamed: 0'][company],
-                                       'Entity Type': 'Company'},
-                                      {uid: {'Resolution': 'Offshore Leaks Company', 'Notes': ''}}])
-                return_result.append([{'Date': str(df['Incorporation'][company]),
-                                       'Entity Type': 'Date'},
-                                      {index_of_child: {'Resolution': 'Offshore Leaks', 'Notes': ''}}])
-                if df['Jurisdiction'][company] != "Not identified" and df['Jurisdiction'][company] != " Not identified":
-                    return_result.append([{'Country Name': str(df['Jurisdiction'][company]),
-                                           'Entity Type': 'Country'},
-                                          {index_of_child: {'Resolution': 'Jurisdiction', 'Notes': ''}}])
-                if df['Data From'][company] != "Not identified" and df['Data From'][company] != " Not identified":
-                    return_result.append([{'Phrase': str(df['Data From'][company]),
-                                           'Entity Type': 'Phrase'},
-                                          {index_of_child: {'Resolution': 'Document', 'Notes': ''}}])
+
+        if max_results <= 0:
+            return []
+
+        nextHundred = math.ceil(max_results / 100) * 100
+        for entity in entityJsonList:
+            uid = entity['uid']
+            primary_field = entity[list(entity)[1]].strip()
+            df_list = []
+            for batch in range(0, nextHundred, 100):
+                crafted_url = url + f"search?cat=0&from={batch}&q={primary_field}&utf8=✓"
                 try:
-                    countries = df['Linked To'][company]
-                    countries_list = countries.split(",")
-                    for country in countries_list:
-                        if country != "Not identified" and country != " Not identified":
-                            return_result.append([{'Country Name': country,
-                                                   'Entity Type': 'Country'},
-                                                  {index_of_child: {'Resolution': 'Linked to', 'Notes': ''}}])
+                    r = requests.get(crafted_url)
+                    df_list.append(pd.read_html(r.text)[0])
+                except requests.exceptions.ConnectionError:
+                    break
+                except ValueError:
+                    break
+                sleep(1)
+
+            df_full = pd.concat(df_list, ignore_index=True)
+
+            try:
+                df_part = df_full.head(max_results)
+            except IndexError:
+                df_part = df_full
+
+            for entry in range(len(df_part)):
+                index_of_child = len(return_result)
+                return_result.append([{'Company Name': df_part['Entity'][entry].upper(),
+                                       'Entity Type': 'Company'},
+                                      {uid: {'Resolution': 'Offshore Leaks Entity', 'Notes': ''}}])
+                if isinstance(df_part['Data from'][entry], str) and \
+                        "not identified" not in df_part['Data from'][entry].lower():
+                    return_result.append([{'Phrase': df_part['Data from'][entry],
+                                           'Entity Type': 'Phrase'},
+                                          {index_of_child: {'Resolution': 'Offshore Leaks Leak', 'Notes': ''}}])
+                try:
+                    countries = df_part['Linked to'][entry]
+                    if isinstance(countries, str):
+                        if "not identified" not in countries.lower():
+                            countries_list = countries.split(",")
+                            for country in countries_list:
+                                return_result.append([{'Country Name': country,
+                                                       'Entity Type': 'Country'},
+                                                      {index_of_child: {'Resolution': 'Linked to', 'Notes': ''}}])
+                except AttributeError:
+                    continue
+                try:
+                    countries = df_part['Jurisdiction'][entry]
+                    if isinstance(countries, str):
+                        if "not identified" not in countries.lower():
+                            countries_list = countries.split(",")
+                            for country in countries_list:
+                                return_result.append([{'Country Name': country,
+                                                       'Entity Type': 'Country'},
+                                                      {index_of_child: {'Resolution': 'Jurisdiction', 'Notes': ''}}])
                 except AttributeError:
                     continue
         return return_result
