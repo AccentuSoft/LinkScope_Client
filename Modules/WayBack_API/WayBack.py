@@ -32,7 +32,6 @@ class WayBack:
         returnResults = []
         futures = []
         uidList = []
-        primaryFields = []
 
         try:
             max_results = int(parameters['Max Results'])
@@ -46,13 +45,11 @@ class WayBack:
             for entity in entityJsonList:
                 uidList.append(entity['uid'])
                 primary_field = entity[list(entity)[1]]
-                primaryFields.append(primary_field)
                 futures.append(session.get(
                     f'http://web.archive.org/cdx/search/cdx?url={primary_field}&from={yearRange[0]}&to={yearRange[1]}'
                     f'&output=json&limit={max_results}'))
             for future in as_completed(futures):
                 uid = uidList[futures.index(future)]
-                primary_field = [futures.index(future)]
                 try:
                     response = future.result().json()
                 except requests.exceptions.ConnectionError:
@@ -64,7 +61,7 @@ class WayBack:
                         returnResults.append(
                             [{'URL': "http://web.archive.org/web/" + str(value[1]) + '/' + str(value[2]),
                               'Entity Type': 'Website'},
-                             {uid: {'Resolution': f'Older version of {primary_field}',
+                             {uid: {'Resolution': 'Older Version',
                                     'Notes': str(value[5])}}])
 
         return returnResults
