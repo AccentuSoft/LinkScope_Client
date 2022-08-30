@@ -1,6 +1,8 @@
 social-analyzer
-requests_futures
+requests-futures
 urllib3
 requests
 holehe
 httpx
+playwright
+bs4

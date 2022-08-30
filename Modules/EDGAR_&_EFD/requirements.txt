@@ -1,3 +1,5 @@
 requests
-beautifulsoup4
+bs4
 xmltodict
+playwright
+datetime

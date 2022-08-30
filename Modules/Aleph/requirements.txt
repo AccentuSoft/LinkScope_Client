@@ -1,2 +1,3 @@
 requests
 pycountry
+requests-futures
