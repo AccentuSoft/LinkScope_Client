@@ -7,14 +7,14 @@ class IPInfo:
     description = "Find information about the location of a given IP Address"
     originTypes = {'IP Address'}
     resultTypes = {'Geocordinates', 'Organization', 'City'}
-    parameters = {'IPInfo Access Token': {'description': 'Enter your access token key under your profile after'
+    parameters = {'IPInfo Access Token': {'description': 'Enter your access token key under your profile after '
                                                          'signing up on https://ipinfo.io. Free usage of the API is '
                                                          'limited to 50,000 requests per month. '
                                                          'For any requests beyond that limit, no results will be '
                                                          'returned.',
                                           'type': 'String',
                                           'value': '',
-                  'global': True}}
+                                          'global': True}}
 
     def resolution(self, entityJsonList, parameters):
         import requests

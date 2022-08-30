@@ -7,11 +7,13 @@ class URLScan:
     description = "Find information about a given website"
     originTypes = {'Website', 'Domain'}
     resultTypes = {'IP Address', 'Website', 'Domain', 'Hash'}
-    parameters = {'api key': {'description': 'Enter your api key under your profile after'
-                                             ' signing up on https://urlscan.io.'
-                                             'Above that limit a code 429 will be returned',
-                              'type': 'String',
-                              'value': ''},
+    parameters = {'URLScan API Key': {'description': 'Enter your api key under your profile after '
+                                                     'signing up on https://urlscan.io. '
+                                                     'Requests beyond the limit will fail with HTTP '
+                                                     'status code 429.',
+                                      'type': 'String',
+                                      'global': True,
+                                      'value': ''},
                   'ip results': {'description': 'Enter the number of IP Addresses you want to be returned',
                                  'type': 'String',
                                  'value': '0'},
@@ -56,7 +58,8 @@ class URLScan:
                 while response.status_code == 404:
                     time.sleep(0.5)
                     try:
-                        response = requests.post('https://urlscan.io/api/v1/scan/', headers=headers, data=json.dumps(data))
+                        response = requests.post('https://urlscan.io/api/v1/scan/', headers=headers,
+                                                 data=json.dumps(data))
                     except requests.exceptions.ConnectionError:
                         return "Please check your internet connection"
                 response = response.json()
