@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import importlib
+import importlib.util
 import sys
 from os import listdir
 from pathlib import Path
