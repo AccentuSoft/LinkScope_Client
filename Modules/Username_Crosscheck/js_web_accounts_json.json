@@ -160,7 +160,7 @@
       "username_submit_locator": "",
       "password_locator": "[aria-label=\"Password\"]",
       "login_submit_locator": "[aria-label=\"Sign in\"]",
-      "account_existence_locators": ["text=That’s not the right password.", "text=Welcome Back"],
+      "account_existence_locators": ["text=That’s not the right password.", "text=Welcome Back", "text=That's not the right password."],
       "account_missing_locator": "text=Couldn’t find a LinkedIn account associated with this email. Please try again.",
       "category": "social",
       "accepts_email": true,
