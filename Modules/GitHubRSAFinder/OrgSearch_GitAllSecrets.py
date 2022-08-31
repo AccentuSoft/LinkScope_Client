@@ -8,7 +8,7 @@ class OrgSearch_GitAllSecrets:
     category = "Secrets & Leaks"
 
     # A string that describes this resolution.
-    description = "Returns Nodes of Relationship Info"
+    description = "Returns Nodes of Relationship Info. Requires Docker to be installed."
 
     originTypes = {'GitHub Organisation'}
 
