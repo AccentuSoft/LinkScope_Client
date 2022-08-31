@@ -4,7 +4,7 @@
 class Amass_Intel:
     name = "Amass Intel Scan"
     category = "Network Infrastructure"
-    description = "Find information about a particular domain"
+    description = "Find information about a particular domain. Requires Docker to be installed."
     originTypes = {'Domain', 'IP Address', 'Autonomous System'}
     resultTypes = {'Domain'}
     parameters = {'VirusTotal API Key': {'description': 'Enter your api key under your profile after'
