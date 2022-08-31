@@ -17,19 +17,15 @@ class CompanyToCIK:
     parameters = {}
 
     def resolution(self, entityJsonList, parameters):
-        import re
         from bs4 import BeautifulSoup
         from playwright.sync_api import sync_playwright, TimeoutError, Error
 
         returnResults = []
-        index_of_child = []
-        cikRegex = re.compile(r'CIK=\d{4,10}', re.IGNORECASE)
 
         with sync_playwright() as p:
             browser = p.firefox.launch()
             context = browser.new_context(
-                viewport={'width': 1920, 'height': 1080},
-                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:94.0) Gecko/20100101 Firefox/94.0'
+                viewport={'width': 1920, 'height': 1080}
             )
             page = context.new_page()
             for entity in entityJsonList:
@@ -51,30 +47,31 @@ class CompanyToCIK:
                     continue
 
                 soup = BeautifulSoup(page.content(), 'lxml')
-                cikIDs = cikRegex.findall(soup.get_text())
 
-                links_with_text = []
+                count = 0
+                temp = None
                 for td_element in soup.find_all('td'):
                     if td_element.text:
-                        try:
-                            text = td_element.text
-                            split = text.split('SIC')[0]
-                            links_with_text.append(split)
-                        except IndexError:
-                            links_with_text.append(td_element.text)
+                        text = td_element.text
+                        splitText = text.split('SIC')[0]
+                        if count == 0:
+                            temp = [{'CIK': splitText,
+                                     'Entity Type': 'Edgar ID'},
+                                    {len(returnResults): {'Resolution': 'CIK Edgar ID',
+                                                          'Notes': ''}}]
+                        elif count == 1:
+                            returnResults.append([{'Company Name': splitText,
+                                                   'Entity Type': 'Company'},
+                                                  {uid: {'Resolution': 'Edgar Company',
+                                                         'Notes': ''}}])
+                            returnResults.append(temp)
+                        elif count == 2:
+                            returnResults.append([{'Phrase': "State: " + splitText,
+                                                   'Entity Type': 'Phrase'},
+                                                  {len(returnResults) - 1: {'Resolution': 'Edgar Company State',
+                                                                            'Notes': ''}}])
+                        count = (count + 1) % 3
 
-                for link in links_with_text:
-                    if search_term.lower() in link.lower():
-                        index_of_child.append(len(returnResults))
-                        returnResults.append([{'Company Name': link,
-                                               'Entity Type': 'Company'},
-                                              {uid: {'Resolution': 'Edgar Company',
-                                                     'Notes': ''}}])
-                for code in cikIDs:
-                    returnResults.append([{'CIK': code.split('=')[1],
-                                           'Entity Type': 'Edgar ID'},
-                                          {index_of_child[cikIDs.index(code)]: {'Resolution': 'CIK Edgar ID',
-                                                                                'Notes': ''}}])
             page.close()
             browser.close()
         return returnResults

@@ -60,7 +60,7 @@ class Get20FForms:
                             for j in range(linkNumbers):
                                 if '20-F' in data['facts'][form][i]['units']['USD'][j]['form']:
                                     value = data['facts'][form][i]['units']['USD'][::-1][j]
-                                    returnResults.append([{'Field Name': '20-F: ' + i + ' ' + value['filed'],
+                                    returnResults.append([{'Field Name': cik + ' 20-F: ' + i + ' ' + value['filed'],
                                                            'Account Number': value['accn'],
                                                            'Fiscal Year': value['fy'],
                                                            'Fiscal Period': value['fp'],
@@ -79,7 +79,7 @@ class Get20FForms:
                         for j in range(linkNumbers):
                             if '20-F' in data['facts'][form][i]['units']['shares'][j]['form']:
                                 value = data['facts'][form][i]['units']['shares'][::-1][j]
-                                returnResults.append([{'Field Name': '20-F: ' + i + ' ' + value['filed'],
+                                returnResults.append([{'Field Name': cik + ' 20-F: ' + i + ' ' + value['filed'],
                                                        'Account Number': value['accn'],
                                                        'Fiscal Year': value['fy'],
                                                        'Fiscal Period': value['fp'],

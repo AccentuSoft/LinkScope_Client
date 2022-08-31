@@ -61,7 +61,7 @@ class Get40FForms:
                             for j in range(linkNumbers):
                                 if '40-F' in data['facts'][form][i]['units']['USD'][j]['form']:
                                     value = data['facts'][form][i]['units']['USD'][::-1][j]
-                                    returnResults.append([{'Field Name': '40-F: ' + i + ' ' + value['filed'],
+                                    returnResults.append([{'Field Name': cik + ' 40-F: ' + i + ' ' + value['filed'],
                                                            'Account Number': value['accn'],
                                                            'Fiscal Year': value['fy'],
                                                            'Fiscal Period': value['fp'],
@@ -80,7 +80,7 @@ class Get40FForms:
                         for j in range(linkNumbers):
                             if '40-F' in data['facts'][form][i]['units']['shares'][j]['form']:
                                 value = data['facts'][form][i]['units']['shares'][::-1][j]
-                                returnResults.append([{'Field Name': '40-F: ' + i + ' ' + value['filed'],
+                                returnResults.append([{'Field Name': cik + ' 40-F: ' + i + ' ' + value['filed'],
                                                        'Account Number': value['accn'],
                                                        'Fiscal Year': value['fy'],
                                                        'Fiscal Period': value['fp'],

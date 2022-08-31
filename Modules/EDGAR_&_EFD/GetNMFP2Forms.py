@@ -139,7 +139,7 @@ class GetNMFP2Forms:
 
                     for field in liquidAssets:
                         if 'Daily' in field:
-                            returnResults.append([{'Field Name': f'N-MFP2:({field})' + ' '
+                            returnResults.append([{'Field Name': cik + f' N-MFP2:({field})' + ' '
                                                                  + f'ID: {seriesId} Date: {date}',
                                                    'Friday 1': fieldPath[field][
                                                        'ns3:fridayDay1'],
@@ -154,7 +154,7 @@ class GetNMFP2Forms:
                                                   {uid: {'Resolution': field,
                                                          'Notes': ''}}])
                         else:
-                            returnResults.append([{'Field Name': f'N-MFP2:({field})' + ' '
+                            returnResults.append([{'Field Name': cik + f' N-MFP2:({field})' + ' '
                                                                  + f'ID: {seriesId} Date: {date}',
                                                    'Friday 1': fieldPath[field][
                                                        'ns3:fridayWeek1'],
@@ -177,7 +177,7 @@ class GetNMFP2Forms:
                             [{'Phrase': classInfo['classesId'],
                               'Entity Type': 'Phrase'},
                              {uid: {'Resolution': 'Classes Id', 'Notes': ''}}])
-                        returnResults.append([{'Field Name': f'N-MFP2:(Net Asset Per Share)' + ' '
+                        returnResults.append([{'Field Name': cik + f' N-MFP2:(Net Asset Per Share)' + ' '
                                                              + f'ID: {seriesId} Date: {date}',
                                                'Friday 1': classInfo['netAssetPerShare'][
                                                    'ns3:fridayWeek1'],
@@ -211,7 +211,8 @@ class GetNMFP2Forms:
                                  {index_of_child: {'Resolution': value,
                                                    'Notes': ''}}])
 
-                    scheduleOfPortfolioSecurities = data['edgarSubmission']['formData']['scheduleOfPortfolioSecuritiesInfo']
+                    scheduleOfPortfolioSecurities = data['edgarSubmission']['formData'][
+                        'scheduleOfPortfolioSecuritiesInfo']
                     instance = 0
                     for securitiesInfo in scheduleOfPortfolioSecurities:
                         index_of_child = len(returnResults)
@@ -259,7 +260,8 @@ class GetNMFP2Forms:
                                 returnResults.append([{'Name': issuer['nameOfCollateralIssuer'],
                                                        'Coupon or Yield': issuer['couponOrYield'],
                                                        'Principal Amount': issuer['principalAmountToTheNearestCent'],
-                                                       'Value of Collateral': issuer['valueOfCollateralToTheNearestCent'],
+                                                       'Value of Collateral': issuer[
+                                                           'valueOfCollateralToTheNearestCent'],
                                                        'Ctgry Investments Rprsnts Collateral':
                                                            issuer['ctgryInvestmentsRprsntsCollateral'],
                                                        'Entity Type': 'Collateral Issuer'},

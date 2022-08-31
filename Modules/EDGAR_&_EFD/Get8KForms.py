@@ -63,7 +63,7 @@ class Get8KForms:
                             for j in range(linkNumbers):
                                 if '8-K' in data['facts'][form][i]['units']['USD'][j]['form']:
                                     value = data['facts'][form][i]['units']['USD'][::-1][j]
-                                    returnResults.append([{'Field Name': '8-K: ' + i + ' ' + value['filed'],
+                                    returnResults.append([{'Field Name': cik + ' 8-K: ' + i + ' ' + value['filed'],
                                                            'Account Number': value['accn'],
                                                            'Fiscal Year': value['fy'],
                                                            'Fiscal Period': value['fp'],
@@ -82,7 +82,7 @@ class Get8KForms:
                         for j in range(linkNumbers):
                             if '8-K' in data['facts'][form][i]['units']['shares'][j]['form']:
                                 value = data['facts'][form][i]['units']['shares'][::-1][j]
-                                returnResults.append([{'Field Name': '8-K: ' + i + ' ' + value['filed'],
+                                returnResults.append([{'Field Name': cik + ' 8-K: ' + i + ' ' + value['filed'],
                                                        'Account Number': value['accn'],
                                                        'Fiscal Year': value['fy'],
                                                        'Fiscal Period': value['fp'],
