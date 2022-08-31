@@ -43,19 +43,10 @@ class TwitterUser:
         import argparse
         import requests
         import pytz
-        import snscrape.base
-        import snscrape.modules
-        import snscrape.version
+        from snscrape.modules.twitter import TwitterUserScraper
         from dateutil.parser import parse
         from PySide6.QtCore import QByteArray, QBuffer, QIODevice, QSize
         from PySide6.QtGui import QImage
-
-        classes = snscrape.base.Scraper.__subclasses__()
-        scrapers = {}
-        for cls in classes:
-            if cls.name is not None:
-                scrapers[cls.name] = cls
-            classes.extend(cls.__subclasses__())
 
         arguments = argparse.Namespace(citation=None, verbosity=0, dumpLocals=False, retries=3, maxResults=None,
                                        format=None, jsonl=True, withEntity=False, since=None, progress=False,
@@ -210,7 +201,7 @@ class TwitterUser:
                 primaryField = primaryField[1:]
             arguments.username = primaryField
 
-            scraper = scrapers['twitter-user'].cli_from_args(arguments)
+            scraper = TwitterUserScraper.cli_from_args(arguments)
 
             for index, item in enumerate(scraper.get_items(), start=1):
                 if arguments.since is not None and item.date < arguments.since:

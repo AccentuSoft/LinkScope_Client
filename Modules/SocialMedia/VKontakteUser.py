@@ -33,17 +33,8 @@ class VKontakteUser:
     def resolution(self, entityJsonList, parameters):
         import argparse
         import pytz
-        import snscrape.base
-        import snscrape.modules
-        import snscrape.version
+        from snscrape.modules.vkontakte import VKontakteUserScraper
         from dateutil.parser import parse
-
-        classes = snscrape.base.Scraper.__subclasses__()
-        scrapers = {}
-        for cls in classes:
-            if cls.name is not None:
-                scrapers[cls.name] = cls
-            classes.extend(cls.__subclasses__())
 
         arguments = argparse.Namespace(citation=None, verbosity=0, dumpLocals=False, retries=3, maxResults=None,
                                        format=None, jsonl=True, withEntity=True, since=None, progress=False,
@@ -119,7 +110,7 @@ class VKontakteUser:
                 primaryField = primaryField[1:]
             arguments.username = primaryField
 
-            scraper = scrapers['vkontakte-user'].cli_from_args(arguments)
+            scraper = VKontakteUserScraper.cli_from_args(arguments)
             item = scraper.entity
 
             childIndex = len(returnResults)
