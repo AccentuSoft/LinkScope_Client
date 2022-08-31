@@ -3,43 +3,46 @@
 # Copy the Modules, Resources and Core directories, as well as Icon.ico, LinkScope.py and requirements.txt to a new directory along with this file.
 # Then, run the script.
 
-python3.9 -m venv buildEnv
+PYTHON_VER=3.9
+
+python${PYTHON_VER} -m venv buildEnv
 
 source buildEnv/bin/activate
 
-python3.9 -m pip install --upgrade wheel pip pyinstaller
+# orderedset package installed for compile time performance.
+python${PYTHON_VER} -m pip install --upgrade wheel pip nuitka orderedset
 
-python3.9 -m pip cache purge
+python${PYTHON_VER} -m pip cache purge
 
-python3.9 -m pip install -r requirements.txt
+python${PYTHON_VER} -m pip install -r requirements.txt
 
-PLAYWRIGHT_BROWSERS_PATH=0 python3.9 -m playwright install
+# Stop snscrape from messing with directories that will not exist in the final build.
+echo "" > "buildEnv/lib/python${PYTHON_VER}/site-packages/snscrape/modules/__init__.py"
 
-python3.9 -m PyInstaller --clean --icon="./Icon.ico" --noconsole --noconfirm --onedir --noupx \
---add-data "./Modules:Modules/" --add-data "./Resources:Resources/" --add-data "./Core:Core/" \
---add-data "buildEnv/lib/python3.9/site-packages/playwright:playwright" \
---collect-all "PySide6" --collect-all "networkx" --collect-all "pydot" --collect-all "msgpack" \
---hidden-import "_cffi_backend" --collect-all "folium" --collect-all "shodan" --collect-all "vtapi3" \
---collect-all "docker" --collect-all "exif" --collect-all "pycountry" --collect-all "tldextract" \
---collect-all "requests_futures" --collect-all "branca" --collect-all "bs4" --hidden-import "pandas" \
---collect-all "docx2python" --collect-all "tweepy" --collect-all "PyPDF2" --collect-all "Wappalyzer" \
---collect-all "email_validator" --collect-all "social-analyzer" --collect-all "tld" \
---hidden-import "PIL" --hidden-import "lz4" --hidden-import "lxml" --hidden-import "jellyfish" \
---hidden-import "defusedxml" --hidden-import "cchardet" --hidden-import "ipwhois" --hidden-import "xmltodict" \
---hidden-import "dateutil" --hidden-import "urllib3" --hidden-import "logging" --collect-all "holehe" \
---hidden-import "httpx" --collect-all "snscrape" --hidden-import "pytz" --hidden-import "name_that_hash" \
-"./LinkScope.py"
+PLAYWRIGHT_BROWSERS_PATH=0 python${PYTHON_VER} -m playwright install
 
-# Copy web engine resources in final package, so that the map tool works.
-cp buildEnv/lib/python3.9/site-packages/PySide6/Qt/resources/qtwebengine_resources.pak dist/LinkScope
-cp buildEnv/lib/python3.9/site-packages/PySide6/Qt/resources/qtwebengine_devtools_resources.pak dist/LinkScope
-cp buildEnv/lib/python3.9/site-packages/PySide6/Qt/resources/qtwebengine_resources_100p.pak dist/LinkScope
-cp buildEnv/lib/python3.9/site-packages/PySide6/Qt/resources/qtwebengine_resources_200p.pak dist/LinkScope
-cp buildEnv/lib/python3.9/site-packages/PySide6/Qt/resources/icudtl.dat dist/LinkScope
-# Copy web libraries to a location that can be found by the system automatically.
-cp -r buildEnv/lib/python3.9/site-packages/playwright/driver/package/.local-browsers/firefox-*/firefox/* dist/LinkScope
-cp -r buildEnv/lib/python3.9/site-packages/playwright/driver/package/.local-browsers/firefox-*/firefox/* dist/LinkScope/playwright/driver/package/.local-browsers/firefox-*/firefox
-# Include the Icon.
-cp Icon.ico dist/LinkScope
+FIREFOX_VER=$(python -c "from pathlib import Path;x=Path(\"buildEnv/lib/python${PYTHON_VER}/site-packages/playwright/driver/package/.local-browsers\");print(list(x.glob(\"firefox*/firefox\"))[0].parent.name.split(\"-\")[1])")
+
+python${PYTHON_VER} -m nuitka --follow-imports --standalone --noinclude-pytest-mode=nofollow \
+--noinclude-setuptools-mode=nofollow --noinclude-custom-mode=setuptools:error --noinclude-IPython-mode=nofollow \
+--enable-plugin=pyside6 --enable-plugin=numpy --enable-plugin=trio --assume-yes-for-downloads --remove-output \
+--disable-console --include-data-dir="Resources=Resources" --include-plugin-directory=Modules --include-package=Core \
+--include-data-dir="Core/Entities=Core/Entities" --include-data-dir="Core/Resolutions/Core=Core/Resolutions/Core" \
+--include-data-dir="Modules=Modules" --warn-unusual-code --show-modules --include-data-files="Icon.ico=Icon.ico" \
+--linux-icon="Icon.ico" \
+--include-package-data=playwright \
+--include-package-data=folium --include-package-data=branca \
+--include-package=social-analyzer --include-package-data=langdetect --include-package-data=tld \
+--include-package=Wappalyzer --include-package-data=Wappalyzer \
+--include-package=dns \
+--include-package=holehe.modules \
+--include-package=snscrape \
+--include-package=docker --include-package-data=docker \
+--include-package-data=pycountry \
+--include-package=jellyfish \
+--include-package=ipwhois \
+--include-package=tweepy \
+--include-data-dir="buildEnv/lib/python${PYTHON_VER}/site-packages/playwright/driver/package/.local-browsers/firefox-${FIREFOX_VER}/firefox=playwright/driver/package/.local-browsers/firefox-${FIREFOX_VER}/firefox" \
+LinkScope.py
 
 deactivate
