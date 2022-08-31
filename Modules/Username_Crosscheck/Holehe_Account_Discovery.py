@@ -52,7 +52,7 @@ class Holehe_Account_Discovery:
             try:
                 await websiteFuncToUse(emailToUse, clientToUse, outList)
             except Exception:
-                name = str(websiteFuncToUse).split('<function ')[1].split(' ')[0]
+                name = str(websiteFuncToUse).split(' ')[1]
                 outList.append({"name": name, "domain": None,
                                 "rateLimit": True,
                                 "exists": False,
