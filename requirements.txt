@@ -4,8 +4,6 @@ PySide6
 # For python-magic, the following packages may be required:
 ## Linux:
 ### sudo apt-get install libmagic1
-## Windows:
-### pip install python-magic-bin
 python-magic
 
 # The graphviz package is required.

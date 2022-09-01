@@ -1,6 +1,7 @@
 #!/bin/bash
 
-# Copy the Modules, Resources and Core directories, as well as Icon.ico, LinkScope.py and requirements.txt to a new directory along with this file.
+# Copy the Modules, Resources and Core directories, as well as Icon.ico, LinkScope.py and requirements.txt
+#   to a new directory along with this file.
 # Then, run the script.
 
 PYTHON_VER=3.9
