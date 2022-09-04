@@ -56,8 +56,11 @@ Some dependencies need to be installed in order for the software to work properl
     - `playwright install`
 2. Windows
    - Download and install the graphviz package from https://www.graphviz.org/download/
-   - `pip install -r requirements.txt`
-   - `pip install python-magic-bin`
+   - `pip install -r requirements.txt --upgrade`
+   - Build the magic binaries from https://github.com/nscaife/file-windows and put them
+   next to the `loader.py` script in the `magic` module folder of your python installation
+   or virtual environment.
+   - `python PatchMagicWin.py`
    - `playwright install`
    
 The software comes packaged in a 7zip archive. Uncompress the archive, and double-click the executable to start the software. On Windows, the executable should be named 'LinkScope.exe'. On Linux, it should be named 'LinkScope'.
