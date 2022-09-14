@@ -5,11 +5,25 @@
 #   PySide6
 #   py7zr
 #
-# Compile with:
-#  Linux:
-#    pyinstaller --clean --noconsole --noconfirm --onefile --icon='../Icon.ico' Installer.py
-#  Windows:
-#    pyinstaller --clean --noconsole --noconfirm --onefile --icon='..\Icon.ico' Installer.py
+# Compile with (requires zstandard, benefits from orderedset):
+## Windows:
+"""
+python -m nuitka --follow-imports --onefile --noinclude-pytest-mode=nofollow --noinclude-setuptools-mode=nofollow ^
+--noinclude-custom-mode=setuptools:error --noinclude-IPython-mode=nofollow --enable-plugin=pyside6 ^
+--assume-yes-for-downloads --remove-output --disable-console --warn-unusual-code --show-modules ^
+--windows-company-name="AccentuSoft" --windows-product-name="LinkScope Installer" --windows-product-version=2.0.0.0 ^
+--include-data-files="Icon.ico=Icon.ico" --linux-icon="Icon.ico" --windows-icon-from-ico=".\Icon.ico" ^
+--windows-file-description="LinkScope Installer" ^
+Installer.py
+"""
+## Linux:
+"""
+python -m nuitka --follow-imports --onefile --noinclude-pytest-mode=nofollow --noinclude-setuptools-mode=nofollow \
+--noinclude-custom-mode=setuptools:error --noinclude-IPython-mode=nofollow --enable-plugin=pyside6 \
+--assume-yes-for-downloads --remove-output --disable-console --warn-unusual-code --show-modules \
+--include-data-files="Icon.ico=Icon.ico" --linux-icon="Icon.ico" \
+Installer.py
+"""
 
 
 import shutil
@@ -23,7 +37,7 @@ from pathlib import Path
 
 import requests
 import py7zr
-from PySide6 import QtCore, QtWidgets
+from PySide6 import QtCore, QtWidgets, QtGui
 
 LINUX_DESKTOP_FILE_ENTRY = """[Desktop Entry]
 Name=LinkScope Client
@@ -746,6 +760,11 @@ class InstallWizard(QtWidgets.QWizard):
     def __init__(self):
         super(InstallWizard, self).__init__()
         self.currentOS = platform.system()
+        appIcon = QtGui.QIcon('Icon.ico')
+        self.setWindowIcon(appIcon)
+        self.trayIcon = QtWidgets.QSystemTrayIcon(appIcon, self)
+        # Whether the icon is shown or not depends on the Desktop environment.
+        self.trayIcon.show()
 
         if len(sys.argv) < 5:
             releasesPage = requests.get('https://github.com/AccentuSoft/LinkScope_Client/releases/latest')
@@ -803,7 +822,7 @@ class InstallWizard(QtWidgets.QWizard):
 
                     shortcutExistsBefore = self.desktopShortcutPath.exists()
                     for _ in range(3):
-                        sudoPassword = QtWidgets.QInputDialog.getText(None, 'Sudo Password',
+                        sudoPassword = QtWidgets.QInputDialog.getText(self, 'Sudo Password',
                                                                       'Installation requires elevated privileges. '
                                                                       'Please enter your password: ',
                                                                       QtWidgets.QLineEdit.Password)
@@ -813,17 +832,17 @@ class InstallWizard(QtWidgets.QWizard):
                                                          stderr=subprocess.PIPE)
                             stdOut, stdErr = sudoPrivs.communicate(input=(sudoPassword[0] + "\n").encode())
                             if b'\nsudo: 1 incorrect password attempt\n' in stdErr:
-                                QtWidgets.QMessageBox.warning(None, 'Incorrect Password', 'Incorrect password entered.')
+                                QtWidgets.QMessageBox.warning(self, 'Incorrect Password', 'Incorrect password entered.')
                                 continue
 
                             if not shortcutExistsBefore and self.desktopShortcutPath.exists():
                                 subprocess.run(
                                     ['dbus-launch', 'gio', 'set', str(self.desktopShortcutPath), "metadata::trusted",
                                      'true'])
-                                subprocess.run(
-                                    ["dbus-send --type=method_call --dest=org.gnome.Shell /org/gnome/Shell "
-                                     "org.gnome.Shell.Eval string:'global.reexec_self()'"],
-                                    shell=True)
+                                # subprocess.run(
+                                #    ["dbus-send --type=method_call --dest=org.gnome.Shell /org/gnome/Shell "
+                                #     "org.gnome.Shell.Eval string:'global.reexec_self()'"],
+                                #    shell=True)
                             sys.exit(0)
                         else:
                             sys.exit(-1)
@@ -1037,34 +1056,29 @@ class WindowsGraphVizPage(QtWidgets.QWizardPage):
 class LinkScopeInstallLatestPage(QtWidgets.QWizardPage):
 
     def doStuff(self):
-        # Graphviz is installed by default as we install the software on linux.
-        try:
-            self.installProgressWidget.setEnabled(True)
-            self.installProgressWidget.setDisabled(False)
-            if not self.wizard().graphvizExists and self.wizard().currentOS == 'Windows':
-                self.progressBar.setValue(1)
-                self.wizard().downloadGraphviz()
-            self.progressBar.setValue(2)
-            self.wizard().install()
-            self.downloadingLabel.setVisible(True)
-            self.downloadingLabel.setHidden(False)
-            self.progressBar.setValue(4)
-            self.wizard().downloadClient()
-            self.progressBar.setValue(8)
-            shortcutExists = self.wizard().desktopShortcutPath.exists()
-            self.progressBar.setValue(9)
-            if self.createShortcut or (self.updateSelected and shortcutExists):
-                self.wizard().createShortcut()
-            self.progressBar.setValue(10)
-        except Exception as e:
-            self.wizard().page(6).doneLabel.setText('Error occurred during installation: ' +
-                                                    str(e) + '\nThe installation cannot continue.')
-            self.progressBar.setValue(10)
+        self.processStarted = True
+        self.installProgressWidget.setEnabled(True)
+        self.installProgressWidget.setDisabled(False)
+        self.installThread = InstallThread(self, self.wizard())
+        self.installThread.progressSignal.connect(self.progressBar.setValue)
+        self.installThread.doneSignal.connect(self.installationFinished)
+        self.installThread.start()
+
+    def installationFinished(self, success: bool):
+        # No real need to do anything here, since we update the final page if something goes wrong.
+        self.downloadingLabel.setVisible(False)
+        if success:
+            self.installLabel.setText('Installation complete, click "Commit" to proceed.')
+        else:
+            self.installLabel.setText('Installation failed, click "Commit" to proceed.')
 
     def validatePage(self) -> bool:
         if self.progressBar.value() != 10:
-            self.doStuff()
-        return True
+            if not self.processStarted:
+                self.doStuff()
+        else:
+            return True
+        return False
 
     def __init__(self):
         super(LinkScopeInstallLatestPage, self).__init__()
@@ -1079,6 +1093,8 @@ class LinkScopeInstallLatestPage(QtWidgets.QWizardPage):
 
         self.createShortcut = False
         self.updateSelected = False
+        self.processStarted = False
+        self.installThread = None
 
         self.installLabel.setWordWrap(True)
         self.installLabel.setAlignment(QtCore.Qt.AlignCenter)
@@ -1162,8 +1178,9 @@ class CreateDesktopShortcutPage(QtWidgets.QWizardPage):
             self.wizard().page(5).createShortcut = True
             if self.wizard().currentOS == 'Linux':
                 self.wizard().page(6).doneLabel.setText('Thank you for using LinkScope!\nClick "Finish" to exit the '
-                                                        'installer.\nNOTE: On some Desktops, you may see the display '
-                                                        'refresh. This is done to "activate" the desktop shortcut.')
+                                                        'installer.\nNOTE: On some Desktops, you may need to manually '
+                                                        'mark the Desktop shortcut as executable. You can do that by '
+                                                        'right-clicking it and selecting "Allow Launching".')
         else:
             self.wizard().page(5).installLabel.setText('The installer will now download and install the latest version '
                                                        'of LinkScope. Click "Commit" to start the installation.')
@@ -1235,6 +1252,43 @@ class DonePage(QtWidgets.QWizardPage):
         self.doneLabel.setWordWrap(True)
         self.doneLabel.setAlignment(QtCore.Qt.AlignCenter)
         doneLayout.addWidget(self.doneLabel)
+
+
+class InstallThread(QtCore.QThread):
+    progressSignal = QtCore.Signal(int)
+    doneSignal = QtCore.Signal(bool)
+    
+    def __init__(self, installPage, wizard) -> None:
+        super().__init__()
+        self.installPage = installPage
+        self.wizard = wizard
+
+    def run(self) -> None:
+        try:
+            # We have already installed Graphviz on Linux at this point.
+            if not self.wizard.graphvizExists and self.wizard.currentOS == 'Windows':
+                self.progressSignal.emit(1)
+                self.wizard.downloadGraphviz()
+            self.progressSignal.emit(2)
+            if self.installPage.updateSelected:
+                self.wizard.uninstall()
+            self.wizard.install()
+            self.installPage.downloadingLabel.setVisible(True)
+            self.installPage.downloadingLabel.setHidden(False)
+            self.progressSignal.emit(4)
+            self.wizard.downloadClient()
+            self.progressSignal.emit(8)
+            shortcutExists = self.wizard.desktopShortcutPath.exists()
+            self.progressSignal.emit(9)
+            if self.installPage.createShortcut or (self.installPage.updateSelected and shortcutExists):
+                self.wizard.createShortcut()
+            self.progressSignal.emit(10)
+            self.doneSignal.emit(True)
+        except Exception as e:
+            self.wizard.page(6).doneLabel.setText('Error occurred during installation: ' +
+                                                  str(e) + '\nThe installation cannot continue.')
+            self.progressSignal.emit(10)
+            self.doneSignal.emit(False)
 
 
 if __name__ == '__main__':
