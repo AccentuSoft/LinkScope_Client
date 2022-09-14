@@ -894,12 +894,14 @@ class InstallWizard(QtWidgets.QWizard):
         uninstallPage.setCommitPage(True)
         installUpgradePage = LinkScopeInstallLatestPage()
         installUpgradePage.setCommitPage(True)
+        licensePage = LicensePage()
+        licensePage.setCommitPage(True)
 
         self.addPage(introPage)
         self.addPage(shortcutPage)
         self.addPage(WindowsGraphVizPage())
         self.addPage(uninstallPage)
-        self.addPage(LicensePage())
+        self.addPage(licensePage)
         self.addPage(installUpgradePage)
         self.addPage(DonePage())
         self.setOptions(self.NoBackButtonOnStartPage | self.NoBackButtonOnLastPage | self.CancelButtonOnLeft |
