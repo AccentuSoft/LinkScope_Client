@@ -27,6 +27,8 @@ class GetInternalURLs:
         considerResources = False if parameters['Include Resources'] == 'Only consider links to pages' else True
 
         def handleLink(currentLink, currentUrl, currentDomain):
+            if currentLink is None:
+                return None
             if currentLink.startswith('//'):
                 if currentUrl.endswith('/'):
                     currentUrl = currentUrl[:-1]
@@ -34,7 +36,7 @@ class GetInternalURLs:
             elif currentLink.startswith('/'):
                 urlParts = urllib.parse.urlparse(currentUrl)
                 currentLink = urlParts.scheme + '://' + urlParts.netloc + currentLink
-            parsedCurrentURL = urllib.parse.urlparse(link)
+            parsedCurrentURL = urllib.parse.urlparse(currentLink)
             if all([parsedCurrentURL.scheme, parsedCurrentURL.netloc]):
                 if currentDomain in currentLink:
                     newLink = currentLink.split('#')[0].split('?')[0]
