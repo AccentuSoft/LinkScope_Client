@@ -1,31 +1,5 @@
 #!/usr/bin/env python3
 
-# Requirements:
-#   requests
-#   PySide6
-#   py7zr
-#
-# Compile with (requires zstandard, benefits from orderedset):
-## Windows:
-"""
-python -m nuitka --follow-imports --onefile --noinclude-pytest-mode=nofollow --noinclude-setuptools-mode=nofollow ^
---noinclude-custom-mode=setuptools:error --noinclude-IPython-mode=nofollow --enable-plugin=pyside6 ^
---assume-yes-for-downloads --remove-output --disable-console --warn-unusual-code --show-modules ^
---windows-company-name="AccentuSoft" --windows-product-name="LinkScope Installer" --windows-product-version=2.0.0.0 ^
---include-data-files="Icon.ico=Icon.ico" --linux-icon="Icon.ico" --windows-icon-from-ico=".\Icon.ico" ^
---windows-file-description="LinkScope Installer" ^
-Installer.py
-"""
-## Linux:
-"""
-python -m nuitka --follow-imports --onefile --noinclude-pytest-mode=nofollow --noinclude-setuptools-mode=nofollow \
---noinclude-custom-mode=setuptools:error --noinclude-IPython-mode=nofollow --enable-plugin=pyside6 \
---assume-yes-for-downloads --remove-output --disable-console --warn-unusual-code --show-modules \
---include-data-files="Icon.ico=Icon.ico" --linux-icon="Icon.ico" \
-Installer.py
-"""
-
-
 import shutil
 import sys
 import ctypes
@@ -38,6 +12,33 @@ from pathlib import Path
 import requests
 import py7zr
 from PySide6 import QtCore, QtWidgets, QtGui
+
+# Requirements:
+#   requests
+#   PySide6
+#   py7zr
+#
+# Compile with (requires zstandard, benefits from orderedset):
+#
+# Windows:
+"""
+python -m nuitka --follow-imports --onefile --noinclude-pytest-mode=nofollow --noinclude-setuptools-mode=nofollow ^
+--noinclude-custom-mode=setuptools:error --noinclude-IPython-mode=nofollow --enable-plugin=pyside6 ^
+--assume-yes-for-downloads --remove-output --disable-console --warn-unusual-code --show-modules ^
+--windows-company-name="AccentuSoft" --windows-product-name="LinkScope Installer" --windows-product-version=2.0.0.0 ^
+--include-data-files="Icon.ico=Icon.ico" --linux-icon="Icon.ico" --windows-icon-from-ico=".\Icon.ico" ^
+--windows-file-description="LinkScope Installer" ^
+Installer.py
+"""
+
+# Linux:
+"""
+python -m nuitka --follow-imports --onefile --noinclude-pytest-mode=nofollow --noinclude-setuptools-mode=nofollow \
+--noinclude-custom-mode=setuptools:error --noinclude-IPython-mode=nofollow --enable-plugin=pyside6 \
+--assume-yes-for-downloads --remove-output --disable-console --warn-unusual-code --show-modules \
+--include-data-files="Icon.ico=Icon.ico" --linux-icon="Icon.ico" \
+Installer.py
+"""
 
 LINUX_DESKTOP_FILE_ENTRY = """[Desktop Entry]
 Name=LinkScope Client
@@ -808,7 +809,8 @@ class InstallWizard(QtWidgets.QWizard):
                     # No harm in re-installing graphviz if it exists.
                     self.graphvizExists = False
                     self.baseSoftwarePath = Path(os.path.abspath(os.sep)) / 'usr' / 'local' / 'sbin' / 'LinkScope'
-                    self.appPath = Path(os.path.abspath(os.sep)) / 'usr' / 'share' / 'applications' / 'LinkScope.desktop'
+                    self.appPath = Path(
+                        os.path.abspath(os.sep)) / 'usr' / 'share' / 'applications' / 'LinkScope.desktop'
                     self.executablePath = self.baseSoftwarePath / 'LinkScope'
                     for textPart in releasesParts:
                         if 'Ubuntu-x64.7z' in textPart:
@@ -1037,7 +1039,7 @@ class IntroInstallUninstallPage(QtWidgets.QWizardPage):
 
 
 class WindowsGraphVizPage(QtWidgets.QWizardPage):
-    
+
     def __init__(self):
         super(WindowsGraphVizPage, self).__init__()
         self.setTitle('Graphviz')
@@ -1240,7 +1242,7 @@ class LicensePage(QtWidgets.QWizardPage):
 
 
 class DonePage(QtWidgets.QWizardPage):
-    
+
     def __init__(self):
         super(DonePage, self).__init__()
         self.setTitle('Done')
@@ -1257,7 +1259,7 @@ class DonePage(QtWidgets.QWizardPage):
 class InstallThread(QtCore.QThread):
     progressSignal = QtCore.Signal(int)
     doneSignal = QtCore.Signal(bool)
-    
+
     def __init__(self, installPage, wizard) -> None:
         super().__init__()
         self.installPage = installPage
