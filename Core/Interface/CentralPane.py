@@ -1249,10 +1249,10 @@ class CanvasScene(QtWidgets.QGraphicsScene):
                     itemsX.append(item.pos().x())
                     itemsY.append(item.pos().y())
 
-            minX = min(itemsX) - (21 * self.entityTextFont.pointSize())
-            minY = min(itemsY) - 100 - self.entityTextFont.pointSize()
-            width = max(itemsX) - minX + (24 * self.entityTextFont.pointSize())
-            height = max(itemsY) - minY + 100 + self.entityTextFont.pointSize()
+            minX = min(itemsX) - (24 * self.entityTextFont.pointSize()) - 200
+            minY = min(itemsY) - 200 - self.entityTextFont.pointSize()
+            width = max(itemsX) - minX + (24 * self.entityTextFont.pointSize()) + 100
+            height = max(itemsY) - minY + 400 + self.entityTextFont.pointSize()
 
             return QtCore.QRectF(minX, minY, width, height)
         except ValueError:
