@@ -149,29 +149,6 @@ class MenuBar(QtWidgets.QMenuBar):
         viewMenu = self.addMenu("View")
         viewMenu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
 
-        actionSelectAllNodes = QtGui.QAction('Select All Nodes',
-                                             self,
-                                             statusTip="Select all nodes on this canvas.",
-                                             triggered=self.selectAllNodes)
-        actionSelectAllNodes.setShortcut('Ctrl+A')
-        viewMenu.addAction(actionSelectAllNodes)
-
-        actionSelectChildren = QtGui.QAction('Select Child Nodes',
-                                             self,
-                                             statusTip="Select the child entities of the selected nodes.",
-                                             triggered=self.selectChildNodes)
-        actionSelectChildren.setShortcut('Ctrl+Shift+C')
-        viewMenu.addAction(actionSelectChildren)
-
-        actionSelectParents = QtGui.QAction('Select Parent Nodes',
-                                            self,
-                                            statusTip="Select the parent entities of the selected nodes.",
-                                            triggered=self.selectParentNodes)
-        actionSelectParents.setShortcut('Ctrl+Shift+P')
-        viewMenu.addAction(actionSelectParents)
-
-        viewMenu.addSeparator()
-
         findAction = QtGui.QAction("&Find",
                                    self,
                                    statusTip="Find Links or Entities by their Primary Field",
@@ -206,6 +183,12 @@ class MenuBar(QtWidgets.QMenuBar):
                                              triggered=self.findResolutions)
         resolutionFindAction.setShortcut("Ctrl+R")
         viewMenu.addAction(resolutionFindAction)
+
+        runningResolutionsAction = QtGui.QAction("View Running Resolutions",
+                                                 self,
+                                                 statusTip="View Running Resolutions",
+                                                 triggered=self.runningResolutions)
+        viewMenu.addAction(runningResolutionsAction)
         viewMenu.addSeparator()
 
         rearrangeGraphAction = QtGui.QAction("Rearrange Canvas Graph",
@@ -223,32 +206,6 @@ class MenuBar(QtWidgets.QMenuBar):
                                                             "creation date.",
                                                   triggered=self.rearrangeGraphToTimeLine)
         viewMenu.addAction(rearrangeAsTimelineAction)
-        viewMenu.addSeparator()
-
-        runningResolutionsAction = QtGui.QAction("Running Resolutions",
-                                                 self,
-                                                 statusTip="View Running Resolutions",
-                                                 triggered=self.runningResolutions)
-        viewMenu.addAction(runningResolutionsAction)
-        viewMenu.addSeparator()
-
-        openWebsiteInBrowserTabAction = QtGui.QAction("Open Selected Websites in Browser",
-                                                      self,
-                                                      statusTip="Open the Selected Website entities in new "
-                                                                "Browser tabs.",
-                                                      triggered=self.openWebsite)
-        viewMenu.addAction(openWebsiteInBrowserTabAction)
-        openWebsiteInBrowserTabAction.setShortcut("Ctrl+W")
-
-        openURLInBrowserTabAction = QtGui.QAction("Open Contents of URL Attributes in Browser",
-                                                  self,
-                                                  statusTip="Open new browser tabs for each valid URL value in all "
-                                                            "attributes of all selected entities that contain the "
-                                                            "string 'URL' (case insensitive).",
-                                                  triggered=self.openURLs)
-        viewMenu.addAction(openURLInBrowserTabAction)
-        openURLInBrowserTabAction.setShortcut("Ctrl+Shift+W")
-
         viewMenu.addSeparator()
 
         dockbarVisibilityMenu = viewMenu.addMenu("Toggle Dockbar Visibility")
@@ -281,6 +238,29 @@ class MenuBar(QtWidgets.QMenuBar):
         nodeOperationsMenu = self.addMenu("Node Operations")
         nodeOperationsMenu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
 
+        actionSelectAllNodes = QtGui.QAction('Select All Nodes',
+                                             self,
+                                             statusTip="Select all nodes on this canvas.",
+                                             triggered=self.selectAllNodes)
+        actionSelectAllNodes.setShortcut('Ctrl+A')
+        nodeOperationsMenu.addAction(actionSelectAllNodes)
+
+        actionSelectChildren = QtGui.QAction('Select Child Nodes',
+                                             self,
+                                             statusTip="Select the child entities of the selected nodes.",
+                                             triggered=self.selectChildNodes)
+        actionSelectChildren.setShortcut('Ctrl+Shift+C')
+        nodeOperationsMenu.addAction(actionSelectChildren)
+
+        actionSelectParents = QtGui.QAction('Select Parent Nodes',
+                                            self,
+                                            statusTip="Select the parent entities of the selected nodes.",
+                                            triggered=self.selectParentNodes)
+        actionSelectParents.setShortcut('Ctrl+Shift+P')
+        nodeOperationsMenu.addAction(actionSelectParents)
+
+        nodeOperationsMenu.addSeparator()
+
         downloadWebsitesAction = QtGui.QAction("Download Selected Websites",
                                                self,
                                                statusTip="Download a full copy of the websites pointed to by the URLs "
@@ -294,6 +274,25 @@ class MenuBar(QtWidgets.QMenuBar):
                                                            "of the selected 'Website' nodes.",
                                                  triggered=self.screenshotWebsites)
         nodeOperationsMenu.addAction(screenshotWebsitesAction)
+
+        nodeOperationsMenu.addSeparator()
+
+        openWebsiteInBrowserTabAction = QtGui.QAction("Open Selected Websites in Browser",
+                                                      self,
+                                                      statusTip="Open the Selected Website entities in new "
+                                                                "Browser tabs.",
+                                                      triggered=self.openWebsite)
+        nodeOperationsMenu.addAction(openWebsiteInBrowserTabAction)
+        openWebsiteInBrowserTabAction.setShortcut("Ctrl+W")
+
+        openURLInBrowserTabAction = QtGui.QAction("Open Contents of URL Attributes in Browser",
+                                                  self,
+                                                  statusTip="Open new browser tabs for each valid URL value in all "
+                                                            "attributes of all selected entities that contain the "
+                                                            "string 'URL' (case insensitive).",
+                                                  triggered=self.openURLs)
+        nodeOperationsMenu.addAction(openURLInBrowserTabAction)
+        openURLInBrowserTabAction.setShortcut("Ctrl+Shift+W")
 
         nodeOperationsMenu.addSeparator()
 
