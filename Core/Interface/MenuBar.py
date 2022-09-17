@@ -261,6 +261,15 @@ class MenuBar(QtWidgets.QMenuBar):
 
         nodeOperationsMenu.addSeparator()
 
+        actionMacrosWizard = QtGui.QAction('Macros...',
+                                           self,
+                                           statusTip="View, manage and run Macros.",
+                                           triggered=self.viewMacrosWizard)
+        actionMacrosWizard.setShortcut('Ctrl+M')
+        nodeOperationsMenu.addAction(actionMacrosWizard)
+
+        nodeOperationsMenu.addSeparator()
+
         downloadWebsitesAction = QtGui.QAction("Download Selected Websites",
                                                self,
                                                statusTip="Download a full copy of the websites pointed to by the URLs "
@@ -977,6 +986,9 @@ class MenuBar(QtWidgets.QMenuBar):
     def selectParentNodes(self) -> None:
         self.parent().centralWidget().tabbedPane.getCurrentScene().selectParentNodes()
 
+    def viewMacrosWizard(self) -> None:
+        self.parent().showMacrosDialog()
+
     def findEntityOrLink(self) -> None:
         self.parent().findEntityOrLinkOnCanvas()
 
@@ -1169,7 +1181,6 @@ class MenuBar(QtWidgets.QMenuBar):
         importDialog = BrowserImportDialog(self)
 
         if importDialog.exec_():
-
             importTabsThread = ImportBrowserTabsThread(importDialog, self.parent(), self)
 
             steps = 3
