@@ -6,7 +6,6 @@ Credits in wmn-data.json
 
 
 class Whats_My_Name:
-
     name = "Whats My Name"
     category = "Online Identity"
     description = "Find potentially connected social media accounts."
@@ -60,6 +59,7 @@ class Whats_My_Name:
                         account_existence_code = site['e_code']
                         account_existence_string = site['e_string']
                         requires_javascript = site.get('requires_javascript', False)
+                        post_body = site['post_body']
                         if site['valid']:
                             account_existence_string = re.escape(account_existence_string)
                             account_existence_string = re.compile(account_existence_string)
@@ -70,7 +70,7 @@ class Whats_My_Name:
                                         status_code = response.status
                                         page_source = page.content()
                                         if status_code == account_existence_code and \
-                                            account_existence_string != "" and \
+                                                account_existence_string != "" and \
                                                 len(account_existence_string.findall(page_source)) > 0:
                                             return_result.append([{'URL': original_uri,
                                                                    'Entity Type': 'Website'},
@@ -81,9 +81,14 @@ class Whats_My_Name:
                                         pass
 
                             else:
-                                futures[session.get(original_uri, headers=headers,
-                                                    timeout=10, allow_redirects=False)] = \
-                                    (account_existence_code, account_existence_string)
+                                if post_body != "":
+                                    futures[session.post(original_uri, data=post_body, headers=headers,
+                                                         timeout=10, allow_redirects=False)] = \
+                                        (account_existence_code, account_existence_string)
+                                else:
+                                    futures[session.get(original_uri, headers=headers,
+                                                        timeout=10, allow_redirects=False)] = \
+                                        (account_existence_code, account_existence_string)
                 for future in as_completed(futures):
                     account_existence_code = futures[future][0]
                     account_existence_string = futures[future][1]
