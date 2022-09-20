@@ -330,7 +330,7 @@ class ResourceHandler:
             except (TypeError, ValueError):
                 linkJson['Date Created'] = utcNow
         linkJson['Date Last Edited'] = utcNow
-        linkJson['Notes'] = str(jsonData.get('Notes'))
+        linkJson['Notes'] = str(jsonData.get('Notes', ""))
 
         # Transfer all values from jsonData to linkJson, but preserve the values and order of linkJson for existing
         #   keys.
@@ -368,7 +368,7 @@ class ResourceHandler:
     def deconstructGraph(self, graph: nx.DiGraph) -> tuple:
         nodes = {}
         for nodeKey in graph.nodes:
-            # Dereference the original dict so we don't actually convert its icon to data.
+            # Dereference the original dict, so we don't actually convert its icon to data.
             nodes[nodeKey] = dict(graph.nodes.get(nodeKey))
             try:
                 nodes[nodeKey]['Icon'] = nodes[nodeKey]['Icon'].toBase64().data()
@@ -381,7 +381,7 @@ class ResourceHandler:
     def deconstructGraphForFileDump(self, graph: nx.DiGraph) -> tuple:
         nodes = {}
         for nodeKey in graph.nodes:
-            # Dereference the original dict so we don't actually convert its icon to data.
+            # Dereference the original dict, so we don't actually convert its icon to data.
             nodes[nodeKey] = dict(graph.nodes.get(nodeKey))
             try:
                 nodes[nodeKey]['Icon'] = nodes[nodeKey]['Icon'].toBase64().data()
