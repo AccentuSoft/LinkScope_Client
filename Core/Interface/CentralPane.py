@@ -194,13 +194,16 @@ class TabbedPane(QtWidgets.QTabWidget):
         self.syncedTabs = []
         self.nodeCreationThreads = []
 
-        self.canvasDBPath = Path(
-            self.mainWindow.SETTINGS.value("Project/BaseDir")) / "Project Files" / "CanvasTabs.lscanvas"
-        self.tabsNotesPath = Path(self.mainWindow.SETTINGS.value("Project/FilesDir")).joinpath("CanvasNotes.lsnotes")
         self.tabsNotesDict = {}
         self.previousTab = None
 
         self.currentChanged.connect(self.currentTabChangedListener)
+
+    def getCanvasDBPath(self):
+        return Path(self.mainWindow.SETTINGS.value("Project/BaseDir")) / "Project Files" / "CanvasTabs.lscanvas"
+
+    def getTabsNotesPath(self):
+        return Path(self.mainWindow.SETTINGS.value("Project/FilesDir")).joinpath("CanvasNotes.lsnotes")
 
     def addCanvas(self, canvasName='New Graph', graph=None, positions=None, a=0, b=0, c=0, d=0) -> bool:
         if not self.isCanvasNameAvailable(canvasName):
@@ -603,8 +606,10 @@ class TabbedPane(QtWidgets.QTabWidget):
         if len(self.canvasTabs) == 0:
             return
 
-        canvasDBPathTmp = self.canvasDBPath.with_suffix(self.canvasDBPath.suffix + '.tmp')
-        canvasNotesPathTmp = self.tabsNotesPath.with_suffix(self.tabsNotesPath.suffix + '.tmp')
+        canvasDBPath = self.getCanvasDBPath()
+        tabsNotesPath = self.getTabsNotesPath()
+        canvasDBPathTmp = canvasDBPath.with_suffix(canvasDBPath.suffix + '.tmp')
+        canvasNotesPathTmp = tabsNotesPath.with_suffix(tabsNotesPath.suffix + '.tmp')
 
         # Save canvases
         with open(canvasDBPathTmp, "wb") as canvasDBFile:
@@ -614,7 +619,7 @@ class TabbedPane(QtWidgets.QTabWidget):
                     self.resourceHandler.deconstructGraphForFileDump(self.canvasTabs[canvasName].scene().sceneGraph),
                     self.canvasTabs[canvasName].scene().scenePos]
             dump(saveJson, canvasDBFile)
-        move(canvasDBPathTmp, self.canvasDBPath)
+        move(canvasDBPathTmp, canvasDBPath)
 
         # Save canvas notes
         currIndex = self.currentIndex()
@@ -624,11 +629,12 @@ class TabbedPane(QtWidgets.QTabWidget):
                 self.tabsNotesDict[canvasTabName] = self.mainWindow.dockbarTwo.getNotesText()
         with open(canvasNotesPathTmp, "wb") as canvasNotesFileTmp:
             dump(self.tabsNotesDict, canvasNotesFileTmp)
-        move(canvasNotesPathTmp, self.tabsNotesPath)
+        move(canvasNotesPathTmp, tabsNotesPath)
 
     def open(self) -> None:
+        tabsNotesPath = self.getTabsNotesPath()
         try:
-            with open(self.tabsNotesPath, 'rb') as notesFile:
+            with open(tabsNotesPath, 'rb') as notesFile:
                 # Load the content into the Notes pane.
                 self.tabsNotesDict = load(notesFile)
         except ValueError:
@@ -637,15 +643,16 @@ class TabbedPane(QtWidgets.QTabWidget):
         except FileNotFoundError:
             # Create new placeholder notes file if it doesn't exist.
             try:
-                self.tabsNotesPath.touch(0o700, exist_ok=False)
+                tabsNotesPath.touch(0o700, exist_ok=False)
                 self.mainWindow.MESSAGEHANDLER.info('Created new Tab Notes file.')
             except FileExistsError:
                 self.mainWindow.MESSAGEHANDLER.error('Race condition occurred while trying to create '
                                                      'Tab Notes file.')
 
-        if Path(self.canvasDBPath).exists():
+        canvasDBPath = self.getCanvasDBPath()
+        if Path(canvasDBPath).exists():
             try:
-                with open(self.canvasDBPath, "rb") as canvasDBFile:
+                with open(canvasDBPath, "rb") as canvasDBFile:
                     savedJson = load(canvasDBFile)
                     for canvasName in savedJson:
                         self.addCanvas(canvasName,
