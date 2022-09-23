@@ -107,11 +107,22 @@ class MainWindow(QtWidgets.QMainWindow):
                 #   that don't cause the program to hang, this will be removed.
                 kill(getpid(), 9)
 
+    def saveHelper(self) -> None:
+        """
+        This is where all the saving is done.
+        Add all save methods here.
+
+        NOTE: This function should only be called inside a try/catch.
+        @return:
+        """
+        self.SETTINGS.save()
+        self.LENTDB.save()
+        self.RESOLUTIONMANAGER.save()
+        self.centralWidget().tabbedPane.save()
+
     def saveProject(self) -> None:
         try:
-            self.SETTINGS.save()
-            self.LENTDB.save()
-            self.centralWidget().tabbedPane.save()
+            self.saveHelper()
             self.setStatus("Project Saved.", 3000)
             self.MESSAGEHANDLER.info('Project Saved')
         except Exception as e:
@@ -122,9 +133,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def autoSaveProject(self):
         try:
-            self.SETTINGS.save()
-            self.LENTDB.save()
-            self.centralWidget().tabbedPane.save()
+            self.saveHelper()
             self.setStatus("Project Autosaved.", 3000)
         except Exception:
             self.setStatus("Failed Autosaving Project " + self.SETTINGS.value("Project/Name", 'Untitled'))
