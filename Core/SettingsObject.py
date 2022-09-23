@@ -23,7 +23,6 @@ class SettingsObject(dict):
         super().__init__()
         self.setValue("Program/BaseDir", "Unset")  # dirname(abspath(getsourcefile(lambda:0))) + "/../" )
         self.setValue("Program/GraphLayout", "dot")
-        self.setValue("Program/Internal/Macros", "")
         self.setValue("Program/Graphics/EntityTextFontType", "Mono")
         self.setValue("Program/Graphics/EntityTextFontSize", "11")
         self.setValue("Program/Graphics/EntityTextFontBoldness", "700")
