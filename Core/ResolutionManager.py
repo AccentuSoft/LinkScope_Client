@@ -17,7 +17,7 @@ class ResolutionManager:
         self.messageHandler = messageHandler
         self.mainWindow = mainWindow
         self.resolutions = {}
-        # Macro dict item contents: tuple of (category, resolution name)
+        # Macro dict item contents: tuple of (resolution, parameter values)
         self.macros = {}
 
     def loadResolutionsFromDir(self, directory: Path) -> None:
@@ -164,3 +164,42 @@ class ResolutionManager:
         self.macros[macroUID] = resolutionList
 
         return macroUID
+
+    def deleteMacro(self, macroUID: str) -> bool:
+        # We don't have to worry about running macros, because the details of the macro are saved in memory.
+        # We do however want to get the thread lock because of potential race conditions.
+        try:
+            with self.mainWindow.macrosLock:
+                self.macros.pop(macroUID)
+            return True
+        except KeyError:
+            return False
+
+    def getMacroFilePath(self):
+        return Path(self.mainWindow.SETTINGS.value("Project/BaseDir")) / "Project Files" / "Project Macros.lsmacros"
+
+    def loadMacros(self):
+        # Load AFTER we load resolutions.
+        macroFilePath = self.getMacroFilePath()
+
+        try:
+            with open(macroFilePath, "rb") as macroFile:
+                self.macros = load(macroFile)
+        except ValueError:
+            # If the Macros file is empty or contains invalid input, ignore it.
+            pass
+        except FileNotFoundError:
+            # Create new placeholder notes file if it doesn't exist.
+            try:
+                macroFilePath.touch(0o700, exist_ok=False)
+                self.mainWindow.MESSAGEHANDLER.info('Created new Macros file.')
+            except FileExistsError:
+                self.mainWindow.MESSAGEHANDLER.error('Race condition occurred while trying to create Macros file.')
+
+    def save(self):
+        macroFilePath = self.getMacroFilePath()
+        macroFilePathTmp = macroFilePath.with_suffix(macroFilePath.suffix + '.tmp')
+
+        with open(macroFilePathTmp, "wb") as macroFile:
+            dump(self.macros, macroFile)
+        move(macroFilePathTmp, macroFilePath)

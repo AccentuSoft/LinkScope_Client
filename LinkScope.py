@@ -48,6 +48,7 @@ class MainWindow(QtWidgets.QMainWindow):
     notifyUserSignalListener = QtCore.Signal(str, str, bool)
     statusBarSignalListener = QtCore.Signal(str)
     warningSignalListener = QtCore.Signal(str, bool)
+    runningMacroResolutionFinishedSignalListener = QtCore.Signal(str, str, list)
 
     # Redefining the function to adjust its signature.
     def centralWidget(self) -> Union[QtWidgets.QWidget, QtWidgets.QWidget, CentralPane.WorkspaceWidget]:
@@ -1244,6 +1245,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.cleanUpLocalFinishedResolutions()
         self.setStatus("Resolution: " + resolution_name + " completed.")
+        self.runningMacroResolutionFinishedSignalListener.emit(resolution_name, resolution_uid, affectedUIDs)
 
     def resolutionErrorSignalListener(self, error_message: str):
         self.MESSAGEHANDLER.error(error_message, popUp=True)
@@ -1258,10 +1260,86 @@ class MainWindow(QtWidgets.QMainWindow):
                 resolutionThread[0].deleteLater()
                 self.resolutions.remove(resolutionThread)
 
+    def resolutionFinishedMacrosListener(self, resolution_name: str, resolution_uid: str,
+                                         affectedEntityUIDs: list) -> None:
+        """
+        When user runs macro, the macro goes into a list.
+        Emissions from resolutionSignalListener are caught here, and the macro keeps track of what
+          UIDs correspond to each stage of itself, and progresses appropriately.
+        @param affectedEntityUIDs:
+        @param resolution_name:
+        @param resolution_uid:
+        @return:
+        """
+        with self.macrosLock:
+            macroValid = False
+            for macroIndex, runningMacro in enumerate(self.runningMacros):
+                currentResolutionForMacro = runningMacro[0]
+                if '/' + resolution_name in currentResolutionForMacro[0] and \
+                        resolution_uid == currentResolutionForMacro[1]:
+                    macroValid = True
+                    break
+
+            if macroValid:
+                runNext = False
+                runningMacro.pop(0)
+                if len(runningMacro) > 0:
+                    nextResolutionForMacro = runningMacro[0]
+
+                    acceptableOriginTypes = self.RESOLUTIONMANAGER.getResolutionOriginTypes(nextResolutionForMacro[0])
+                    fullEntityJsonList = [self.LENTDB.getEntity(entityUID) for entityUID in affectedEntityUIDs]
+                    filteredEntityJsonList = [entity for entity in fullEntityJsonList
+                                              if entity['Entity Type'] in acceptableOriginTypes]
+                    if len(filteredEntityJsonList) > 0:
+                        preparedResolutionArguments = [nextResolutionForMacro[0], nextResolutionForMacro[1],
+                                                       filteredEntityJsonList, nextResolutionForMacro[2]]
+                        runNext = True
+                if not runNext:
+                    self.setStatus('Macro execution finished.')
+                    self.runningMacros.remove(runningMacro)
+        if runNext:
+            self.runResolution(*preparedResolutionArguments)
+
     def showMacrosDialog(self) -> None:
+        """
+        Also runs any macros selected by the user.
+        @return:
+        """
         macrosDialog = MacroDialog(self)
         if macrosDialog.exec():
-            pass
+            macrosToRun = []
+            macroTreeRoot = macrosDialog.macroTree.invisibleRootItem()
+            for itemIndex in range(macroTreeRoot.childCount()):
+                item = macroTreeRoot.child(itemIndex)
+                if item.isSelected():
+                    macrosToRun.append(item.text(0))
+            if macrosToRun:
+                currentScene = self.centralWidget().tabbedPane.getCurrentScene()
+                selectedNodes = [self.LENTDB.getEntity(item.uid) for item in currentScene.selectedItems()
+                                 if isinstance(item, BaseNode)]
+                for macro in macrosToRun:
+                    self.runMacro(macro, selectedNodes)
+
+    def runMacro(self, uid: str, selectedEntities: list) -> None:
+        macroDetails = self.RESOLUTIONMANAGER.macros[uid]
+        macroStructure = []
+        try:
+            with self.macrosLock:
+                for resolutionElement in macroDetails:
+                    newResolutionUID = str(uuid4())
+                    macroStructure.append((resolutionElement[0], newResolutionUID, resolutionElement[1]))
+                self.runningMacros.append(macroStructure)
+            firstResolutionDetails = macroStructure[0]
+            runResResult = self.runResolution(firstResolutionDetails[0], firstResolutionDetails[1], selectedEntities,
+                                              firstResolutionDetails[2])
+            if runResResult != "":
+                self.MESSAGEHANDLER.info('Running Macro: ' + uid)
+            else:
+                self.setStatus("Did not run Macro.")
+        except Exception as e:
+            message = "Failed to run Macro. Reason: " + str(e)
+            self.MESSAGEHANDLER.error(message, popUp=True, exc_info=False)
+            self.setStatus(message)
 
     def getClientCollectors(self) -> dict:
         with self.serverCollectorsLock:
@@ -1850,6 +1928,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Moved this here so the software doesn't crash if there are a ton of nodes.
         self.centralWidget().tabbedPane.open()
+        self.RESOLUTIONMANAGER.loadMacros()
         # Creating default 'Home' tab, if no tabs exist.
         if len(self.centralWidget().tabbedPane.canvasTabs) == 0:
             self.centralWidget().tabbedPane.createHomeTab()
@@ -1931,6 +2010,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.collectors = {}
         self.runningCollectors = {}
         self.cycleExtractionThreads = []
+        self.macrosLock = threading.Lock()
+        self.runningMacros = []
 
         self.RESOLUTIONMANAGER.loadResolutionsFromDir(
             Path(self.SETTINGS.value("Program/BaseDir")) / "Core" / "Resolutions" / "Core")
@@ -1985,6 +2066,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Allow threads to issue warnings.
         self.warningSignalListener.connect(self.MESSAGEHANDLER.warning)
+
+        # Connect resolution results to macro execution function
+        self.runningMacroResolutionFinishedSignalListener.connect(self.resolutionFinishedMacrosListener)
 
         self.initializeLayout()
 
@@ -4565,65 +4649,209 @@ class ConditionClauseWidget(QtWidgets.QFrame):
 
 
 class MacroDialog(QtWidgets.QDialog):
-    
+
     def __init__(self, mainWindowObject: MainWindow):
         super(MacroDialog, self).__init__()
+        self.mainWindowObject = mainWindowObject
         self.setModal(True)
         self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
 
-        currentScene = mainWindowObject.centralWidget().tabbedPane.getCurrentScene()
-        canvasName = currentScene.getSelfName()
-        endPoints = [item.uid for item in currentScene.selectedItems()
-                     if isinstance(item, BaseNode)]
-        currentCanvasGraph = currentScene.sceneGraph
-
-        # allResolutions = mainWindowObject.RESOLUTIONMANAGER.getAllResolutions()  - need categories too.
-        allMacros = mainWindowObject.RESOLUTIONMANAGER.macros
+        self.resolutionList = []
+        for category in mainWindowObject.RESOLUTIONMANAGER.getResolutionCategories():
+            for resolution in mainWindowObject.RESOLUTIONMANAGER.getResolutionsInCategory(category):
+                self.resolutionList.append(category + '/' + resolution)
+        self.resolutionList.sort()
 
         layout = QtWidgets.QVBoxLayout()
         self.setLayout(layout)
 
-        macroLabel = QtWidgets.QLabel("This is a list of all currently configured Macros. Click on a Macro to view the "
-                                      "Resolutions included in it.")
+        macroLabel = QtWidgets.QLabel("This is a list of all currently configured Macros.\n"
+                                      "Click on a Macro to view the Resolutions included in it.")
         macroLabel.setWordWrap(True)
-        macroTree = QtWidgets.QTreeWidget(self)
-        macroTree.setSelectionMode(macroTree.SingleSelection)
-        macroTree.setSelectionBehavior(macroTree.SelectRows)
-        macroTree.setHeaderLabels(['Macro UID', 'Delete'])
-
-        for macro in allMacros:
-            newMacro = QtWidgets.QTreeWidgetItem()
-            macroTree.addTopLevelItem(newMacro)
-            newMacro.setText(0, macro)
-            newMacro.setText(1, 'DELETE BUTTON TODO')
-            for resolution in allMacros[macro]:
-                resolutionItem = QtWidgets.QTreeWidgetItem(newMacro)
-                resolutionItem.setText(0, resolution)
+        self.macroTree = MacroTree(self, mainWindowObject)
+        self.macroTree.setSelectionMode(self.macroTree.ExtendedSelection)
+        self.macroTree.setSelectionBehavior(self.macroTree.SelectRows)
+        self.macroTree.setHeaderLabels(['Macro UID', 'Delete'])
+        self.macroTree.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.macroTree.setSortingEnabled(False)
+        # Stretch the first column, since it contains the primary field.
+        self.macroTree.header().setStretchLastSection(False)
+        self.macroTree.header().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
 
         buttonsWidget = QtWidgets.QWidget()
         buttonsWidgetLayout = QtWidgets.QHBoxLayout()
         buttonsWidget.setLayout(buttonsWidgetLayout)
         closeButton = QtWidgets.QPushButton('Close')
         closeButton.clicked.connect(self.reject)
+        addMacroButton = QtWidgets.QPushButton('Create New Macro')
+        addMacroButton.clicked.connect(self.createMacro)
         runSelectedButton = QtWidgets.QPushButton('Run Selected Macros')
         runSelectedButton.clicked.connect(self.accept)
         buttonsWidgetLayout.addWidget(closeButton)
+        buttonsWidgetLayout.addWidget(addMacroButton)
         buttonsWidgetLayout.addWidget(runSelectedButton)
 
         layout.addWidget(macroLabel)
-        layout.addWidget(macroTree)
+        layout.addWidget(self.macroTree)
         layout.addWidget(buttonsWidget)
+        self.updateMacroTree()
+        self.setBaseSize(1000, 1000)
+
+    def updateMacroTree(self) -> None:
+        self.macroTree.clear()
+        allMacros = self.mainWindowObject.RESOLUTIONMANAGER.macros
+
+        for macro in allMacros:
+            newMacro = MacroTreeItem(macro, allMacros[macro])
+            self.macroTree.addTopLevelItem(newMacro)
+            self.macroTree.setItemWidget(newMacro, 1, newMacro.deleteButton)
 
     def createMacro(self) -> None:
-        pass
+        createMacroDialog = MacroCreatorDialog(self.resolutionList)
+        if createMacroDialog.exec():
+            macroResolutionsList = []
+            numberOfResolutionsSelected = createMacroDialog.createList.count()
+            for itemIndex in range(numberOfResolutionsSelected):
+                itemText = createMacroDialog.createList.item(itemIndex).text()
+                resolutionCategory, resolutionName = itemText.split('/', 1)
+                rParameters = self.mainWindowObject.RESOLUTIONMANAGER.getResolutionParameters(resolutionCategory,
+                                                                                              resolutionName)
+                if rParameters is None:
+                    message = 'Resolution parameters not found for resolution: ' + resolutionName
+                    self.mainWindowObject.MESSAGEHANDLER.error(message, popUp=True, exc_info=False)
+                    self.mainWindowObject.setStatus(message + ', Macro creation aborted.')
+                    return
 
-    def deleteMacro(self) -> None:
-        pass
+                resolutionParameterValues = self.mainWindowObject.popParameterValuesAndReturnSpecified(resolutionName,
+                                                                                                       rParameters)
+
+                if 0 < len(rParameters):
+                    parameterSelector = ResolutionParametersSelector(
+                        self.mainWindowObject, resolutionName, rParameters,
+                        windowTitle='[' + str(itemIndex) + '/' + str(numberOfResolutionsSelected) + '] ' +
+                                    'Select Parameter values for Resolution: ' + resolutionName)
+                    if parameterSelector.exec():
+                        resolutionParameterValues.update(parameterSelector.chosenParameters)
+                    else:
+                        self.mainWindowObject.MESSAGEHANDLER.info('Macro creation aborted.')
+                        self.mainWindowObject.setStatus('Macro creation aborted.')
+                        return
+
+                macroResolutionsList.append((itemText, resolutionParameterValues))
+            self.mainWindowObject.RESOLUTIONMANAGER.createMacro(macroResolutionsList)
+            self.updateMacroTree()
+            self.mainWindowObject.setStatus('New Macro Created.')
+            self.mainWindowObject.MESSAGEHANDLER.info('New Macro Created.')
 
     def accept(self) -> None:
-        pass  # TODO - run resolutions - function in main / thread?
-
         super(MacroDialog, self).accept()
+
+
+class MacroTree(QtWidgets.QTreeWidget):
+
+    def __init__(self, parent, mainWindowObject):
+        super(MacroTree, self).__init__(parent=parent)
+        self.mainWindowObject = mainWindowObject
+
+    def deleteMacro(self, treeEntry: QtWidgets.QTreeWidgetItem):
+        index = self.indexOfTopLevelItem(treeEntry)
+        uid = treeEntry.text(0)
+        self.mainWindowObject.RESOLUTIONMANAGER.deleteMacro(uid)
+        self.takeTopLevelItem(index)
+
+
+class MacroTreeItem(QtWidgets.QTreeWidgetItem):
+
+    def __init__(self, uid: str, resolutionList: list):
+        super(MacroTreeItem, self).__init__()
+        self.setText(0, uid)
+
+        self.deleteButton = QtWidgets.QPushButton('X')
+        self.deleteButton.clicked.connect(self.removeSelf)
+
+        for resolution in resolutionList:
+            resolutionItem = QtWidgets.QTreeWidgetItem()
+            resolutionItem.setText(0, 'Resolution: ' + resolution[0])
+            self.addChild(resolutionItem)
+
+    def removeSelf(self):
+        self.treeWidget().deleteMacro(self)
+
+
+class MacroCreatorDialog(QtWidgets.QDialog):
+
+    def __init__(self, resolutionsWithCategoriesList: list):
+        super(MacroCreatorDialog, self).__init__()
+        self.setWindowTitle('Create new Macro')
+        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
+
+        self.viewList = QtWidgets.QListWidget()
+        for resolution in resolutionsWithCategoriesList:
+            viewItem = QtWidgets.QListWidgetItem(resolution)
+            self.viewList.addItem(viewItem)
+        self.viewList.sortItems()
+        self.viewList.setSelectionMode(self.viewList.ExtendedSelection)
+
+        buttonsAddRemoveWidget = QtWidgets.QWidget()
+        buttonsAddRemoveWidgetLayout = QtWidgets.QVBoxLayout()
+        buttonAdd = QtWidgets.QPushButton('>')
+        buttonAdd.clicked.connect(self.addSelectedToMacro)
+        buttonRemove = QtWidgets.QPushButton('<')
+        buttonRemove.clicked.connect(self.removeSelectedFromMacro)
+        buttonsAddRemoveWidget.setLayout(buttonsAddRemoveWidgetLayout)
+        buttonsAddRemoveWidgetLayout.addWidget(buttonAdd)
+        buttonsAddRemoveWidgetLayout.addWidget(buttonRemove)
+        self.createList = QtWidgets.QListWidget()
+        buttonsRearrangeWidget = QtWidgets.QWidget()
+        buttonsRearrangeWidgetLayout = QtWidgets.QVBoxLayout()
+        buttonsRearrangeWidget.setLayout(buttonsRearrangeWidgetLayout)
+        buttonMoveUp = QtWidgets.QPushButton('^')
+        buttonMoveUp.clicked.connect(self.shiftSelectedUp)
+        buttonMoveDown = QtWidgets.QPushButton('v')
+        buttonMoveDown.clicked.connect(self.shiftSelectedDown)
+        buttonsRearrangeWidgetLayout.addWidget(buttonMoveUp)
+        buttonsRearrangeWidgetLayout.addWidget(buttonMoveDown)
+        allResolutionsLabel = QtWidgets.QLabel('All Resolutions')
+        allResolutionsLabel.setAlignment(QtCore.Qt.AlignCenter)
+        selectedResolutionsLabel = QtWidgets.QLabel('Selected Resolutions')
+        selectedResolutionsLabel.setAlignment(QtCore.Qt.AlignCenter)
+        confirmButton = QtWidgets.QPushButton('Confirm')
+        confirmButton.clicked.connect(self.accept)
+        cancelButton = QtWidgets.QPushButton('Cancel')
+        cancelButton.clicked.connect(self.reject)
+
+        macroCreateLayout = QtWidgets.QGridLayout()
+        self.setLayout(macroCreateLayout)
+        macroCreateLayout.addWidget(self.viewList, 1, 0, 1, 5)
+        macroCreateLayout.addWidget(buttonsAddRemoveWidget, 1, 5, 1, 1)
+        macroCreateLayout.addWidget(self.createList, 1, 6, 1, 5)
+        macroCreateLayout.addWidget(buttonsRearrangeWidget, 1, 11, 1, 1)
+        macroCreateLayout.addWidget(allResolutionsLabel, 0, 0, 1, 5)
+        macroCreateLayout.addWidget(selectedResolutionsLabel, 0, 6, 1, 5)
+        macroCreateLayout.addWidget(cancelButton, 2, 1, 1, 3)
+        macroCreateLayout.addWidget(confirmButton, 2, 7, 1, 3)
+        self.setBaseSize(1000, 700)
+
+    def addSelectedToMacro(self):
+        for selectedItem in self.viewList.selectedItems():
+            self.createList.addItem(QtWidgets.QListWidgetItem(selectedItem.text()))
+
+    def removeSelectedFromMacro(self):
+        for selectedItem in self.createList.selectedItems():
+            self.createList.takeItem(self.createList.row(selectedItem))
+
+    def shiftSelectedUp(self):
+        selectedItemIndex = self.createList.row(self.createList.selectedItems()[0])
+        if selectedItemIndex != 0:
+            currentItem = self.createList.takeItem(selectedItemIndex)
+            self.createList.insertItem(selectedItemIndex - 1, currentItem)
+            currentItem.setSelected(True)
+
+    def shiftSelectedDown(self):
+        selectedItemIndex = self.createList.row(self.createList.selectedItems()[0])
+        currentItem = self.createList.takeItem(selectedItemIndex)
+        self.createList.insertItem(selectedItemIndex + 1, currentItem)
+        currentItem.setSelected(True)
 
 
 class ExtractCyclesThread(QtCore.QThread):
