@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 
 
+import contextlib
 from typing import Union
 
 import networkx as nx
 import re
+from datetime import timezone
 from defusedxml.ElementTree import parse
 from datetime import datetime
 from os import listdir
@@ -89,10 +91,7 @@ class ResourceHandler:
         self.loadCoreEntities()
 
     def getEntityCategories(self) -> list:
-        eList = []
-        for category in self.entityCategoryList:
-            eList.append(category)
-        return eList
+        return list(self.entityCategoryList)
 
     def getAllEntityDetailsWithIconsInCategory(self, category) -> list:
         eList = []
@@ -108,8 +107,7 @@ class ResourceHandler:
         try:
             for category in self.entityCategoryList:
                 if entityType in self.entityCategoryList[category]:
-                    for attribute in self.entityCategoryList[category][entityType]['Attributes']:
-                        aList.append(attribute)
+                    aList.extend(iter(self.entityCategoryList[category][entityType]['Attributes']))
                     break
         except KeyError:
             self.messageHandler.error("Attempted to get attributes for "
@@ -121,16 +119,12 @@ class ResourceHandler:
         """
         Get all Entity Types in the specified category.
         """
-        eList = []
-        for entity in self.entityCategoryList[category]:
-            eList.append(entity)
-        return eList
+        return list(self.entityCategoryList[category])
 
     def getCategoryOfEntityType(self, entityType: Union[str, None]):
-        for category in self.entityCategoryList:
-            if entityType in self.entityCategoryList[category]:
-                return category
-        return None
+        return next((category for category in self.entityCategoryList
+                     if entityType in self.entityCategoryList[category]),
+                    None)
 
     def getAllEntities(self) -> list:
         """
@@ -138,8 +132,7 @@ class ResourceHandler:
         """
         eList = []
         for category in self.getEntityCategories():
-            for entity in self.getAllEntitiesInCategory(category):
-                eList.append(entity)
+            eList.extend(iter(self.getAllEntitiesInCategory(category)))
         return eList
 
     def validateAttributesOfEntity(self, entityJSON: dict) -> (bool, str):
@@ -156,7 +149,7 @@ class ResourceHandler:
                         if attrValue is None or not self.runCheckOnAttribute(
                                 attrValue,
                                 self.entityCategoryList[entityCategory][entityType]['Attributes'][attribute][1]):
-                            return 'Bad value: ' + str(attrValue)
+                            return f'Bad value: {str(attrValue)}'
         except Exception:
             return False
         return True
@@ -172,9 +165,7 @@ class ResourceHandler:
         if attrCheck is None:
             return False
         result = attrCheck.findall(attribute)
-        if len(result) == 1:
-            return True
-        return False
+        return len(result) == 1
 
     def addRecognisedEntityTypes(self, entityFile: Path) -> bool:
         try:
@@ -191,32 +182,28 @@ class ResourceHandler:
             try:
                 entityName = entity.tag.replace('_', ' ')
                 attributes = entity.find('Attributes')
-                attributesDict = {}
                 primaryCount = 0
+                attributesDict = {}
                 for attribute in list(attributes):
-                    attributeName = attribute.text
                     defaultValue = attribute.attrib['default']
                     valueCheck = attribute.attrib['check']
-                    isPrimary = True if attribute.attrib['primary'] == 'True' else False
+                    isPrimary = attribute.attrib['primary'] == 'True'
                     if isPrimary:
                         if primaryCount > 0:
-                            raise AttributeError('Malformed Entity: ' + entityName + ' - too many primary fields')
+                            raise AttributeError(f'Malformed Entity: {entityName} - too many primary fields')
                         else:
                             primaryCount += 1
-                    if self.runCheckOnAttribute(defaultValue, valueCheck):
-                        attributesDict[attributeName] = [attribute.attrib['default'], attribute.attrib['check'],
-                                                         isPrimary]
-                    else:
-                        raise AttributeError('Malformed Entity: ' + entityName + ' - default values do not conform to '
-                                             'their corresponding checks.')
+                    if not self.runCheckOnAttribute(defaultValue, valueCheck):
+                        raise AttributeError(f'Malformed Entity: {entityName} - default values do not pass their '
+                                             f'corresponding checks.')
+                    attributeName = attribute.text
+                    attributesDict[attributeName] = [attribute.attrib['default'], attribute.attrib['check'], isPrimary]
                 if primaryCount != 1:
-                    raise AttributeError('Malformed Entity: ' + entityName + ' - invalid number of primary fields '
-                                                                             'specified.')
+                    raise AttributeError(f'Malformed Entity: {entityName} - invalid number of primary fields '
+                                         f'specified.')
+
                 icon = entity.find('Icon')
-                if icon is not None:
-                    icon = icon.text.strip()
-                elif icon is None or icon == '':
-                    icon = 'Default.svg'
+                icon = icon.text.strip() if icon is not None else 'Default.svg'
                 if self.entityCategoryList.get(category) is None:
                     self.entityCategoryList[category] = {}
                 self.entityCategoryList[category][entityName] = {
@@ -224,7 +211,7 @@ class ResourceHandler:
                     'Icon': str(Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) / "Resources" / "Icons" / icon)}
             except (KeyError, AttributeError) as err:
                 # Ignore malformed entities
-                self.messageHandler.error('Error: ' + str(err), popUp=False)
+                self.messageHandler.error(f'Error: {str(err)}', popUp=False)
                 continue
         return True
 
@@ -253,8 +240,7 @@ class ResourceHandler:
                         eJson[attribute] = self.entityCategoryList[category][entityType]['Attributes'][attribute][0]
                     break
         except KeyError:
-            self.messageHandler.error("Attempted to get attributes for "
-                                      "malformed entity type: " + str(entityType), True)
+            self.messageHandler.error(f"Attempted to get attributes for malformed entity type: {entityType}", True)
             return None
         eJson['Entity Type'] = entityType
         eJson['Date Created'] = None
@@ -269,7 +255,7 @@ class ResourceHandler:
                 if value is not None and value != '':
                     eJson[key] = value
 
-        utcNow = datetime.isoformat(datetime.utcnow())
+        utcNow = datetime.isoformat(datetime.now(timezone.utc))
         if eJson['Date Created'] is None:
             eJson['Date Created'] = utcNow
         else:
@@ -291,8 +277,8 @@ class ResourceHandler:
                         if self.entityCategoryList[category][entityType]['Attributes'][attribute][2]:
                             return attribute
         except KeyError:
-            self.messageHandler.error("Attempted to get primary attribute for "
-                                      "malformed entity type: " + str(entityType), True)
+            self.messageHandler.error(f"Attempted to get primary attribute for malformed entity type: {entityType}",
+                                      True)
         return None
 
     def getBareBonesEntityJson(self, entityType: str) -> Union[dict, None]:
@@ -304,8 +290,7 @@ class ResourceHandler:
                         eJson[attribute] = self.entityCategoryList[category][entityType]['Attributes'][attribute][0]
                     break
         except KeyError:
-            self.messageHandler.error("Attempted to get attributes for "
-                                      "malformed entity type: " + str(entityType), True)
+            self.messageHandler.error(f"Attempted to get attributes for malformed entity type: {entityType}", True)
             return None
         eJson['Entity Type'] = entityType
 
@@ -318,7 +303,7 @@ class ResourceHandler:
         except KeyError:
             return None
 
-        utcNow = datetime.isoformat(datetime.utcnow())
+        utcNow = datetime.isoformat(datetime.now(timezone.utc))
         linkJson['Resolution'] = str(jsonData.get('Resolution'))  # This way, if it is None, it is cast to a string.
         linkJson['Date Created'] = jsonData.get('Date Created')
         # Make sure that dates are always in ISO format.
@@ -334,8 +319,8 @@ class ResourceHandler:
 
         # Transfer all values from jsonData to linkJson, but preserve the values and order of linkJson for existing
         #   keys.
-        jsonData.update(linkJson)
-        linkJson.update(jsonData)
+        jsonData |= linkJson
+        linkJson |= jsonData
 
         return linkJson
 
@@ -354,8 +339,7 @@ class ResourceHandler:
         finally:
             with open(picture, 'rb') as pictureFile:
                 pictureContents = pictureFile.read()
-            pictureByteArray = QByteArray(pictureContents)
-            return pictureByteArray
+            return QByteArray(pictureContents)
 
     def getLinkPicture(self):
         picture = Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) / "Resources" / "Icons" / "Resolution.png"
@@ -370,11 +354,8 @@ class ResourceHandler:
         for nodeKey in graph.nodes:
             # Dereference the original dict, so we don't actually convert its icon to data.
             nodes[nodeKey] = dict(graph.nodes.get(nodeKey))
-            try:
+            with contextlib.suppress(KeyError):
                 nodes[nodeKey]['Icon'] = nodes[nodeKey]['Icon'].toBase64().data()
-            except KeyError:
-                pass
-
         edges = {edgeKey: graph.edges.get(edgeKey) for edgeKey in graph.edges}
         return nodes, edges
 
@@ -383,22 +364,16 @@ class ResourceHandler:
         for nodeKey in graph.nodes:
             # Dereference the original dict, so we don't actually convert its icon to data.
             nodes[nodeKey] = dict(graph.nodes.get(nodeKey))
-            try:
+            with contextlib.suppress(KeyError):
                 nodes[nodeKey]['Icon'] = nodes[nodeKey]['Icon'].toBase64().data()
-            except KeyError:
-                pass
-
         edges = {str(edgeKey): graph.edges.get(edgeKey) for edgeKey in graph.edges}
         return nodes, edges
 
     def reconstructGraphFromString(self, graphString: str) -> tuple:
         nodes, edges = literal_eval(graphString)
         for node in nodes:
-            try:
+            with contextlib.suppress(KeyError):
                 nodes[node]['Icon'] = QByteArray(b64decode(nodes[node]['Icon']))
-            except KeyError:
-                pass
-
         return nodes, edges
 
     def reconstructGraphFullFromFile(self, graphNodesAndEdges: Union[tuple, list]) -> nx.DiGraph:
@@ -406,10 +381,8 @@ class ResourceHandler:
         graphNodes = graphNodesAndEdges[0]
         graphEdges = graphNodesAndEdges[1]
         for node in graphNodes:
-            try:
+            with contextlib.suppress(KeyError):
                 graphNodes[node]['Icon'] = QByteArray(b64decode(graphNodes[node]['Icon']))
-            except KeyError:
-                pass
             returnGraph.add_node(node, **graphNodes[node])
 
         for edge in graphEdges:
@@ -476,11 +449,7 @@ class SingleChoicePropertyInput(QtWidgets.QGroupBox):
             vboxLayout.addWidget(radioButton)
 
     def getValue(self):
-        for option in self.options:
-            if option.isChecked():
-                return option.text()
-
-        return ''
+        return next((option.text() for option in self.options if option.isChecked()), '')
 
 
 class MultiChoicePropertyInput(QtWidgets.QGroupBox):
@@ -507,12 +476,7 @@ class MultiChoicePropertyInput(QtWidgets.QGroupBox):
             vboxLayout.addWidget(checkBox)
 
     def getValue(self):
-        valuesSelected = []
-        for option in self.options:
-            if option.isChecked():
-                valuesSelected.append(option.text())
-
-        return valuesSelected
+        return [option.text() for option in self.options if option.isChecked()]
 
 
 class MinSizeStackedLayout(QtWidgets.QStackedLayout):
@@ -550,12 +514,11 @@ class RichNotesEditor(QtWidgets.QTextBrowser):
         self.textFormat = self.currentCharFormat()
 
     def startEditing(self) -> None:
-        if self.allowEditing:
-            if self.isReadOnly():
-                # Reset char format to plain text.
-                self.setCurrentCharFormat(self.textFormat)
-                self.setPlainText(self.contents)
-                self.setReadOnly(False)
+        if self.allowEditing and self.isReadOnly():
+            # Reset char format to plain text.
+            self.setCurrentCharFormat(self.textFormat)
+            self.setPlainText(self.contents)
+            self.setReadOnly(False)
 
     def stopEditing(self) -> None:
         if not self.isReadOnly():
@@ -573,15 +536,13 @@ class RichNotesEditor(QtWidgets.QTextBrowser):
 
     def mousePressEvent(self, ev: QtGui.QMouseEvent) -> None:
         potentialLink = self.anchorAt(ev.pos())
-        if not potentialLink:
-            if ev.button() == QtGui.Qt.LeftButton:
-                self.startEditing()
+        if not potentialLink and ev.button() == QtGui.Qt.LeftButton:
+            self.startEditing()
         super(RichNotesEditor, self).mousePressEvent(ev)
 
     def focusOutEvent(self, ev: QtGui.QFocusEvent) -> None:
-        if not self.underMouse():
-            if self.isActiveWindow():
-                self.stopEditing()
+        if not self.underMouse() and self.isActiveWindow():
+            self.stopEditing()
         super(RichNotesEditor, self).focusOutEvent(ev)
 
     def doSetSource(self, name: Union[QUrl, str], resourceType: QtGui.QTextDocument.ResourceType = ...) -> None:

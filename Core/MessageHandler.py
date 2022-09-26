@@ -63,7 +63,7 @@ class MessageHandler:
         return message
 
     # Set the severity level
-    def setSeverityLevel(self, level: int):
+    def setSeverityLevel(self, level):
         currentLogLevel = self.linkScopeLogger.level
         try:
             level = int(level)

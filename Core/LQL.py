@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import contextlib
 from typing import Union, Optional, Any
 from uuid import uuid4
 import re
@@ -27,10 +28,9 @@ class LQLQueryBuilder:
         self.mainWindow = mainWindow
 
     def takeSnapshot(self):
-        self.mainWindow.LENTDB.dbLock.acquire()
-        # Create a copy
-        self.databaseSnapshot = self.mainWindow.LENTDB.database.copy()
-        self.mainWindow.LENTDB.dbLock.release()
+        with self.mainWindow.LENTDB.dbLock:
+            # Create a copy
+            self.databaseSnapshot = self.mainWindow.LENTDB.database.copy()
 
         self.databaseEntities = set(self.databaseSnapshot.nodes)
 
@@ -82,16 +82,14 @@ class LQLQueryBuilder:
 
     def parseSelect(self, selectClause: str, selectValue: Union[str, list]):
         if selectClause == 'SELECT':
-            if '*' in selectValue:
-                # No need to remove the '*'. Could cause errors if that's a field name (even though it is bad practice).
-                return self.allEntityFields
-            return set([entityField for entityField in selectValue if entityField in self.allEntityFields])
-        else:
-            try:
-                clauseValue = re.compile(selectValue)
-                return set([entityField for entityField in self.allEntityFields if clauseValue.match(entityField)])
-            except re.error:
-                return set()
+            return self.allEntityFields if '*' in selectValue else \
+                {entityField for entityField in selectValue if entityField in self.allEntityFields}
+
+        try:
+            clauseValue = re.compile(selectValue)
+            return {entityField for entityField in self.allEntityFields if clauseValue.match(entityField)}
+        except re.error:
+            return set()
 
     def parseSource(self, sourceClause: str, sourceValues: Union[None, list], fieldsToSelect: set) -> set:
         """
@@ -118,32 +116,24 @@ class LQLQueryBuilder:
                 except (ValueError, re.error):
                     continue
 
-                # Not the most efficient way of phrasing this, but by far the most compact and legible.
                 for matchingCanvas in matchingCanvases:
                     if sourceValue[0] == 'AND':
-                        if sourceValue[2] is True:
-                            resultEntitySet = self.canvasAndNot(resultEntitySet,
-                                                                self.canvasesEntitiesDict[matchingCanvas])
-                        else:
-                            resultEntitySet = self.canvasAnd(resultEntitySet,
-                                                             self.canvasesEntitiesDict[matchingCanvas])
+                        resultEntitySet = self.canvasAndNot(resultEntitySet, self.canvasesEntitiesDict[matchingCanvas])\
+                            if sourceValue[2] is True else\
+                            self.canvasAnd(resultEntitySet, self.canvasesEntitiesDict[matchingCanvas])
+
+                    elif sourceValue[2] is True:
+                        resultEntitySet = self.canvasOrNot(resultEntitySet,
+                                                           self.canvasesEntitiesDict[matchingCanvas],
+                                                           self.databaseEntities)
                     else:
-                        # If this is the first clause, or'ing the empty initial resultEntitySet is what we want.
-                        if sourceValue[2] is True:
-                            resultEntitySet = self.canvasOrNot(resultEntitySet,
-                                                               self.canvasesEntitiesDict[matchingCanvas],
-                                                               self.databaseEntities)
-                        else:
-                            resultEntitySet = self.canvasOr(resultEntitySet,
-                                                            self.canvasesEntitiesDict[matchingCanvas])
+                        resultEntitySet = self.canvasOr(resultEntitySet,
+                                                        self.canvasesEntitiesDict[matchingCanvas])
 
         # Filter out all entities that do not contain at least one of the selected fields.
         for entity in list(resultEntitySet):
-            validEntity = False
-            for field in fieldsToSelect:
-                if field in self.allEntities[entity].keys():
-                    validEntity = True
-                    break
+            validEntity = any(field in self.allEntities[entity].keys() for field in fieldsToSelect)
+
             if not validEntity:
                 resultEntitySet.remove(entity)
                 self.allEntities.pop(entity)
@@ -190,30 +180,26 @@ class LQLQueryBuilder:
                         attributeRegex = re.compile(userInput1)
                     except re.error:
                         continue
-                    for field in self.allEntityFields:
-                        if attributeRegex.match(field):
-                            matchingFields.append(field)
+                    matchingFields.extend(field for field in self.allEntityFields if attributeRegex.match(field))
 
                 for matchingField in matchingFields:
                     entitiesToRemove = []
                     for entity in self.allEntities:
                         attributeKeyValue = str(self.allEntities[entity].get(matchingField))
-                        if not self.checkVCHelper(conditionValue[2], isNot, attributeKeyValue, userInput2):
-                            if conditionClause[0] == "AND":
-                                entitiesToRemove.append(entity)
-                        else:
+                        if self.checkVCHelper(conditionValue[2], isNot, attributeKeyValue, userInput2):
                             uidsToSelect.add(entity)
+                        elif conditionClause[0] == "AND":
+                            entitiesToRemove.append(entity)
                     for entityToRemove in entitiesToRemove:
                         uidsToSelect.remove(entityToRemove)
 
             elif conditionClause[1] == "Graph Condition":
                 entitiesToRemove = []
                 for entity in self.allEntities:
-                    if not self.checkGCHelper(firstArgument, isNot, [entity] + conditionValue[1:]):
-                        if conditionClause[0] == "AND":
-                            entitiesToRemove.append(entity)
-                    else:
+                    if self.checkGCHelper(firstArgument, isNot, [entity] + conditionValue[1:]):
                         uidsToSelect.add(entity)
+                    elif conditionClause[0] == "AND":
+                        entitiesToRemove.append(entity)
                 for entityToRemove in entitiesToRemove:
                     uidsToSelect.remove(entityToRemove)
 
@@ -236,169 +222,119 @@ class LQLQueryBuilder:
         return canvasSetA.union(allEntitiesSet.difference(canvasSetB))
 
     def checkEQ(self, valueA: str, valueB: str):
-        if valueA == valueB:
-            return True
-        return False
+        return valueA == valueB
 
     def checkContains(self, valueA: str, valueB: str):
-        if valueB in valueA:
-            return True
-        return False
+        return valueB in valueA
 
     def checkStartsWith(self, valueA: str, valueB: str):
-        if valueA.startswith(valueB):
-            return True
-        return False
+        return valueA.startswith(valueB)
 
     def checkEndsWith(self, valueA: str, valueB: str):
-        if valueA.endswith(valueB):
-            return True
-        return False
+        return valueA.endswith(valueB)
 
     def checkRMatch(self, valueA: str, valueB: str):
-        try:
+        with contextlib.suppress(re.error):
             valueMatch = re.compile(valueB)
             if valueMatch.match(valueA):
                 return True
-        except re.error:
-            pass
         return False
 
     def checkVCHelper(self, checkType: str, isNot: bool, valueA: str, valueB: str):
         returnVal = False
-        if checkType == "EQ":
-            returnVal = self.checkEQ(valueA, valueB)
-        elif checkType == "CONTAINS":
+        if checkType == "CONTAINS":
             returnVal = self.checkContains(valueA, valueB)
-        elif checkType == "STARTSWITH":
-            returnVal = self.checkStartsWith(valueA, valueB)
         elif checkType == "ENDSWITH":
             returnVal = self.checkEndsWith(valueA, valueB)
+        elif checkType == "EQ":
+            returnVal = self.checkEQ(valueA, valueB)
         elif checkType == "RMATCH":
             returnVal = self.checkRMatch(valueA, valueB)
-        if isNot:
-            return not returnVal
-        return returnVal
+        elif checkType == "STARTSWITH":
+            returnVal = self.checkStartsWith(valueA, valueB)
+        return not returnVal if isNot else returnVal
 
     def checkParentOf(self, valueA: str, valueB: str):
         return self.databaseSnapshot.has_successor(valueA, valueB)
 
     def checkAncestorOf(self, valueA: str, valueB: str):
-        try:
+        with contextlib.suppress(nx.NetworkXError):
             if valueB in nx.descendants(self.databaseSnapshot, valueA):
                 return True
-        except nx.NetworkXError:
-            pass
         return False
 
     def checkChildOf(self, valueA: str, valueB: str):
         return self.databaseSnapshot.has_predecessor(valueA, valueB)
 
     def checkDescendantOf(self, valueA: str, valueB: str):
-        try:
+        with contextlib.suppress(nx.NetworkXError):
             if valueB in nx.ancestors(self.databaseSnapshot, valueA):
                 return True
-        except nx.NetworkXError:
-            pass
         return False
 
     def checkNumChildren(self, valueA: str, valueB: str, valueC: int):
         numChildren = len(list(self.databaseSnapshot.successors(valueA)))
-        returnValue = False
-        if valueB == "<":
-            if numChildren < valueC:
-                returnValue = True
-        elif valueB == "<=":
-            if numChildren <= valueC:
-                returnValue = True
-        elif valueB == ">":
-            if numChildren > valueC:
-                returnValue = True
-        elif valueB == ">=":
-            if numChildren >= valueC:
-                returnValue = True
-        elif valueB == "==":
-            if numChildren == valueC:
-                returnValue = True
-        return returnValue
+        return (valueB == "<" and numChildren < valueC) or \
+               (valueB == "<=" and numChildren <= valueC) or \
+               (valueB == ">" and numChildren > valueC) or \
+               (valueB == ">=" and numChildren >= valueC) or \
+               (valueB == "==" and numChildren == valueC)
 
     def checkNumParents(self, valueA: str, valueB: str, valueC: int):
         numParents = len(list(self.databaseSnapshot.predecessors(valueA)))
-        returnValue = False
-        if valueB == "<":
-            if numParents < valueC:
-                returnValue = True
-        elif valueB == "<=":
-            if numParents <= valueC:
-                returnValue = True
-        elif valueB == ">":
-            if numParents > valueC:
-                returnValue = True
-        elif valueB == ">=":
-            if numParents >= valueC:
-                returnValue = True
-        elif valueB == "==":
-            if numParents == valueC:
-                returnValue = True
-        return returnValue
+        return (valueB == "<" and numParents < valueC) or \
+               (valueB == "<=" and numParents <= valueC) or \
+               (valueB == ">" and numParents > valueC) or \
+               (valueB == ">=" and numParents >= valueC) or \
+               (valueB == "==" and numParents == valueC)
 
     def checkConnectedTo(self, valueA: str, valueB: str):
-        try:
+        with contextlib.suppress(nx.NetworkXError):
             if nx.has_path(self.databaseSnapshot, valueA, valueB):
                 return True
-        except nx.NetworkXError:
-            pass
         return False
 
     def checkIsolated(self, valueA: str):
-        try:
+        with contextlib.suppress(nx.NetworkXError):
             if valueA in self.databaseSnapshot.nodes and nx.is_isolate(self.databaseSnapshot, valueA):
                 return True
-        except nx.NetworkXError:
-            pass
         return False
 
     def checkIsRoot(self, valueA: str):
-        try:
+        with contextlib.suppress(nx.NetworkXError):
             if len(self.databaseSnapshot.in_edges(valueA)) == 0:
                 return True
-        except nx.NetworkXError:
-            pass
         return False
 
     def checkIsLeaf(self, valueA: str):
-        try:
+        with contextlib.suppress(nx.NetworkXError):
             if len(self.databaseSnapshot.out_edges(valueA)) == 0:
                 return True
-        except nx.NetworkXError:
-            pass
         return False
 
     def checkGCHelper(self, checkType: str, isNot: bool, args: list):
         returnVal = False
-        if checkType == "CHILDOF":
-            returnVal = self.checkChildOf(*args)
-        elif checkType == "DESCENDANTOF":
-            returnVal = self.checkDescendantOf(*args)
-        elif checkType == "PARENTOF":
-            returnVal = self.checkParentOf(*args)
-        elif checkType == "ANCESTOROF":
+        if checkType == "ANCESTOROF":
             returnVal = self.checkAncestorOf(*args)
-        elif checkType == "NUMCHILDREN":
-            returnVal = self.checkNumChildren(*args)
-        elif checkType == "NUMPARENTS":
-            returnVal = self.checkNumParents(*args)
+        elif checkType == "CHILDOF":
+            returnVal = self.checkChildOf(*args)
         elif checkType == "CONNECTEDTO":
             returnVal = self.checkConnectedTo(*args)
+        elif checkType == "DESCENDANTOF":
+            returnVal = self.checkDescendantOf(*args)
+        elif checkType == "ISLEAF":
+            returnVal = self.checkIsLeaf(*args)
         elif checkType == "ISOLATED":
             returnVal = self.checkIsolated(*args)
         elif checkType == "ISROOT":
             returnVal = self.checkIsRoot(*args)
-        elif checkType == "ISLEAF":
-            returnVal = self.checkIsLeaf(*args)
-        if isNot:
-            return not returnVal
-        return returnVal
+        elif checkType == "NUMCHILDREN":
+            returnVal = self.checkNumChildren(*args)
+        elif checkType == "NUMPARENTS":
+            returnVal = self.checkNumParents(*args)
+        elif checkType == "PARENTOF":
+            returnVal = self.checkParentOf(*args)
+        return not returnVal if isNot else returnVal
 
     def modifyNumify(self, valueA: str):
         # Get the first number that shows up.
@@ -457,17 +393,15 @@ class LQLQueryBuilder:
             for entity in self.allEntities:
                 for modifyField in modifyFields:
                     entityFieldValue = self.allEntities[entity].get(modifyField)
-                    if entityFieldValue is None:
+                    if entityFieldValue is None or modificationType not in ["UPPERCASE", "LOWERCASE", "NUMIFY"]:
                         newFieldValue = None
                     elif modificationType == "UPPERCASE":
                         newFieldValue = self.modifyUpperCase(entityFieldValue)
                     elif modificationType == "LOWERCASE":
                         newFieldValue = self.modifyLowerCase(entityFieldValue)
-                    elif modificationType == "NUMIFY":
+                    else:
                         newFieldValue = self.modifyNumify(entityFieldValue)
                         numifiedFields.add(modifyField)
-                    else:
-                        newFieldValue = None
                     if newFieldValue is not None:
                         modifiedUIDs.add(entity)
                         self.allEntities[entity][modifyField] = newFieldValue
@@ -476,19 +410,16 @@ class LQLQueryBuilder:
 
     def parseQuery(self, selectClause: str, selectValue: Union[str, list], sourceClause: str,
                    sourceValues: Union[None, list], conditionClauses: Union[None, list],
-                   modifyQueries: Union[list, None] = None) -> \
-            Optional[tuple[Optional[tuple[set, Union[set[Any], set[Union[str, Any]]]]],
-                           Optional[tuple[set[Any], set[Any]]]]]:
+                   modifyQueries: Union[list, None] = None) -> Optional[tuple[Optional[tuple[set, Union[set[Any], set[Union[str, Any]]]]],
+                                                                              Optional[tuple[set[Any], set[Any]]]]]:
 
         if self.databaseSnapshot is None:
             return None
 
         returnValue = None
         modifications = None
-        fieldsToSelect = self.parseSelect(selectClause, selectValue)
-        if fieldsToSelect:
-            entitiesToConsider = self.parseSource(sourceClause, sourceValues, fieldsToSelect)
-            if entitiesToConsider:
+        if fieldsToSelect := self.parseSelect(selectClause, selectValue):
+            if entitiesToConsider := self.parseSource(sourceClause, sourceValues, fieldsToSelect):
                 if conditionClauses:
                     entitiesToConsider = self.parseConditions(conditionClauses, entitiesToConsider)
                 returnValue = (entitiesToConsider, fieldsToSelect)

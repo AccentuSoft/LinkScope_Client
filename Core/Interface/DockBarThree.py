@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import contextlib
 from PySide6 import QtWidgets, QtCore, QtCharts, QtGui
 from Core.Interface import Stylesheets
 from datetime import datetime
@@ -129,16 +130,12 @@ class TimeWidget(QtWidgets.QWidget):
 
         if nodeMinute not in self.timeDetails[nodeYear][nodeMonth][nodeDay][nodeHour]:
             # Sanity check. Should not be able to remove nodes that do not exist, but you never know.
-            if added:
-                self.timeDetails[nodeYear][nodeMonth][nodeDay][nodeHour][nodeMinute] = 1
-            else:
-                self.timeDetails[nodeYear][nodeMonth][nodeDay][nodeHour][nodeMinute] = 0
-        else:
-            if added:
-                self.timeDetails[nodeYear][nodeMonth][nodeDay][nodeHour][nodeMinute] += 1
-            else:
-                if self.timeDetails[nodeYear][nodeMonth][nodeDay][nodeHour][nodeMinute] > 0:
-                    self.timeDetails[nodeYear][nodeMonth][nodeDay][nodeHour][nodeMinute] -= 1
+            self.timeDetails[nodeYear][nodeMonth][nodeDay][nodeHour][nodeMinute] = 1 if added else 0
+
+        elif added:
+            self.timeDetails[nodeYear][nodeMonth][nodeDay][nodeHour][nodeMinute] += 1
+        elif self.timeDetails[nodeYear][nodeMonth][nodeDay][nodeHour][nodeMinute] > 0:
+            self.timeDetails[nodeYear][nodeMonth][nodeDay][nodeHour][nodeMinute] -= 1
 
         if updateGraph:
             self.drawChart([])
@@ -177,15 +174,11 @@ class TimeWidget(QtWidgets.QWidget):
         if minute is not None:
             barsDict = {minute: self.timeDetails[year][month][day][hour][minute]}
             self.currentTimeStep = [year, month, day, hour, minute]
-            self.drawChartHelper(barsDict, self.currentTimeStep)
-
         elif hour is not None:
-            barsDict = {}
-            for minute in self.timeDetails[year][month][day][hour]:
-                barsDict[minute] = self.timeDetails[year][month][day][hour][minute]
-            self.currentTimeStep = [year, month, day, hour]
-            self.drawChartHelper(barsDict, self.currentTimeStep)
+            barsDict = {minute: self.timeDetails[year][month][day][hour][minute]
+                        for minute in self.timeDetails[year][month][day][hour]}
 
+            self.currentTimeStep = [year, month, day, hour]
         elif day is not None:
             barsDict = {}
             for hour in self.timeDetails[year][month][day]:
@@ -193,8 +186,6 @@ class TimeWidget(QtWidgets.QWidget):
                 for minute in self.timeDetails[year][month][day][hour]:
                     barsDict[hour] += self.timeDetails[year][month][day][hour][minute]
             self.currentTimeStep = [year, month, day]
-            self.drawChartHelper(barsDict, self.currentTimeStep)
-
         elif month is not None:
             barsDict = {}
             for day in self.timeDetails[year][month]:
@@ -203,8 +194,6 @@ class TimeWidget(QtWidgets.QWidget):
                     for minute in self.timeDetails[year][month][day][hour]:
                         barsDict[day] += self.timeDetails[year][month][day][hour][minute]
             self.currentTimeStep = [year, month]
-            self.drawChartHelper(barsDict, self.currentTimeStep)
-
         elif year is not None:
             barsDict = {}
             for month in self.timeDetails[year]:
@@ -214,8 +203,6 @@ class TimeWidget(QtWidgets.QWidget):
                         for minute in self.timeDetails[year][month][day][hour]:
                             barsDict[month] += self.timeDetails[year][month][day][hour][minute]
             self.currentTimeStep = [year]
-            self.drawChartHelper(barsDict, self.currentTimeStep)
-
         else:
             barsDict = {}
             for year in self.timeDetails:
@@ -226,7 +213,8 @@ class TimeWidget(QtWidgets.QWidget):
                             for minute in self.timeDetails[year][month][day][hour]:
                                 barsDict[year] += self.timeDetails[year][month][day][hour][minute]
             self.currentTimeStep = []
-            self.drawChartHelper(barsDict, self.currentTimeStep)
+
+        self.drawChartHelper(barsDict, self.currentTimeStep)
 
     def drawChartHelper(self, barsDict: dict, timestep: list):
         timelineSeries = QtCharts.QBarSeries(self.timelineChart)
@@ -241,14 +229,13 @@ class TimeWidget(QtWidgets.QWidget):
             if barsDict[bar] > maxEntityNum:
                 maxEntityNum = barsDict[bar]
             value = ""
-            for step in range(len(timestep)):
+            for step, stepValue in enumerate(timestep):
                 if step <= 2:
-                    value += str(timestep[step]) + '/'
+                    value += f'{str(stepValue)}/'
                     if step == 2:
-                        value = value[:-1]
-                        value += " "
+                        value = f"{value[:-1]} "
                 else:
-                    value += str(timestep[step]) + ':'
+                    value += f'{str(stepValue)}:'
             value += str(bar)
             xAxisValues.append(value)
         self.timelineChart.removeAllSeries()
@@ -276,10 +263,7 @@ class TimeWidget(QtWidgets.QWidget):
             self.timescaleSelector.adjustLabelsToHour()
         elif timesteps == 4:
             self.timescaleSelector.adjustLabelsToMinute()
-        elif timesteps == 5:
-            self.timescaleSelector.adjustLabelsToSecond()
         else:
-            # Just in case.
             self.timescaleSelector.adjustLabelsToSecond()
 
         yAxis.applyNiceNumbers()
@@ -501,7 +485,7 @@ class ChatBox(QtWidgets.QWidget):
         self.setMinimumWidth(500)
         self.setMaximumWidth(500)
 
-        self.chatName = getuser() + ": "
+        self.chatName = f"{getuser()}: "
 
         chatLayout = QtWidgets.QGridLayout()
         self.setLayout(chatLayout)
@@ -536,14 +520,10 @@ class LoggingUpdateThread(QtCore.QThread):
         self.messageHandler = messageHandler
 
     def run(self):
-        while True:
-            if self.endLogging:
-                break
+        while not self.endLogging:
             if not self.messageHandler.logQueue.empty():
-                try:
+                with contextlib.suppress(queue.Empty):
                     logMsg = self.messageHandler.logQueue.get().getMessage()
                     self.loggingSignal.emit(logMsg)
-                except queue.Empty:
-                    pass
             else:
                 self.msleep(100)

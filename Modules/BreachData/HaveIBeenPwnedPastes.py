@@ -31,14 +31,7 @@ class HaveIBeenPwnedPastes:
             emailAddress = entity['Email Address']
             pasteInfoRequest = requests.get(baseURL + quote_plus(emailAddress), headers=requestHeaders)
             statusCode = pasteInfoRequest.status_code
-            if statusCode == 401:
-                return "The HIBP API Key provided is invalid."
-            elif statusCode == 429:
-                sleep(2)
-                continue
-            elif statusCode == 503:
-                return "The HIBP Service is unavailable."
-            elif statusCode == 200:
+            if statusCode == 200:
                 pasteContent = json.loads(pasteInfoRequest.content)
 
                 for paste in pasteContent:
@@ -46,7 +39,7 @@ class HaveIBeenPwnedPastes:
                     pasteSource = paste['Source']
 
                     # If Paste Date is None, then default to entity creation date.
-                    returnResults.append([{'Paste Identifier': pasteSource + ' | ' + pasteID,
+                    returnResults.append([{'Paste Identifier': f'{pasteSource} | {pasteID}',
                                            'Paste Title': paste['Title'],
                                            'Paste Source': pasteSource,
                                            'Paste ID': pasteID,
@@ -55,6 +48,14 @@ class HaveIBeenPwnedPastes:
                                            'Date Created': paste['Date']},
                                           {entity['uid']: {'Resolution': 'Contained in Paste',
                                                            'Notes': ''}}])
+
+            elif statusCode == 401:
+                return "The HIBP API Key provided is invalid."
+            elif statusCode == 429:
+                sleep(2)
+                continue
+            elif statusCode == 503:
+                return "The HIBP Service is unavailable."
             sleep(1.7)
             count += 1
         return returnResults

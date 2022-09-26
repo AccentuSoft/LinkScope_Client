@@ -31,11 +31,7 @@ class URLManager:
         Takes a list of QUrls and returns a list of entities that correspond
         to them.
         """
-        returnValue = []
-        for url in urls:
-            returnValue.append(self.handleURL(url))
-
-        return returnValue
+        return [self.handleURL(url) for url in urls]
 
     def handleURL(self, url):
         parsedURL = urlparse(url.toString())
@@ -66,10 +62,8 @@ class URLManager:
             fileType = magic.from_file(urlPathString, mime=True).split('/')[0]
             if fileType == "video":
                 entityJson = {"Video Name": urlName, "File Path": savePathString, "Entity Type": "Video"}
-                pass
             elif fileType == "image":
                 entityJson = {"Image Name": urlName, "File Path": savePathString, "Entity Type": "Image"}
-                pass
             else:
                 entityJson = {"Document Name": urlName, "File Path": savePathString, "Entity Type": "Document"}
         return entityJson
@@ -85,12 +79,12 @@ class URLManager:
             savePath = valuePath.relative_to(projectFilesPath)
         except ValueError:
             # The file selected is not in Project Files
-            createSymlink = True if self.mainWindow.SETTINGS.value("Project/Symlink or Copy Materials") == "Symlink" \
-                else False
+            createSymlink = self.mainWindow.SETTINGS.value("Project/Symlink or Copy Materials") == "Symlink"
+
             projectFilesPath = Path(self.mainWindow.SETTINGS.value("Project/FilesDir"))
             # Create a unique path in Project Files
             saveHash = hexlify(sha3_512(str(urlPath).encode()).digest()).decode()[:16]  # nosec
-            savePath = projectFilesPath / (saveHash + '|' + urlPath.name)
+            savePath = projectFilesPath / f'{saveHash}|{urlPath.name}'
 
             if createSymlink:
                 symlink(urlPath, savePath)
@@ -103,8 +97,6 @@ class URLManager:
 
     def handleRemoteURL(self, url):
         stringURL = url.toString()
-        if self.mainWindow.RESOURCEHANDLER.runCheckOnAttribute(stringURL, 'Onion'):
-            entity = {'Entity Type': 'Onion Website', 'Onion URL': stringURL}
-        else:
-            entity = {'Entity Type': 'Website', 'URL': stringURL}
-        return entity
+        return {'Entity Type': 'Onion Website', 'Onion URL': stringURL} \
+            if self.mainWindow.RESOURCEHANDLER.runCheckOnAttribute(stringURL, 'Onion') \
+            else {'Entity Type': 'Website', 'URL': stringURL}

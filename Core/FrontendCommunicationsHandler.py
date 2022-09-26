@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 
+import contextlib
 from ast import literal_eval
 from typing import Union
 from pathlib import Path
@@ -165,7 +166,7 @@ class CommunicationsHandler(QtCore.QObject):
         except ConnectionRefusedError:
             self.mainWindow.MESSAGEHANDLER.error("Did not connect: Server not running.", popUp=True, exc_info=False)
         except Exception as exception:
-            self.mainWindow.MESSAGEHANDLER.error("Did not connect: " + str(exception))
+            self.mainWindow.MESSAGEHANDLER.error(f"Did not connect: {str(exception)}")
 
         try:
             if self.sock is not None:
@@ -184,9 +185,7 @@ class CommunicationsHandler(QtCore.QObject):
         """
         Check if socket is in a working state.
         """
-        if self.sock is not None and self.sock.fileno() != -1:
-            return True
-        return False
+        return self.sock is not None and self.sock.fileno() != -1
 
     def close(self) -> None:
         global closeSoftwareLock
@@ -214,14 +213,13 @@ class CommunicationsHandler(QtCore.QObject):
     def decryptTransmission(self, bytesObject) -> Union[bytes, None]:
         decrypter = self.cipher.decryptor()
         try:
-            message = decrypter.update(bytesObject) + decrypter.finalize()
-            return message
+            return decrypter.update(bytesObject) + decrypter.finalize()
         except InvalidTag:
             # If the ciphertext cannot be decrypted to a valid message, return None.
             return None
 
     def transmitMessage(self, messageJson: dict, showErrorOnBrokenPipe: bool = True) -> None:
-        self.mainWindow.MESSAGEHANDLER.debug('Sending Message: ' + str(messageJson))
+        self.mainWindow.MESSAGEHANDLER.debug(f'Sending Message: {messageJson}')
         argEncoded = str(messageJson)
         largeMessageUUID = str(uuid4())
         try:
@@ -244,19 +242,15 @@ class CommunicationsHandler(QtCore.QObject):
         """
         try:
             self.transmitMessage({"Operation": "Close Socket", "Arguments": {}}, showErrorOnBrokenPipe=False)
-        except OSError:
-            # Typically this is due to bad file descriptor, i.e. server is closed.
-            pass
-        except AttributeError:
-            # This happens if no connection was established while the software was running
+        except (OSError, AttributeError):
+            # OSError thrown due to bad file descriptor, i.e. server is closed.
+            # AttributeError thrown if no connection was established while the software was running
             pass
         finally:
-            try:
+            with contextlib.suppress(OSError):
+                # OSError thrown if the socket is already closed.
                 if self.sock is not None:
                     self.sock.shutdown(socket.SHUT_RDWR)
-            except OSError:
-                # This would typically occur if the socket is already closed.
-                pass
             try:
                 self.sock.close()
             finally:
@@ -299,15 +293,12 @@ class CommunicationsHandler(QtCore.QObject):
                         self.inbox.put(preInbox.pop(messageID).get("message"))
 
             except socket.error as socketError:
-                self.mainWindow.MESSAGEHANDLER.error('Socket Error: ' + str(socketError))
+                self.mainWindow.MESSAGEHANDLER.error(f'Socket Error: {str(socketError)}')
                 # If something happens, wait 2 seconds then try again.
-                closeSoftwareLock.acquire()
-                if not closeSoftware:
-                    closeSoftwareLock.release()
-                    time.sleep(2)
-                else:
-                    closeSoftwareLock.release()
-                    break
+                with closeSoftwareLock:
+                    if closeSoftware:
+                        break
+                time.sleep(2)
             except ValueError:
                 # E.g.: Unpack failed: incomplete input
                 # In this case, we are being sent fragmented messages.
@@ -333,14 +324,12 @@ class CommunicationsHandler(QtCore.QObject):
                              continueTimestamp: int = 0) -> None:
         collector_entities_to_send = []
         for entity in collector_entities:
-            try:
+            with contextlib.suppress(KeyError):
                 dereferenced_entity = dict(entity)
                 collector_entities_to_send.append(dereferenced_entity)
                 # Icon is not necessary for any collector as of now: 2022/4/3.
                 # Cutting it out saves data.
                 dereferenced_entity['Icon'] = ''
-            except KeyError:
-                pass
         message = {'Operation': 'Start Server Collector',
                    'Arguments': {
                        'collector_name': collector_name,
@@ -372,14 +361,12 @@ class CommunicationsHandler(QtCore.QObject):
                             resolution_uid: str) -> None:
         resolution_entities_to_send = []
         for entity in resolution_entities:
-            try:
+            with contextlib.suppress(KeyError):
                 dereferenced_entity = dict(entity)
                 resolution_entities_to_send.append(dereferenced_entity)
                 # Icon is not necessary for any resolution as of now: 2022/1/2.
                 # Cutting it out saves data.
                 dereferenced_entity['Icon'] = ''
-            except KeyError:
-                pass
         message = {'Operation': 'Run Resolution',
                    'Arguments': {
                        'resolution_name': resolution_name,
@@ -512,17 +499,13 @@ class CommunicationsHandler(QtCore.QObject):
     # Being verbose is better than prematurely optimizing for a few kbps of
     #   network traffic.
     def receiveDatabaseUpdateEvent(self, entity_json: dict, add: int) -> None:
-        try:
+        with contextlib.suppress(KeyError):
             entity_json['Icon'] = QtCore.QByteArray(b64decode(entity_json['Icon']))
-        except KeyError:
-            pass
         self.receive_project_database_update.emit(entity_json, add)
 
     def sendDatabaseUpdateEvent(self, project_name: str, entity_json: dict, add: int) -> None:
-        try:
+        with contextlib.suppress(KeyError):
             entity_json['Icon'] = entity_json['Icon'].toBase64().data()
-        except KeyError:
-            pass
         message = {"Operation": "Update Project Entities",
                    "Arguments": {
                        'project_name': project_name,
@@ -573,30 +556,28 @@ class CommunicationsHandler(QtCore.QObject):
         """
         if not filePath.exists() or not filePath.is_file():
             return
-        fileHandler = open(filePath, 'rb')
-
-        currThread = threading.currentThread()
-        while getattr(currThread, "continue_running", True):
-            filePart = fileHandler.read(512)
-            if not filePart:
-                messageJson = {"Operation": "File Upload Done",
+        with open(filePath, 'rb') as fileHandler:
+            currThread = threading.currentThread()
+            while getattr(currThread, "continue_running", True):
+                filePart = fileHandler.read(512)
+                if not filePart:
+                    messageJson = {"Operation": "File Upload Done",
+                                   "Arguments": {
+                                       'project_name': project_name,
+                                       'file_name': file_name
+                                   }}
+                    self.transmitMessage(messageJson)
+                    break
+                messageJson = {"Operation": "File Upload",
                                "Arguments": {
                                    'project_name': project_name,
-                                   'file_name': file_name
+                                   'file_name': file_name,
+                                   'file_contents': filePart
                                }}
                 self.transmitMessage(messageJson)
-                break
-            messageJson = {"Operation": "File Upload",
-                           "Arguments": {
-                               'project_name': project_name,
-                               'file_name': file_name,
-                               'file_contents': filePart
-                           }}
-            self.transmitMessage(messageJson)
-        fileHandler.close()
 
     def sendFileAbort(self, project_name: str, file_name: str) -> None:
-        try:
+        with contextlib.suppress(KeyError):
             uploadToAbort = self.uploadingFiles.pop(file_name)
             uploadToAbort.continue_running = False
             messageJson = {"Operation": "File Upload Abort",
@@ -605,8 +586,6 @@ class CommunicationsHandler(QtCore.QObject):
                                'file_name': file_name
                            }}
             self.transmitMessage(messageJson)
-        except KeyError:
-            pass
 
     def scanInbox(self) -> None:
         """
@@ -619,15 +598,14 @@ class CommunicationsHandler(QtCore.QObject):
                 message = self.inbox.get(timeout=0.2)
             except Empty:
                 with closeSoftwareLock:
-                    if not closeSoftware:
-                        time.sleep(0.2)
-                        continue
-                    else:
+                    if closeSoftware:
                         return
+                    time.sleep(0.2)
+                    continue
             if prevMesg == message:
                 # Same message, do not waste time handling.
                 continue
-            self.mainWindow.MESSAGEHANDLER.debug('Message to handle: ' + str(message))
+            self.mainWindow.MESSAGEHANDLER.debug(f'Message to handle: {str(message)}')
             operation = message['Operation']
             arguments = message['Arguments']
             if operation == 'Get Server Resolutions':
@@ -667,8 +645,8 @@ class CommunicationsHandler(QtCore.QObject):
             elif operation == "Start Collector":
                 self.receiveStartCollector(**arguments)
             else:
-                self.mainWindow.MESSAGEHANDLER.warning('Unhandled message: ' + str(message) +
-                                                       ' On Operation: ' + str(operation))
+                self.mainWindow.MESSAGEHANDLER.warning(f'Unhandled message: {str(message)} On Operation: '
+                                                       f'{str(operation)}')
             prevMesg = message
 
     def handleStatusMessage(self, operation: str, message: str, status_code: int) -> None:
@@ -686,61 +664,53 @@ class CommunicationsHandler(QtCore.QObject):
         :param status_code:
         :return:
         """
-        if status_code != 200:
-            if status_code == 404 and message == 'No project with the specified name exists!':
-                self.close_project_signal.emit()
-            else:
-                self.status_message_signal.emit('Operation ' + operation + ' failed with status code ' +
-                                                str(status_code) + ': ' + message, True)
-        else:
-            if operation == 'Create Project':
-                # No need to do anything here. Creating a new project also opens it.
-                pass
-            elif operation == 'Open Project':
-                projectName = message.split(': ', 1)[1]
-                self.open_project_signal.emit(projectName)
-            # Show the user that the server is doing something.
-            elif operation == 'Opening Project':
-                self.status_message_signal.emit(message, True)
-            elif operation == 'Close Project':
-                self.close_project_signal.emit()
-            elif operation == 'Create Canvas':
-                # No need to do anything here. Creating a new canvas also opens it.
-                pass
-            elif operation == 'Open Canvas':
-                canvas_name = message.split(': ', 1)[1]
-                self.open_project_canvas_signal.emit(canvas_name)
-            elif operation == 'Close Canvas':
-                canvas_name = message.split(': ', 1)[1]
-                self.close_project_canvas_signal.emit(canvas_name)
-            elif operation == 'Connect To Server':
-                server_name = message.split(': ', 1)[1]
-                self.connected_to_server_listener.emit(server_name)
-            elif operation == 'File Upload':
-                file_name = message.split(': ', 1)[1]
-                self.file_upload_finished_signal.emit(file_name)
-            elif operation == 'File Download Done':
-                file_name = message.split(': ', 1)[1]
-                self.receiveFileDoneListener(file_name)
-            elif operation == 'Abort Resolution':
+        if status_code == 200:
+            if operation == 'Abort Resolution':
                 # Remove resolution from resolutions list.
                 resolution_uid = message.split(': ', 1)[1]
                 self.remove_server_resolution_from_running_signal.emit(resolution_uid)
+            elif operation == 'Close Canvas':
+                canvas_name = message.split(': ', 1)[1]
+                self.close_project_canvas_signal.emit(canvas_name)
+            elif operation == 'Close Project':
+                self.close_project_signal.emit()
+            elif operation == 'Connect To Server':
+                server_name = message.split(': ', 1)[1]
+                self.connected_to_server_listener.emit(server_name)
+            elif operation in {'Create Project', 'Create Canvas', 'Stop Collector'}:
+                # No need to do anything for these.
+                pass
             elif operation == 'Delete Project':
                 # Remove project from server projects list.
                 project_name = message.split(': ', 1)[1]
                 self.delete_server_project_signal.emit(project_name)
+            elif operation == 'File Download Done':
+                file_name = message.split(': ', 1)[1]
+                self.receiveFileDoneListener(file_name)
             elif operation == 'File Upload Abort':
                 file_name = message.split(': ', 1)[1]
                 # Remove file from uploading files list.
                 self.file_upload_abort_signal.emit(file_name)
-            elif operation == 'Stop Collector':
-                # No need to do anything here - stopping collectors is only done by the client.
-                pass
+            elif operation == 'File Upload':
+                file_name = message.split(': ', 1)[1]
+                self.file_upload_finished_signal.emit(file_name)
+            elif operation == 'Open Canvas':
+                canvas_name = message.split(': ', 1)[1]
+                self.open_project_canvas_signal.emit(canvas_name)
+            elif operation == 'Open Project':
+                projectName = message.split(': ', 1)[1]
+                self.open_project_signal.emit(projectName)
+            elif operation == 'Opening Project':
+                self.status_message_signal.emit(message, True)
             else:
-                self.mainWindow.MESSAGEHANDLER.warning('Unhandled status message: ' + message +
-                                                       ' Code: ' + str(status_code) +
-                                                       ' On Operation: ' + str(operation))
+                self.mainWindow.MESSAGEHANDLER.warning(f'Unhandled status message: {message} Code: {status_code} '
+                                                       f'On Operation: {operation}')
+
+        elif status_code == 404 and message == 'No project with the specified name exists!':
+            self.close_project_signal.emit()
+        else:
+            self.status_message_signal.emit(f'Operation {operation} failed with status code {status_code}: {message}',
+                                            True)
 
     def receiveFile(self, project_name: str, file_name: str, saveDir: Path) -> None:
         # Do not download files already being downloaded.
@@ -761,18 +731,19 @@ class CommunicationsHandler(QtCore.QObject):
             fileHandler.write(file_contents)
         except Exception:
             # In case something goes wrong in the middle of writing.
-            self.mainWindow.MESSAGEHANDLER.warning('Received data for file: ' + file_name +
-                                                   ' but no valid file handler exists for this file.')
+            self.mainWindow.MESSAGEHANDLER.warning(f'Received data for file: {file_name} but no valid file handler '
+                                                   f'exists for this file.')
 
     def receiveFileDoneListener(self, file_name: str) -> None:
         fileHandler = self.downloadingFiles.pop(file_name)
         if fileHandler is None:
-            self.mainWindow.MESSAGEHANDLER.warning('Received file: ' + file_name +
-                                                   ' but no file handler exists for this file.')
+            self.mainWindow.MESSAGEHANDLER.warning(f'Received file: {file_name} but no file handler exists for this '
+                                                   f'file.')
+
             return
 
         fileHandler.close()
-        self.status_message_signal.emit('Finished downloading file from server: ' + file_name, True)
+        self.status_message_signal.emit(f'Finished downloading file from server: {file_name}', True)
 
     def receiveFileAbort(self, project_name: str, file_name: str) -> None:
         messageJson = {"Operation": "File Download Abort",
@@ -813,12 +784,10 @@ class CommunicationsHandler(QtCore.QObject):
         :param file_name:
         :return:
         """
-        try:
+        with contextlib.suppress(KeyError):
             uploadToAbort = self.uploadingFiles.pop(file_name)
             uploadToAbort.continue_running = False
             self.file_upload_abort_signal.emit(file_name)
-        except KeyError:
-            pass
 
     def sendFileAbortAll(self, project_name: str) -> None:
         """
@@ -828,7 +797,7 @@ class CommunicationsHandler(QtCore.QObject):
         :return:
         """
         for file_name in dict(self.uploadingFiles):
-            try:
+            with contextlib.suppress(KeyError):
                 uploadToAbort = self.uploadingFiles.pop(file_name)
                 uploadToAbort.continue_running = False
                 messageJson = {"Operation": "File Upload Abort",
@@ -837,8 +806,6 @@ class CommunicationsHandler(QtCore.QObject):
                                    'file_name': file_name
                                }}
                 self.transmitMessage(messageJson)
-            except KeyError:
-                pass
 
     def receiveFileAbortAll(self, project_name: str) -> None:
         """

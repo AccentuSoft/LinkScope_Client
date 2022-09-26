@@ -33,14 +33,7 @@ class HaveIBeenPwnedBreachDomains:
             primaryField = entity['Domain Name']
             breachInfoRequest = requests.get(baseURL + primaryField, headers=requestHeaders)
             statusCode = breachInfoRequest.status_code
-            if statusCode == 401:
-                return "The HIBP API Key provided is invalid."
-            elif statusCode == 429:
-                sleep(2)
-                continue
-            elif statusCode == 503:
-                return "The HIBP Service is unavailable."
-            elif statusCode == 200:
+            if statusCode == 200:
                 breachContent = json.loads(breachInfoRequest.content)
 
                 for breach in breachContent:
@@ -80,6 +73,13 @@ class HaveIBeenPwnedBreachDomains:
                                            'Date Created': breach['BreachDate']},
                                           {entity['uid']: {'Resolution': 'Contained in Breach',
                                                            'Notes': ''}}])
+            elif statusCode == 401:
+                return "The HIBP API Key provided is invalid."
+            elif statusCode == 429:
+                sleep(2)
+                continue
+            elif statusCode == 503:
+                return "The HIBP Service is unavailable."
             sleep(1.7)
             count += 1
         return returnResults

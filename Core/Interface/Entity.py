@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import contextlib
 from json import dumps
 import math
 from typing import Any, Optional
@@ -69,18 +70,16 @@ class BaseNode(QGraphicsItemGroup):
 
     def updateLabel(self, newText: str = '') -> None:
         if not isinstance(newText, str):
-            newText = str(newText)
+            newText = newText
         if newText != '':
             if len(newText) > 50:
-                newText = newText[:47] + "..."
+                newText = f"{newText[:47]}..."
             self.labelItem.setPlainText(newText)
 
     def removeConnector(self, connector) -> None:
         # Exception could be thrown if the connector is already deleted.
-        try:
+        with contextlib.suppress(ValueError):
             self.connectors.remove(connector)
-        except ValueError:
-            pass
 
     def addConnector(self, connector) -> None:
         self.connectors.append(connector)
@@ -235,10 +234,7 @@ class BaseConnector(QGraphicsItemGroup):
         self.updateLabel(name)
 
         if uid is not None:
-            if isinstance(uid, list) or isinstance(uid, set):
-                self.uid = set(uid)
-            else:
-                self.uid = {uid}
+            self.uid = set(uid) if isinstance(uid, (list, set)) else {uid}
         else:
             self.uid = {(origin.uid, destination.uid)}
 
@@ -262,7 +258,7 @@ class BaseConnector(QGraphicsItemGroup):
 
     def updateLabel(self, newText: str = '') -> None:
         if len(newText) > 50:
-            newText = newText[:47] + "..."
+            newText = f"{newText[:47]}..."
         self.labelItem.setText(newText)
         self.update()
 

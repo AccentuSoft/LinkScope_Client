@@ -61,13 +61,12 @@ class ContainsPhrase:
                     counter += 1
 
             if counter > 0:
-                returnResults.append([{'Phrase': primaryField + ' Contains Phrase: "' + searchPhrase +
-                                                 f'" {counter} times',
+                returnResults.append([{'Phrase': f'{primaryField} Contains Phrase: "{searchPhrase}" {counter} times',
                                        'Entity Type': 'Phrase',
                                        'Notes': f'"{searchPhrase}" was found {counter} time(s)\n'
                                                 f'Offsets: Matches at character indices: '
                                                 f'{(", ".join(map(str, offsets)))}'},
-                                      {uid: {'Resolution': 'Contains Phrase ' + searchPhrase,
+                                      {uid: {'Resolution': f'Contains Phrase {searchPhrase}',
                                              'Notes': ''}}])
 
         return returnResults

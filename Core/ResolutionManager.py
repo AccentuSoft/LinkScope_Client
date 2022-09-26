@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import contextlib
 import importlib.util
 import sys
 from os import listdir
@@ -40,12 +41,10 @@ class ResolutionManager:
                     originTypes = resClassInst.originTypes
                     resultTypes = resClassInst.resultTypes
                     resolutionParameters = resClassInst.parameters
-                    try:
+                    with contextlib.suppress(AttributeError):
                         resolutionCategory = resClassInst.category
                         if not isinstance(resolutionCategory, str):
                             raise AttributeError()
-                    except AttributeError:
-                        pass
                     if self.resolutions.get(resolutionCategory) is None:
                         self.resolutions[resolutionCategory] = {}
                     self.resolutions[resolutionCategory][resNameString] = {'name': resNameString,
@@ -56,9 +55,9 @@ class ResolutionManager:
                                                                            'category': resolutionCategory,
                                                                            'resolution': resClass
                                                                            }
-                    self.messageHandler.info("Loaded Resolution: " + resNameString)
+                    self.messageHandler.info(f"Loaded Resolution: {resNameString}")
             except Exception as e:
-                self.messageHandler.error("Cannot load resolutions from " + str(directory) + "\n Info: " + repr(e))
+                self.messageHandler.error(f"Cannot load resolutions from {str(directory)}" + "\n Info: " + repr(e))
                 exceptionsCount += 1
                 if exceptionsCount > 3:
                     # Will not occur when loading modules with 3 or fewer resolutions, but that should be fine.
@@ -68,30 +67,24 @@ class ResolutionManager:
     def getResolutionParameters(self, resolutionCategory, resolutionNameString):
         resolutionsList = self.resolutions.get(resolutionCategory)
         if resolutionsList is not None and resolutionNameString in resolutionsList:
-            parameters = self.resolutions[resolutionCategory][resolutionNameString]['parameters']
-            return parameters
+            return self.resolutions[resolutionCategory][resolutionNameString]['parameters']
         return None
 
     def getResolutionOriginTypes(self, resolutionCategoryNameString: str) -> Union[list, None]:
         resolutionCategory, resolutionName = resolutionCategoryNameString.split('/', 1)
-        try:
+        with contextlib.suppress(TypeError):
             if resolutionName in self.resolutions.get(resolutionCategory):
                 originTypes = self.resolutions[resolutionCategory][resolutionName]['originTypes']
                 if '*' in originTypes:
                     originTypes = self.mainWindow.RESOURCEHANDLER.getAllEntities()
                 return originTypes
-        except TypeError:
-            pass
         return None
 
     def getResolutionDescription(self, resolutionCategoryNameString: str) -> Union[str, None]:
         resolutionCategory, resolutionName = resolutionCategoryNameString.split('/', 1)
-        try:
+        with contextlib.suppress(TypeError):
             if resolutionName in self.resolutions.get(resolutionCategory):
-                resolutionDescription = self.resolutions[resolutionCategory][resolutionName].get('description', '')
-                return resolutionDescription
-        except TypeError:
-            pass
+                return self.resolutions[resolutionCategory][resolutionName].get('description', '')
         return None
 
     def loadResolutionsFromServer(self, serverRes) -> None:
@@ -130,9 +123,7 @@ class ResolutionManager:
         return result
 
     def getResolutionsInCategory(self, category) -> list:
-        if category in self.resolutions:
-            return list(self.resolutions[category])
-        return []
+        return list(self.resolutions[category]) if category in self.resolutions else []
 
     def getAllResolutions(self) -> list:
         categories = self.getResolutionCategories()
@@ -144,7 +135,7 @@ class ResolutionManager:
     def executeResolution(self, resolutionCategoryNameString: str, resolutionEntitiesInput: list, parameters: dict,
                           resolutionUID: str):
         resolutionCategory, resolutionName = resolutionCategoryNameString.split('/', 1)
-        try:
+        with contextlib.suppress(TypeError):
             if resolutionName in self.resolutions.get(resolutionCategory):
                 if self.resolutions[resolutionCategory][resolutionName].get('resolution') == '':
                     # If resolution class does not exist locally, then assume it exists on the server.
@@ -153,10 +144,7 @@ class ResolutionManager:
                     # Returning a bool, so we know that the resolution is running on the server.
                     return True
                 resolutionClass = self.resolutions[resolutionCategory][resolutionName]['resolution']()
-                result = resolutionClass.resolution(resolutionEntitiesInput, parameters)
-                return result
-        except TypeError:
-            pass
+                return resolutionClass.resolution(resolutionEntitiesInput, parameters)
         return None
 
     def createMacro(self, resolutionList: list) -> str:
@@ -198,7 +186,7 @@ class ResolutionManager:
 
     def save(self):
         macroFilePath = self.getMacroFilePath()
-        macroFilePathTmp = macroFilePath.with_suffix(macroFilePath.suffix + '.tmp')
+        macroFilePathTmp = macroFilePath.with_suffix(f'{macroFilePath.suffix}.tmp')
 
         with open(macroFilePathTmp, "wb") as macroFile:
             dump(self.macros, macroFile)

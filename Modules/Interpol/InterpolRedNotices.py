@@ -38,8 +38,8 @@ class InterpolRedNotices:
 
                 noticeNotes = ""
                 for warrant in noticeContents['arrest_warrants']:
-                    noticeNotes += 'CHARGE: ' + warrant.get('charge') + '\nFROM COUNTRY: ' + \
-                                   warrant.get('issuing_country_id') + '\n\n'
+                    noticeNotes += f"CHARGE: {warrant.get('charge')}\nFROM COUNTRY: " \
+                                   f"{warrant.get('issuing_country_id')}\n\n"
 
                 try:
                     thumbnailPictureURL = noticeContents['_links']['thumbnail']['href']
@@ -84,7 +84,7 @@ class InterpolRedNotices:
         for entity in entityJsonList:
             uid = entity['uid']
             entityType = entity['Entity Type']
-            if entityType == 'Person' or entityType == 'Politically Exposed Person':
+            if entityType in ['Person', 'Politically Exposed Person']:
                 primaryField = entity['Full Name'].strip()
             elif entityType == 'Phrase':
                 primaryField = entity['Phrase'].strip()
@@ -95,17 +95,13 @@ class InterpolRedNotices:
             # This ensures that we will not miss any matches.
             nameFragments = primaryField.split(' ')
             firstName = nameFragments[0].upper()
-            if len(nameFragments) == 1:
-                lastName = None
-            else:
-                lastName = nameFragments[-1].upper()
-
+            lastName = None if len(nameFragments) == 1 else nameFragments[-1].upper()
             firstRequestURL = firstRequestPart1 + firstName
             if lastName is not None:
-                firstRequestURL += "&name=" + lastName
+                firstRequestURL += f"&name={lastName}"
             firstRequestURL += firstRequestPart2
 
-            firstRequest = requests.get(firstRequestURL + "1" + firstRequestPart3)
+            firstRequest = requests.get(f"{firstRequestURL}1{firstRequestPart3}")
 
             pageContents = firstRequest.json()
             lastPage = int(pageContents['_links']['last']['href'].split('&page=')[1].split('&')[0])

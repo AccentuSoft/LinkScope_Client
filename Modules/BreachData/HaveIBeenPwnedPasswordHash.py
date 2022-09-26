@@ -35,24 +35,24 @@ class HaveIBeenPwnedPasswordHash:
 
             breachInfoRequest = requests.get(baseURL + hashPrefix, headers=requestHeaders)
             statusCode = breachInfoRequest.status_code
-            if statusCode == 401:
+            if statusCode == 200:
+                pwnedPasswordContent = breachInfoRequest.content.decode('utf-8').split('\r\n')
+
+                for password in pwnedPasswordContent:
+                    if hashSuffix in password:
+                        returnResults.append([{'Phrase': f"Password Hash Found {password.split(':')[1]} times "
+                                                         f"in breach data.",
+                                               'Entity Type': 'Phrase'},
+                                              {entity['uid']: {'Resolution': 'Pwned Password',
+                                                               'Notes': ''}}])
+                        break
+            elif statusCode == 401:
                 return "The HIBP API Key provided is invalid."
             elif statusCode == 429:
                 sleep(2)
                 continue
             elif statusCode == 503:
                 return "The HIBP Service is unavailable."
-            elif statusCode == 200:
-                pwnedPasswordContent = breachInfoRequest.content.decode('utf-8').split('\r\n')
-
-                for password in pwnedPasswordContent:
-                    if hashSuffix in password:
-                        returnResults.append([{'Phrase': 'Password Hash Found ' + password.split(':')[1] +
-                                                         ' times in breach data.',
-                                               'Entity Type': 'Phrase'},
-                                              {entity['uid']: {'Resolution': 'Pwned Password',
-                                                               'Notes': ''}}])
-                        break
             sleep(1.7)
             count += 1
         return returnResults

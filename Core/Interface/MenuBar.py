@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 
+import contextlib
 import hashlib
 import re
 import json
@@ -508,11 +509,9 @@ class MenuBar(QtWidgets.QMenuBar):
                         fileContents = []
                         with open(fileDirectory, 'r') as importFile:
                             # Read a maximum of 3 lines from the file:
-                            count = 0
-                            for line in importFile:
+                            for index, line in enumerate(importFile):
                                 fileContents.append(line.strip())
-                                count += 1
-                                if count >= 3:
+                                if index > 2:
                                     break
 
                         importTextFileDialog = ImportFromTextFileDialog(self, fileContents)
@@ -561,10 +560,10 @@ class MenuBar(QtWidgets.QMenuBar):
                         importEntityCSVDialog = ImportEntityFromCSVFile(self, csvDF)
                         if importEntityCSVDialog.exec_():
                             attributeRows = [comboBox.currentText()
-                                             for comboBox in importEntityCSVDialog.fieldMappingComboBoxes]
-                            for attribute in range(len(attributeRows)):
-                                if attributeRows[attribute] == '':
-                                    attributeRows[attribute] = csvDF.columns[attribute]
+                                             if comboBox.currentText() else
+                                             csvDF.columns[index]
+                                             for index, comboBox in
+                                             enumerate(importEntityCSVDialog.fieldMappingComboBoxes)]
 
                             if importEntityCSVDialog.importToCanvasCheckbox.isChecked():
                                 sceneToAddTo = self.parent().centralWidget().tabbedPane.getSceneByName(
@@ -572,8 +571,8 @@ class MenuBar(QtWidgets.QMenuBar):
 
                             entityTypeToImportAs = importEntityCSVDialog.entityTypeChoiceDropdown.currentText()
                             for row in csvDF.itertuples(index=False):
-                                newEntityJSON = {str(attributeRows[key]).strip(): str(row[key]).strip()
-                                                 for key in range(len(attributeRows))}
+                                newEntityJSON = {str(value).strip(): str(row[index]).strip()
+                                                 for index, value in enumerate(attributeRows)}
                                 newEntityJSON['Entity Type'] = entityTypeToImportAs
                                 if newEntityJSON not in newNodes:
                                     primaryAttr = newEntityJSON[
@@ -608,9 +607,9 @@ class MenuBar(QtWidgets.QMenuBar):
                         importLinksCSVDialog = ImportLinksFromCSVFile(self, csvDF)
                         if importLinksCSVDialog.exec_():
                             unmapped = []
-                            for columnIndex in range(len(importLinksCSVDialog.fieldMappingComboBoxes)):
-                                columnMapping = importLinksCSVDialog.fieldMappingComboBoxes[columnIndex].currentText()
-                                if columnMapping != '':
+                            for columnIndex, columnValue in enumerate(importLinksCSVDialog.fieldMappingComboBoxes):
+                                columnMapping = columnValue.currentText()
+                                if columnMapping:
                                     csvDF.rename(columns={csvDF.columns[columnIndex]: columnMapping}, inplace=True)
                                 elif not importLinksCSVDialog.fieldIncludeCheckBoxes[columnIndex].isChecked():
                                     unmapped.append(csvDF.columns[columnIndex])
@@ -628,10 +627,10 @@ class MenuBar(QtWidgets.QMenuBar):
                                     entityTwoType = importLinksCSVDialog.entityTwoTypeChoiceDropdown.currentText()
 
                                     attributeRows = [comboBox.currentText()
-                                                     for comboBox in createLinkEntitiesDialog.fieldMappingComboBoxes]
-                                    for attribute in range(len(attributeRows)):
-                                        if attributeRows[attribute] == '':
-                                            attributeRows[attribute] = fieldsRemainingDF.columns[attribute]
+                                                     if comboBox.currentText()
+                                                     else fieldsRemainingDF.columns[index]
+                                                     for index, comboBox
+                                                     in enumerate(createLinkEntitiesDialog.fieldMappingComboBoxes)]
 
                                     entityTypeToImportAs = \
                                         createLinkEntitiesDialog.entityTypeChoiceDropdown.currentText()
@@ -642,14 +641,13 @@ class MenuBar(QtWidgets.QMenuBar):
                                     for entityRow, linkRow in zip(fieldsRemainingDF.itertuples(index=False),
                                                                   csvDF.itertuples(index=False)):
 
-                                        count = 0
                                         linkJSON = {}
                                         entityOneJSON = {}
                                         entityTwoJSON = {}
                                         resolutionID = ""
                                         notes = ""
 
-                                        for column in linkRow:
+                                        for count, column in enumerate(linkRow):
                                             column = str(column)
                                             mapping = csvDF.columns[count]
                                             if mapping == 'Entity One':
@@ -674,7 +672,6 @@ class MenuBar(QtWidgets.QMenuBar):
                                                 resolutionID = column
                                             else:
                                                 linkJSON[mapping] = column
-                                            count += 1
 
                                         # We still need to check if both nodes exist, since errors may have occurred
                                         #   during their creation.
@@ -696,12 +693,12 @@ class MenuBar(QtWidgets.QMenuBar):
                                             linkJSONTwo = dict(linkJSON)
                                             linkJSONTwo['Resolution'] += ' IN'
 
-                                            newEntityJSON = {str(attributeRows[key]): str(entityRow[key]).strip()
-                                                             for key in range(len(attributeRows))}
+                                            newEntityJSON = {str(value): str(entityRow[index]).strip()
+                                                             for index, value in enumerate(attributeRows)}
                                             newEntityJSON['Entity Type'] = entityTypeToImportAs
 
                                             if randomizePrimary:
-                                                newEntityJSON[newEntityPrimaryAttribute] += ' | ' + str(uuid4())
+                                                newEntityJSON[newEntityPrimaryAttribute] += f' | {str(uuid4())}'
 
                                             newNode = self.parent().LENTDB.getEntityOfType(
                                                 newEntityJSON[newEntityPrimaryAttribute], entityTypeToImportAs)
@@ -734,14 +731,13 @@ class MenuBar(QtWidgets.QMenuBar):
                                     entityTwoType = importLinksCSVDialog.entityTwoTypeChoiceDropdown.currentText()
 
                                     for row in csvDF.itertuples(index=False):
-                                        count = 0
                                         linkJSON = {}
                                         entityOneJSON = {}
                                         entityTwoJSON = {}
                                         resolutionID = ""
                                         notes = ""
 
-                                        for column in row:
+                                        for count, column in enumerate(row):
                                             column = str(column)
                                             mapping = csvDF.columns[count]
                                             if mapping == 'Entity One':
@@ -756,7 +752,6 @@ class MenuBar(QtWidgets.QMenuBar):
                                                 resolutionID = column
                                             else:
                                                 linkJSON[mapping] = column
-                                            count += 1
 
                                         if (entityOneJSON is not None) and (entityTwoJSON is not None):
                                             linkJSON['uid'] = (entityOneJSON['uid'], entityTwoJSON['uid'])
@@ -815,14 +810,8 @@ class MenuBar(QtWidgets.QMenuBar):
 
         if canvasSaveDialogAccept and fileDirectory != '':
             canvas = canvasSaveDialog.chosenCanvasDropdown.currentText()
-            if canvasSaveDialog.justViewportChoice.isChecked():
-                justViewport = True
-            else:
-                justViewport = False
-            if canvasSaveDialog.transparentChoice.isChecked():
-                transparentBackground = True
-            else:
-                transparentBackground = False
+            justViewport = canvasSaveDialog.justViewportChoice.isChecked()
+            transparentBackground = canvasSaveDialog.transparentChoice.isChecked()
             picture = self.parent().getPictureOfCanvas(canvas, justViewport, transparentBackground)
             picture.save(fileDirectory, "PNG")
 
@@ -957,10 +946,7 @@ class MenuBar(QtWidgets.QMenuBar):
             self.parent().FCOM.askServerForFileList(project_name)
 
     def forceDatabaseSync(self) -> None:
-        if self.parent().FCOM.isConnected():
-            project_name = self.parent().SETTINGS.value("Project/Server/Project")
-            with self.parent().LENTDB.dbLock:
-                self.parent().FCOM.syncDatabase(project_name, self.parent().LENTDB.database)
+        self.parent().syncDatabase()
 
     def uploadFiles(self) -> None:
         self.parent().uploadFiles()
@@ -1036,10 +1022,8 @@ class MenuBar(QtWidgets.QMenuBar):
         selectedURLs = SearchEngineDialog(self)
 
         if selectedURLs.exec_():
-            selectedEngineURLs = []
-            for engineCheckbox in selectedURLs.searchEngineWidgets:
-                if engineCheckbox.isChecked():
-                    selectedEngineURLs.append(engineCheckbox.searchAttr)
+            selectedEngineURLs = [engineCheckbox.searchAttr for engineCheckbox in selectedURLs.searchEngineWidgets
+                                  if engineCheckbox.isChecked()]
             searchTerms = []
             for item in currentScene.selectedItems():
                 if isinstance(item, BaseNode):
@@ -1057,10 +1041,8 @@ class MenuBar(QtWidgets.QMenuBar):
         selectedURLs = SearchImageEngineDialog(self)
 
         if selectedURLs.exec_():
-            selectedEngineURLs = []
-            for engineCheckbox in selectedURLs.searchEngineWidgets:
-                if engineCheckbox.isChecked():
-                    selectedEngineURLs.append(engineCheckbox.searchAttr)
+            selectedEngineURLs = [engineCheckbox.searchAttr for engineCheckbox in selectedURLs.searchEngineWidgets
+                                  if engineCheckbox.isChecked()]
             for searchEngineURL in selectedEngineURLs:
                 try:
                     QtGui.QDesktopServices.openUrl(searchEngineURL)
@@ -1092,7 +1074,7 @@ class MenuBar(QtWidgets.QMenuBar):
                     except KeyError:
                         continue
 
-        if len(websiteEntities) == 0:
+        if not websiteEntities:
             self.parent().MESSAGEHANDLER.warning('Please select the "Website" nodes that correspond to the sites that '
                                                  'you wish to download, and re-run the Download Selected Websites '
                                                  'operation.',
@@ -1121,7 +1103,7 @@ class MenuBar(QtWidgets.QMenuBar):
                     except KeyError:
                         continue
 
-        if len(websiteEntities) == 0:
+        if not websiteEntities:
             self.parent().MESSAGEHANDLER.warning('Please select the "Website" nodes that correspond to the sites that '
                                                  'you wish to download, and re-run the Download Selected Websites '
                                                  'operation.',
@@ -1153,9 +1135,8 @@ class MenuBar(QtWidgets.QMenuBar):
                     fileName = itemPrimaryField + ' | ' + itemJSON.get('Date Last Edited', str(time.time_ns())) + '.txt'
                     fileName = fileName.replace('/', '+')
                     fileName = fileName.replace('\\', '+')
-                    f = open(baseFilesPath / fileName, "w")
-                    f.write(itemJSONNotes)
-                    f.close()
+                    with open(baseFilesPath / fileName, "w") as f:
+                        f.write(itemJSONNotes)
                     newNodes.append([{'Document Name': fileName,
                                       'File Path': fileName,
                                       'Entity Type': 'Document'},
@@ -1172,7 +1153,7 @@ class MenuBar(QtWidgets.QMenuBar):
 
         :return:
         """
-        if platform.system() != 'Linux' and platform.system() != 'Windows':
+        if platform.system() not in ['Linux', 'Windows']:
             self.parent().setStatus('Importing tabs not supported on platforms other than Linux and Windows.')
             self.parent().MESSAGEHANDLER.warning('Importing tabs not supported on platforms '
                                                  'other than Linux and Windows.', popUp=True)
@@ -1279,7 +1260,7 @@ class MenuBar(QtWidgets.QMenuBar):
                 del newNodeJSON[newNodePrimaryFieldKey]
                 try:
                     notesField = newNodeJSON.pop('Notes')
-                    existingEntityJSON['Notes'] += '\n' + notesField
+                    existingEntityJSON['Notes'] += f'\n{notesField}'
                 except KeyError:
                     # If no new field was actually added to the entity, don't re-add to the database
                     if len(newNodeJSON) == 0:
@@ -1303,10 +1284,9 @@ class MenuBar(QtWidgets.QMenuBar):
                 allEntityUIDs.append(entityJson['uid'])
                 allEntityPrimaryFieldsAndTypes.append((newNodePrimaryField, newNodeEntityType))
 
-        for resultListIndex in range(len(resolution_result)):
-            if len(resolution_result[resultListIndex]) > 1:
-                outputEntityUID = newNodeUIDs[resultListIndex]
-                parentsDict = resolution_result[resultListIndex][1]
+        for parentsDictHolder, outputEntityUID in zip(resolution_result, newNodeUIDs):
+            if len(parentsDictHolder) > 1:
+                parentsDict = parentsDictHolder[1]
                 for parentID in parentsDict:
                     parentUID = parentID
                     if isinstance(parentUID, int):
@@ -1319,7 +1299,7 @@ class MenuBar(QtWidgets.QMenuBar):
                         if newLinkUID in allLinks:
                             linkJson = self.parent().LENTDB.getLinkIfExists(newLinkUID)
                             if resolutionName not in linkJson['Notes']:
-                                linkJson['Notes'] += '\nConnection also produced by Resolution: ' + resolutionName
+                                linkJson['Notes'] += f'\nConnection also produced by Resolution: {resolutionName}'
                                 self.parent().LENTDB.addLink(linkJson, fromServer=True)
                         else:
                             self.parent().LENTDB.addLink({'uid': newLinkUID, 'Resolution': resolutionName,
@@ -1351,7 +1331,7 @@ class DeleteProjectConfirmationDialog(QtWidgets.QDialog):
         self.mainWindowObject = mainWindowObject
         self.setWindowTitle('Delete Server Project')
 
-        resolutionsLabel = QtWidgets.QLabel('Delete Project: "' + currentServerProject + '" ?')
+        resolutionsLabel = QtWidgets.QLabel(f'Delete Project: "{currentServerProject}" ?')
         resolutionsLabel.setWordWrap(True)
 
         resolutionsLabel.setAlignment(QtCore.Qt.AlignCenter)
@@ -1626,7 +1606,7 @@ class CollectorsDialog(QtWidgets.QDialog):
             self.connectedToServerFormWidgetLayout = QtWidgets.QVBoxLayout()
 
             for category in collectorsDict:
-                categoryLabel = QtWidgets.QLabel("Category: " + str(category))
+                categoryLabel = QtWidgets.QLabel(f"Category: {str(category)}")
                 self.connectedToServerFormWidgetLayout.addWidget(categoryLabel)
                 for collector in collectorsDict[category]:
                     newCollectorWidget = QtWidgets.QWidget()
@@ -1651,8 +1631,8 @@ class CollectorsDialog(QtWidgets.QDialog):
                     newCollectorWidgetLayout.addWidget(newCollectorInstanceTree, 1, 0, 2, 2)
 
                     if runningCollectors is not None:
-                        for runningCollectorCategory in runningCollectors:
-                            for runningCollector in runningCollectors[runningCollectorCategory][collector]:
+                        for value in runningCollectors.values():
+                            for runningCollector in value[collector]:
                                 newTreeItem = QtWidgets.QTreeWidgetItem(newCollectorInstanceTree)
                                 newTreeItem.setText(0, runningCollector['uid'])
                                 stopButton = QtWidgets.QPushButton("Stop")
@@ -1683,10 +1663,10 @@ class CollectorsDialog(QtWidgets.QDialog):
                                                           newCollector.chosenParameters)
                 self.mainWindow.MESSAGEHANDLER.info('Starting server collector: ' + collector_name)
             except Exception as e:
-                self.mainWindow.MESSAGEHANDLER.error('Error starting server collector: ' + str(e))
+                self.mainWindow.MESSAGEHANDLER.error(f'Error starting server collector: {str(e)}')
 
     def stopSelectedCollector(self, collectorToStop: str):
-        self.mainWindow.MESSAGEHANDLER.info('Stopping server collector with UID: ' + collectorToStop)
+        self.mainWindow.MESSAGEHANDLER.info(f'Stopping server collector with UID: {collectorToStop}')
         self.mainWindow.FCOM.stopServerCollector(collectorToStop)
         self.runningCollectorTreeItems[collectorToStop][1].takeTopLevelItem(
             self.runningCollectorTreeItems[collectorToStop][1].indexOfTopLevelItem(
@@ -1890,7 +1870,7 @@ class ImportLinksFromCSVFile(QtWidgets.QDialog):
         tableFieldCheckBoxesWidget = QtWidgets.QWidget()
         tableFieldCheckBoxesWidgetLayout = QtWidgets.QHBoxLayout()
         tableFieldCheckBoxesWidget.setLayout(tableFieldCheckBoxesWidgetLayout)
-        for fieldIndex in range(columnNumber):
+        for _ in range(columnNumber):
             checkBoxWidget = QtWidgets.QCheckBox('Include Field? ')
             checkBoxWidget.setToolTip('Check the box to include this column as an attribute for the resolution.')
             self.fieldIncludeCheckBoxes.append(checkBoxWidget)
@@ -1955,9 +1935,7 @@ class ImportLinksFromCSVFile(QtWidgets.QDialog):
         importLayout.addWidget(buttonsWidget)
 
     def changeMappingForField(self, newIndex):
-        for comboBoxIndex in range(len(self.fieldMappingComboBoxes)):
-            comboBox = self.fieldMappingComboBoxes[comboBoxIndex]
-            checkBox = self.fieldIncludeCheckBoxes[comboBoxIndex]
+        for comboBox, checkBox in zip(self.fieldMappingComboBoxes, self.fieldIncludeCheckBoxes):
             if comboBox.currentIndex() == newIndex:
                 if newIndex == 0:
                     checkBox.setEnabled(True)
@@ -1967,9 +1945,8 @@ class ImportLinksFromCSVFile(QtWidgets.QDialog):
                         checkBox.setChecked(True)
                     else:
                         comboBox.setCurrentIndex(0)
-                        if newIndex != 0:
-                            checkBox.setEnabled(True)
-                            checkBox.setChecked(False)
+                        checkBox.setEnabled(True)
+                        checkBox.setChecked(False)
 
     def checkIfEntitiesAreMapped(self):
         # Check if Entity One and Entity Two labels are assigned, do not proceed if not.
@@ -2037,7 +2014,7 @@ class ImportLinkEntitiesFromCSVFile(QtWidgets.QDialog):
         tableFieldAttributeMapping = QtWidgets.QWidget()
         tableFieldAttributeMappingLayout = QtWidgets.QHBoxLayout()
         tableFieldAttributeMapping.setLayout(tableFieldAttributeMappingLayout)
-        for fieldIndex in range(columnNumber):
+        for _ in range(columnNumber):
             fieldMappingWidget = QtWidgets.QComboBox()
             fieldMappingWidget.setEditable(False)
             fieldMappingWidget.currentIndexChanged.connect(self.changeMappingForField)
@@ -2090,12 +2067,7 @@ class ImportLinkEntitiesFromCSVFile(QtWidgets.QDialog):
     def confirmThatPrimaryFieldIsMapped(self):
         primaryField = self.parent().parent().RESOURCEHANDLER.getPrimaryFieldForEntityType(
             self.entityTypeChoiceDropdown.currentText())
-        primaryFieldMapped = False
-        for comboBox in self.fieldMappingComboBoxes:
-            if comboBox.currentText() == primaryField:
-                # Just doing self.accept() here will not work.
-                primaryFieldMapped = True
-                break
+        primaryFieldMapped = any(comboBox.currentText() == primaryField for comboBox in self.fieldMappingComboBoxes)
         if primaryFieldMapped:
             self.accept()
         else:
@@ -2143,7 +2115,7 @@ class ImportEntityFromCSVFile(QtWidgets.QDialog):
         tableFieldAttributeMapping = QtWidgets.QWidget()
         tableFieldAttributeMappingLayout = QtWidgets.QHBoxLayout()
         tableFieldAttributeMapping.setLayout(tableFieldAttributeMappingLayout)
-        for fieldIndex in range(columnNumber):
+        for _ in range(columnNumber):
             fieldMappingWidget = QtWidgets.QComboBox()
             fieldMappingWidget.setEditable(False)
             fieldMappingWidget.currentIndexChanged.connect(self.changeMappingForField)
@@ -2321,10 +2293,10 @@ class ImportFromTextFileDialog(QtWidgets.QDialog):
         textTable = QtWidgets.QTableWidget(3, 1, self)
         textTable.setWordWrap(True)
         textTable.setFixedWidth(450)
-        for line in range(len(fileContents)):
-            columnItem = QtWidgets.QTableWidgetItem(fileContents[line])
+        for lineIndex, lineValue in enumerate(fileContents):
+            columnItem = QtWidgets.QTableWidgetItem(lineValue)
             columnItem.setFlags(columnItem.flags() & ~QtCore.Qt.ItemIsEditable)
-            textTable.setItem(line, 0, columnItem)
+            textTable.setItem(lineIndex, 0, columnItem)
         textTable.setColumnWidth(0, 450)
         textTable.setHorizontalHeaderLabels(['File Entities Preview'])
 
@@ -2561,8 +2533,7 @@ class ScreenshotWebsiteThread(QtCore.QThread):
                 )
                 urlPath = Path(os.environ['APPDATA']) / 'Mozilla' / 'Firefox' / 'Profiles'
 
-            tabsFilePath = list(urlPath.glob('*default*/sessionstore-backups/recovery.jsonlz4'))
-            if len(tabsFilePath) != 0:
+            if tabsFilePath := list(urlPath.glob('*default*/sessionstore-backups/recovery.jsonlz4')):
                 tabsFilePath = tabsFilePath[0]
                 cookiesDatabasePath = tabsFilePath.parent.parent / 'cookies.sqlite'
                 browserCookies = self.menuBar.firefoxCookiesHelper(cookiesDatabasePath)
@@ -2623,7 +2594,7 @@ class SaveWebsiteThread(QtCore.QThread):
             responseURL = response.url
             responseURLFragments = responseURL.split('/')[3:]
             savePath = currTempDir
-            try:
+            with contextlib.suppress(Exception):
                 if response.ok:
                     for fragment in responseURLFragments[:-1]:
                         savePath /= fragment
@@ -2632,12 +2603,10 @@ class SaveWebsiteThread(QtCore.QThread):
                         filename = responseURLFragments[-1]
                     except IndexError:
                         filename = ''
-                    if filename == '':
+                    if not filename:
                         filename = 'index.html'
                     with open(savePath / filename, "wb") as fileToWrite:
                         fileToWrite.write(response.body())
-            except Exception:
-                pass
 
         with sync_playwright() as p:
             browser = p.firefox.launch()
@@ -2655,8 +2624,7 @@ class SaveWebsiteThread(QtCore.QThread):
                 )
                 urlPath = Path(os.environ['APPDATA']) / 'Mozilla' / 'Firefox' / 'Profiles'
 
-            tabsFilePath = list(urlPath.glob('*default*/sessionstore-backups/recovery.jsonlz4'))
-            if len(tabsFilePath) != 0:
+            if tabsFilePath := list(urlPath.glob('*default*/sessionstore-backups/recovery.jsonlz4')):
                 tabsFilePath = tabsFilePath[0]
                 cookiesDatabasePath = tabsFilePath.parent.parent / 'cookies.sqlite'
                 browserCookies = self.menuBar.firefoxCookiesHelper(cookiesDatabasePath)
@@ -2673,13 +2641,11 @@ class SaveWebsiteThread(QtCore.QThread):
                     archiveDir = baseFilesPath / (tldextract.extract(website).fqdn + ' Snapshot ' + str(time.time_ns()))
 
                     for _ in range(3):
-                        try:
+                        with contextlib.suppress(TimeoutError):
                             page.goto(website)
                             page.keyboard.press("End")
                             page.wait_for_load_state("networkidle")
                             break
-                        except TimeoutError:
-                            pass
                     progressValue += 1
                     self.progressSignal.emit(progressValue)
 
@@ -2734,11 +2700,7 @@ class ImportBrowserTabsThread(QtCore.QThread):
                         )
                         urlPath = Path(os.environ['APPDATA']) / 'Mozilla' / 'Firefox' / 'Profiles'
 
-                    tabsFilePath = list(urlPath.glob('*default*/sessionstore-backups/recovery.jsonlz4'))
-                    if len(tabsFilePath) == 0:
-                        self.mainWindow.warningSignalListener.emit('No Firefox session detected. Skipping importing '
-                                                                   'from Firefox.', True)
-                    else:
+                    if tabsFilePath := list(urlPath.glob('*default*/sessionstore-backups/recovery.jsonlz4')):
                         tabsFilePath = tabsFilePath[0]
                         if recordSession:
                             tabsToOpen = []
@@ -2837,23 +2799,20 @@ class ImportBrowserTabsThread(QtCore.QThread):
                                         if urlSaveDir is not None:
                                             timeNow = str(datetime.now().timestamp() * 1000000).split('.')[0]
                                             screenshotSavePath = str(urlSaveDir / (
-                                                    actualURL.replace('/', '+') +
-                                                    ' ' + timeNow + ' screenshot.png'))
+                                                    actualURL.replace('/', '+') + ' ' + timeNow + ' screenshot.png'))
                                             screenshotSavePath = screenshotSavePath.replace('\\', '+')
 
-                                            screenshotEntity = {'Image Name': decodedPath + ' Screenshot ' +
-                                                                              timeNow,
+                                            screenshotEntity = {'Image Name': f"{decodedPath} Screenshot {timeNow}",
                                                                 'File Path': screenshotSavePath,
                                                                 'Entity Type': 'Image'}
-
                                             try:
                                                 page.screenshot(path=screenshotSavePath, full_page=True)
                                             except Error:
                                                 try:
                                                     page.screenshot(path=screenshotSavePath, full_page=False)
                                                 except Error:
-                                                    screenshotEntity = {'Phrase': 'Could not take screenshot of ' +
-                                                                                  decodedPath,
+                                                    screenshotEntity = {'Phrase': f'Could not take screenshot of '
+                                                                                  f'{decodedPath}',
                                                                         'Entity Type': 'Phrase'}
 
                                             returnResults.append(
@@ -2866,10 +2825,12 @@ class ImportBrowserTabsThread(QtCore.QThread):
                                     newEntity.append({historyMark: {'Resolution': 'Next Page'}})
                                 historyMark = len(returnResults)
                             returnResults.append(newEntity)
-
+                    else:
+                        self.mainWindow.warningSignalListener.emit('No Firefox session detected. Skipping importing '
+                                                                   'from Firefox.', True)
                     browser.close()
                 except Error as e:
-                    self.mainWindow.warningSignalListener.emit('Cannot import tabs from Firefox: ' + str(repr(e)), True)
+                    self.mainWindow.warningSignalListener.emit(f'Cannot import tabs from Firefox: {str(repr(e))}', True)
 
             if self.importDialog.chromeChoice.isChecked() and not self.cancelled:
                 progressValue = 2
@@ -3017,7 +2978,7 @@ class ImportBrowserTabsThread(QtCore.QThread):
                                         page.screenshot(path=screenshotSavePath, full_page=True)
 
                                         returnResults.append(
-                                            [{'Image Name': decodedPath + ' Screenshot ' + timeNow,
+                                            [{'Image Name': f"{decodedPath} Screenshot {timeNow}",
                                               'File Path': screenshotSavePath,
                                               'Entity Type': 'Image'},
                                              {len(returnResults) - 1: {'Resolution': 'Screenshot of Tab',

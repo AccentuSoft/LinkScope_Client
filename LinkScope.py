@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 # Load modules
+import contextlib
 import re
 import sys
 import tempfile
@@ -11,6 +12,7 @@ import itertools
 import threading
 
 import networkx as nx
+from svglib.svglib import svg2rlg
 from ast import literal_eval
 from uuid import uuid4
 from shutil import move
@@ -66,7 +68,7 @@ class MainWindow(QtWidgets.QMainWindow):
         newChildren = [childUID for childUID in list(entityJSON['Child UIDs'])
                        if childUID not in targetCanvas.sceneGraph.nodes]
         # Don't create the entity if all the nodes in it already exist on the target canvas.
-        if len(newChildren) == 0:
+        if not newChildren:
             return None
         newEntity = self.LENTDB.addEntity(
             {'Group Name': entityJSON['Group Name'] + ' Copy',
@@ -127,7 +129,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.setStatus("Project Saved.", 3000)
             self.MESSAGEHANDLER.info('Project Saved')
         except Exception as e:
-            errorMessage = "Could not Save Project: " + str(repr(e))
+            errorMessage = f"Could not Save Project: {repr(e)}"
             self.MESSAGEHANDLER.error(errorMessage, exc_info=True)
             self.setStatus("Failed Saving Project.", 3000)
             self.MESSAGEHANDLER.info("Failed Saving Project " + self.SETTINGS.value("Project/Name", 'Untitled'))
@@ -208,7 +210,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.setWindowTitle("LinkScope - " + self.SETTINGS.get('Project/Name', 'Untitled'))
         self.saveProject()
-        self.setStatus('Project Saved As: ' + newProjectPath.name)
+        self.setStatus(f'Project Saved As: {newProjectPath.name}')
 
     # https://networkx.org/documentation/stable/reference/readwrite/graphml.html
     def exportCanvasToGraphML(self):
@@ -229,7 +231,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 nx.write_graphml(currentCanvasGraph, filePath)
                 self.setStatus('Canvas exported successfully.')
             except Exception as exc:
-                self.MESSAGEHANDLER.error("Could not export canvas to file: " + str(exc), popUp=True)
+                self.MESSAGEHANDLER.error(f"Could not export canvas to file: {str(exc)}", popUp=True)
                 self.setStatus('Canvas export failed.')
 
     def importCanvasFromGraphML(self):
@@ -252,7 +254,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 nodesToReadFirst = [entity for entity in nodesToReadFirst if entity is not None and
                                     entity['Entity Type'] == 'EntityGroup']
                 for entity in nodesToReadFirst:
-                    # Create new group entity so we don't mess with the contents of the original.
+                    # Create new group entity, so we don't mess with the contents of the original.
                     if entity['uid'] not in currentScene.sceneGraph.nodes:
                         newGroupEntity = self.copyGroupEntity(entity['uid'], currentScene)
                         if newGroupEntity is not None:
@@ -271,14 +273,13 @@ class MainWindow(QtWidgets.QMainWindow):
                                           "do not exist in the database.", popUp=True)
                 self.setStatus('Canvas import aborted.')
             except Exception as exc:
-                self.MESSAGEHANDLER.error("Cannot import canvas: " + str(exc), popUp=True)
+                self.MESSAGEHANDLER.error(f"Cannot import canvas: {str(exc)}", popUp=True)
                 self.setStatus('Canvas import failed.')
 
     def exportDatabaseToGraphML(self):
         # Need to create a new database to remove the icons
-        self.LENTDB.dbLock.acquire()
-        currentDatabase = self.LENTDB.database.copy()
-        self.LENTDB.dbLock.release()
+        with self.LENTDB.dbLock:
+            currentDatabase = self.LENTDB.database.copy()
 
         for node in currentDatabase.nodes:
             # Remove icons. Will reset custom icons to default, but saves space.
@@ -305,7 +306,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 nx.write_graphml(currentDatabase, filePath)
                 self.setStatus('Database exported successfully.')
             except Exception as exc:
-                self.MESSAGEHANDLER.error("Could not export database to file: " + str(exc), popUp=True)
+                self.MESSAGEHANDLER.error(f"Could not export database to file: {str(exc)}", popUp=True)
                 self.setStatus('Database export failed.')
 
     def importDatabaseFromGraphML(self):
@@ -323,18 +324,22 @@ class MainWindow(QtWidgets.QMainWindow):
                 read_graphml_nodes = {key: read_graphml.nodes[key] for key in read_graphml.nodes}
                 read_graphml_edges = {key: read_graphml.edges[key] for key in read_graphml.edges}
                 for node in read_graphml_nodes:
-                    read_graphml_nodes[node]['Icon'] = self.RESOURCEHANDLER.getEntityDefaultPicture(
-                        read_graphml_nodes[node]['Entity Type'])
+                    # Make sure that all the necessary values are assigned.
+                    # This will throw an exception if the user imports an entity without a type.
+                    read_graphml_nodes[node] = self.RESOURCEHANDLER.getEntityJson(
+                        read_graphml_nodes[node]['Entity Type'], read_graphml_nodes[node])
                     if read_graphml_nodes[node].get('Child UIDs'):
                         read_graphml_nodes[node]['Child UIDs'] = literal_eval(read_graphml_nodes[node]['Child UIDs'])
                 for edge in read_graphml_edges:
                     read_graphml_edges[edge]['uid'] = literal_eval(read_graphml_edges[edge]['uid'])
+                    # Make sure that all the necessary values are assigned.
+                    read_graphml_edges[edge] = self.RESOURCEHANDLER.getLinkJson(read_graphml_edges[edge])
                 self.LENTDB.mergeDatabases(read_graphml_nodes, read_graphml_edges, fromServer=False)
                 self.dockbarOne.existingEntitiesPalette.loadEntities()
                 self.LENTDB.resetTimeline()
                 self.setStatus('Database imported successfully.')
             except Exception as exc:
-                self.MESSAGEHANDLER.error("Could not import database from file: " + str(exc), popUp=True)
+                self.MESSAGEHANDLER.error(f"Could not import database from file: {str(exc)}", popUp=True)
                 self.setStatus('Database import failed.')
 
     def generateReport(self):
@@ -382,26 +387,23 @@ class MainWindow(QtWidgets.QMainWindow):
         self.SETTINGS.setValue("Project/Name", newName)
 
         move(oldBaseDir, self.SETTINGS.value("Project/BaseDir"))
-        oldProjectFile = newBaseDir.joinpath(oldName + '.linkscope')
+        oldProjectFile = newBaseDir.joinpath(f'{oldName}.linkscope')
         oldProjectFile.unlink(missing_ok=True)
 
         self.setWindowTitle("LinkScope - " + self.SETTINGS.get('Project/Name', 'Untitled'))
         self.saveProject()
-        statusMessage = 'Project Renamed to: ' + newName
+        statusMessage = f'Project Renamed to: {newName}'
         self.setStatus(statusMessage)
         self.MESSAGEHANDLER.info(statusMessage)
 
     def addCanvas(self) -> None:
         # Create or open canvas
-        connected = False
-        if self.FCOM.isConnected():
-            connected = True
-
+        connected = self.FCOM.isConnected()
         with self.syncedCanvasesLock:
             availableSyncedCanvases = self.syncedCanvases
         newCanvasPopup = CreateOrOpenCanvas(self, connected, availableSyncedCanvases)
         if newCanvasPopup.exec():
-            self.MESSAGEHANDLER.info("New Canvas added: " + newCanvasPopup.canvasName)
+            self.MESSAGEHANDLER.info(f"New Canvas added: {newCanvasPopup.canvasName}")
 
     def toggleWorldDoc(self) -> None:
         if self.centralWidget() is not None:
@@ -430,7 +432,7 @@ class MainWindow(QtWidgets.QMainWindow):
     def deleteSpecificEntity(self, itemUID: str) -> None:
         self.centralWidget().tabbedPane.nodeRemoveAllHelper(itemUID)
         self.LENTDB.removeEntity(itemUID)
-        self.MESSAGEHANDLER.info("Deleted node: " + itemUID)
+        self.MESSAGEHANDLER.info(f"Deleted node: {itemUID}")
 
     def deleteSpecificLink(self, linkUIDs: set) -> None:
         """
@@ -446,7 +448,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 scene.removeUIDFromLink(linkUID)
         for linkUID in linkUIDs:
             self.LENTDB.removeLink(linkUID)
-            self.MESSAGEHANDLER.info("Deleted link: " + str(linkUID))
+            self.MESSAGEHANDLER.info(f"Deleted link: {str(linkUID)}")
 
     def setGroupAppendMode(self, enable: bool) -> None:
         if self.centralWidget().tabbedPane.getCurrentScene().linking:
@@ -536,7 +538,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 shortestPath = None
 
         if shortestPath is None:
-            messagePathNotFound = 'No path found connecting the selected nodes: ' + str(endPoints)
+            messagePathNotFound = f'No path found connecting the selected nodes: {endPoints}'
             self.setStatus(messagePathNotFound)
             self.MESSAGEHANDLER.info(messagePathNotFound, popUp=True)
         else:
@@ -546,7 +548,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 if itemUID in shortestPath:
                     currentScene.nodesDict[itemUID].setSelected(True)
 
-            linksToSelect = [(a, b) for a, b in zip(shortestPath, shortestPath[1:])]
+            linksToSelect = list(zip(shortestPath, shortestPath[1:]))
             for linkItem in [link for link in currentScene.items() if isinstance(link, BaseConnector)]:
                 if linkItem.uid.intersection(linksToSelect):
                     linkItem.setSelected(True)
@@ -568,17 +570,17 @@ class MainWindow(QtWidgets.QMainWindow):
 
         newCyclesThread = ExtractCyclesThread(tempGraph, endPoints, canvasName)
         newCyclesThread.cyclesSignal.connect(self.extractCyclesResultHandler)
-        self.MESSAGEHANDLER.info('Extracting Cycles from Canvas: ' + canvasName)
+        self.MESSAGEHANDLER.info(f'Extracting Cycles from Canvas: {canvasName}')
         newCyclesThread.start()
         self.cycleExtractionThreads.append(newCyclesThread)
 
     def extractCyclesResultHandler(self, results: list, canvasName: str) -> None:
         if not results:
-            self.MESSAGEHANDLER.info('No Cycles in Canvas: ' + canvasName)
+            self.MESSAGEHANDLER.info(f'No Cycles in Canvas: {canvasName}')
         else:
             count = 0
             while True:
-                newCanvasName = canvasName + ' Cycles #' + str(count)
+                newCanvasName = f'{canvasName} Cycles #{str(count)}'
                 if self.centralWidget().tabbedPane.addCanvas(newCanvasName):
                     break
                 else:
@@ -591,16 +593,14 @@ class MainWindow(QtWidgets.QMainWindow):
             for node in nodesToAdd:
                 newCanvas.addNodeProgrammatic(node)
 
-            count = 1
             entitiesAlreadyInGroups = set()
-            for group in groupsToMake:
+            for count, group in enumerate(groupsToMake, start=1):
                 newGroup = set()
                 for groupEntity in group:
                     if groupEntity not in entitiesAlreadyInGroups:
                         newGroup.add(groupEntity)
                         entitiesAlreadyInGroups.add(groupEntity)
-                newCanvas.groupItemsProgrammatic(newGroup, 'Group ' + str(count))
-                count += 1
+                newCanvas.groupItemsProgrammatic(newGroup, f'Group {str(count)}')
             newCanvas.rearrangeGraph('circular')
 
         for cycleThread in list(self.cycleExtractionThreads):
@@ -610,8 +610,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def findEntityOrLinkOnCanvas(self, regex: bool = False) -> None:
         currentScene = self.centralWidget().tabbedPane.getCurrentScene()
-        currentUIDs = [item.uid for item in currentScene.items() if isinstance(item, BaseNode)
-                       or isinstance(item, BaseConnector)]
+        currentUIDs = [item.uid for item in currentScene.items() if isinstance(item, (BaseNode, BaseConnector))]
         entityPrimaryFields = {}
         for uid in currentUIDs:
             if isinstance(uid, str):
@@ -631,9 +630,9 @@ class MainWindow(QtWidgets.QMainWindow):
         findPrompt = FindEntityOnCanvasDialog(list(entityPrimaryFields), regex)
 
         if findPrompt.exec():
-            uidsToSelect = []
             findText = findPrompt.findInput.text()
             if findText != "":
+                uidsToSelect = []
                 try:
                     if regex:
                         expression = re.compile(findText)
@@ -650,7 +649,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
                     currentScene.clearSelection()
                     for item in [linkOrEntity for linkOrEntity in currentScene.items()
-                                 if isinstance(linkOrEntity, BaseNode) or isinstance(linkOrEntity, BaseConnector)]:
+                                 if isinstance(linkOrEntity, (BaseNode, BaseConnector))]:
                         if str(item.uid) in uidsToSelect:
                             item.setSelected(True)
                     if len(uidsToSelect) == 1 and ',' not in uidsToSelect[0]:
@@ -677,10 +676,10 @@ class MainWindow(QtWidgets.QMainWindow):
         findPrompt = FindEntityOfTypeOnCanvasDialog(entityTypesOnCanvas, regex)
 
         if findPrompt.exec():
-            uidsToSelect = []
             findText = findPrompt.findInput.text()
             findType = findPrompt.typeInput.currentText()
             if findText != "":
+                uidsToSelect = []
                 try:
                     if regex:
                         expression = re.compile(findText)
@@ -771,7 +770,7 @@ class MainWindow(QtWidgets.QMainWindow):
                          if isinstance(item, BaseNode)]
         validEntityToSplit = [entity for entity in entityToSplit
                               if entity['Entity Type'] != 'EntityGroup']
-        if len(validEntityToSplit) == 0:
+        if not validEntityToSplit:
             self.MESSAGEHANDLER.info('No valid entities to split selected! Please choose at least one non-Meta entity.',
                                      popUp=True)
             return
@@ -780,6 +779,7 @@ class MainWindow(QtWidgets.QMainWindow):
                                      popUp=True)
             return
 
+        # Continue only if a single entity is selected.
         entityToSplit = validEntityToSplit[0]
         entityToSplitPrimaryFieldKey = list(entityToSplit)[1]
         entityToSplitUID = entityToSplit['uid']
@@ -792,14 +792,12 @@ class MainWindow(QtWidgets.QMainWindow):
             for newEntityWithLinks in splitDialog.splitEntitiesWithLinks:
                 newEntity = {entityToSplitPrimaryFieldKey: newEntityWithLinks[0]}
                 for field in entityToSplit:
-                    if field != 'uid' and field != entityToSplitPrimaryFieldKey:
+                    if field not in ['uid', entityToSplitPrimaryFieldKey]:
                         newEntity[field] = entityToSplit[field]
                 newEntity = self.LENTDB.addEntity(newEntity)
 
                 for link in newEntityWithLinks[1]:
-                    newLink = {}
-                    for field in link:
-                        newLink[field] = link[field]
+                    newLink = {field: link[field] for field in link}
                     if newLink['uid'][0] == entityToSplitUID:
                         newLink['uid'] = (newEntity['uid'], newLink['uid'][1])
                     else:
@@ -821,9 +819,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def editProjectSettings(self) -> None:
         settingsDialog = ProjectEditDialog(self.SETTINGS)
-        settingsConfirm = settingsDialog.exec()
-
-        if settingsConfirm:
+        if settingsDialog.exec():
             # Save new settings
             newSettings = settingsDialog.newSettings
             for key in newSettings:
@@ -833,25 +829,19 @@ class MainWindow(QtWidgets.QMainWindow):
                     self.SETTINGS.pop(key)
                 elif newSettingValue[0] != '':
                     # Do not allow blank settings.
-                    if key == 'Project/Resolution Result Grouping Threshold' or \
-                            key == 'Project/Number of Answers Returned' or \
-                            key == 'Project/Question Answering Retriever Value' or \
-                            key == 'Project/Question Answering Reader Value':
-                        try:
+                    if key in ['Project/Resolution Result Grouping Threshold', 'Project/Number of Answers Returned',
+                               'Project/Question Answering Retriever Value', 'Project/Question Answering Reader Value']:
+                        with contextlib.suppress(ValueError):
                             int(newSettingValue[1])
                             self.SETTINGS.setValue(key, newSettingValue[0])
-                        except ValueError:
-                            pass
-                    elif newSettingValue[0] == 'Copy' or newSettingValue[0] == 'Symlink':
+                    elif newSettingValue[0] in ['Copy', 'Symlink']:
                         self.SETTINGS.setValue(key, newSettingValue[0])
 
             self.saveProject()
 
     def editResolutionsSettings(self) -> None:
         settingsDialog = ResolutionsEditDialog(self.SETTINGS)
-        settingsConfirm = settingsDialog.exec()
-
-        if settingsConfirm:
+        if settingsDialog.exec():
             # Save new settings
             newSettings = settingsDialog.newSettings
             for key in newSettings:
@@ -867,9 +857,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def editLogSettings(self) -> None:
         settingsDialog = LoggingSettingsDialog(self.SETTINGS)
-        settingsConfirm = settingsDialog.exec()
-
-        if settingsConfirm:
+        if settingsDialog.exec():
             # Save new settings
             newSettings = settingsDialog.newSettings
             for key in newSettings:
@@ -887,9 +875,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def editProgramSettings(self) -> None:
         settingsDialog = ProgramEditDialog(self.SETTINGS)
-        settingsConfirm = settingsDialog.exec()
-
-        if settingsConfirm:
+        if settingsDialog.exec():
             # Save new settings
             newSettings = settingsDialog.newSettings
             for key in newSettings:
@@ -905,30 +891,22 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def changeGraphics(self) -> None:
         settingsDialog = GraphicsEditDialog(self.SETTINGS, self.RESOURCEHANDLER)
-        settingsConfirm = settingsDialog.exec()
 
-        if settingsConfirm:
+        if settingsDialog.exec():
             newSettings = settingsDialog.newSettings
-            try:
+            with contextlib.suppress(ValueError):
                 etfVal = int(newSettings["ETF"])
                 self.centralWidget().tabbedPane.entityTextFont.setPointSize(etfVal)
                 self.SETTINGS.setValue("Program/Graphics/EntityTextFontSize", str(newSettings["ETF"]))
-            except ValueError:
-                pass
-            try:
+            with contextlib.suppress(ValueError):
                 ltfVal = int(newSettings["LTF"])
                 self.centralWidget().tabbedPane.linkTextFont.setPointSize(ltfVal)
                 self.SETTINGS.setValue("Program/Graphics/LinkTextFontSize", str(newSettings["LTF"]))
-            except ValueError:
-                pass
-            try:
+            with contextlib.suppress(ValueError):
                 lfVal = int(newSettings["LF"])
-                self.centralWidget().tabbedPane.hideZoom = - int(lfVal)
+                self.centralWidget().tabbedPane.hideZoom = -lfVal
                 self.centralWidget().tabbedPane.updateCanvasHideZoom()
                 self.SETTINGS.setValue("Program/Graphics/LabelFade", str(newSettings["LF"]))
-            except ValueError:
-                pass
-
             etcVal = newSettings["ETC"]
             newEtcColor = QtGui.QColor(etcVal)
             if newEtcColor.isValid():
@@ -1072,8 +1050,7 @@ class MainWindow(QtWidgets.QMainWindow):
         for uid in uids:
             # Connectors give the list if edge UIDs they represent
             if isinstance(uid, set):
-                for linkUID in uid:
-                    eJson.append(self.LENTDB.getLink(linkUID))
+                eJson.extend(self.LENTDB.getLink(linkUID) for linkUID in uid)
             else:
                 eJson.append(self.LENTDB.getEntity(uid))
 
@@ -1090,10 +1067,8 @@ class MainWindow(QtWidgets.QMainWindow):
         """
         for tab in self.centralWidget().tabbedPane.canvasTabs:
             scene = self.centralWidget().tabbedPane.canvasTabs[tab].scene()
-            try:
+            with contextlib.suppress(KeyError):
                 scene.nodesDict[uid].updateLabel(label)
-            except KeyError:
-                pass
 
     def updateLinkLabelsOnCanvases(self, uid: str, label: str) -> None:
         """
@@ -1106,10 +1081,8 @@ class MainWindow(QtWidgets.QMainWindow):
         """
         for tab in self.centralWidget().tabbedPane.canvasTabs:
             scene = self.centralWidget().tabbedPane.canvasTabs[tab].scene()
-            try:
+            with contextlib.suppress(KeyError):
                 scene.linksDict[uid].updateLabel(label)
-            except KeyError:
-                pass
 
     def populateEntitiesWidget(self, eJson: dict, add: bool) -> None:
         if add:
@@ -1140,9 +1113,9 @@ class MainWindow(QtWidgets.QMainWindow):
             elif parameters[parameter].get('global') is True:
                 # Extra slash in the middle to ensure that resolutions cannot overwrite these accidentally (or not),
                 #   since slashes are not allowed by default on Linux or Windows.
-                savedParameterValue = self.SETTINGS.value('Resolutions/Global/Parameters/' + parameter)
+                savedParameterValue = self.SETTINGS.value(f'Resolutions/Global/Parameters/{parameter}')
             else:
-                savedParameterValue = self.SETTINGS.value('Resolutions/' + resolutionName + '/' + parameter)
+                savedParameterValue = self.SETTINGS.value(f'Resolutions/{resolutionName}/{parameter}')
             if savedParameterValue is not None:
                 specifiedParameterValues[parameter] = savedParameterValue
                 parameters.pop(parameter)
@@ -1275,7 +1248,7 @@ class MainWindow(QtWidgets.QMainWindow):
             macroValid = False
             for macroIndex, runningMacro in enumerate(self.runningMacros):
                 currentResolutionForMacro = runningMacro[0]
-                if '/' + resolution_name in currentResolutionForMacro[0] and \
+                if resolution_name == currentResolutionForMacro[0] and \
                         resolution_uid == currentResolutionForMacro[1]:
                     macroValid = True
                     break
@@ -1283,21 +1256,21 @@ class MainWindow(QtWidgets.QMainWindow):
             if macroValid:
                 runNext = False
                 runningMacro.pop(0)
-                if len(runningMacro) > 0:
+                if runningMacro:
                     nextResolutionForMacro = runningMacro[0]
 
                     acceptableOriginTypes = self.RESOLUTIONMANAGER.getResolutionOriginTypes(nextResolutionForMacro[0])
-                    fullEntityJsonList = [self.LENTDB.getEntity(entityUID) for entityUID in affectedEntityUIDs]
+                    fullEntityJsonList = [self.LENTDB.getEntity(entityUID) for entityUID in set(affectedEntityUIDs)]
                     filteredEntityJsonList = [entity for entity in fullEntityJsonList
                                               if entity['Entity Type'] in acceptableOriginTypes]
-                    if len(filteredEntityJsonList) > 0:
+                    if filteredEntityJsonList:
                         preparedResolutionArguments = [nextResolutionForMacro[0], nextResolutionForMacro[1],
                                                        filteredEntityJsonList, nextResolutionForMacro[2]]
                         runNext = True
                 if not runNext:
                     self.setStatus('Macro execution finished.')
                     self.runningMacros.remove(runningMacro)
-        if runNext:
+        if macroValid and runNext:
             self.runResolution(*preparedResolutionArguments)
 
     def showMacrosDialog(self) -> None:
@@ -1869,12 +1842,11 @@ class MainWindow(QtWidgets.QMainWindow):
             for answerIndex in range(answerCount):
                 answer = response[answerIndex]
                 if answer['answer']:
-                    textAns += "Answer " + str(answerIndex + 1) + ": " + answer['answer'] + "\n\n"
-                    textAns += "Context: ..." + answer['context'] + "...\n\n"
-                    textAns += "Document Used: " + answer['doc']
-                    textAns += "\n\n"
+                    textAns += f"Answer {str(answerIndex + 1)}: {answer['answer']}\n\n" \
+                               f"Context: ...{answer['context']}...\n\n" \
+                               f"Document Used: {answer['doc']}\n\n"
                 else:
-                    textAns += "Answer " + str(answerIndex + 1) + ": No Answer\n\n"
+                    textAns += f"Answer {str(answerIndex + 1)}: No Answer\n\n"
 
         self.dockbarTwo.oracle.answerSection.setPlainText(textAns)
         self.setStatus("Answered Question")
@@ -2204,7 +2176,10 @@ class InitialConfigPage(QtWidgets.QWizardPage):
                                                              options=QtWidgets.QFileDialog.DontUseNativeDialog)
         selectedPath = selectedPath[0]
         if selectedPath != '':
-            self.savePathEdit.setText(str(Path(selectedPath).absolute()))
+            savePath = Path(selectedPath).absolute()
+            if savePath.suffix != '.pdf':
+                savePath = savePath.with_suffix(f"{savePath.suffix}.pdf")
+            self.savePathEdit.setText(str(savePath))
 
     def getData(self):
         data = {'SavePath': self.savePathEdit.text()}
@@ -2276,24 +2251,22 @@ class SummaryPage(QtWidgets.QWizardPage):
 class EntityPage(QtWidgets.QWizardPage):
     def __init__(self, parent: ReportWizard):
         super(EntityPage, self).__init__(parent=parent.parent())
-        self.inputAppendixImageEdit = QtWidgets.QLineEdit()
-        self.appendixWidget = QtWidgets.QWidget()
-        self.appendixLayout = QtWidgets.QVBoxLayout()
 
         self.setTitle(self.tr(f"Entity Page Wizard"))
         self.setMinimumSize(300, 700)
 
         self.entityName = parent.primaryField
-        self.uidPicture = parent.uid
+        self.entityUID = parent.uid
 
         self.inputNotesEdit = QtWidgets.QPlainTextEdit()
         self.inputImageEdit = QtWidgets.QLineEdit()
-        self.button = QtWidgets.QPushButton("Add...")
+        self.addAppendixButton = QtWidgets.QPushButton("Add New Appendix Section")
+        self.removeAppendixButton = QtWidgets.QPushButton("Remove Last Appendix Section")
 
         self.scrolllayout = QtWidgets.QVBoxLayout()
         self.scrollwidget = QtWidgets.QWidget()
 
-        self.defaultpic = self.parent().LENTDB.getEntity(self.uidPicture).get('Icon')
+        self.defaultpic = self.parent().LENTDB.getEntity(self.entityUID).get('Icon')
 
         summaryLabel = QtWidgets.QLabel(f"Entity {self.entityName} Notes: ")
 
@@ -2305,13 +2278,8 @@ class EntityPage(QtWidgets.QWizardPage):
         imageCheckBox.setChecked(False)
         imageCheckBox.toggled.connect(pDirButton.setEnabled)
 
-        self.button.clicked.connect(self.addSection)
-
-        self.button.setDisabled(True)
-
-        appendixCheckBox = QtWidgets.QCheckBox('Add Appendix')
-        appendixCheckBox.setChecked(False)
-        appendixCheckBox.toggled.connect(self.button.setEnabled)
+        self.addAppendixButton.clicked.connect(self.addSection)
+        self.removeAppendixButton.clicked.connect(self.removeSection)
 
         self.scrollwidget.setLayout(self.scrolllayout)
 
@@ -2328,8 +2296,9 @@ class EntityPage(QtWidgets.QWizardPage):
         hLayout.addWidget(self.inputImageEdit)
         hLayout.addWidget(pDirButton)
 
-        hLayout.addWidget(appendixCheckBox)
-        hLayout.addWidget(self.button)
+        hLayout.addItem(QtWidgets.QSpacerItem(10, 30))
+        hLayout.addWidget(self.addAppendixButton)
+        hLayout.addWidget(self.removeAppendixButton)
 
         layout = QtWidgets.QVBoxLayout()
         layout.addLayout(hLayout)
@@ -2337,7 +2306,7 @@ class EntityPage(QtWidgets.QWizardPage):
 
         self.setLayout(layout)
 
-    def editPath(self):
+    def editPath(self) -> None:
         selectedPath = QtWidgets.QFileDialog().getOpenFileName(parent=self, caption='Select New Icon',
                                                                dir=str(Path.home()),
                                                                options=QtWidgets.QFileDialog.DontUseNativeDialog,
@@ -2345,56 +2314,22 @@ class EntityPage(QtWidgets.QWizardPage):
         if selectedPath != '':
             self.inputImageEdit.setText(str(Path(selectedPath).absolute()))
 
-    def editAppendixPath(self):
-        selectedPath = QtWidgets.QFileDialog().getOpenFileName(parent=self, caption='Select New Icon',
-                                                               dir=str(Path.home()),
-                                                               options=QtWidgets.QFileDialog.DontUseNativeDialog,
-                                                               filter="Image Files (*.png *.jpg)")[0]
-        if selectedPath != '':
-            self.inputAppendixImageEdit.setText(str(Path(selectedPath).absolute()))
+    def addSection(self) -> None:
+        appendixWidget = AppendixWidget()
+        self.scrolllayout.addWidget(appendixWidget)
 
-    def addSection(self):
-        appendixLabelNotes = QtWidgets.QLabel("Entity Notes: ")
-        inputAppendixNotesEdit = QtWidgets.QPlainTextEdit()
-        imageAppendixLabel = QtWidgets.QLabel("Image Path: ")
-        appendixButton = QtWidgets.QPushButton("Select Image...")
-        appendixButton.clicked.connect(self.editAppendixPath)
-        self.appendixLayout.addWidget(appendixLabelNotes)
-        self.appendixLayout.addWidget(inputAppendixNotesEdit)
-        self.appendixLayout.addWidget(imageAppendixLabel)
-        self.appendixLayout.addWidget(self.inputAppendixImageEdit)
-        self.appendixLayout.addWidget(appendixButton)
-        self.appendixWidget.setLayout(self.appendixLayout)
-        self.scrolllayout.addWidget(self.appendixWidget)
-        self.button.setDisabled(True)
+    def removeSection(self) -> None:
+        numChildren = self.scrolllayout.count()
+        if numChildren:
+            appendixItem = self.scrolllayout.takeAt(numChildren - 1)
+            appendixItem.widget().deleteLater()
 
     def getData(self):
-        import re
-        from svglib.svglib import svg2rlg
-
         appendixNotes = []
         if self.inputImageEdit.text() != '':
             data = {'EntityNotes': self.inputNotesEdit.toPlainText(), 'EntityImage': self.inputImageEdit.text()}
         else:
-            if 'svg' in str(self.defaultpic):
-                contents = bytearray(self.defaultpic)
-                widthRegex = re.compile(b' width="\d*" ')
-                fileContents = ''
-                for widthMatches in widthRegex.findall(self.defaultpic):
-                    fileContents = contents.replace(widthMatches, b' ')
-                heightRegex = re.compile(b' height="\d*" ')
-                for heightMatches in heightRegex.findall(self.defaultpic):
-                    fileContents = contents.replace(heightMatches, b' ')
-                fileContents = fileContents.replace(b'<svg ', b'<svg height="150" width="150" ')
-
-                temp_dir = tempfile.TemporaryDirectory()
-                imagePath = Path(temp_dir.name) / 'entity.svg'
-                with open(imagePath, 'wb') as tempFile:
-                    tempFile.write(bytearray(fileContents))
-
-                image = svg2rlg(imagePath)
-                data = {'EntityNotes': self.inputNotesEdit.toPlainText(), 'EntityImage': image}
-            elif 'PNG' in str(self.defaultpic):
+            if 'PNG' in str(self.defaultpic):
                 temp_dir = tempfile.TemporaryDirectory()
                 imagePath = Path(temp_dir.name) / 'entity.png'
                 with open(imagePath, 'wb') as tempFile:
@@ -2402,9 +2337,10 @@ class EntityPage(QtWidgets.QWizardPage):
 
                 data = {'EntityNotes': self.inputNotesEdit.toPlainText(), 'EntityImage': str(imagePath)}
             else:
-                self.defaultpic = self.parent().RESOURCEHANDLER.getEntityDefaultPicture(
-                    self.parent().LENTDB.getEntity(self.uidPicture)['Entity Type'])
-                # Default picture is an SVG.
+                if 'svg' not in str(self.defaultpic):
+                    # Default picture is an SVG.
+                    self.defaultpic = self.parent().RESOURCEHANDLER.getEntityDefaultPicture(
+                        self.parent().LENTDB.getEntity(self.entityUID)['Entity Type'])
                 contents = bytearray(self.defaultpic)
                 widthRegex = re.compile(b' width="\d*" ')
                 fileContents = ''
@@ -2423,14 +2359,41 @@ class EntityPage(QtWidgets.QWizardPage):
                 image = svg2rlg(imagePath)
                 data = {'EntityNotes': self.inputNotesEdit.toPlainText(), 'EntityImage': image}
 
-        qPlainTextNote = self.appendixWidget.findChildren(QtWidgets.QPlainTextEdit)
-        qlineEdits = self.appendixWidget.findChildren(QtWidgets.QLineEdit)
-        for i in range(len(qPlainTextNote)):
-            appendixDict = {'AppendixEntityNotes': qPlainTextNote[i].toPlainText(),
-                            'AppendixEntityImage': qlineEdits[i].text()}
+        for index in range(self.scrolllayout.count()):
+            childWidget = self.scrolllayout.itemAt(index).widget()
+            appendixDict = {'AppendixEntityNotes': childWidget.inputAppendixNotesEdit.toPlainText(),
+                            'AppendixEntityImage': childWidget.inputAppendixImageEdit.text()}
             appendixNotes.append(appendixDict)
-
         return data, appendixNotes
+
+
+class AppendixWidget(QtWidgets.QWidget):
+
+    def __init__(self) -> None:
+        super(AppendixWidget, self).__init__()
+        appendixWidgetLayout = QtWidgets.QGridLayout()
+        appendixLabelNotes = QtWidgets.QLabel("Entity Notes: ")
+        self.inputAppendixNotesEdit = QtWidgets.QPlainTextEdit()
+        imageAppendixLabel = QtWidgets.QLabel("Image Path: ")
+        appendixButton = QtWidgets.QPushButton("Select Image...")
+        appendixButton.clicked.connect(self.editAppendixPath)
+        self.inputAppendixImageEdit = QtWidgets.QLineEdit()
+        appendixWidgetLayout.addWidget(appendixLabelNotes, 0, 0, 1, 1)
+        appendixWidgetLayout.addWidget(self.inputAppendixNotesEdit, 2, 0, 4, 1)
+        appendixWidgetLayout.addWidget(imageAppendixLabel, 7, 0, 1, 1)
+        appendixWidgetLayout.addWidget(self.inputAppendixImageEdit, 9, 0, 1, 1)
+        appendixWidgetLayout.addWidget(appendixButton, 11, 0, 1, 1)
+        self.setLayout(appendixWidgetLayout)
+        self.inputAppendixNotesEdit.setFixedHeight(100)
+
+    def editAppendixPath(self) -> None:
+        selectedPath = QtWidgets.QFileDialog().getOpenFileName(parent=self, caption='Select New Icon',
+                                                               dir=str(Path.home()),
+                                                               options=QtWidgets.QFileDialog.DontUseNativeDialog,
+                                                               filter="Image Files (*.png *.jpg)")[0]
+
+        if selectedPath != '':
+            self.inputAppendixImageEdit.setText(str(Path(selectedPath).absolute()))
 
 
 class CreateOrOpenCanvas(QtWidgets.QDialog):
@@ -3826,13 +3789,11 @@ class SplitEntitiesDialog(QtWidgets.QDialog):
         self.entitiesTable.setItem(newRowIndex, 0, QtWidgets.QTableWidgetItem(entityPrimaryField))
         self.entitiesTable.setFocus()
 
-        count = 1
-        for link in self.allLinks:
+        for count, link in enumerate(self.allLinks, start=1):
             selectResolution = QtWidgets.QCheckBox(link['Resolution'])
             selectResolution.setStyleSheet(Stylesheets.CHECK_BOX_STYLESHEET)
             selectResolution.linkUID = link['uid']
             self.entitiesTable.setCellWidget(newRowIndex, count, selectResolution)
-            count += 1
 
     def removeRow(self) -> None:
         self.entitiesTable.removeRow(self.entitiesTable.rowCount() - 1)
@@ -4355,13 +4316,11 @@ class QueryResultsViewer(QtWidgets.QDialog):
         for index in range(1, len(self.headerFields)):
             self.resultsTable.horizontalHeader().setSectionResizeMode(index, QtWidgets.QHeaderView.Stretch)
 
-        count = 0
-        for uid in selectedUIDs:
+        for count, uid in enumerate(selectedUIDs):
             self.resultsTable.insertRow(count)
             for index, field in enumerate(self.headerFields):
                 self.resultsTable.setItem(count, index, QtWidgets.QTableWidgetItem(
                     str(entitiesDict[uid].get(field, 'None'))))
-            count += 1
 
         self.resultsTabbedPane.addTab(self.resultsTable, 'Table')
 
@@ -4728,8 +4687,8 @@ class MacroDialog(QtWidgets.QDialog):
                 if 0 < len(rParameters):
                     parameterSelector = ResolutionParametersSelector(
                         self.mainWindowObject, resolutionName, rParameters,
-                        windowTitle='[' + str(itemIndex) + '/' + str(numberOfResolutionsSelected) + '] ' +
-                                    'Select Parameter values for Resolution: ' + resolutionName)
+                        windowTitle=f'[{str(itemIndex + 1)}/{str(numberOfResolutionsSelected)}] Select Parameter '
+                                    f'values for Resolution: {resolutionName}')
                     if parameterSelector.exec():
                         resolutionParameterValues.update(parameterSelector.chosenParameters)
                     else:

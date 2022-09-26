@@ -50,13 +50,10 @@ class DockBarTwo(QtWidgets.QDockWidget):
         self.initialiseLayout()
 
     def setNotesText(self, newText: str) -> None:
-        if self.tabNotes.textEditor.isReadOnly():
-            self.tabNotes.textEditor.contents = newText
-            self.tabNotes.textEditor.setMarkdown(newText)
-        else:
+        if not self.tabNotes.textEditor.isReadOnly():
             self.tabNotes.textEditor.setReadOnly(True)
-            self.tabNotes.textEditor.contents = newText
-            self.tabNotes.textEditor.setMarkdown(newText)
+        self.tabNotes.textEditor.contents = newText
+        self.tabNotes.textEditor.setMarkdown(newText)
 
     def getNotesText(self) -> str:
         """
@@ -248,15 +245,15 @@ class EntityDetails(QtWidgets.QWidget):
                     else:
                         self.populateMultiRelationshipHelperLink(item)
                         linksNumber += 1
-                self.multiNodesTableLabelOne.setText('Selected Nodes:   ' + str(nodesNumber))
-                self.multiNodesTableLabelTwo.setText('Selected Links:   ' + str(linksNumber))
+                self.multiNodesTableLabelOne.setText(f'Selected Nodes:   {str(nodesNumber)}')
+                self.multiNodesTableLabelTwo.setText(f'Selected Links:   {str(linksNumber)}')
 
             self.switchLayoutHelper(numberOfItems, isNode)
         except Exception as exc:
             # If an error is thrown at some point during the process, show the default nothing selected screen.
             self.detailsLayout.setCurrentIndex(0)
-            self.mainWindow.MESSAGEHANDLER.error('Error occurred while trying to display the details of the selected '
-                                                 'nodes: ' + str(exc), popUp=False, exc_info=False)
+            self.mainWindow.MESSAGEHANDLER.error(f'Error occurred while trying to display the details of the selected '
+                                                 f'nodes: {str(exc)}', popUp=False, exc_info=False)
 
     # Display helper functions
     def clearDetailsHelper(self) -> None:
@@ -279,7 +276,7 @@ class EntityDetails(QtWidgets.QWidget):
             return
         rowCount = 0
         for key in jsonDict:
-            if key == "uid" or key == "Child UIDs" or key == "Icon":
+            if key in ["uid", "Child UIDs", "Icon"]:
                 continue
             elif key == "Notes":
                 notesTextArea = RichNotesEditor(self, jsonDict[key], False)
@@ -339,7 +336,7 @@ class EntityDetails(QtWidgets.QWidget):
                                        nodePixmap,
                                        edgeJson[list(edgeJson)[1]],
                                        uid)
-        self.relationshipsIncomingTable.setHeaderLabel('Incoming Links:   ' + str(len(inc)))
+        self.relationshipsIncomingTable.setHeaderLabel(f'Incoming Links:   {len(inc)}')
         for edge in out:
             uid = edge[1]
             edgeJson = self.entityDB.getEntity(uid)
@@ -349,7 +346,7 @@ class EntityDetails(QtWidgets.QWidget):
                                        nodePixmap,
                                        edgeJson[list(edgeJson)[1]],
                                        uid)
-        self.relationshipsOutgoingTable.setHeaderLabel('Outgoing Links:   ' + str(len(out)))
+        self.relationshipsOutgoingTable.setHeaderLabel(f'Outgoing Links:   {len(out)}')
 
     def populateMultiRelationshipHelperNode(self, nodeJson) -> None:
         inc = len(self.entityDB.getIncomingLinks(nodeJson['uid']))

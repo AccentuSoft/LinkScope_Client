@@ -10,7 +10,7 @@ from reportlab.platypus.tableofcontents import TableOfContents
 from reportlab.lib.units import cm
 
 from reportlab.pdfgen import canvas
-from reportlab.platypus import Paragraph, PageBreak, Image, Spacer, Table, LongTable, ParagraphAndImage
+from reportlab.platypus import Paragraph, PageBreak, Image, Spacer, Table, ParagraphAndImage
 from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_JUSTIFY
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.pagesizes import LETTER, inch
@@ -33,7 +33,7 @@ class MyDocTemplate(BaseDocTemplate):
             style = flowable.style.name
             if style == 'Heading1':
                 self.notify('TOCEntry', (0, text, self.page))
-            if style == 'Heading2':
+            elif style == 'Heading2':
                 self.notify('TOCEntry', (1, text, self.page))
 
 
@@ -58,7 +58,7 @@ class ReportBuilder(canvas.Canvas):
         canvas.Canvas.save(self)
 
     def drawHeaderAndFooter(self, pageCount):
-        pageCountString = "Page %s of %s" % (self._pageNumber, pageCount)
+        pageCountString = f"Page {self._pageNumber} of {pageCount}"
         self.saveState()
         self.setStrokeColorRGB(0, 0, 0)
         self.setLineWidth(0.5)
@@ -96,7 +96,7 @@ class PDFReport:
         self.elements.append(spacer)
         self.elements.append(report_subtitle)
 
-        spacer = Spacer(100, 200)
+        spacer = Spacer(100, 425)
         self.elements.append(spacer)
 
         date = datetime.now().strftime('%Y-%m-%d %H:%m:%S')
@@ -165,14 +165,16 @@ class PDFReport:
         """
 
         text = Paragraph(notes, notesParagraph)
-        if type(entityImagePath) == Drawing:
+        if isinstance(entityImagePath, Drawing):
             tbl = ReportImageAndParagraph(text, entityImagePath, side='left', xpad=10, ypad=0)
         elif entityImagePath.endswith('.png') or entityImagePath.endswith('.jpg'):
-            entityImage = Image(entityImagePath, kind='proportional')
+            entityImage = Image(entityImagePath)
             entityImage.preserveAspectRatio = True
             entityImage.drawHeight = 2 * inch
             entityImage.drawWidth = 2 * inch
             tbl = ReportImageAndParagraph(text, entityImage, side='left', xpad=10, ypad=0)
+        else:
+            raise ValueError('Invalid Image Type')
 
         links_subHeader = Paragraph("Entity Links", psSubHeaderText)
 
@@ -188,20 +190,20 @@ class PDFReport:
             outgoing_data = [
                 ['Outgoing Links'],
                 ['Resolution Name', 'Child Entity', 'Date Created', 'Notes']]
-            index = 0
-            for link in outgoingLinks:
+            for index, link in enumerate(outgoingLinks):
                 resolutionText = link['Resolution']
                 childNodeText = outgoingNames[index]
                 linkNotesText = link['Notes']
-                linkName = "".join([resolutionText[counter:counter+24] + "\n"
+                dateCreatedText = link['Date Created']
+                linkName = "".join([resolutionText[counter:counter + 24] + "\n"
                                     for counter in range(0, len(resolutionText), 24)])
-                childNode = "".join([childNodeText[counter:counter+24] + "\n"
-                                    for counter in range(0, len(childNodeText), 24)])
-                linkNotes = "".join([linkNotesText[counter:counter+24] + "\n"
-                                    for counter in range(0, len(linkNotesText), 24)])
-                dateCreated = link['Date Created']
+                childNode = "".join([childNodeText[counter:counter + 24] + "\n"
+                                     for counter in range(0, len(childNodeText), 24)])
+                linkNotes = "".join([linkNotesText[counter:counter + 24] + "\n"
+                                     for counter in range(0, len(linkNotesText), 24)])
+                dateCreated = "".join([dateCreatedText[counter:counter + 24] + "\n"
+                                       for counter in range(0, len(dateCreatedText), 24)])
                 outgoing_data.append([linkName, childNode, dateCreated, Paragraph(linkNotes)])
-                index += 1
             outgoing_table = Table(data=outgoing_data, style=links_table_style, hAlign="CENTER",
                                    colWidths=[140, 140, 140, 140])
             spacer = Spacer(10, 10)
@@ -218,20 +220,20 @@ class PDFReport:
             incoming_data = [
                 ['Incoming Links'],
                 ['Resolution Name', 'Parent Entity', 'Date Created', 'Notes']]
-            index = 0
-            for link in incomingLinks:
+            for index, link in enumerate(incomingLinks):
                 resolutionText = link['Resolution']
                 parentNodeText = incomingNames[index]
                 linkNotesText = link['Notes']
-                linkName = "".join([resolutionText[counter:counter+24] + "\n"
+                dateCreatedText = link['Date Created']
+                linkName = "".join([resolutionText[counter:counter + 24] + "\n"
                                     for counter in range(0, len(resolutionText), 24)])
-                parentNode = "".join([parentNodeText[counter:counter+24] + "\n"
+                parentNode = "".join([parentNodeText[counter:counter + 24] + "\n"
                                       for counter in range(0, len(parentNodeText), 24)])
-                linkNotes = "".join([linkNotesText[counter:counter+24] + "\n"
-                                    for counter in range(0, len(linkNotesText), 24)])
-                dateCreated = link['Date Created']
+                linkNotes = "".join([linkNotesText[counter:counter + 24] + "\n"
+                                     for counter in range(0, len(linkNotesText), 24)])
+                dateCreated = "".join([dateCreatedText[counter:counter + 24] + "\n"
+                                       for counter in range(0, len(dateCreatedText), 24)])
                 incoming_data.append([linkName, parentNode, dateCreated, Paragraph(linkNotes)])
-                index += 1
             incoming_table = Table(data=incoming_data, style=links_table_style, hAlign="CENTER",
                                    colWidths=[140, 140, 140, 140])
             spacer = Spacer(10, 10)
@@ -260,35 +262,13 @@ class PDFReport:
         for key in list(entity):
             if key not in avoid_parsing_fields and key != 'Notes':
                 valueText = entity[key]
-                value = "".join([valueText[counter:counter+80] + "\n"
+                value = "".join([valueText[counter:counter + 80] + "\n"
                                  for counter in range(0, len(valueText), 80)])
                 entity_data.append([Paragraph(key, tableParagraph), Paragraph(value, tableParagraph)])
             elif key == 'Notes':
                 entity_notes_header = Paragraph("Entity Notes ", notesHeader)
                 entity_notes = Paragraph(entity[key], notesParagraph)
         entity_table = Table(data=entity_data, style=entity_table_style, hAlign="CENTER")
-
-        appendix_header = Paragraph(f"Appendix {appendixNumber}", notesHeader)
-        text = []
-        images = []
-        imangeNParagraph = []
-        for appendixDict in appendixDicts:
-            if appendixDict['AppendixEntityImage'] == '':
-                text.append(Paragraph(appendixDict['AppendixEntityNotes'], notesParagraph))
-            elif appendixDict['AppendixEntityNotes'] == '' and appendixDict['AppendixEntityImage'] != '':
-                img = Image(Path(appendixDict['AppendixEntityImage']), kind='proportional')
-                # img.preserveAspectRatio=True
-                img.drawHeight = 2 * inch
-                img.drawWidth = 2 * inch
-                img.hAlign = 'LEFT'
-                images.append(img)
-            elif appendixDict['AppendixEntityNotes'] != '' and appendixDict['AppendixEntityImage'] != '':
-                paragraph = appendixDict['AppendixEntityNotes']
-                img = Image(Path(appendixDict['AppendixEntityImage']), kind='proportional')
-                img.drawHeight = 2 * inch
-                img.drawWidth = 2 * inch
-                imangeNParagraph.append(
-                    ReportImageAndParagraph(Paragraph(paragraph), img, side='left', xpad=10, ypad=0))
 
         self.elements.append(entityTitle)
         spacer = Spacer(20, 20)
@@ -314,11 +294,11 @@ class PDFReport:
             pie = Pie()
             pie.x = 150
             pie.y = 65
-            pie.data = [int(len(incomingLinks)), int(len(outgoingLinks))]
+            pie.data = [len(incomingLinks), len(outgoingLinks)]
             pie.sideLabels = 1
             pie.labels = ['Incoming: ' + str(len(incomingLinks)), 'Outgoing: ' + str(len(outgoingLinks))]
             pie.slices.strokeWidth = 1
-            if int(len(incomingLinks)) > int(len(outgoingLinks)):
+            if len(incomingLinks) > len(outgoingLinks):
                 pie.slices[0].popout = 5
             else:
                 pie.slices[1].popout = 5
@@ -333,17 +313,29 @@ class PDFReport:
         self.elements.append(entity_notes_header)
         self.elements.append(entity_notes)
         self.elements.append(spacer)
-        self.elements.append(appendix_header)
+
         spacer = Spacer(20, 20)
-        self.elements.append(spacer)
-        for elementText in text:
-            self.elements.append(elementText)
+        for appendixIndex, appendixDict in enumerate(appendixDicts):
+            appendix_header = Paragraph(f"Entity Appendix {appendixIndex}", notesHeader)
+            self.elements.append(appendix_header)
             self.elements.append(spacer)
-        for elementImage in images:
-            self.elements.append(elementImage)
-            self.elements.append(spacer)
-        for elementBoth in imangeNParagraph:
-            self.elements.append(elementBoth)
+
+            appendixImage = appendixDict['AppendixEntityImage']
+            appendixNotes = appendixDict['AppendixEntityNotes']
+            if appendixImage == '':
+                self.elements.append(Paragraph(appendixNotes, notesParagraph))
+            elif appendixNotes == '' and appendixImage != '':
+                img = Image(Path(appendixImage))
+                # img.preserveAspectRatio = True
+                img.drawHeight = 3 * inch
+                img.drawWidth = 3 * inch
+                self.elements.append(img)
+            elif appendixNotes != '' and appendixImage != '':
+                paragraph = appendixNotes
+                img = Image(Path(appendixImage))
+                img.drawHeight = 3 * inch
+                img.drawWidth = 3 * inch
+                self.elements.append(ReportImageAndParagraph(Paragraph(paragraph), img, side='left', xpad=10, ypad=0))
             self.elements.append(spacer)
 
         self.elements.append(PageBreak())
@@ -356,7 +348,7 @@ class PDFReport:
         ParagraphStyle('Report', fontSize=9, justifyBreaks=1, alignment=TA_LEFT,
                        justifyLastLine=1)
 
-        img = Image(timeLineImage, kind='proportional')
+        img = Image(timeLineImage)
         img.drawHeight = 1.3 * inch
         img.drawWidth = 6 * inch
         img.hAlign = 'LEFT'
@@ -429,11 +421,15 @@ class PDFReport:
 
             head = f'Entity Report: {entityPrimaryField[i - 3]}'
             self.nextPagesHeader(True, head)
-            self.entityPage(title=entityPrimaryField[i - 3], userNotes=entityListData[i][0].get('EntityNotes'),
+            self.entityPage(title=entityPrimaryField[i - 3],
+                            userNotes=entityListData[i][0].get('EntityNotes'),
                             entityImagePath=imagePath,
-                            appendixDicts=entityListData[i][1], outgoingLinks=outgoingLinks[i - 3],
+                            appendixDicts=entityListData[i][1],
+                            outgoingLinks=outgoingLinks[i - 3],
                             incomingLinks=incomingLinks[i - 3],
-                            entity=entity[i - 3], incomingNames=incomingNames[i - 3], outgoingNames=outgoingNames[i - 3],
+                            entity=entity[i - 3],
+                            incomingNames=incomingNames[i - 3],
+                            outgoingNames=outgoingNames[i - 3],
                             appendixNumber=i - 3)
 
         # Graph report stuff disabled, at least for now.

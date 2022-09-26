@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import contextlib
 import re
 import json
 import sys
@@ -71,8 +72,8 @@ class WorkspaceWidget(QtWidgets.QWidget):
             self.docPane.deleteLater()
 
     def setDocTitleAndContents(self, title: Union[str, None] = None, content: Union[str, None] = None) -> None:
-        self.docPaneTitleText = title if title else "Document Name"
-        self.docPaneBodyText = content if content else "Document Summary"
+        self.docPaneTitleText = title or "Document Name"
+        self.docPaneBodyText = content or "Document Summary"
         if self.docAndCanvasLayout.count() == 2:
             self.docPane.documentTitleWidget.setText(title)
             self.docPane.documentSummaryWidget.setPlainText(content)
@@ -89,38 +90,33 @@ class TabBar(QtWidgets.QTabBar):
         self.setMovable(True)
 
     def mouseDoubleClickEvent(self, event) -> None:
-        if event.button() == QtGui.Qt.LeftButton:
-            currIndex = self.currentIndex()
-            currName = self.tabText(currIndex)
-            currView = self.parent().getViewAtIndex(currIndex)
+        if event.button() != QtGui.Qt.LeftButton:
+            return
+        currIndex = self.currentIndex()
+        currName = self.tabText(currIndex)
+        currView = self.parent().getViewAtIndex(currIndex)
 
-            renameOrDeleteDialog = RenameOrDeleteTabDialog(currView.synced, currName)
-            dialogResult = renameOrDeleteDialog.exec()
+        renameOrDeleteDialog = RenameOrDeleteTabDialog(currView.synced, currName)
+        if not renameOrDeleteDialog.exec():
+            return
 
-            if dialogResult:
-                newTabName = renameOrDeleteDialog.newNameTextBox.text()
-                delete = renameOrDeleteDialog.deleteCheckbox.isChecked()
-            else:
-                return
+        newTabName = renameOrDeleteDialog.newNameTextBox.text()
+        if renameOrDeleteDialog.deleteCheckbox.isChecked():
+            sceneToClose = self.parent().canvasTabs[currName].scene()
+            groupNodes = [item for item in sceneToClose.items() if isinstance(item, Entity.GroupNode)]
+            for groupNode in groupNodes:
+                sceneToClose.removeNode(groupNode)
+            self.parent().closeTab(currName)
+            return
 
-            if delete:
-                sceneToClose = self.parent().canvasTabs[currName].scene()
-                groupNodes = [item for item in sceneToClose.items() if isinstance(item, Entity.GroupNode)]
-                for groupNode in groupNodes:
-                    sceneToClose.removeNode(groupNode)
-                self.parent().closeTab(currName)
-                return
-
-            if newTabName == currName or newTabName == "":
-                return
-            if self.parent().isCanvasNameAvailable(newTabName):
-                self.parent().renameCanvas(currName, newTabName)
-                self.setTabText(currIndex, newTabName)
-                currView.name = newTabName
-            else:
-                self.messageHandler.info(
-                    "Failed renaming tab: Canvas name already exists.",
-                    popUp=True)
+        if newTabName in [currName, ""]:
+            return
+        if self.parent().isCanvasNameAvailable(newTabName):
+            self.parent().renameCanvas(currName, newTabName)
+            self.setTabText(currIndex, newTabName)
+            currView.name = newTabName
+        else:
+            self.messageHandler.info("Failed renaming tab: Canvas name already exists.", popUp=True)
 
 
 class RenameOrDeleteTabDialog(QtWidgets.QDialog):
@@ -241,11 +237,8 @@ class TabbedPane(QtWidgets.QTabWidget):
 
     def unmarkSyncedCanvasesByName(self, canvasToUnSync: str = None) -> None:
         if canvasToUnSync is not None:
-            try:
+            with contextlib.suppress(ValueError):
                 self.syncedTabs.remove(canvasToUnSync)
-            except ValueError:
-                # In case the tab to unSync isn't actually synced.
-                pass
             syncIndex = self.getTabIndexByName(canvasToUnSync)
             syncView = self.getViewAtIndex(syncIndex)
             self.setTabIcon(syncIndex, QtGui.QIcon())
@@ -262,9 +255,7 @@ class TabbedPane(QtWidgets.QTabWidget):
         """
         Checks if the specified canvas name is available.
         """
-        if canvasName in self.canvasTabs:
-            return False
-        return True
+        return canvasName not in self.canvasTabs
 
     def renameCanvas(self, currName: str, newName: str) -> None:
         self.canvasTabs[newName] = self.canvasTabs.pop(currName)
@@ -294,10 +285,8 @@ class TabbedPane(QtWidgets.QTabWidget):
                 self.removeTab(tabIndex)
                 break
         self.canvasTabs.pop(tabName)
-        try:
+        with contextlib.suppress(KeyError):
             self.tabsNotesDict.pop(tabName)
-        except KeyError:
-            pass
 
     def hideTab(self, index) -> None:
         self.removeTab(index)
@@ -311,18 +300,11 @@ class TabbedPane(QtWidgets.QTabWidget):
                 self.setTabIcon(syncIndex, QtGui.QIcon(self.resourceHandler.getIcon("uploading")))
 
     def getTabIndexByName(self, tabName):
-        count = 0
-        for tab in self.canvasTabs:
-            if tab == tabName:
-                return count
-            count += 1
-        return None
+        return next((count for count, tab in enumerate(self.canvasTabs) if tab == tabName), None)
 
     def getSceneByName(self, tabName):
         tabView = self.canvasTabs.get(tabName)
-        if tabView is not None:
-            return tabView.scene()
-        return None
+        return tabView.scene() if tabView is not None else None
 
     def getNameOfScene(self, scene) -> str:
         for tab in self.canvasTabs:
@@ -367,17 +349,16 @@ class TabbedPane(QtWidgets.QTabWidget):
 
         # Having a very granular progress bar results in a massive slowdown (i.e. resolutions take 5x< the time).
         steps = 3
-        progress = QtWidgets.QProgressDialog('Resolving new nodes for resolution: ' + resolution_name +
-                                             ', please wait...', 'Abort Resolving Nodes', 0, steps, self)
+        progress = QtWidgets.QProgressDialog(f'Resolving new nodes for resolution: {resolution_name}, please wait...',
+                                             'Abort Resolving Nodes', 0, steps, self)
+
         progress.setWindowModality(QtCore.Qt.WindowModal)
         progress.setMinimumDuration(1500)
 
-        # Get all the entities, then split it into several lists, to make searching & iterating through them faster.
-        allEntities = [(entity['uid'], (entity[list(entity)[1]], entity['Entity Type']))
-                       for entity in self.entityDB.getAllEntities()]
         # In case we have no entities in the database when the resolution finishes, i.e. the user deletes the origin
         #   node for the resolution, or runs something that creates nodes from nothing.
-        if allEntities:
+        if allEntities := [(entity['uid'], (entity[list(entity)[1]], entity['Entity Type']))
+                           for entity in self.entityDB.getAllEntities()]:
             allEntityUIDs, allEntityPrimaryFieldsAndTypes = map(list, zip(*allEntities))
         else:
             allEntityUIDs = []
@@ -412,7 +393,7 @@ class TabbedPane(QtWidgets.QTabWidget):
                 try:
                     notesField = newNodeJSON.pop('Notes')
                     if existingEntityJSON.get('Notes'):
-                        existingEntityJSON['Notes'] += '\n' + notesField
+                        existingEntityJSON['Notes'] += f"\n{notesField}"
                     else:
                         existingEntityJSON['Notes'] = str(notesField)
                 except KeyError:
@@ -441,9 +422,8 @@ class TabbedPane(QtWidgets.QTabWidget):
                 nodesCreatedCount += 1
 
         progress.setValue(1)
-        for resultListIndex in range(len(newNodeUIDs)):
-            outputEntityUID = newNodeUIDs[resultListIndex]
-            parentsDict = resolution_result[resultListIndex][1]
+        for outputEntityUID, resolutionResultElement in zip(newNodeUIDs, resolution_result):
+            parentsDict = resolutionResultElement[1]
             for parentID in parentsDict:
                 parentUID = parentID
                 if isinstance(parentUID, int):
@@ -458,7 +438,7 @@ class TabbedPane(QtWidgets.QTabWidget):
                     if newLinkUID in allLinks:
                         linkJson = self.entityDB.getLinkIfExists(newLinkUID)
                         if resolutionName not in linkJson['Notes']:
-                            linkJson['Notes'] += '\nConnection also produced by Resolution: ' + resolutionName
+                            linkJson['Notes'] += f"\nConnection also produced by Resolution: {resolutionName}"
                             self.entityDB.addLink(linkJson, fromServer=True)
                             linksUpdatedCount += 1
                     else:
@@ -477,10 +457,11 @@ class TabbedPane(QtWidgets.QTabWidget):
         progress.setValue(3)
         self.entityDB.resetTimeline()
         self.mainWindow.saveProject()
-        self.mainWindow.MESSAGEHANDLER.info('Resolution ' + resolution_name + ' completed successfully: ' +
-                                            str(nodesCreatedCount) + ' new nodes created, ' + str(nodesUpdatedCount) +
-                                            ' existing nodes updated. New links created: ' + str(linksCreatedCount) +
-                                            ', links updated: ' + str(linksUpdatedCount))
+        self.mainWindow.MESSAGEHANDLER.info(f'Resolution {resolution_name} completed successfully: '
+                                            f'{str(nodesCreatedCount)} new nodes created, {str(nodesUpdatedCount)} '
+                                            f'existing nodes updated. New links created: {str(linksCreatedCount)}, '
+                                            f'links updated: {str(linksUpdatedCount)}')
+
         return newNodeUIDs
 
     def linkAddHelper(self, links) -> None:
@@ -536,10 +517,10 @@ class TabbedPane(QtWidgets.QTabWidget):
                         else:
                             scene.addLinkProgrammatic((newLink[0], newLink[1]), newLink[2])
 
-                    elif parentUID in scene.nodesDict and uid in scene.nodesDict:
+                    elif parentUID in scene.nodesDict:
                         # Need to send this to server, since it won't be drawn otherwise.
                         scene.addLinkDragDrop(scene.nodesDict[parentUID], scene.nodesDict[uid], newLink[2])
-                    elif parentUID not in scene.nodesDict and uid in scene.nodesDict:
+                    elif uid in scene.nodesDict:
                         if parentUID not in scene.sceneGraph.nodes:
                             nodeJSON = self.entityDB.getEntity(parentUID)
 
@@ -614,16 +595,14 @@ class TabbedPane(QtWidgets.QTabWidget):
 
         canvasDBPath = self.getCanvasDBPath()
         tabsNotesPath = self.getTabsNotesPath()
-        canvasDBPathTmp = canvasDBPath.with_suffix(canvasDBPath.suffix + '.tmp')
-        canvasNotesPathTmp = tabsNotesPath.with_suffix(tabsNotesPath.suffix + '.tmp')
+        canvasDBPathTmp = canvasDBPath.with_suffix(f'{canvasDBPath.suffix}.tmp')
+        canvasNotesPathTmp = tabsNotesPath.with_suffix(f'{tabsNotesPath.suffix}.tmp')
 
         # Save canvases
         with open(canvasDBPathTmp, "wb") as canvasDBFile:
-            saveJson = {}
-            for canvasName in self.canvasTabs:
-                saveJson[canvasName] = [
-                    self.resourceHandler.deconstructGraphForFileDump(self.canvasTabs[canvasName].scene().sceneGraph),
-                    self.canvasTabs[canvasName].scene().scenePos]
+            saveJson = {canvasName: [self.resourceHandler.deconstructGraphForFileDump(self.canvasTabs[canvasName].scene().sceneGraph),
+                                     self.canvasTabs[canvasName].scene().scenePos] for canvasName in self.canvasTabs}
+
             dump(saveJson, canvasDBFile)
         move(canvasDBPathTmp, canvasDBPath)
 
@@ -665,8 +644,8 @@ class TabbedPane(QtWidgets.QTabWidget):
                                        self.resourceHandler.reconstructGraphFullFromFile(savedJson[canvasName][0]),
                                        savedJson[canvasName][1])
             except Exception as exc:
-                self.messageHandler.error("Exception occurred when opening tabs: " + str(exc) +
-                                          "\nSkipping opening tabs.", popUp=True)
+                self.messageHandler.error(f"Exception occurred when opening tabs: {str(exc)}\nSkipping opening tabs.",
+                                          popUp=True)
 
     def currentTabChangedListener(self, newIndex: int) -> None:
         if self.previousTab in self.canvasTabs:
@@ -882,8 +861,7 @@ class CanvasView(QtWidgets.QGraphicsView):
             self.centerOn(node)
 
     def dragMoveEvent(self, event) -> None:
-        itemsMoved = self.scene().selectedItems()
-        if len(itemsMoved) != 0:
+        if itemsMoved := self.scene().selectedItems():
             self.ensureVisible(itemsMoved[0], 50, 50)
 
     def dragEnterEvent(self, event) -> None:
@@ -934,26 +912,11 @@ class CanvasView(QtWidgets.QGraphicsView):
                     entityJson = self.tabbedPane.entityDB.addEntity(nodeJson)
                 entityUID = entityJson['uid']
 
-                if entityUID not in self.scene().sceneGraph.nodes():
-                    if entityJson['Entity Type'] == 'EntityGroup':
-                        newGroup = self.tabbedPane.mainWindow.copyGroupEntity(entityUID, self.scene())
-                        if newGroup is not None:
-                            newNode = self.scene().addNodeProgrammatic(newGroup['uid'], newGroup['Child UIDs'])
-                            newNode.setPos(pos.x() - 20, pos.y() - 20)
-                        else:
-                            self.tabbedPane.messageHandler.warning("Cannot add selected Group Node to scene: Scene "
-                                                                   "already contains all nodes that the Group Node "
-                                                                   "currently contains.", popUp=True)
-                    else:
-                        self.scene().addNodeDragDrop(
-                            entityUID,
-                            pos.x() - 20,
-                            pos.y() - 20)
-                else:
+                if entityUID in self.scene().sceneGraph.nodes():
                     wasGrouped = False
                     for groupNode in [node for node in self.items() if isinstance(node, Entity.GroupNode)]:
                         wasGrouped = \
-                            groupNode.removeSpecificItemFromGroupIfExists(entityUID)
+                                groupNode.removeSpecificItemFromGroupIfExists(entityUID)
                         if wasGrouped:
                             self.removeGroupNodeLinksForUID(groupNode.uid, entityUID)
                             groupNodeJson = self.tabbedPane.entityDB.getEntity(groupNode.uid)
@@ -976,6 +939,20 @@ class CanvasView(QtWidgets.QGraphicsView):
                                     pos.y() - 20
                                 )
                                 break
+                elif entityJson['Entity Type'] == 'EntityGroup':
+                    newGroup = self.tabbedPane.mainWindow.copyGroupEntity(entityUID, self.scene())
+                    if newGroup is not None:
+                        newNode = self.scene().addNodeProgrammatic(newGroup['uid'], newGroup['Child UIDs'])
+                        newNode.setPos(pos.x() - 20, pos.y() - 20)
+                    else:
+                        self.tabbedPane.messageHandler.warning("Cannot add selected Group Node to scene: Scene "
+                                                               "already contains all nodes that the Group Node "
+                                                               "currently contains.", popUp=True)
+                else:
+                    self.scene().addNodeDragDrop(
+                        entityUID,
+                        pos.x() - 20,
+                        pos.y() - 20)
                 if len(nodeJson) > 1:
                     primaryField = self.tabbedPane.resourceHandler.getPrimaryFieldForEntityType(
                         entityJson['Entity Type'])
@@ -1001,9 +978,7 @@ class CanvasView(QtWidgets.QGraphicsView):
         # Entities are unique - only one instance exists in each canvas.
         # This should search all group nodes, regardless of whether they are nested or not.
         for groupNode in [node for node in self.items() if isinstance(node, Entity.GroupNode)]:
-            wasGrouped = \
-                groupNode.removeSpecificItemFromGroupIfExists(entityUID)
-            if wasGrouped:
+            if groupNode.removeSpecificItemFromGroupIfExists(entityUID):
                 self.removeGroupNodeLinksForUID(groupNode.uid, entityUID)
 
                 # Should not be needed.
@@ -1014,11 +989,9 @@ class CanvasView(QtWidgets.QGraphicsView):
                     self.tabbedPane.entityDB.addEntity(groupNodeJson)
 
                 break
-        try:
+        with contextlib.suppress(nx.exception.NetworkXError):
+            # Exception thrown if node was already removed.
             self.scene().sceneGraph.remove_node(entityUID)
-        except nx.exception.NetworkXError:
-            # Node is already removed
-            pass
 
     def removeGroupNodeLinksForUID(self, groupUID, nodeUID) -> None:
         self.scene().removeGroupNodeLinksForUID(groupUID, nodeUID)
@@ -1035,19 +1008,20 @@ class CanvasView(QtWidgets.QGraphicsView):
         self.adjustSceneRect()
 
     def wheelEvent(self, event) -> None:
-        if len(self.scene().items()) > 0:
-            if event.angleDelta().y() > 0:
-                if self.zoom == 0:
-                    return
-                factor = 1.25
-                self.zoom += 1
-            else:
-                # Prevent user from zooming out indefinitely.
-                if self.zoom < -11:
-                    return
-                factor = 0.8
-                self.zoom -= 1
-            self.scale(factor, factor)
+        if len(self.scene().items()) == 0:
+            return
+        if event.angleDelta().y() > 0:
+            if self.zoom == 0:
+                return
+            factor = 1.25
+            self.zoom += 1
+        else:
+            # Prevent user from zooming out indefinitely.
+            if self.zoom < -11:
+                return
+            factor = 0.8
+            self.zoom -= 1
+        self.scale(factor, factor)
 
     def mousePressEvent(self, event) -> None:
         if event.button() == QtCore.Qt.MouseButton.RightButton and \
@@ -1058,7 +1032,7 @@ class CanvasView(QtWidgets.QGraphicsView):
                 items = self.scene().selectedItems()
                 groupItems = [groupItem for groupItem in items if isinstance(groupItem, Entity.GroupNode)]
                 linkItems = [linkItem for linkItem in items if isinstance(linkItem, Entity.BaseConnector)]
-                if len(groupItems) > 0:
+                if groupItems:
                     self.actionUngroup.setDisabled(False)
                     self.actionUngroup.setEnabled(True)
                 else:
@@ -1070,7 +1044,7 @@ class CanvasView(QtWidgets.QGraphicsView):
                 else:
                     self.actionGroup.setDisabled(True)
                     self.actionGroup.setEnabled(False)
-                if len(linkItems) > 0:
+                if linkItems:
                     self.actionLinkDelete.setDisabled(False)
                     self.actionLinkDelete.setEnabled(True)
                 else:
@@ -1112,8 +1086,7 @@ class CanvasView(QtWidgets.QGraphicsView):
         prompt = SendToOtherTabCanvasSelector(otherTabs)
 
         if prompt.exec():
-            otherCanvasName = prompt.canvasNameSelector.currentText()
-            if otherCanvasName:
+            if otherCanvasName := prompt.canvasNameSelector.currentText():
                 otherCanvas = self.tabbedPane.canvasTabs[otherCanvasName].scene()
                 for entityToSend in entitiesToSend:
                     if otherCanvas.sceneGraph.nodes.get(entityToSend) is None:
@@ -1152,8 +1125,7 @@ class CanvasView(QtWidgets.QGraphicsView):
                                    if link[1] not in self.scene().sceneGraph.nodes])
             for groupEntity in [linkedGroupEntity for linkedGroupEntity in linkedEntities
                                 if linkedGroupEntity.endswith('@')]:
-                newEntityJSON = self.tabbedPane.mainWindow.copyGroupEntity(groupEntity, self.scene())
-                if newEntityJSON:
+                if newEntityJSON := self.tabbedPane.mainWindow.copyGroupEntity(groupEntity, self.scene()):
                     newNode = self.scene().addNodeProgrammatic(newEntityJSON['uid'], newEntityJSON['Child UIDs'])
                     linkedEntities.remove(groupEntity)
                     newNode.setSelected(True)
@@ -1168,7 +1140,7 @@ class CanvasView(QtWidgets.QGraphicsView):
         # Ref: https://qtcentre.org/threads/10975-Help-Export-QGraphicsView-to-Image-File
         # Rendering best optimized to rgb32 and argb32_premultiplied.
         # Ref: https://doc.qt.io/qtforpython/PySide6/QtGui/QImage.html?highlight=qimage#image-formats
-        selectedItems = [item for item in self.scene().selectedItems()]
+        selectedItems = list(self.scene().selectedItems())
         for item in selectedItems:
             item.setSelected(False)
         if justViewport:
@@ -1275,14 +1247,13 @@ class CanvasScene(QtWidgets.QGraphicsScene):
         self.nodesDict[item.uid] = item
         self.addItem(item)
         item.setPos(QtCore.QPointF(x, y))
-        self.parent().mainWindow.MESSAGEHANDLER.info('Added node: ' + str(item.uid) + ' | ' +
-                                                     item.labelItem.toPlainText())
+        self.parent().mainWindow.MESSAGEHANDLER.info(f'Added node: {str(item.uid)} | {item.labelItem.toPlainText()}')
 
     def addLinkToScene(self, link: Entity.BaseConnector) -> None:
         self.linksDict[link.startItem().uid + link.endItem().uid] = link
         self.addItem(link)
-        self.parent().mainWindow.MESSAGEHANDLER.info('Added link: (' + link.startItem().uid + ", " +
-                                                     link.endItem().uid + ') | ' + link.labelItem.text())
+        self.parent().mainWindow.MESSAGEHANDLER.info(f'Added link: ({link.startItem().uid}, {link.endItem().uid}) | '
+                                                     f'{link.labelItem.text()}')
 
     def appendSelectedItemsToGroupToggle(self) -> None:
         if self.linking:
@@ -1311,22 +1282,22 @@ class CanvasScene(QtWidgets.QGraphicsScene):
                 self.parent().mainWindow.setStatus('Too many items selected to link, please only choose a total of 2.')
             elif len(self.itemsToLink) == 2:
                 potentialUID = (self.itemsToLink[0].uid, self.itemsToLink[1].uid)
-                if not self.parent().entityDB.isLink(potentialUID):
-                    if self.parent().entityDB.addLink({"uid": potentialUID}) is not None:
-                        self.addLinkDragDrop(self.itemsToLink[0],
-                                             self.itemsToLink[1])
-                        self.editLinkProperties(potentialUID)
+                if not self.parent().entityDB.isLink(potentialUID) and \
+                        self.parent().entityDB.addLink({"uid": potentialUID}) is not None:
+                    self.addLinkDragDrop(self.itemsToLink[0], self.itemsToLink[1])
+                    self.editLinkProperties(potentialUID)
                 self.parent().mainWindow.toggleLinkingMode()
 
         elif self.appendingToGroup:
             selectedGroupItems = [item for item in self.selectedItems() if isinstance(item, Entity.GroupNode)]
-            if len(selectedGroupItems) < 1:
+            if not selectedGroupItems:
                 pass
             elif len(selectedGroupItems) > 1:
                 self.parent().mainWindow.MESSAGEHANDLER.warning('Too many group items selected, '
                                                                 'please only choose one.', popUp=True)
                 self.parent().mainWindow.setStatus('Too many group items selected, please only choose one.')
             else:
+                # Only continue if just 1 group item is selected.
                 groupEntityMaybe = selectedGroupItems[0]
                 if not isinstance(groupEntityMaybe, Entity.GroupNode):
                     self.parent().mainWindow.setStatus('Selected entity is not a group entity. Aborting adding new '
@@ -1369,7 +1340,8 @@ class CanvasScene(QtWidgets.QGraphicsScene):
             # Add UIDs to list. If there are both links and nodes, remove
             #   links from list and only keep nodes.
             selectedUIDs = [item.uid for item in self.selectedItems()
-                            if isinstance(item, Entity.BaseNode) or isinstance(item, Entity.BaseConnector)]
+                            if isinstance(item, (Entity.BaseNode, Entity.BaseConnector))]
+
             self.parent().mainWindow.populateDetailsWidget(selectedUIDs)
 
     def drawGraphOnCanvasFromOpen(self, canvasName: str) -> None:
@@ -1387,8 +1359,9 @@ class CanvasScene(QtWidgets.QGraphicsScene):
         if steps == 0:
             return
         steps += 1
-        progress = QtWidgets.QProgressDialog('Opening Canvas: ' + canvasName + ', please wait...',
-                                             '', 0, steps, self.parent())
+        progress = QtWidgets.QProgressDialog(f'Opening Canvas: {canvasName}, please wait...', '', 0, steps,
+                                             self.parent())
+
         # Remove Cancel button from progress bar (user should not be able to stop canvas from loading).
         progress.setMinimumDuration(1500)
         progress.setCancelButton(None)
@@ -1440,7 +1413,7 @@ class CanvasScene(QtWidgets.QGraphicsScene):
 
         progress.setValue(steps)
         self.adjustSceneRect()
-        self.parent().mainWindow.MESSAGEHANDLER.info('Loaded canvas: ' + canvasName)
+        self.parent().mainWindow.MESSAGEHANDLER.info(f'Loaded canvas: {canvasName}')
 
     def updatePositionInDB(self, uid, x, y) -> None:
         """
@@ -1468,8 +1441,7 @@ class CanvasScene(QtWidgets.QGraphicsScene):
             #   canvases will have different nodes on them.
             # The 'addNode' functions assume that they've been passed whatever entity group is the correct one, i.e.
             #   either a new one being created or an old one that was copied.
-            groupItems = [uid for uid in entity['Child UIDs'] if uid not in self.sceneGraph.nodes]
-            if len(groupItems) > 0:
+            if groupItems := [uid for uid in entity['Child UIDs'] if uid not in self.sceneGraph.nodes]:
                 newNode = Entity.GroupNode(picture, uid, entity['Group Name'], self.entityTextFont,
                                            self.entityTextBrush)
                 self.addNodeToScene(newNode, x, y)
@@ -1518,19 +1490,17 @@ class CanvasScene(QtWidgets.QGraphicsScene):
             newNode = Entity.BaseNode(picture, uid, nodePrimaryAttribute, self.entityTextFont,
                                       self.entityTextBrush)
             self.addNodeToScene(newNode)
-        else:
-            groupItems = [uid for uid in groupItems if uid not in self.sceneGraph.nodes]
-            if len(groupItems) > 0:
-                newNode = Entity.GroupNode(picture, uid, entity['Group Name'], self.entityTextFont,
-                                           self.entityTextBrush)
-                self.addNodeToScene(newNode)
+        elif groupItems := [uid for uid in groupItems if uid not in self.sceneGraph.nodes]:
+            newNode = Entity.GroupNode(picture, uid, entity['Group Name'], self.entityTextFont,
+                                       self.entityTextBrush)
+            self.addNodeToScene(newNode)
 
-                newGroupList = newNode.listWidget
-                newGroupListGraphic = self.addWidget(newGroupList)
-                newGroupListGraphic.hide()
-                newNode.formGroup(groupItems, newGroupListGraphic)
-                for item in groupItems:
-                    self.sceneGraph.add_node(item, groupID=newNode.uid)
+            newGroupList = newNode.listWidget
+            newGroupListGraphic = self.addWidget(newGroupList)
+            newGroupListGraphic.hide()
+            newNode.formGroup(groupItems, newGroupListGraphic)
+            for item in groupItems:
+                self.sceneGraph.add_node(item, groupID=newNode.uid)
         if newNode is not None:
             if uid in self.sceneGraph.nodes:
                 del self.sceneGraph.nodes[uid]['groupID']
@@ -1554,7 +1524,7 @@ class CanvasScene(QtWidgets.QGraphicsScene):
         currGraphClone = self.sceneGraph.copy()
 
         nodesToDel = set()
-        for edgeParentUID, edgeChild in dict(currGraphClone.edges):
+        for edgeParentUID, edgeChild in currGraphClone.edges:
             potentialGroupIDOne = currGraphClone.nodes[edgeParentUID].get('groupID', edgeParentUID)
             potentialGroupIDTwo = currGraphClone.nodes[edgeChild].get('groupID', edgeChild)
             if potentialGroupIDOne != edgeParentUID:
@@ -1628,13 +1598,13 @@ class CanvasScene(QtWidgets.QGraphicsScene):
         nodesOnCanvas = {}
         for node in self.nodesDict:
             try:
-                # Tiny differences in milliseconds are not considered to be significant.
+                # Tiny differences in seconds are not considered to be significant.
                 entityDate = datetime.fromisoformat(
-                    self.parent().entityDB.getEntity(node)['Date Created']).replace(microsecond=0)
+                    self.parent().entityDB.getEntity(node)['Date Created']).replace(microsecond=0, second=0)
             except (TypeError, ValueError):
                 # Should never happen, but we will handle it if it does.
-                self.parent().mainWindow.MESSAGEHANDLER.warning('Entity without valid Date Created: ' + str(node))
-                entityDate = datetime.now().replace(microsecond=0)
+                self.parent().mainWindow.MESSAGEHANDLER.warning(f'Entity without valid Date Created: {str(node)}')
+                entityDate = datetime.now().replace(microsecond=0, second=0)
             if entityDate not in nodesOnCanvas:
                 nodesOnCanvas[entityDate] = [node]
             else:
@@ -1642,8 +1612,8 @@ class CanvasScene(QtWidgets.QGraphicsScene):
         sortedDates = sorted(nodesOnCanvas)
         xValue = 0
         yValue = 0
-        for dateIndex in range(len(sortedDates)):
-            for entityUID in nodesOnCanvas[sortedDates[dateIndex]]:
+        for dateValue in sortedDates:
+            for entityUID in nodesOnCanvas[dateValue]:
                 self.scenePos[entityUID] = (xValue, yValue)
                 self.nodesDict[entityUID].setPos(QtCore.QPointF(xValue, yValue))
                 yValue += 150
@@ -1798,7 +1768,7 @@ class CanvasScene(QtWidgets.QGraphicsScene):
             # Remove UIDs from list, and delete the link if no more UIDs are left
             self.linksDict[edgeToDelete].uid = {linkToStayUID for linkToStayUID in self.linksDict[edgeToDelete].uid
                                                 if linkToStayUID not in edgesToDelete[edgeToDelete]}
-            if len(self.linksDict[edgeToDelete].uid) == 0:
+            if not self.linksDict[edgeToDelete].uid:
                 self.removeEdge(self.linksDict[edgeToDelete])
 
     def removeUIDFromLink(self, linkUIDToRemove: tuple) -> None:
@@ -1869,10 +1839,8 @@ class CanvasScene(QtWidgets.QGraphicsScene):
             childLinks = self.parent().entityDB.getOutgoingLinks(item)
             for childLink in childLinks:
                 # Ask forgiveness instead of permission - set children as selected, if they are on the canvas.
-                try:
+                with contextlib.suppress(KeyError):
                     self.nodesDict[childLink[1]].setSelected(True)
-                except KeyError:
-                    pass
 
     def selectParentNodes(self) -> None:
         items = [item.uid for item in self.selectedItems() if isinstance(item, Entity.BaseNode)]
@@ -1881,10 +1849,8 @@ class CanvasScene(QtWidgets.QGraphicsScene):
             parentLinks = self.parent().entityDB.getIncomingLinks(item)
             for parentLink in parentLinks:
                 # Ask forgiveness instead of permission - set parents as selected, if they are on the canvas.
-                try:
+                with contextlib.suppress(KeyError):
                     self.nodesDict[parentLink[0]].setSelected(True)
-                except KeyError:
-                    pass
 
     # Because the entities on each canvas are stored in dicts, and dicts are ordered, group nodes will always
     # come after the nodes they contain.
@@ -1934,11 +1900,9 @@ class CanvasScene(QtWidgets.QGraphicsScene):
     def deleteSelectedItems(self) -> None:
         items = self.selectedItems()
         for item in items:
-            if isinstance(item, Entity.BaseNode):
-                if isinstance(item, Entity.GroupNode):
-                    if item.listProxyWidget is not None:
-                        item.listProxyWidget.hide()
-                self.removeNode(item)
+            if isinstance(item, Entity.GroupNode) and item.listProxyWidget is not None:
+                item.listProxyWidget.hide()
+            self.removeNode(item)
 
     def removeNode(self, nodeItem: Entity.BaseNode) -> None:
         if not isinstance(nodeItem, Entity.BaseNode) or self.sceneGraph.nodes.get(nodeItem.uid) is None:
@@ -1953,14 +1917,10 @@ class CanvasScene(QtWidgets.QGraphicsScene):
             self.clearSelection()
         self.removeItem(nodeItem)
         # Node already deleted
-        try:
+        with contextlib.suppress(nx.exception.NetworkXError):
             self.sceneGraph.remove_node(uid)
-        except nx.exception.NetworkXError:
-            pass
-        try:
+        with contextlib.suppress(KeyError):
             self.scenePos.pop(uid)
-        except KeyError:
-            pass
         if isinstance(nodeItem, Entity.GroupNode):
             for childUID in nodeItem.groupedNodesUid:
                 self.sceneGraph.remove_node(childUID)
@@ -1968,22 +1928,18 @@ class CanvasScene(QtWidgets.QGraphicsScene):
         del nodeItem
 
     def removeEdge(self, edgeItem: Entity.BaseConnector) -> None:
-        try:
+        with contextlib.suppress(KeyError):
+            # KeyError means that the edge was already removed from linksDict.
             self.linksDict.pop(edgeItem.myStartItem.uid + edgeItem.myEndItem.uid)
-        except KeyError:
-            # Edge already removed from linksDict.
-            pass
         uidProper = (edgeItem.myStartItem.uid, edgeItem.myEndItem.uid)
         edgeItem.hide()
         edgeItem.myStartItem.removeConnector(self)
         edgeItem.myEndItem.removeConnector(self)
         if edgeItem in self.selectedItems():
             self.clearSelection()
-        try:
+        with contextlib.suppress(nx.exception.NetworkXError):
+            # NetworkXError is thrown when an edge is already deleted.
             self.sceneGraph.remove_edge(uidProper[0], uidProper[1])
-        except nx.exception.NetworkXError:
-            # Thrown when an edge is already deleted.
-            pass
         # Could be the case that some link graphics are duplicated or left hanging.
         #   This would clear them out.
         if edgeItem.scene() == self:
@@ -1996,14 +1952,7 @@ class CanvasScene(QtWidgets.QGraphicsScene):
         """
         newNodes = [node for node in canvas_nodes if node not in self.nodesDict and
                     self.parent().mainWindow.LENTDB.getEntity(node)['Entity Type'] != 'EntityGroup']
-        # newGroupNodes = [y for y in newNodes
-        #                 if self.parent().mainWindow.LENTDB.getEntity(y)['Entity Type'] == 'EntityGroup']
-        # newNodesInGroup = []
-        # for groupNode in newGroupNodes:
-        #    entityJson = self.parent().mainWindow.LENTDB.getEntity(groupNode)
-        #    self.addNodeProgrammatic(groupNode, entityJson['Child UIDs'], fromServer=True)
-        #    newNodesInGroup += entityJson['Child UIDs']
-        for node in newNodes:  # [z for z in newNodes if z not in newNodesInGroup]:
+        for node in newNodes:
             self.addNodeProgrammatic(node, fromServer=True)
 
         # Edges technically only added if the related nodes are already created,
@@ -2021,7 +1970,6 @@ class PropertiesEditor(QtWidgets.QDialog):
         self.setModal(True)
         self.isEditingNode = isNode
 
-        # self.setLayout(QtWidgets.QGridLayout())
         self.setWindowTitle("Properties Editor")
         self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         self.setMinimumSize(500, 300)
@@ -2089,7 +2037,7 @@ class PropertiesEditor(QtWidgets.QDialog):
             if isValid is True:
                 super().accept()
             elif isinstance(isValid, str):
-                self.canvas.parent().mainWindow.MESSAGEHANDLER.error('Entity fields contain invalid values: ' + isValid,
+                self.canvas.parent().mainWindow.MESSAGEHANDLER.error(f'Entity fields contain invalid values: {isValid}',
                                                                      exc_info=False)
             else:
                 self.canvas.parent().mainWindow.MESSAGEHANDLER.error('Error occurred when checking validity of entity '
@@ -2162,8 +2110,7 @@ class PropertiesEditorIconField(QtWidgets.QLabel):
             except ValueError as ve:
                 # Image type is unsupported (for ImageQt)
                 # Supported types: 1, L, P, RGB, RGBA
-                self.canvas.parent().mainWindow.MESSAGEHANDLER.warning(
-                    'Invalid Image selected: ' + str(ve), popUp=True)
+                self.canvas.parent().mainWindow.MESSAGEHANDLER.warning(f'Invalid Image selected: {str(ve)}', popUp=True)
 
         super(PropertiesEditorIconField, self).mousePressEvent(event)
 

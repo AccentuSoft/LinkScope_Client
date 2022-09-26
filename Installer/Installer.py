@@ -747,16 +747,11 @@ class InstallWizard(QtWidgets.QWizard):
         if self.currentId() == 3:
             return 6
         if self.currentId() == 4:
-            if self.currentOS == 'Windows' and not self.graphvizExists:
-                return 2
-            else:
-                return 5
+            return 2 if self.currentOS == 'Windows' and not self.graphvizExists else 5
         if self.currentId() == 5:
             return 6
-        if self.currentId() == 6:
-            return -1
         # If we lose the user somehow, return them to the last page.
-        return 6
+        return -1 if self.currentId() == 6 else 6
 
     def __init__(self):
         super(InstallWizard, self).__init__()
@@ -775,11 +770,10 @@ class InstallWizard(QtWidgets.QWizard):
                 try:
                     if ctypes.windll.shell32.IsUserAnAdmin() == 0:
                         raise ValueError('Not an admin')
-                    else:
-                        QtWidgets.QMessageBox.critical(self, 'Elevated Privileges Detected',
-                                                       'The Installer must be ran as a normal user, not as an '
-                                                       'Administrator. Please run the Installer normally.')
-                        sys.exit(-2)
+                    QtWidgets.QMessageBox.critical(self, 'Elevated Privileges Detected',
+                                                   'The Installer must be ran as a normal user, not as an '
+                                                   'Administrator. Please run the Installer normally.')
+                    sys.exit(-2)
 
                 except Exception:
                     self.desktopShortcutPath = Path.home() / 'Desktop' / 'LinkScope.lnk'
@@ -790,7 +784,7 @@ class InstallWizard(QtWidgets.QWizard):
                     for textPart in releasesParts:
                         if 'Windows10-x64.7z' in textPart:
                             urlPart = textPart.split('"')[1].strip()
-                            self.downloadURL = 'https://github.com' + urlPart
+                            self.downloadURL = f'https://github.com{urlPart}'
                             break
 
                     newArgs = ['"' + str(self.desktopShortcutPath) + '"', str(self.graphvizExists),
@@ -815,7 +809,7 @@ class InstallWizard(QtWidgets.QWizard):
                     for textPart in releasesParts:
                         if 'Ubuntu-x64.7z' in textPart:
                             urlPart = textPart.split('"')[1].strip()
-                            self.downloadURL = 'https://github.com' + urlPart
+                            self.downloadURL = f'https://github.com{urlPart}'
                             break
 
                     # No need to wrap these in quotes
@@ -841,10 +835,6 @@ class InstallWizard(QtWidgets.QWizard):
                                 subprocess.run(
                                     ['dbus-launch', 'gio', 'set', str(self.desktopShortcutPath), "metadata::trusted",
                                      'true'])
-                                # subprocess.run(
-                                #    ["dbus-send --type=method_call --dest=org.gnome.Shell /org/gnome/Shell "
-                                #     "org.gnome.Shell.Eval string:'global.reexec_self()'"],
-                                #    shell=True)
                             sys.exit(0)
                         else:
                             sys.exit(-1)
@@ -855,7 +845,7 @@ class InstallWizard(QtWidgets.QWizard):
                 sys.exit(-5)
         else:
             self.desktopShortcutPath = Path(sys.argv[1])
-            self.graphvizExists = True if sys.argv[2] == 'True' else False
+            self.graphvizExists = sys.argv[2] == 'True'
             self.baseSoftwarePath = Path(sys.argv[3])
             self.executablePath = Path(sys.argv[4])
             self.downloadURL = sys.argv[5]
@@ -910,18 +900,19 @@ class InstallWizard(QtWidgets.QWizard):
         self.show()
 
     def removeFileHelper(self, pathToRemove: Path):
-        if pathToRemove.exists():
-            pathToRemove.chmod(0o777)
-            if pathToRemove.is_dir():
-                for dirpath, dirnames, filenames in os.walk(pathToRemove):
-                    Path(dirpath).chmod(0o777)
-                    filenames.extend(dirnames)
-                    for filename in filenames:
-                        filePath = Path(dirpath) / filename
-                        filePath.chmod(0o777)
-                shutil.rmtree(pathToRemove)
-            else:
-                pathToRemove.unlink(missing_ok=True)
+        if not pathToRemove.exists():
+            return
+        pathToRemove.chmod(0o777)
+        if pathToRemove.is_dir():
+            for dirpath, dirnames, filenames in os.walk(pathToRemove):
+                Path(dirpath).chmod(0o777)
+                filenames.extend(dirnames)
+                for filename in filenames:
+                    filePath = Path(dirpath) / filename
+                    filePath.chmod(0o777)
+            shutil.rmtree(pathToRemove)
+        else:
+            pathToRemove.unlink(missing_ok=True)
 
     def createShortcut(self):
         self.removeFileHelper(self.desktopShortcutPath)
@@ -955,11 +946,9 @@ class InstallWizard(QtWidgets.QWizard):
     def downloadGraphviz(self):
         graphVizPage = requests.get('https://graphviz.org/download/')
         graphVizParts = graphVizPage.text.split('\n')
-        graphVizDownloadLink = ""
-        for chunk in graphVizParts:
-            if '(64-bit) EXE installer' in chunk:
-                graphVizDownloadLink = chunk.split('"')[1]
-                break
+        graphVizDownloadLink = next((chunk.split('"')[1] for chunk in graphVizParts
+                                     if '(64-bit) EXE installer' in chunk), "")
+
         if not isinstance(graphVizDownloadLink, str) or graphVizDownloadLink == "":
             raise ValueError('Cannot install GraphViz: Failed to locate the latest version of the GraphViz installer.')
         graphVizInstallerTemp = tempfile.mkstemp()
@@ -975,25 +964,24 @@ class InstallWizard(QtWidgets.QWizard):
 
     def install(self):
         # Assumes we have superuser privileges.
-        if self.currentOS == 'Linux':
-            # Redundant since we always try to update and install, but it's good coding practice.
-            if not self.graphvizExists:
-                # No need to check if this succeeds - if there are any issues with installation, we will throw
-                #   an error on the install command.
-                subprocess.run(['apt', 'update'])
-                command = subprocess.run(['apt', 'install', 'p7zip-full', 'libopengl0', 'graphviz', 'libmagic1', '-y'])
-                if command.returncode != 0:
-                    raise ValueError('Installing new packages failed, cannot continue installation.')
-
-            self.removeFileHelper(self.appPath)
-            with open(self.appPath, 'w') as desktopApplicationFile:
-                desktopApplicationFile.write(LINUX_DESKTOP_FILE_ENTRY)
-            # Mark desktop file as executable
-            self.appPath.chmod(self.appPath.stat().st_mode | 0o111)
-        elif self.currentOS == 'Windows':
+        if self.currentOS != 'Linux':
             # Assume the user has installed / will install Graphviz.
             # We don't actually need to do anything here. Maybe in the future, register application in registry?
-            pass
+            return
+        # Redundant since we always try to update and install, but it's good coding practice.
+        if not self.graphvizExists:
+            # No need to check if this succeeds - if there are any issues with installation, we will throw
+            #   an error on the install command.
+            subprocess.run(['apt', 'update'])
+            command = subprocess.run(['apt', 'install', 'p7zip-full', 'libopengl0', 'graphviz', 'libmagic1', '-y'])
+            if command.returncode != 0:
+                raise ValueError('Installing new packages failed, cannot continue installation.')
+
+        self.removeFileHelper(self.appPath)
+        with open(self.appPath, 'w') as desktopApplicationFile:
+            desktopApplicationFile.write(LINUX_DESKTOP_FILE_ENTRY)
+        # Mark desktop file as executable
+        self.appPath.chmod(self.appPath.stat().st_mode | 0o111)
 
 
 class IntroInstallUninstallPage(QtWidgets.QWizardPage):
@@ -1077,11 +1065,10 @@ class LinkScopeInstallLatestPage(QtWidgets.QWizardPage):
             self.installLabel.setText('Installation failed, click "Commit" to proceed.')
 
     def validatePage(self) -> bool:
-        if self.progressBar.value() != 10:
-            if not self.processStarted:
-                self.doStuff()
-        else:
+        if self.progressBar.value() == 10:
             return True
+        if not self.processStarted:
+            self.doStuff()
         return False
 
     def __init__(self):

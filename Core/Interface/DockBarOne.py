@@ -352,7 +352,7 @@ class ResolutionList(QtWidgets.QTreeWidget):
         if resolution not in self.resolutionManager.getResolutionsInCategory(category):
             return
 
-        self.mainWindow.runResolution(category + '/' + resolution)
+        self.mainWindow.runResolution(f'{category}/{resolution}')
 
 
 class ResolutionWidget(QtWidgets.QTreeWidgetItem):

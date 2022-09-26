@@ -63,10 +63,9 @@ class SettingsObject(dict):
         # Save and then move to prevent corruption if the application closes unexpectedly.
         actualSavePath = str(Path(self.value("Project/BaseDir")).joinpath(self.value("Project/Name") + ".linkscope"))
         if is_path_exists_or_creatable_portable(actualSavePath):
-            tempSavePath = actualSavePath + '.tmp'
-            projectFile = open(tempSavePath, "wb")
-            dump(self, projectFile)
-            projectFile.close()
+            tempSavePath = f'{actualSavePath}.tmp'
+            with open(tempSavePath, "wb") as projectFile:
+                dump(self, projectFile)
             move(tempSavePath, actualSavePath)
 
     def load(self, savedDict: dict):
