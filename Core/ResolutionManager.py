@@ -6,6 +6,8 @@ from os import listdir
 from pathlib import Path
 from uuid import uuid4
 from typing import Union
+from shutil import move
+from msgpack import dump, load
 
 
 class ResolutionManager:
@@ -70,20 +72,26 @@ class ResolutionManager:
             return parameters
         return None
 
-    def getResolutionOriginTypes(self, resolutionNameString: str) -> Union[list, None]:
-        for category in self.resolutions:
-            if resolutionNameString in self.resolutions[category]:
-                originTypes = self.resolutions[category][resolutionNameString]['originTypes']
+    def getResolutionOriginTypes(self, resolutionCategoryNameString: str) -> Union[list, None]:
+        resolutionCategory, resolutionName = resolutionCategoryNameString.split('/', 1)
+        try:
+            if resolutionName in self.resolutions.get(resolutionCategory):
+                originTypes = self.resolutions[resolutionCategory][resolutionName]['originTypes']
                 if '*' in originTypes:
                     originTypes = self.mainWindow.RESOURCEHANDLER.getAllEntities()
                 return originTypes
+        except TypeError:
+            pass
         return None
 
-    def getResolutionDescription(self, resolutionNameString: str) -> Union[str, None]:
-        for category in self.resolutions:
-            if resolutionNameString in self.resolutions[category]:
-                resolutionDescription = self.resolutions[category][resolutionNameString].get('description', '')
+    def getResolutionDescription(self, resolutionCategoryNameString: str) -> Union[str, None]:
+        resolutionCategory, resolutionName = resolutionCategoryNameString.split('/', 1)
+        try:
+            if resolutionName in self.resolutions.get(resolutionCategory):
+                resolutionDescription = self.resolutions[resolutionCategory][resolutionName].get('description', '')
                 return resolutionDescription
+        except TypeError:
+            pass
         return None
 
     def loadResolutionsFromServer(self, serverRes) -> None:
@@ -133,21 +141,23 @@ class ResolutionManager:
             result += self.getResolutionsInCategory(category)
         return result
 
-    def executeResolution(self, resolutionName: str, resolutionEntitiesInput: list, parameters: dict,
+    def executeResolution(self, resolutionCategoryNameString: str, resolutionEntitiesInput: list, parameters: dict,
                           resolutionUID: str):
-        for category in self.resolutions:
-            for resolution in self.resolutions[category]:
-                if self.resolutions[category][resolution]['name'] == resolutionName:
+        resolutionCategory, resolutionName = resolutionCategoryNameString.split('/', 1)
+        try:
+            if resolutionName in self.resolutions.get(resolutionCategory):
+                if self.resolutions[resolutionCategory][resolutionName].get('resolution') == '':
                     # If resolution class does not exist locally, then assume it exists on the server.
-                    if self.resolutions[category][resolution]['resolution'] == '':
-                        self.mainWindow.executeRemoteResolution(resolutionName, resolutionEntitiesInput, parameters,
-                                                                resolutionUID)
-                        # Returning a bool, so we know that the resolution is running on the server.
-                        return True
-
-                    resolutionClass = self.resolutions[category][resolution]['resolution']()
-                    result = resolutionClass.resolution(resolutionEntitiesInput, parameters)
-                    return result
+                    self.mainWindow.executeRemoteResolution(resolutionCategoryNameString, resolutionEntitiesInput,
+                                                            parameters, resolutionUID)
+                    # Returning a bool, so we know that the resolution is running on the server.
+                    return True
+                resolutionClass = self.resolutions[resolutionCategory][resolutionName]['resolution']()
+                result = resolutionClass.resolution(resolutionEntitiesInput, parameters)
+                return result
+        except TypeError:
+            pass
+        return None
 
     def createMacro(self, resolutionList: list) -> str:
         macroUID = str(uuid4())

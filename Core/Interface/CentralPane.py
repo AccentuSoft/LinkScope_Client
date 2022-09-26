@@ -361,7 +361,7 @@ class TabbedPane(QtWidgets.QTabWidget):
             self.setTabEnabled(tab, True)
             self.setTabsClosable(True)
 
-    def facilitateResolution(self, resolution_name: str, resolution_result: list) -> None:
+    def facilitateResolution(self, resolution_name: str, resolution_result: list) -> list:
         # fromServer is used to prevent updates from being pushed to server - canvas is synced after
         #   the resolution is done
 
@@ -387,6 +387,8 @@ class TabbedPane(QtWidgets.QTabWidget):
         newNodeUIDs = []
         nodesCreatedCount = 0
         nodesUpdatedCount = 0
+        linksCreatedCount = 0
+        linksUpdatedCount = 0
         for resultList in resolution_result:
             newNodeJSON = resultList[0]
             newNodeEntityType = newNodeJSON.get('Entity Type')
@@ -404,7 +406,7 @@ class TabbedPane(QtWidgets.QTabWidget):
                 # If entity already exists, update the fields and re-add
                 newNodeExistingUID = allEntityUIDs[newNodeExistsIndex]
                 existingEntityJSON = self.entityDB.getEntity(newNodeExistingUID)
-                # Remove primary field and entity type, since those are duplicates. Primary field is the first element.
+                # Remove primary field and entity type, since those are duplicates.
                 del newNodeJSON['Entity Type']
                 del newNodeJSON[newNodePrimaryFieldKey]
                 try:
@@ -458,6 +460,7 @@ class TabbedPane(QtWidgets.QTabWidget):
                         if resolutionName not in linkJson['Notes']:
                             linkJson['Notes'] += '\nConnection also produced by Resolution: ' + resolutionName
                             self.entityDB.addLink(linkJson, fromServer=True)
+                            linksUpdatedCount += 1
                     else:
                         newLink = self.entityDB.addLink({'uid': newLinkUID, 'Resolution': resolutionName,
                                                          'Notes': parentsDict[parentID].get('Notes', '')},
@@ -465,6 +468,7 @@ class TabbedPane(QtWidgets.QTabWidget):
                         if newLink is not None:
                             links.append((parentUID, outputEntityUID, resolutionName))
                             allLinks.append(newLinkUID)
+                            linksCreatedCount += 1
 
         progress.setValue(2)
 
@@ -475,7 +479,9 @@ class TabbedPane(QtWidgets.QTabWidget):
         self.mainWindow.saveProject()
         self.mainWindow.MESSAGEHANDLER.info('Resolution ' + resolution_name + ' completed successfully: ' +
                                             str(nodesCreatedCount) + ' new nodes created, ' + str(nodesUpdatedCount) +
-                                            ' existing nodes updated.')
+                                            ' existing nodes updated. New links created: ' + str(linksCreatedCount) +
+                                            ', links updated: ' + str(linksUpdatedCount))
+        return newNodeUIDs
 
     def linkAddHelper(self, links) -> None:
         """

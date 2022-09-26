@@ -1119,115 +1119,128 @@ class MainWindow(QtWidgets.QMainWindow):
     def populateResolutionsWidget(self, selected) -> None:
         self.dockbarOne.resolutionsPalette.loadResolutionsForSelected(selected)
 
-    def runResolution(self, resolution) -> None:
+    def popParameterValuesAndReturnSpecified(self, resolutionName: str, parameters: dict,
+                                             preSpecifiedParameters: dict = None) -> dict:
+        """
+        This takes a dict of parameters (see Example Resolution for dict format) and a resolution name.
+        We remove the specified parameters from the given 'parameters' dict, and return a dict with
+          their respective values.
+
+        @param preSpecifiedParameters: Optional dict containing values provided via alternative means (i.e. macros)
+        @param resolutionName: The name of the resolution whose parameters we are getting
+        @param parameters: The parameter dict of a resolution
+        @return:
+        """
+        specifiedParameterValues = {}
+        # New dict given in argument, so we can pop stuff from it while we loop through it.
+        for parameter in dict(parameters):
+            if preSpecifiedParameters is not None and parameter in preSpecifiedParameters:
+                savedParameterValue = preSpecifiedParameters.get(parameter)
+            elif parameters[parameter].get('global') is True:
+                # Extra slash in the middle to ensure that resolutions cannot overwrite these accidentally (or not),
+                #   since slashes are not allowed by default on Linux or Windows.
+                savedParameterValue = self.SETTINGS.value('Resolutions/Global/Parameters/' + parameter)
+            else:
+                savedParameterValue = self.SETTINGS.value('Resolutions/' + resolutionName + '/' + parameter)
+            if savedParameterValue is not None:
+                specifiedParameterValues[parameter] = savedParameterValue
+                parameters.pop(parameter)
+        return specifiedParameterValues
+
+    def runResolution(self, resolutionName, preSpecifiedUID: str = None, preSpecifiedEntities: list = None,
+                      preSpecifiedParameters: dict = None) -> str:
         """
         Runs the specified resolution in another thread.
         """
-        self.setStatus("Running Resolution: " + resolution)
         try:
-            category, resolution = resolution.split('/')
+            category, resolution = resolutionName.split('/', 1)
         except ValueError:
-            self.MESSAGEHANDLER.error('Category name or resolution name should not contain slashes: ' + resolution)
-            return
+            self.MESSAGEHANDLER.error('Category name or resolution name should not contain slashes: ' + resolutionName)
+            return ""
 
-        scene = self.centralWidget().tabbedPane.getCurrentScene()
-        items = scene.selectedItems()
-        resArgument = []
-        for item in items:
-            if not isinstance(item, BaseNode):
-                continue
-            resArgument.append(self.LENTDB.getEntity(item.uid))
+        if preSpecifiedEntities:
+            resolutionInputEntities = preSpecifiedEntities
+        else:
+            scene = self.centralWidget().tabbedPane.getCurrentScene()
+            items = scene.selectedItems()
+            resolutionInputEntities = [self.LENTDB.getEntity(item.uid) for item in items if isinstance(item, BaseNode)]
 
         parameters = self.RESOLUTIONMANAGER.getResolutionParameters(category, resolution)
         if parameters is None:
             message = 'Resolution parameters not found for resolution: ' + resolution
             self.MESSAGEHANDLER.error(message, popUp=True, exc_info=False)
             self.setStatus(message)
-            return
+            return ""
 
-        resolutionParameterValues = {}
-        resolutionUnspecifiedParameterValues = {}
-        for parameter in parameters:
-            if parameters[parameter].get('global') is True:
-                # Extra slash in the middle to ensure that resolutions cannot overwrite these accidentally,
-                #   since slashes are not allowed by default on Linux or Windows.
-                savedParameterValue = self.SETTINGS.value('Resolutions/Global/Parameters/' + parameter)
-            else:
-                savedParameterValue = self.SETTINGS.value('Resolutions/' + resolution + '/' + parameter)
-            if savedParameterValue is not None:
-                resolutionParameterValues[parameter] = savedParameterValue
-            else:
-                resolutionUnspecifiedParameterValues[parameter] = parameters[parameter]
-
+        resolutionParameterValues = self.popParameterValuesAndReturnSpecified(resolution, parameters,
+                                                                              preSpecifiedParameters)
         # Show Resolution wizard if there are any parameters required that aren't saved in settings, or
         #   if the user did not select any items to run the resolution on.
-        if len(items) == 0 or (0 < len(parameters) and 0 < len(resolutionUnspecifiedParameterValues)):
+        # Note that at this point, the parameters dict contains only the parameters that are unspecified, i.e.
+        #   ones that were not saved previously.
+        if len(resolutionInputEntities) == 0 or 0 < len(parameters):
             selectEntityList = None
             uidAndPrimaryFields: list = []
             acceptableOriginTypes = None
             resolutionDescription = None
-            if len(items) == 0:
-                acceptableOriginTypes = self.RESOLUTIONMANAGER.getResolutionOriginTypes(resolution)
+            if len(resolutionInputEntities) == 0:
+                acceptableOriginTypes = self.RESOLUTIONMANAGER.getResolutionOriginTypes(resolutionName)
                 uidAndPrimaryFields = [(entity['uid'], entity[list(entity)[1]])
                                        for entity in self.LENTDB.getAllEntities()
                                        if entity['Entity Type'] in acceptableOriginTypes]
                 selectEntityList = [entity[1] for entity in uidAndPrimaryFields]
-                resolutionDescription = self.RESOLUTIONMANAGER.getResolutionDescription(resolution)
+                resolutionDescription = self.RESOLUTIONMANAGER.getResolutionDescription(resolutionName)
 
-            parameterSelector = ResolutionParametersSelector(
-                resolutionUnspecifiedParameterValues, selectEntityList, acceptableOriginTypes, resolutionDescription)
+            parameterSelector = ResolutionParametersSelector(self, resolution, parameters,
+                                                             selectEntityList, acceptableOriginTypes,
+                                                             resolutionDescription)
             parameterSelectorConfirm = parameterSelector.exec()
 
             if not parameterSelectorConfirm:
                 self.setStatus('Resolution ' + resolution + ' aborted.')
-                return
+                return ""
             else:
                 resolutionParameterValues.update(parameterSelector.chosenParameters)
 
-                newParametersToSave = parameterSelector.parametersToRemember
-                for parameterToRemember in newParametersToSave:
-                    # No need to update settings objects here - these values are only relevant to the mainWindow,
-                    #   since this function is where all the resolutions are ran from.
-                    if parameters[parameterToRemember].get('global') is True:
-                        self.SETTINGS.setValue('Resolutions/Global/Parameters/' + parameterToRemember,
-                                               newParametersToSave[parameterToRemember])
-                    else:
-                        self.SETTINGS.setValue('Resolutions/' + resolution + '/' + parameterToRemember,
-                                               newParametersToSave[parameterToRemember])
-
-                if len(items) == 0:
+                if len(resolutionInputEntities) == 0:
                     selectedEntities = parameterSelector.entitySelector.selectedItems()
                     if len(selectedEntities) == 0:
-                        self.setStatus('Resolution ' + resolution +
-                                       ' did not run: No entities selected.')
-                        return
+                        self.setStatus('Resolution ' + resolution + ' did not run: No entities selected.')
+                        return ""
 
                     for selectedEntity in selectedEntities:
                         uid = uidAndPrimaryFields[selectEntityList.index(selectedEntity.text())][0]
-                        resArgument.append(self.LENTDB.getEntity(uid))
+                        resolutionInputEntities.append(self.LENTDB.getEntity(uid))
 
         resolutionParameterValues['Project Files Directory'] = self.SETTINGS.value("Project/FilesDir")
-        resolutionUID = str(uuid4())
+        if preSpecifiedUID:
+            resolutionUID = preSpecifiedUID
+        else:
+            resolutionUID = str(uuid4())
         resolutionThread = ResolutionExecutorThread(
-            resolution, resArgument, resolutionParameterValues, self, resolutionUID)
+            resolutionName, resolutionInputEntities, resolutionParameterValues, self, resolutionUID)
         resolutionThread.sig.connect(self.resolutionSignalListener)
         resolutionThread.sigError.connect(self.resolutionErrorSignalListener)
         self.MESSAGEHANDLER.info('Running Resolution: ' + resolution)
+        self.setStatus("Running Resolution: " + resolution)
         resolutionThread.start()
         self.resolutions.append((resolutionThread, category == 'Server Resolutions'))
+        return resolutionUID
 
-    def resolutionSignalListener(self, resolution_name: str, resolution_result: Union[list, str]) -> None:
+    def resolutionSignalListener(self, resolution_name: str, resolution_result: Union[list, str],
+                                 resolution_uid: str) -> None:
         """
         Is called by the threads created by runResolution to handle the
         result, i.e. run the function that adds nodes and links.
         """
+        affectedUIDs = []
         if isinstance(resolution_result, str):
             self.MESSAGEHANDLER.info(f"Resolution {resolution_name} finished with status: {resolution_result}",
                                      popUp=True)
         elif len(resolution_result) == 0:
             self.MESSAGEHANDLER.info(f"Resolution {resolution_name} returned no results.", popUp=True)
         else:
-            self.centralWidget().tabbedPane.facilitateResolution(resolution_name, resolution_result)
+            affectedUIDs = self.centralWidget().tabbedPane.facilitateResolution(resolution_name, resolution_result)
 
         self.cleanUpLocalFinishedResolutions()
         self.setStatus("Resolution: " + resolution_name + " completed.")
@@ -2566,7 +2579,7 @@ class NewOrOpenWidget(QtWidgets.QDialog):
 
 
 class ResolutionExecutorThread(QtCore.QThread):
-    sig = QtCore.Signal(str, dict)
+    sig = QtCore.Signal(str, dict, str)
     sigError = QtCore.Signal(str)
 
     def __init__(self, resolution: str, resolutionArgument: list, resolutionParameters: dict,
@@ -2597,23 +2610,26 @@ class ResolutionExecutorThread(QtCore.QThread):
 
         # If the resolution is ran on the server or there is a problem, don't emit signal.
         if ret is not None and self.return_results:
-            self.sig.emit(self.resolution, ret)
+            self.sig.emit(self.resolution, ret, self.uid)
             self.done = True
 
 
 class ResolutionParametersSelector(QtWidgets.QDialog):
 
-    def __init__(self, properties: dict, includeEntitySelector: list = None, originTypes: list = None,
-                 resolutionDescription: str = None) -> None:
+    def __init__(self, mainWindowObject, resolutionName, properties: dict, includeEntitySelector: list = None,
+                 originTypes: list = None, resolutionDescription: str = None,
+                 windowTitle: str = 'Resolution Parameter Selector') -> None:
         super(ResolutionParametersSelector, self).__init__()
 
         self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         self.setModal(True)
-        self.setWindowTitle('Resolution Wizard')
+        self.setWindowTitle(windowTitle)
         self.parametersList = []
         # Have two separate dicts for readability.
         self.chosenParameters = {}
-        self.parametersToRemember = {}
+        self.properties = properties
+        self.mainWindowObject = mainWindowObject
+        self.resolutionName = resolutionName
 
         dialogLayout = QtWidgets.QGridLayout()
         self.setLayout(dialogLayout)
@@ -2718,6 +2734,7 @@ class ResolutionParametersSelector(QtWidgets.QDialog):
             self.childWidget.setCurrentIndex(currentIndex - 1)
 
     def accept(self) -> None:
+        savedParameters = {}
         for resolutionParameterName, resolutionParameterInput, resolutionParameterRemember in self.parametersList:
             value = resolutionParameterInput.getValue()
             if value == '':
@@ -2731,7 +2748,16 @@ class ResolutionParametersSelector(QtWidgets.QDialog):
             self.chosenParameters[resolutionParameterName] = value
 
             if resolutionParameterRemember.isChecked():
-                self.parametersToRemember[resolutionParameterName] = value
+                savedParameters[resolutionParameterName] = value
+
+        # Only save paramters after we verify that everything is filled in properly.
+        for savedParameter in savedParameters:
+            if self.properties[savedParameter].get('global') is True:
+                self.mainWindowObject.SETTINGS.setValue('Resolutions/Global/Parameters/' + savedParameter,
+                                                        savedParameters[savedParameter])
+            else:
+                self.mainWindowObject.SETTINGS.setValue('Resolutions/' + self.resolutionName + '/' + savedParameter,
+                                                        savedParameters[savedParameter])
 
         super(ResolutionParametersSelector, self).accept()
 
