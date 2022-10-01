@@ -763,8 +763,10 @@ class InstallWizard(QtWidgets.QWizard):
         self.trayIcon.show()
 
         if len(sys.argv) < 5:
-            releasesPage = requests.get('https://github.com/AccentuSoft/LinkScope_Client/releases/latest')
-            releasesParts = releasesPage.text.split('\n')
+            latestReleaseDetails = requests.get('https://github.com/AccentuSoft/LinkScope_Client/releases/latest',
+                                                headers={'Accept': 'application/json'})
+            latestVersion = latestReleaseDetails.json()['tag_name']
+            downloadURLBase = f"https://github.com/AccentuSoft/LinkScope_Client/releases/download/{latestVersion}/"
 
             if self.currentOS == 'Windows':
                 try:
@@ -781,15 +783,11 @@ class InstallWizard(QtWidgets.QWizard):
                     self.graphvizExists = graphvizPath.exists()
                     self.baseSoftwarePath = Path(os.path.abspath(os.sep)) / 'Program Files' / 'LinkScope'
                     self.executablePath = self.baseSoftwarePath / 'LinkScope.exe'
-                    for textPart in releasesParts:
-                        if 'Windows10-x64.7z' in textPart:
-                            urlPart = textPart.split('"')[1].strip()
-                            self.downloadURL = f'https://github.com{urlPart}'
-                            break
+                    self.downloadURL = downloadURLBase + "LinkScope-Windows-x64.7z"
 
                     newArgs = ['"' + str(self.desktopShortcutPath) + '"', str(self.graphvizExists),
                                '"' + str(self.baseSoftwarePath) + '"', '"' + str(self.executablePath) + '"',
-                               '"' + str(self.downloadURL) + '"']
+                               '"' + self.downloadURL + '"']
                     ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(newArgs), None, 1)
                     sys.exit(0)
             elif self.currentOS == 'Linux':
@@ -806,15 +804,11 @@ class InstallWizard(QtWidgets.QWizard):
                     self.appPath = Path(
                         os.path.abspath(os.sep)) / 'usr' / 'share' / 'applications' / 'LinkScope.desktop'
                     self.executablePath = self.baseSoftwarePath / 'LinkScope'
-                    for textPart in releasesParts:
-                        if 'Ubuntu-x64.7z' in textPart:
-                            urlPart = textPart.split('"')[1].strip()
-                            self.downloadURL = f'https://github.com{urlPart}'
-                            break
+                    self.downloadURL = downloadURLBase + "LinkScope-Ubuntu-x64.7z"
 
                     # No need to wrap these in quotes
                     newArgs = [str(self.desktopShortcutPath), str(self.graphvizExists), str(self.baseSoftwarePath),
-                               str(self.executablePath), str(self.downloadURL), str(self.appPath)]
+                               str(self.executablePath), self.downloadURL, str(self.appPath)]
 
                     shortcutExistsBefore = self.desktopShortcutPath.exists()
                     for _ in range(3):
