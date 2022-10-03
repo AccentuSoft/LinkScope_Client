@@ -2260,6 +2260,7 @@ class EntityPage(QtWidgets.QWizardPage):
 
         self.inputNotesEdit = QtWidgets.QPlainTextEdit()
         self.inputImageEdit = QtWidgets.QLineEdit()
+        self.inputImageEdit.setReadOnly(True)
         self.addAppendixButton = QtWidgets.QPushButton("Add New Appendix Section")
         self.removeAppendixButton = QtWidgets.QPushButton("Remove Last Appendix Section")
 
@@ -2274,9 +2275,9 @@ class EntityPage(QtWidgets.QWizardPage):
         pDirButton = QtWidgets.QPushButton("Select Image...")
         pDirButton.clicked.connect(self.editPath)
         pDirButton.setDisabled(True)
-        imageCheckBox = QtWidgets.QCheckBox('Add Custom Entity Image')
-        imageCheckBox.setChecked(False)
-        imageCheckBox.toggled.connect(pDirButton.setEnabled)
+        self.imageCheckBox = QtWidgets.QCheckBox('Add Custom Entity Image')
+        self.imageCheckBox.setChecked(False)
+        self.imageCheckBox.toggled.connect(pDirButton.setEnabled)
 
         self.addAppendixButton.clicked.connect(self.addSection)
         self.removeAppendixButton.clicked.connect(self.removeSection)
@@ -2291,7 +2292,7 @@ class EntityPage(QtWidgets.QWizardPage):
         hLayout.addWidget(summaryLabel)
         hLayout.addWidget(self.inputNotesEdit)
 
-        hLayout.addWidget(imageCheckBox)
+        hLayout.addWidget(self.imageCheckBox)
         hLayout.addWidget(imageLabel)
         hLayout.addWidget(self.inputImageEdit)
         hLayout.addWidget(pDirButton)
@@ -2326,7 +2327,7 @@ class EntityPage(QtWidgets.QWizardPage):
 
     def getData(self):
         appendixNotes = []
-        if self.inputImageEdit.text() != '':
+        if self.inputImageEdit.text() != '' and self.imageCheckBox.isChecked():
             data = {'EntityNotes': self.inputNotesEdit.toPlainText(), 'EntityImage': self.inputImageEdit.text()}
         else:
             if 'PNG' in str(self.defaultpic):
@@ -2378,6 +2379,7 @@ class AppendixWidget(QtWidgets.QWidget):
         appendixButton = QtWidgets.QPushButton("Select Image...")
         appendixButton.clicked.connect(self.editAppendixPath)
         self.inputAppendixImageEdit = QtWidgets.QLineEdit()
+        self.inputAppendixImageEdit.setReadOnly(True)
         appendixWidgetLayout.addWidget(appendixLabelNotes, 0, 0, 1, 1)
         appendixWidgetLayout.addWidget(self.inputAppendixNotesEdit, 2, 0, 4, 1)
         appendixWidgetLayout.addWidget(imageAppendixLabel, 7, 0, 1, 1)

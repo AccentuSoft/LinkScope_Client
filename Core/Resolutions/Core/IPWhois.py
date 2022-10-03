@@ -31,8 +31,13 @@ class IPWhois:
                                   {uid: {'Resolution': 'IPWhois', 'Notes': ''}}])
             for net in response['nets']:
                 if net['country'] is not None:
-                    country = pycountry.countries.get(alpha_2=net['country']).name
-                    return_result.append([{'Country Name': country,
+                    country = pycountry.countries.get(alpha_2=net['country'])
+                    if country:
+                        country_name = country.name
+                    else:
+                        # May not always be an actual Country.
+                        country_name = net['country']
+                    return_result.append([{'Country Name': country_name,
                                            'Entity Type': 'Country'},
                                           {uid: {'Resolution': 'IPWhois', 'Notes': ''}}])
                 if net['name'] is not None:

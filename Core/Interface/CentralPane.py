@@ -1512,7 +1512,7 @@ class CanvasScene(QtWidgets.QGraphicsScene):
 
     def rearrangeGraph(self, graphAlgorithm: str = None) -> None:
         # https://gitlab.com/graphviz/graphviz/-/merge_requests/2236
-        # No triangulation library on windows yet, so sfdp can't be used there.
+        # No triangulation library on Windows, so sfdp can't be used there.
 
         if graphAlgorithm is None or graphAlgorithm not in ('sfdp', 'neato', 'dot', 'circular'):
             graphAlgorithm = self.parent().mainWindow.SETTINGS.value("Program/GraphLayout", 'dot')
@@ -1524,7 +1524,7 @@ class CanvasScene(QtWidgets.QGraphicsScene):
         currGraphClone = self.sceneGraph.copy()
 
         nodesToDel = set()
-        for edgeParentUID, edgeChild in currGraphClone.edges:
+        for edgeParentUID, edgeChild in list(currGraphClone.edges):
             potentialGroupIDOne = currGraphClone.nodes[edgeParentUID].get('groupID', edgeParentUID)
             potentialGroupIDTwo = currGraphClone.nodes[edgeChild].get('groupID', edgeChild)
             if potentialGroupIDOne != edgeParentUID:

@@ -2056,7 +2056,9 @@ class ImportLinkEntitiesFromCSVFile(QtWidgets.QDialog):
         currentEntityAttributes = [''] + self.parent().parent().RESOURCEHANDLER.getEntityAttributes(
             self.entityTypeChoiceDropdown.currentText())
         for comboBox in self.fieldMappingComboBoxes:
+            comboBox.blockSignals(True)
             comboBox.clear()
+            comboBox.blockSignals(False)
             comboBox.addItems(currentEntityAttributes)
 
     def changeMappingForField(self, newIndex):
@@ -2170,7 +2172,9 @@ class ImportEntityFromCSVFile(QtWidgets.QDialog):
         currentEntityAttributes = [''] + self.parent().parent().RESOURCEHANDLER.getEntityAttributes(
             self.entityTypeChoiceDropdown.currentText())
         for comboBox in self.fieldMappingComboBoxes:
+            comboBox.blockSignals(True)
             comboBox.clear()
+            comboBox.blockSignals(False)
             comboBox.addItems(currentEntityAttributes)
 
     def changeMappingForField(self, newIndex):
