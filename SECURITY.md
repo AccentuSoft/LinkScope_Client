@@ -4,7 +4,7 @@
 
 Currently, only the latest version of the software is supported.
 
-The software is targeted towards Linux (Debian / Ubuntu) and Windows (version 10).
+The software is targeted towards Linux (Debian / Ubuntu) and Windows (version 11).
 Other platforms are not officially supported.
 
 ## Reporting a Vulnerability

@@ -34,12 +34,12 @@ Some notable features of LinkScope include:
 
 ## Installation
 ### Supported Platforms
-Currently, Linux (Ubuntu, but most Debian derivatives should work) and Windows 10 are supported.
+Currently, Linux (Ubuntu, but most Debian derivatives should work) and Windows 11 are supported.
 
 Note that the SFDP graph layout does not function on Windows, as an essential graph related library is not available on that platform. Windows also has a few more visual bugs than Linux, which are currently being worked on.
 
 ### Installing the software
-Since Version 1.0.0, installers are provided for Windows 10 and Linux (Ubuntu) platforms.
+Since Version 1.0.0, installers are provided for Windows 11 and Linux (Ubuntu) platforms.
 
 Download the latest installer for your platform from the Releases page, and run it to install the software:
 https://github.com/AccentuSoft/LinkScope_Client/releases/tag/v1.0.0
