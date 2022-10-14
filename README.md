@@ -42,7 +42,7 @@ Note that the SFDP graph layout does not function on Windows, as an essential gr
 Since Version 1.0.0, installers are provided for Windows 11 and Linux (Ubuntu) platforms.
 
 Download the latest installer for your platform from the Releases page, and run it to install the software:
-https://github.com/AccentuSoft/LinkScope_Client/releases/tag/v1.0.0
+https://github.com/AccentuSoft/LinkScope_Client/releases/tag/v1.4.0
 
 Note: On Ubuntu, you may need to mark the downloaded installer as executable before you can run it. To do this, right-click the installer, and from the drop-down menu, select 'properties'. On the dialog window that pops up, navigate to the 'Permissions' tab, and make sure that 'Allow executing file as program' is checked. You should at this point be able to run the installer by double-clicking it.
 
