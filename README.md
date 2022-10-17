@@ -71,6 +71,8 @@ The Wiki page contains a manual on using the tool, available here: https://githu
 
 We have an introductory blog post that explains the basics of using the tool, available here: https://accentusoft.com/tutorials/first-steps-with-linkscope-client/
 
+We also have some videos demonstrating how to use the software on our YouTube channel: https://www.youtube.com/channel/UC8h9Vde1OdezdC2cJ1nEUcw
+
 ## Extending the software
 LinkScope was built from the ground up to be modular! In this repository's wiki, there are instructions on how to create your own modules, which can contain custom Entities and Resolutions. There is also an example module in the Modules directory that can act as a template, and has a verbose description of most things that a module creator should need to consider.
 
