@@ -54,8 +54,8 @@ class CommunicationsHandler(QtCore.QObject):
     receive_start_collector_signal = QtCore.Signal(str, str, str, list, dict)
     receive_collector_result_signal = QtCore.Signal(str, str, str, list)
     receive_resolutions_signal = QtCore.Signal(dict)
-    receive_completed_resolution_result_signal = QtCore.Signal(str, list)
-    receive_completed_resolution_string_result_signal = QtCore.Signal(str, str)
+    receive_completed_resolution_result_signal = QtCore.Signal(str, list, str)
+    receive_completed_resolution_string_result_signal = QtCore.Signal(str, str, str)
     receive_document_summary_signal = QtCore.Signal(str, str)
     remove_server_resolution_from_running_signal = QtCore.Signal(str)
     receive_projects_list_signal = QtCore.Signal(list)
@@ -379,9 +379,11 @@ class CommunicationsHandler(QtCore.QObject):
     def receiveResolutionResult(self, resolution_name: str, resolution_result: Union[list, str],
                                 resolution_uid: str) -> None:
         if isinstance(resolution_result, str):
-            self.receive_completed_resolution_string_result_signal.emit(resolution_name, resolution_result)
+            self.receive_completed_resolution_string_result_signal.emit(resolution_name, resolution_result,
+                                                                        resolution_uid)
         else:
-            self.receive_completed_resolution_result_signal.emit(resolution_name, resolution_result)
+            self.receive_completed_resolution_result_signal.emit(resolution_name, resolution_result,
+                                                                 resolution_uid)
         self.remove_server_resolution_from_running_signal.emit(resolution_uid)
 
     def abortResolution(self, resolution_name: str, resolution_uid: str) -> None:

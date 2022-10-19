@@ -50,7 +50,7 @@ class OpenCorporateOfficerCompanies:
             if entity['Entity Type'] == 'Open Corporates Officer':
                 primaryField = primaryField.split(' | ')[0]  # Nobody has ' | ' in their name - 2022/7/10
 
-            if parameters['OpenCorporates API Key'] == 'No Key':
+            if parameters['OpenCorporates API Key'].strip() == 'No Key':
                 # Set up parameters
                 data_params = parse.urlencode({
                     'q': primaryField
@@ -79,7 +79,7 @@ class OpenCorporateOfficerCompanies:
                 # Rate limited to the Starter API rate.
                 time.sleep(0.02)
                 # print(r)
-                data = r.json
+                data = r.json()
 
             if r.status_code == 401:
                 return 'Invalid API Key'

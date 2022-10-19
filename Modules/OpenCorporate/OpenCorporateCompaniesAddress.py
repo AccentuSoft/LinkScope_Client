@@ -45,7 +45,7 @@ class OpenCorporateCompaniesAddress:
         for entity in entityJsonList:
             uid = entity['uid']
 
-            if parameters['OpenCorporates API Key'] == 'No Key':
+            if parameters['OpenCorporates API Key'].strip() == 'No Key':
                 # Set up parameters
                 data_params = parse.urlencode({
                     'q': entity['Company Name']
@@ -70,7 +70,7 @@ class OpenCorporateCompaniesAddress:
                 )
                 # Rate limited to the Starter API rate.
                 time.sleep(0.02)
-                data = r.json
+                data = r.json()
 
             if r.status_code == 401:
                 return 'Invalid API Key'

@@ -52,7 +52,7 @@ class OpenCorporateCompanyOfficers:
             companyCode = entity['Company Number']
             uid = entity['uid']
 
-            if parameters['OpenCorporates API Key'] == 'No Key':
+            if parameters['OpenCorporates API Key'].strip() == 'No Key':
                 # Perform and process get request
                 try:
                     r = requests.get(f"https://api.opencorporates.com/v0.4/companies/{jurisdictionCode}/{companyCode}")
@@ -71,7 +71,7 @@ class OpenCorporateCompanyOfficers:
                     return "Please check your internet connection"
                 # Rate limited to the Starter API rate.
                 time.sleep(80)
-                data = r.json
+                data = r.json()
 
             if r.status_code == 401:
                 return 'Invalid API Key'

@@ -25,7 +25,7 @@ class GetN8FForms:
         from bs4 import BeautifulSoup
 
         headers = {
-            'User-Agent': 'user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:89.0) Gecko/20100101 Firefox/89.0',
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:105.0) Gecko/20100101 Firefox/105.0',
         }
 
         try:
