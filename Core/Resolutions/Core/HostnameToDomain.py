@@ -17,7 +17,7 @@ class HostnameToDomain:
             uid = entity['uid']
             primary_field = entity[list(entity)[1]].strip()
             tsd, td, tsu = extract(primary_field)
-            domain = td + '.' + tsu
+            domain = f'{td}.{tsu}'
             if domain == primary_field:
                 continue
             return_result.append([{'Domain Name': domain,

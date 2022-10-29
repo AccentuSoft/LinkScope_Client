@@ -47,11 +47,10 @@ class DecodePhrase:
                 if len(text) % 8 != 0:
                     return "Malformed format not in Octaves"
 
-                ascii_string = ''
-                for binaryIndex in range(0, len(text), 8):
-                    ascii_string += chr(int(text[binaryIndex:binaryIndex + 8], 2))
-                returnResult.append([{'Phrase': str(ascii_string),
-                                      'Entity Type': 'Phrase'},
+                ascii_string = ''.join(chr(int(text[binaryIndex: binaryIndex + 8], 2))
+                                       for binaryIndex in range(0, len(text), 8))
+
+                returnResult.append([{'Phrase': ascii_string, 'Entity Type': 'Phrase'},
                                      {uid: {'Resolution': 'Binary Decoded Phrase', 'Notes': ''}}])
 
         return returnResult

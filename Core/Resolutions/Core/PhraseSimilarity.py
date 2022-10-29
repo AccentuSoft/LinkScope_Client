@@ -23,11 +23,10 @@ class PhraseSimilarity:
         entity_fields = []
         selection = parameters['Primary field or Notes']
         algorithm = parameters['Algorithm'].replace(" ", "_")
-        if selection == 'Primary Field':
-            for entity in entityJsonList:
+        for entity in entityJsonList:
+            if selection == 'Primary Field':
                 entity_fields.append((entity['uid'], entity[list(entity)[1]].strip()))
-        elif selection == 'Notes':
-            for entity in entityJsonList:
+            elif selection == 'Notes':
                 entity_fields.append((entity['uid'], entity.get('Notes')))
 
         if len(entity_fields) < 2:

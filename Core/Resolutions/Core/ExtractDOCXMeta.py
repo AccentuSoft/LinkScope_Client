@@ -26,7 +26,7 @@ class ExtractDOCXMeta:
             uid = entity['uid']
             filePath = Path(parameters['Project Files Directory']) / entity['File Path']
 
-            if not (filePath.exists() and filePath.is_file()):
+            if not filePath.exists() or not filePath.is_file():
                 continue
 
             if magic.from_file(str(filePath), mime=True) != \
@@ -49,9 +49,8 @@ class ExtractDOCXMeta:
                                    'Entity Type': 'Date'},
                                   {uid: {'Resolution': 'created', 'Notes': ''}}])
 
-            for metadataKey in [dataKey for dataKey in data if dataKey not in defaultDateProperties]:
-                returnResults.append([{'Phrase': metadataKey + ': ' + str(data.get(metadataKey)),
-                                       'Entity Type': 'Phrase'},
-                                      {uid: {'Resolution': metadataKey, 'Notes': ''}}])
+            returnResults.extend([{'Phrase': f'{metadataKey}: {str(data.get(metadataKey))}', 'Entity Type': 'Phrase'},
+                                  {uid: {'Resolution': metadataKey, 'Notes': ''}}] for metadataKey in
+                                 [dataKey for dataKey in data if dataKey not in defaultDateProperties])
 
         return returnResults

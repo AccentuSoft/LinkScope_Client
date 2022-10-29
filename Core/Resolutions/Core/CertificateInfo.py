@@ -11,6 +11,7 @@ class CertificateInfo:
     parameters = {}
 
     def resolution(self, entityJsonList, parameters):
+        import contextlib
         import ssl
         import socket
 
@@ -54,21 +55,18 @@ class CertificateInfo:
                                                'Entity Type': 'Domain'},
                                               {uid: {'Resolution': 'Certificate Subject Common Name',
                                                      'Notes': ''}}])
-
-                    elif subjectAttributeInnerKey == 'streetAddress':
-                        streetAddr = subjectAttributeInnerValue
                     elif subjectAttributeInnerKey == 'countryName':
                         subjectCountry = subjectAttributeInnerValue
-                    elif subjectAttributeInnerKey == 'postalCode':
-                        postalCode = subjectAttributeInnerValue
                     elif subjectAttributeInnerKey == 'localityName':
                         locality = subjectAttributeInnerValue
-
-                    elif subjectAttributeInnerKey == 'serialNumber':
-                        subjectSerial = subjectAttributeInnerValue
                     elif subjectAttributeInnerKey == 'organizationName':
                         subjectName = subjectAttributeInnerValue
-
+                    elif subjectAttributeInnerKey == 'postalCode':
+                        postalCode = subjectAttributeInnerValue
+                    elif subjectAttributeInnerKey == 'serialNumber':
+                        subjectSerial = subjectAttributeInnerValue
+                    elif subjectAttributeInnerKey == 'streetAddress':
+                        streetAddr = subjectAttributeInnerValue
             subjectIndex = None
             if subjectName is not None:
                 subjectIndex = len(returnResults)
@@ -141,45 +139,33 @@ class CertificateInfo:
                                          'Notes': ''}}])
 
             # Domain names included in the certificate.
-            try:
+            with contextlib.suppress(KeyError):
                 for altNameAttribute in websiteCertificate['subjectAltName']:
                     returnResults.append([{'Domain Name': altNameAttribute[1],
                                            'Entity Type': 'Domain'},
                                           {uid: {'Resolution': 'Certificate Subject Alternate Name',
                                                  'Notes': ''}}])
-            except KeyError:
-                pass
-
             # OCSP URLs. Often just one.
-            try:
+            with contextlib.suppress(KeyError):
                 for ocsp in websiteCertificate['OCSP']:
                     returnResults.append([{'URL': ocsp,
                                            'Entity Type': 'Website'},
                                           {uid: {'Resolution': 'Certificate OCSP URL',
                                                  'Notes': ''}}])
-            except KeyError:
-                pass
-
             # CA Issuer URL
-            try:
+            with contextlib.suppress(KeyError):
                 for caIssuer in websiteCertificate['caIssuers']:
                     returnResults.append([{'URL': caIssuer,
                                            'Entity Type': 'Website'},
                                           {uid: {'Resolution': 'Certificate Authority Issuer URL',
                                                  'Notes': ''}}])
-            except KeyError:
-                pass
-
             # CRL URLs
-            try:
+            with contextlib.suppress(KeyError):
                 for crlDistributionPoint in websiteCertificate['crlDistributionPoints']:
                     returnResults.append([{'URL': crlDistributionPoint,
                                            'Entity Type': 'Website'},
                                           {uid: {'Resolution': 'Certificate Authority Revocation List URL',
                                                  'Notes': ''}}])
-            except KeyError:
-                pass
-
             # Issuer information
             orgName = None
             orgCommonName = None
@@ -192,21 +178,20 @@ class CertificateInfo:
                 for issuerAttributeInner in issuerAttributeOuter:
                     issuerAttributeInnerKey = issuerAttributeInner[0]
                     issuerAttributeInnerValue = issuerAttributeInner[1]
-                    if issuerAttributeInnerKey == 'organizationName':
-                        orgName = issuerAttributeInnerValue
-                    elif issuerAttributeInnerKey == 'commonName':
+                    if issuerAttributeInnerKey == 'commonName':
                         orgCommonName = issuerAttributeInnerValue
                     elif issuerAttributeInnerKey == 'countryName':
                         orgCountry = issuerAttributeInnerValue
-                    elif issuerAttributeInnerKey == 'postalCode':
-                        orgPostal = issuerAttributeInnerValue
                     elif issuerAttributeInnerKey == 'localityName':
                         orgLocality = issuerAttributeInnerValue
-                    elif issuerAttributeInnerKey == 'stateOrProvinceName':
-                        orgStateOrProvince = issuerAttributeInnerValue
                     elif issuerAttributeInnerKey == 'orgUnitName':
                         orgUnitName = issuerAttributeInnerValue
-
+                    elif issuerAttributeInnerKey == 'organizationName':
+                        orgName = issuerAttributeInnerValue
+                    elif issuerAttributeInnerKey == 'postalCode':
+                        orgPostal = issuerAttributeInnerValue
+                    elif issuerAttributeInnerKey == 'stateOrProvinceName':
+                        orgStateOrProvince = issuerAttributeInnerValue
             issuerIndex = None
             if orgName is not None:
                 issuerIndex = len(returnResults)

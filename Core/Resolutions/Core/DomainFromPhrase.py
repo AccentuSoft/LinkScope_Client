@@ -12,6 +12,7 @@ class DomainFromPhrase:
 
     def resolution(self, entityJsonList, parameters):
         import re
+        import contextlib
         import tldextract
 
         domainRegex = re.compile(
@@ -30,14 +31,11 @@ class DomainFromPhrase:
                 while wordChar.match(entityChunk[-1]) is None:
                     entityChunk = entityChunk[:-1]
                 if domainRegex.match(entityChunk):
-                    try:
+                    with contextlib.suppress(Exception):
                         tldObject = tldextract.extract(entityChunk)
                         if tldObject.suffix != '':
                             returnResults.append([{'Domain Name': entityChunk,
                                                    'Entity Type': 'Domain'},
                                                   {entity['uid']: {'Resolution': 'Phrase To Domain',
                                                                    'Notes': ''}}])
-                    except Exception:
-                        pass
-
         return returnResults

@@ -20,6 +20,8 @@ class JSCodeExtractor:
         from playwright.sync_api import sync_playwright, Error
         from base64 import b64decode
         import re
+        import contextlib
+
         returnResults = []
         requestUrlsParsed = set()
 
@@ -48,126 +50,127 @@ class JSCodeExtractor:
         brightcoveRegex = re.compile(r'metrics\.brightcove\.com/.*/tracker\?.*&account=[^&]*')
 
         def GetTrackingCodes(pageUid, requestUrl) -> None:
-            if requestUrl not in requestUrlsParsed:
-                requestUrlsParsed.add(requestUrl)
-                for uaCode in uaRegex.findall(requestUrl):
-                    returnResults.append([{'Phrase': uaCode,
-                                           'Entity Type': 'Phrase'},
-                                          {pageUid: {'Resolution': 'Google UA Tracking Code',
-                                                     'Notes': ''}}])
-                for pubCode in pubRegex.findall(requestUrl):
-                    returnResults.append([{'Phrase': pubCode,
-                                           'Entity Type': 'Phrase'},
-                                          {pageUid: {'Resolution': 'Google AdSense ca-pub Tracking Code',
-                                                     'Notes': ''}}])
-                for gtmCode in gtmRegex.findall(requestUrl):
-                    returnResults.append([{'Phrase': gtmCode,
-                                           'Entity Type': 'Phrase'},
-                                          {pageUid: {'Resolution': 'Google GTM Tracking Code',
-                                                     'Notes': ''}}])
-                for gCode in gRegex.findall(requestUrl):
-                    returnResults.append([{'Phrase': gCode,
-                                           'Entity Type': 'Phrase'},
-                                          {pageUid: {'Resolution': 'Google G Tracking Code',
-                                                     'Notes': ''}}])
-                for qCode in qualtricsRegex.findall(requestUrl):
-                    returnResults.append([{'Phrase': qCode[6:],
-                                           'Entity Type': 'Phrase'},
-                                          {pageUid: {'Resolution': 'Qualtrics Tracking Code',
-                                                     'Notes': ''}}])
-                for pCode in pingdomRegex.findall(requestUrl):
-                    returnResults.append([{'Phrase': pCode[:-3],
-                                           'Entity Type': 'Phrase'},
-                                          {pageUid: {'Resolution': 'Pingdom Tracking Code',
-                                                     'Notes': ''}}])
-                for mCode in mPulseRegex.findall(requestUrl):
-                    returnResults.append([{'Phrase': mCode.split('/')[-1],
-                                           'Entity Type': 'Phrase'},
-                                          {pageUid: {'Resolution': 'mPulse Tracking Code',
-                                                     'Notes': ''}}])
-                for cCode in contextWebRegex.findall(requestUrl):
-                    returnResults.append([{'Phrase': cCode.split('token=')[1].split('&')[0],
-                                           'Entity Type': 'Phrase'},
-                                          {pageUid: {'Resolution': 'ContextWeb Tracking Code',
-                                                     'Notes': ''}}])
-                for fCode in facebookRegex.findall(requestUrl):
-                    returnResults.append([{'Phrase': fCode.split('id=')[1].split('&')[0],
-                                           'Entity Type': 'Phrase'},
-                                          {pageUid: {'Resolution': 'Facebook Tracking Pixel Code',
-                                                     'Notes': ''}}])
-                for mapsCode in googleMapsRegex.findall(requestUrl):
-                    returnResults.append([{'Phrase': mapsCode.split('client=', 1)[1].split('&')[0],
-                                           'Entity Type': 'Phrase'},
-                                          {pageUid: {'Resolution': 'Google Maps Client Code',
-                                                     'Notes': ''}}])
-                for marketoCode in marketoRegex.findall(requestUrl):
-                    returnResults.append([{'Phrase': marketoCode.split('aid=')[1].split('&')[0],
-                                           'Entity Type': 'Phrase'},
-                                          {pageUid: {'Resolution': 'Marketo Tracking Code',
-                                                     'Notes': ''}}])
-                for vwoCode in visualWebsiteOptimizerRegex.findall(requestUrl):
-                    returnResults.append([{'Phrase': vwoCode.split('a=')[1].split('&')[0],
-                                           'Entity Type': 'Phrase'},
-                                          {pageUid: {'Resolution': 'Visual Website Optimizer Tracking User ID',
-                                                     'Notes': ''}}])
-                for oCode in optimizeRegex.findall(requestUrl):
-                    returnResults.append([{'Phrase': oCode.split('id=')[1].split('&')[0],
-                                           'Entity Type': 'Phrase'},
-                                          {pageUid: {'Resolution': 'Google Optimize ID',
-                                                     'Notes': ''}}])
-                for mmCode in markMonitorRegex.findall(requestUrl):
-                    returnResults.append([{'Phrase': mmCode.split('adv=')[1].split('&')[0],
-                                           'Entity Type': 'Phrase'},
-                                          {pageUid: {'Resolution': 'Mark Monitor Tracking ID',
-                                                     'Notes': ''}}])
-                for zCode in zendeskRegex.findall(requestUrl):
-                    returnResults.append([{'Phrase': zCode.split('key=')[1].split('&')[0],
-                                           'Entity Type': 'Phrase'},
-                                          {pageUid: {'Resolution': 'Zendesk ID',
-                                                     'Notes': ''}}])
-                for qsCode in quantServeRegex.findall(requestUrl):
-                    returnResults.append([{'Phrase': qsCode.split('/pixel/')[1].split('.gif')[0],
-                                           'Entity Type': 'Phrase'},
-                                          {pageUid: {'Resolution': 'QuantServe Tracking Pixel ID',
-                                                     'Notes': ''}}])
-                for clCode in cookieLawRegex.findall(requestUrl):
-                    returnResults.append([{'Phrase': clCode.split('/')[2],
-                                           'Entity Type': 'Phrase'},
-                                          {pageUid: {'Resolution': 'CookieLaw Website ID',
-                                                     'Notes': ''}}])
-                for otCode in oneTagRegex.findall(requestUrl):
-                    returnResults.append([{'Phrase': otCode.split('/')[1],
-                                           'Entity Type': 'Phrase'},
-                                          {pageUid: {'Resolution': 'OneTag Tracking ID',
-                                                     'Notes': ''}}])
-                for beCode in bounceExchangeRegex.findall(requestUrl):
-                    returnResults.append([{'Phrase': beCode.split('/')[1],
-                                           'Entity Type': 'Phrase'},
-                                          {pageUid: {'Resolution': 'BounceExchange Tracking ID',
-                                                     'Notes': ''}}])
-                for pushlyCode in pushlyRegex.findall(requestUrl):
-                    returnResults.append([{'Phrase': pushlyCode.split('domain_key=')[1],
-                                           'Entity Type': 'Phrase'},
-                                          {pageUid: {'Resolution': 'Pushly Website ID',
-                                                     'Notes': ''}}])
-                for aCode in akamaiRegex.findall(requestUrl):
-                    encodedTracking = aCode.split('a=', 1)[1]
-                    encodedTracking = encodedTracking.replace('%3D', '=')
-                    decodedTracking = b64decode(encodedTracking).decode('utf-8').split('t=')[1].split('&')[0]
-                    returnResults.append([{'Phrase': decodedTracking,
-                                           'Entity Type': 'Phrase'},
-                                          {pageUid: {'Resolution': 'Akamai Website ID',
-                                                     'Notes': 'SHA-1 Sum'}}])
-                for dCode in demdexRegex.findall(requestUrl):
-                    returnResults.append([{'Phrase': dCode.split('d_orgid=')[1],
-                                           'Entity Type': 'Phrase'},
-                                          {pageUid: {'Resolution': 'DemDex (Adobe) Website ID',
-                                                     'Notes': ''}}])
-                for bCode in brightcoveRegex.findall(requestUrl):
-                    returnResults.append([{'Phrase': bCode.split('account=')[1],
-                                           'Entity Type': 'Phrase'},
-                                          {pageUid: {'Resolution': 'BrightCove Website ID',
-                                                     'Notes': ''}}])
+            if requestUrl in requestUrlsParsed:
+                return
+            requestUrlsParsed.add(requestUrl)
+            for uaCode in uaRegex.findall(requestUrl):
+                returnResults.append([{'Phrase': uaCode,
+                                       'Entity Type': 'Phrase'},
+                                      {pageUid: {'Resolution': 'Google UA Tracking Code',
+                                                 'Notes': ''}}])
+            for pubCode in pubRegex.findall(requestUrl):
+                returnResults.append([{'Phrase': pubCode,
+                                       'Entity Type': 'Phrase'},
+                                      {pageUid: {'Resolution': 'Google AdSense ca-pub Tracking Code',
+                                                 'Notes': ''}}])
+            for gtmCode in gtmRegex.findall(requestUrl):
+                returnResults.append([{'Phrase': gtmCode,
+                                       'Entity Type': 'Phrase'},
+                                      {pageUid: {'Resolution': 'Google GTM Tracking Code',
+                                                 'Notes': ''}}])
+            for gCode in gRegex.findall(requestUrl):
+                returnResults.append([{'Phrase': gCode,
+                                       'Entity Type': 'Phrase'},
+                                      {pageUid: {'Resolution': 'Google G Tracking Code',
+                                                 'Notes': ''}}])
+            for qCode in qualtricsRegex.findall(requestUrl):
+                returnResults.append([{'Phrase': qCode[6:],
+                                       'Entity Type': 'Phrase'},
+                                      {pageUid: {'Resolution': 'Qualtrics Tracking Code',
+                                                 'Notes': ''}}])
+            for pCode in pingdomRegex.findall(requestUrl):
+                returnResults.append([{'Phrase': pCode[:-3],
+                                       'Entity Type': 'Phrase'},
+                                      {pageUid: {'Resolution': 'Pingdom Tracking Code',
+                                                 'Notes': ''}}])
+            for mCode in mPulseRegex.findall(requestUrl):
+                returnResults.append([{'Phrase': mCode.split('/')[-1],
+                                       'Entity Type': 'Phrase'},
+                                      {pageUid: {'Resolution': 'mPulse Tracking Code',
+                                                 'Notes': ''}}])
+            for cCode in contextWebRegex.findall(requestUrl):
+                returnResults.append([{'Phrase': cCode.split('token=')[1].split('&')[0],
+                                       'Entity Type': 'Phrase'},
+                                      {pageUid: {'Resolution': 'ContextWeb Tracking Code',
+                                                 'Notes': ''}}])
+            for fCode in facebookRegex.findall(requestUrl):
+                returnResults.append([{'Phrase': fCode.split('id=')[1].split('&')[0],
+                                       'Entity Type': 'Phrase'},
+                                      {pageUid: {'Resolution': 'Facebook Tracking Pixel Code',
+                                                 'Notes': ''}}])
+            for mapsCode in googleMapsRegex.findall(requestUrl):
+                returnResults.append([{'Phrase': mapsCode.split('client=', 1)[1].split('&')[0],
+                                       'Entity Type': 'Phrase'},
+                                      {pageUid: {'Resolution': 'Google Maps Client Code',
+                                                 'Notes': ''}}])
+            for marketoCode in marketoRegex.findall(requestUrl):
+                returnResults.append([{'Phrase': marketoCode.split('aid=')[1].split('&')[0],
+                                       'Entity Type': 'Phrase'},
+                                      {pageUid: {'Resolution': 'Marketo Tracking Code',
+                                                 'Notes': ''}}])
+            for vwoCode in visualWebsiteOptimizerRegex.findall(requestUrl):
+                returnResults.append([{'Phrase': vwoCode.split('a=')[1].split('&')[0],
+                                       'Entity Type': 'Phrase'},
+                                      {pageUid: {'Resolution': 'Visual Website Optimizer Tracking User ID',
+                                                 'Notes': ''}}])
+            for oCode in optimizeRegex.findall(requestUrl):
+                returnResults.append([{'Phrase': oCode.split('id=')[1].split('&')[0],
+                                       'Entity Type': 'Phrase'},
+                                      {pageUid: {'Resolution': 'Google Optimize ID',
+                                                 'Notes': ''}}])
+            for mmCode in markMonitorRegex.findall(requestUrl):
+                returnResults.append([{'Phrase': mmCode.split('adv=')[1].split('&')[0],
+                                       'Entity Type': 'Phrase'},
+                                      {pageUid: {'Resolution': 'Mark Monitor Tracking ID',
+                                                 'Notes': ''}}])
+            for zCode in zendeskRegex.findall(requestUrl):
+                returnResults.append([{'Phrase': zCode.split('key=')[1].split('&')[0],
+                                       'Entity Type': 'Phrase'},
+                                      {pageUid: {'Resolution': 'Zendesk ID',
+                                                 'Notes': ''}}])
+            for qsCode in quantServeRegex.findall(requestUrl):
+                returnResults.append([{'Phrase': qsCode.split('/pixel/')[1].split('.gif')[0],
+                                       'Entity Type': 'Phrase'},
+                                      {pageUid: {'Resolution': 'QuantServe Tracking Pixel ID',
+                                                 'Notes': ''}}])
+            for clCode in cookieLawRegex.findall(requestUrl):
+                returnResults.append([{'Phrase': clCode.split('/')[2],
+                                       'Entity Type': 'Phrase'},
+                                      {pageUid: {'Resolution': 'CookieLaw Website ID',
+                                                 'Notes': ''}}])
+            for otCode in oneTagRegex.findall(requestUrl):
+                returnResults.append([{'Phrase': otCode.split('/')[1],
+                                       'Entity Type': 'Phrase'},
+                                      {pageUid: {'Resolution': 'OneTag Tracking ID',
+                                                 'Notes': ''}}])
+            for beCode in bounceExchangeRegex.findall(requestUrl):
+                returnResults.append([{'Phrase': beCode.split('/')[1],
+                                       'Entity Type': 'Phrase'},
+                                      {pageUid: {'Resolution': 'BounceExchange Tracking ID',
+                                                 'Notes': ''}}])
+            for pushlyCode in pushlyRegex.findall(requestUrl):
+                returnResults.append([{'Phrase': pushlyCode.split('domain_key=')[1],
+                                       'Entity Type': 'Phrase'},
+                                      {pageUid: {'Resolution': 'Pushly Website ID',
+                                                 'Notes': ''}}])
+            for aCode in akamaiRegex.findall(requestUrl):
+                encodedTracking = aCode.split('a=', 1)[1]
+                encodedTracking = encodedTracking.replace('%3D', '=')
+                decodedTracking = b64decode(encodedTracking).decode('utf-8').split('t=')[1].split('&')[0]
+                returnResults.append([{'Phrase': decodedTracking,
+                                       'Entity Type': 'Phrase'},
+                                      {pageUid: {'Resolution': 'Akamai Website ID',
+                                                 'Notes': 'SHA-1 Sum'}}])
+            for dCode in demdexRegex.findall(requestUrl):
+                returnResults.append([{'Phrase': dCode.split('d_orgid=')[1],
+                                       'Entity Type': 'Phrase'},
+                                      {pageUid: {'Resolution': 'DemDex (Adobe) Website ID',
+                                                 'Notes': ''}}])
+            for bCode in brightcoveRegex.findall(requestUrl):
+                returnResults.append([{'Phrase': bCode.split('account=')[1],
+                                       'Entity Type': 'Phrase'},
+                                      {pageUid: {'Resolution': 'BrightCove Website ID',
+                                                 'Notes': ''}}])
 
         with sync_playwright() as p:
             browser = p.firefox.launch()
@@ -194,16 +197,12 @@ class JSCodeExtractor:
                 if url is None:
                     continue
                 if not url.startswith('http://') and not url.startswith('https://'):
-                    url = 'http://' + url
+                    url = f'http://{url}'
 
-                try:
+                with contextlib.suppress(Error):
                     pageJS.goto(url, wait_until="networkidle")
-                except Error:
-                    pass
-                try:
+                with contextlib.suppress(Error):
                     pageNoJS.goto(url, wait_until="networkidle")
-                except Error:
-                    pass
             pageJS.close()
             pageNoJS.close()
             browser.close()

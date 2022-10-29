@@ -11,6 +11,7 @@ class WebsiteFromPhrase:
     parameters = {}
 
     def resolution(self, entityJsonList, parameters):
+        import contextlib
         import re
         import tldextract
 
@@ -25,14 +26,11 @@ class WebsiteFromPhrase:
                 while wordChar.match(entityChunk[-1]) is None:
                     entityChunk = entityChunk[:-1]
                 if websiteRegex.match(entityChunk):
-                    try:
+                    with contextlib.suppress(Exception):
                         tldObject = tldextract.extract(entityChunk)
                         if tldObject.suffix != '':
                             returnResults.append([{'URL': entityChunk,
                                                    'Entity Type': 'Website'},
                                                   {entity['uid']: {'Resolution': 'Phrase To Website',
                                                                    'Notes': ''}}])
-                    except Exception:
-                        pass
-
         return returnResults

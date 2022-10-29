@@ -49,7 +49,7 @@ class AffiliateCodesExtractor:
         import re
 
         returnResults = []
-        visitExternal = True if parameters['Visit External Links'] == 'Yes' else False
+        visitExternal = parameters['Visit External Links'] == 'Yes'
 
         # Numbers less than zero are the same as zero, but we should try to prevent overflows.
         try:
@@ -133,57 +133,55 @@ class AffiliateCodesExtractor:
             linksInLinkHref = soupContents.find_all('link')
             for tag in linksInLinkHref:
                 newLink = tag.get('href', None)
-                if newLink is not None:
-                    if newLink.startswith('http'):
-                        newLink = newLink.split('#')[0]
-                        newDepth = depth - 1
-                        if domain in newLink and newLink not in exploredDepth and newDepth > 0:
-                            exploredDepth.add(newLink)
-                            extractCodes(currentUID, newLink, newDepth)
+                if newLink is not None and newLink.startswith('http'):
+                    newLink = newLink.split('#')[0]
+                    newDepth = depth - 1
+                    if domain in newLink and newLink not in exploredDepth and newDepth > 0:
+                        exploredDepth.add(newLink)
+                        extractCodes(currentUID, newLink, newDepth)
 
             linksInAHref = soupContents.find_all('a')
             for tag in linksInAHref:
                 newLink = tag.get('href', None)
-                if newLink is not None:
-                    if newLink.startswith('http'):
-                        newLink = newLink.split('#')[0]
-                        newDepth = depth - 1
-                        if domain in newLink:
-                            redirLinks = redirectRegex.findall(newLink)
-                            if 'redirect' in newLink and len(redirLinks) > 0:
-                                newLink = str(urllib.parse.unquote(redirLinks[0]))[2:]
-                                if newLink not in exploredForeign:
-                                    exploredForeign.add(newLink)
-                                    if visitExternal:
-                                        for _ in range(3):
-                                            try:
-                                                page.goto(newLink, wait_until="networkidle", timeout=10000)
-                                                GetAffiliateCodes(currentUID, page.url)
-                                                break
-                                            except TimeoutError:
-                                                pass
-                                            except Error:
-                                                break
-                                else:
-                                    GetAffiliateCodes(currentUID, newLink)
-                            else:
-                                if newLink not in exploredDepth and newDepth > 0:
-                                    exploredDepth.add(newLink)
-                                    extractCodes(currentUID, newLink, newDepth)
-                        elif newLink not in exploredForeign:
-                            exploredForeign.add(newLink)
-                            if visitExternal:
-                                for _ in range(3):
-                                    try:
-                                        page.goto(newLink, wait_until="networkidle", timeout=10000)
-                                        GetAffiliateCodes(currentUID, page.url)
-                                        break
-                                    except TimeoutError:
-                                        pass
-                                    except Error:
-                                        break
+                if newLink is not None and newLink.startswith('http'):
+                    newLink = newLink.split('#')[0]
+                    newDepth = depth - 1
+                    if domain in newLink:
+                        redirLinks = redirectRegex.findall(newLink)
+                        if 'redirect' in newLink and len(redirLinks) > 0:
+                            newLink = str(urllib.parse.unquote(redirLinks[0]))[2:]
+                            if newLink not in exploredForeign:
+                                exploredForeign.add(newLink)
+                                if visitExternal:
+                                    for _ in range(3):
+                                        try:
+                                            page.goto(newLink, wait_until="networkidle", timeout=10000)
+                                            GetAffiliateCodes(currentUID, page.url)
+                                            break
+                                        except TimeoutError:
+                                            pass
+                                        except Error:
+                                            break
                             else:
                                 GetAffiliateCodes(currentUID, newLink)
+                        else:
+                            if newLink not in exploredDepth and newDepth > 0:
+                                exploredDepth.add(newLink)
+                                extractCodes(currentUID, newLink, newDepth)
+                    elif newLink not in exploredForeign:
+                        exploredForeign.add(newLink)
+                        if visitExternal:
+                            for _ in range(3):
+                                try:
+                                    page.goto(newLink, wait_until="networkidle", timeout=10000)
+                                    GetAffiliateCodes(currentUID, page.url)
+                                    break
+                                except TimeoutError:
+                                    pass
+                                except Error:
+                                    break
+                        else:
+                            GetAffiliateCodes(currentUID, newLink)
 
         with sync_playwright() as p:
             browser = p.firefox.launch()
@@ -197,7 +195,7 @@ class AffiliateCodesExtractor:
                 if url is None:
                     continue
                 if not url.startswith('http://') and not url.startswith('https://'):
-                    url = 'http://' + url
+                    url = f'http://{url}'
                 domain = tldextract.extract(url).fqdn
                 extractCodes(uid, url, maxDepth)
             browser.close()

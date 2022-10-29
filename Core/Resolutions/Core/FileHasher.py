@@ -25,10 +25,10 @@ class FileHasher:
                 continue
             block_size = 65536  # The size of each read from the file
             for hashing_algorithm in hashing_algorithms:
-                if hashing_algorithm == "SHA256":
-                    file_hash = hashlib.sha256()  # nosec
-                elif hashing_algorithm == "SHA1":
+                if hashing_algorithm == "SHA1":
                     file_hash = hashlib.sha1()  # nosec
+                elif hashing_algorithm == "SHA256":
+                    file_hash = hashlib.sha256()  # nosec
                 else:
                     file_hash = hashlib.md5()  # nosec
                 with open(file_path, 'rb') as f:
@@ -40,5 +40,5 @@ class FileHasher:
                 return_result.append([{'Hash Value': resulting_hash,
                                        'Hash Algorithm': hashing_algorithm,
                                        'Entity Type': 'Hash'},
-                                      {uid: {'Resolution': hashing_algorithm + ' Hash', 'Notes': ''}}])
+                                      {uid: {'Resolution': f'{hashing_algorithm} Hash', 'Notes': ''}}])
         return return_result

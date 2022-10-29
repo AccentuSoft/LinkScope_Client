@@ -35,19 +35,19 @@ class IPToASN:
                 index_of_child = len(returnResult)
                 countryCode = results['asn_country_code']
                 country = pycountry.countries.get(alpha_2=countryCode).name
-                returnResult.append([{'AS Number': "AS" + results['asn'],
-                                      'ASN Cidr': results['asn_cidr'],
-                                      'Date Created': results['asn_date'],
-                                      'Entity Type': 'Autonomous System'},
-                                     {uid: {'Resolution': 'Autonomous System of IP', 'Notes': ''}}])
-                returnResult.append(
-                    [{'Organization Name': results['asn_registry'], 'Entity Type': 'Organization'},
-                     {index_of_child: {'Resolution': 'ASN Registry', 'Notes': ''}}])
-                returnResult.append(
-                    [{'Country Name': country, 'Entity Type': 'Country'},
-                     {index_of_child: {'Resolution': 'Country of Registry for ASN', 'Notes': ''}}])
-                returnResult.append(
-                    [{'Phrase': results['asn_description'], 'Entity Type': 'Phrase'},
-                     {index_of_child: {'Resolution': 'ASN Description', 'Notes': ''}}])
+                returnResult.extend(([{'AS Number': "AS" + results['asn'],
+                                       'ASN Cidr': results['asn_cidr'],
+                                       'Date Created': results['asn_date'],
+                                       'Entity Type': 'Autonomous System'},
+                                      {uid: {'Resolution': 'Autonomous System of IP', 'Notes': ''}}],
+                                     [{'Organization Name': results['asn_registry'],
+                                       'Entity Type': 'Organization'},
+                                      {index_of_child: {'Resolution': 'ASN Registry', 'Notes': ''}}],
+                                     [{'Country Name': country,
+                                       'Entity Type': 'Country'},
+                                      {index_of_child: {'Resolution': 'Country of Registry for ASN', 'Notes': ''}}],
+                                     [{'Phrase': results['asn_description'],
+                                       'Entity Type': 'Phrase'},
+                                      {index_of_child: {'Resolution': 'ASN Description', 'Notes': ''}}]))
 
         return returnResult

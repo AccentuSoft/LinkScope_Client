@@ -41,6 +41,7 @@ class FileExtractor:
                                 'default': '0'}}
 
     def resolution(self, entityJsonList, parameters):
+        import contextlib
         import tldextract
         import requests
         from hashlib import md5
@@ -87,7 +88,7 @@ class FileExtractor:
                 if link is not None:
                     if not link.startswith('http'):
                         # We assume that we will be redirected to https if available.
-                        link = 'http://' + domain + link
+                        link = f'http://{domain}{link}'
                     link = link.split('#')[0]
                     if link not in urlsExplored:
                         urlsExplored.add(link)
@@ -113,10 +114,10 @@ class FileExtractor:
                                                          'Notes': ''}}])
 
                             docProperName = link.split('/')[-1]
-                            docFileName = hexlify(md5(link.encode()).digest()).decode() + ' | ' + docProperName  # nosec
+                            docFileName = f'{hexlify(md5(link.encode()).digest()).decode()} | {docProperName}'
                             docFullPath = Path(parameters['Project Files Directory']) / docFileName
 
-                            try:
+                            with contextlib.suppress(Exception):
                                 response = requests.get(link,
                                                         headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; '
                                                                                'x64; rv:94.0) Gecko/20100101 '
@@ -126,13 +127,10 @@ class FileExtractor:
                                     for chunk in response.iter_content(4096):
                                         fileToWrite.write(chunk)
 
-                                returnResults.append([{fileTypeIdentified + ' Name': docProperName,
+                                returnResults.append([{f'{fileTypeIdentified} Name': docProperName,
                                                        'File Path': docFileName,
                                                        'Entity Type': fileTypeIdentified},
-                                                      {childIndex: {'Resolution': 'Downloaded File',
-                                                                    'Notes': ''}}])
-                            except Exception:
-                                pass
+                                                      {childIndex: {'Resolution': 'Downloaded File', 'Notes': ''}}])
 
                         elif domain in link:
                             urlsToExplore.add(link)
@@ -143,7 +141,7 @@ class FileExtractor:
                 if link is not None:
                     if not link.startswith('http'):
                         # We assume that we will be redirected to https if available.
-                        link = 'http://' + domain + link
+                        link = f'http://{domain}{link}'
                     link = link.split('#')[0]
                     if link not in urlsExplored:
                         urlsExplored.add(link)
@@ -155,10 +153,10 @@ class FileExtractor:
                                               {uid: {'Resolution': 'File URL',
                                                      'Notes': ''}}])
                         docProperName = link.split('/')[-1]
-                        docFileName = hexlify(md5(link.encode()).digest()).decode() + ' | ' + docProperName  # nosec
+                        docFileName = f'{hexlify(md5(link.encode()).digest()).decode()} | {docProperName}'
                         docFullPath = Path(parameters['Project Files Directory']) / docFileName
 
-                        try:
+                        with contextlib.suppress(Exception):
                             response = requests.get(link,
                                                     headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; '
                                                                            'x64; rv:94.0) Gecko/20100101 '
@@ -173,9 +171,6 @@ class FileExtractor:
                                                    'Entity Type': 'Image'},
                                                   {childIndex: {'Resolution': 'Downloaded File',
                                                                 'Notes': ''}}])
-                        except Exception:
-                            pass
-
             if currentDepth > 0:
                 newDepth = currentDepth - 1
                 for newURL in urlsToExplore:
@@ -194,7 +189,7 @@ class FileExtractor:
                 if url is None:
                     continue
                 if not url.startswith('http://') and not url.startswith('https://'):
-                    url = 'http://' + url
+                    url = f'http://{url}'
                 domain = tldextract.extract(url).fqdn
 
                 # Because these do not persist across entities, it is possible to explore a URL multiple times.

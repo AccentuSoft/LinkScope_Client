@@ -34,16 +34,14 @@ class TikTokVideoPublishDetails:
 
             binString = "{0:b}".format(videoID)
             if len(binString) == 63:
-                binString = '0' + binString
+                binString = f'0{binString}'
             binString = int(binString[:32], 2)
 
-            UTCTimestamp = datetime.utcfromtimestamp(binString).isoformat() + '+00:00'
+            UTCTimestamp = f'{datetime.utcfromtimestamp(binString).isoformat()}+00:00'
 
-            returnResults.append([{'Date': UTCTimestamp,
-                                   'Entity Type': 'Date'},
-                                  {uid: {'Resolution': 'Video Publish Date', 'Notes': ''}}])
-            returnResults.append([{'User Name': username,
-                                   'Entity Type': 'Social Media Handle'},
-                                  {uid: {'Resolution': 'Published By', 'Notes': ''}}])
+            returnResults.extend(([{'Date': UTCTimestamp, 'Entity Type': 'Date'},
+                                   {uid: {'Resolution': 'Video Publish Date', 'Notes': ''}}],
+                                  [{'User Name': username, 'Entity Type': 'Social Media Handle'},
+                                   {uid: {'Resolution': 'Published By', 'Notes': ''}}]))
 
         return returnResults

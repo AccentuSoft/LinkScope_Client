@@ -38,17 +38,19 @@ class EmailExtractor:
         from playwright.sync_api import sync_playwright, TimeoutError, Error
         from bs4 import BeautifulSoup
         import re
+        import contextlib
         from email_validator import validate_email, caching_resolver, EmailNotValidError
 
         returnResults = []
 
         # Source: https://emailregex.com/
         # Alt: (?:[a-zA-Z0-9_.+-]+@[a-zA-Z0-9-]+(\.([a-zA-Z0-9-])+)+)
-        emailRegex = re.compile(r"""(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])""")
-        useRegex = True if parameters['Use Regex'] == 'Yes' else False
+        emailRegex = re.compile(
+            r"""(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])""")
+        useRegex = parameters['Use Regex'] == 'Yes'
 
         resolver = caching_resolver(timeout=10)
-        verifyDomain = True if parameters['Verify Email Domain Validity'] == 'Yes' else False
+        verifyDomain = parameters['Verify Email Domain Validity'] == 'Yes'
 
         # The software can deduplicate, but handling it here is better.
         allEmails = set()
@@ -92,7 +94,7 @@ class EmailExtractor:
 
                 potentialEmails = emailRegex.findall(siteContent)
                 for potentialEmail in potentialEmails:
-                    try:
+                    with contextlib.suppress(EmailNotValidError):
                         valid = validate_email(potentialEmail, dns_resolver=resolver, check_deliverability=verifyDomain)
                         if valid.email not in allEmails:
                             allEmails.add(valid.email)
@@ -100,24 +102,19 @@ class EmailExtractor:
                                                    'Entity Type': 'Email Address'},
                                                   {currentUID: {'Resolution': 'Email Address Found',
                                                                 'Notes': ''}}])
-                    except EmailNotValidError:
-                        pass
             linksInAHref = soupContents.find_all('a')
             for tag in linksInAHref:
                 newLink = tag.get('href', None)
-                if newLink is not None:
-                    if newLink.startswith('mailto:'):
-                        try:
-                            valid = validate_email(newLink[7:], dns_resolver=resolver,
-                                                   check_deliverability=verifyDomain)
-                            if valid.email not in allEmails:
-                                allEmails.add(valid.email)
-                                returnResults.append([{'Email Address': valid.email,
-                                                       'Entity Type': 'Email Address'},
-                                                      {currentUID: {'Resolution': 'Email Address Found',
-                                                                    'Notes': ''}}])
-                        except EmailNotValidError:
-                            pass
+                if newLink is not None and newLink.startswith('mailto:'):
+                    with contextlib.suppress(EmailNotValidError):
+                        valid = validate_email(newLink[7:], dns_resolver=resolver,
+                                               check_deliverability=verifyDomain)
+                        if valid.email not in allEmails:
+                            allEmails.add(valid.email)
+                            returnResults.append([{'Email Address': valid.email,
+                                                   'Entity Type': 'Email Address'},
+                                                  {currentUID: {'Resolution': 'Email Address Found',
+                                                                'Notes': ''}}])
 
         with sync_playwright() as p:
             browser = p.chromium.launch()
@@ -133,7 +130,7 @@ class EmailExtractor:
                 if url is None:
                     continue
                 if not url.startswith('http://') and not url.startswith('https://'):
-                    url = 'http://' + url
+                    url = f'http://{url}'
                 extractEmails(uid, url)
             browser.close()
 

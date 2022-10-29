@@ -17,18 +17,17 @@ class ImageToGeoLocation:
         for entity in entityJsonList:
             uid = entity['uid']
             image_path = Path(parameters['Project Files Directory']) / entity['File Path']
-            if not (image_path.exists() and image_path.is_file()):
+            if not image_path.exists() or not image_path.is_file():
                 continue
             with open(image_path, 'rb') as image_file:
                 my_image = Image(image_file)
                 if my_image.has_exif is False:
                     continue
-                else:
-                    for tag in my_image.list_all():
-                        if tag == "gps_latitude":
-                            return_result.append([{'Label': "Location of"+str(entity[list(entity)[1]].strip()),
-                                                   'Latitude': my_image.gps_latitude,
-                                                   'Longitude': my_image.gps_longitude,
-                                                   'Entity Type': 'GeoCoordinates'},
-                                                  {uid: {'Resolution': 'GeoCoordinates', 'Notes': ''}}])
+                return_result.extend([{'Label': f"Location of {str(entity[list(entity)[1]].strip())}",
+                                       'Latitude': my_image.gps_latitude,
+                                       'Longitude': my_image.gps_longitude,
+                                       'Entity Type': 'GeoCoordinates'},
+                                      {uid: {'Resolution': 'GeoCoordinates', 'Notes': ''}}]
+                                     for tag in my_image.list_all() if tag == "gps_latitude")
+
         return return_result

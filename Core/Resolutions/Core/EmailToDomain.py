@@ -11,18 +11,16 @@ class EmailToDomain:
     parameters = {}
 
     def resolution(self, entityJsonList, parameters):
+        import contextlib
 
         returnResults = []
 
         for entity in entityJsonList:
             primaryField = entity['Email Address']
             # There is no provider that I am aware of that allows '@' signs in the user part of the email.
-            try:
+            with contextlib.suppress(Exception):
                 returnResults.append([{'Domain Name': primaryField.split('@')[1].strip(),
                                        'Entity Type': 'Domain'},
                                       {entity['uid']: {'Resolution': 'Email To Domain',
                                                        'Notes': ''}}])
-            except Exception:
-                pass
-
         return returnResults

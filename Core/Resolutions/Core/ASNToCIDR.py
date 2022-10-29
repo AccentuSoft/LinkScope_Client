@@ -46,18 +46,13 @@ class ASNToCIDR:
                     cidrWithOutPrefix = split_string[0]
                     prefix = split_string[1]
                     index_of_child = len(returnResult)
-                    returnResult.append([{'IP Address': cidrWithOutPrefix,
-                                          'Range': prefix,
-                                          'Entity Type': 'Network'},
-                                         {uid: {'Resolution': 'ASN to CIDR', 'Notes': ''}}])
-                    returnResult.append(
-                        [{'Phrase': network['description'], 'Entity Type': 'Phrase'},
-                         {index_of_child: {'Resolution': 'CIDR Description', 'Notes': ''}}])
-                    returnResult.append(
-                        [{'Organization Name': network['source'], 'Entity Type': 'Organization'},
-                         {index_of_child: {'Resolution': 'ASN Registry', 'Notes': ''}}])
-                    returnResult.append(
-                        [{'Company Name': network['maintainer'], 'Entity Type': 'Company'},
-                         {index_of_child: {'Resolution': 'Company Name', 'Notes': ''}}])
+                    returnResult.extend(([{'IP Address': cidrWithOutPrefix, 'Range': prefix, 'Entity Type': 'Network'},
+                                          {uid: {'Resolution': 'ASN to CIDR', 'Notes': ''}}],
+                                         [{'Phrase': network['description'], 'Entity Type': 'Phrase'},
+                                          {index_of_child: {'Resolution': 'CIDR Description', 'Notes': ''}}],
+                                         [{'Organization Name': network['source'], 'Entity Type': 'Organization'},
+                                          {index_of_child: {'Resolution': 'ASN Registry', 'Notes': ''}}],
+                                         [{'Company Name': network['maintainer'], 'Entity Type': 'Company'},
+                                          {index_of_child: {'Resolution': 'Company Name', 'Notes': ''}}]))
 
         return returnResult

@@ -18,6 +18,7 @@ class Whats_My_Name:
         from concurrent.futures import as_completed
         from pathlib import Path
         import json
+        import contextlib
         from playwright.sync_api import sync_playwright, TimeoutError
 
         import re
@@ -59,13 +60,12 @@ class Whats_My_Name:
                         account_existence_code = site['e_code']
                         account_existence_string = site['e_string']
                         requires_javascript = site.get('requires_javascript', False)
-                        post_body = site['post_body']
                         if site['valid']:
                             account_existence_string = re.escape(account_existence_string)
                             account_existence_string = re.compile(account_existence_string)
                             if requires_javascript:
                                 for _ in range(3):
-                                    try:
+                                    with contextlib.suppress(TimeoutError):
                                         response = page.goto(original_uri, wait_until="networkidle", timeout=10000)
                                         status_code = response.status
                                         page_source = page.content()
@@ -77,10 +77,8 @@ class Whats_My_Name:
                                                                   {uid: {'Resolution': 'Whats My Name Account Match',
                                                                          'Notes': ''}}])
                                         break
-                                    except TimeoutError:
-                                        pass
-
                             else:
+                                post_body = site['post_body']
                                 if post_body != "":
                                     futures[session.post(original_uri, data=post_body, headers=headers,
                                                          timeout=10, allow_redirects=False)] = \

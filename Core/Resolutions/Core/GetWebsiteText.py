@@ -27,9 +27,7 @@ class GetWebsiteText:
         def tag_visible(element):
             if element.parent.name in ['style', 'script', 'head', 'title', 'meta', '[document]']:
                 return False
-            if isinstance(element, Comment):
-                return False
-            return True
+            return not isinstance(element, Comment)
 
         def text_from_html(body):
             soup = BeautifulSoup(body, 'lxml')
@@ -59,7 +57,7 @@ class GetWebsiteText:
                     try:
                         page.goto(url, wait_until="networkidle", timeout=10000)
                         textContent = text_from_html(page.content())
-                        returnResults.append([{'Phrase': 'Website Body of: ' + url,
+                        returnResults.append([{'Phrase': f'Website Body of: {url}',
                                                'Notes': textContent,
                                                'Entity Type': 'Phrase'},
                                               {uid: {'Resolution': 'Website Body', 'Notes': ''}}])

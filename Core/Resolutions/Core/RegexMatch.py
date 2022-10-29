@@ -59,10 +59,9 @@ class RegexMatch:
 
             search_re = re.findall(search_param, text, flags=flagsToUse)
 
-            for regexMatch in search_re[:maxResults]:
-                returnResults.append([{'Phrase': 'Regex Match: ' + regexMatch,
-                                       'Entity Type': 'Phrase',
-                                       'Notes': ''},
-                                      {uid: {'Resolution': 'Regex String Match',
-                                             'Notes': ''}}])
+            returnResults.extend([{'Phrase': f'Regex Match: {regexMatch}',
+                                   'Entity Type': 'Phrase',
+                                   'Notes': ''},
+                                  {uid: {'Resolution': 'Regex String Match', 'Notes': ''}}]
+                                 for regexMatch in search_re[:maxResults])
         return returnResults

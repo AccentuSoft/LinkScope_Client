@@ -55,12 +55,11 @@ class PhoneNumbersExtractor:
             linksInAHref = soupContents.find_all('a')
             for tag in linksInAHref:
                 newLink = tag.get('href', None)
-                if newLink is not None:
-                    if newLink.startswith('tel:'):
-                        returnResults.append([{'Phone Number': newLink[4:],
-                                               'Entity Type': 'Phone Number'},
-                                              {currentUID: {'Resolution': 'Phone Number Found',
-                                                            'Notes': ''}}])
+                if newLink is not None and newLink.startswith('tel:'):
+                    returnResults.append([{'Phone Number': newLink[4:],
+                                           'Entity Type': 'Phone Number'},
+                                          {currentUID: {'Resolution': 'Phone Number Found',
+                                                        'Notes': ''}}])
 
             textTags = soupContents.find_all('p')
             for tag in textTags:
@@ -88,7 +87,7 @@ class PhoneNumbersExtractor:
                 if url is None:
                     continue
                 if not url.startswith('http://') and not url.startswith('https://'):
-                    url = 'http://' + url
+                    url = f'http://{url}'
                 extractTels(uid, url)
             browser.close()
 

@@ -83,13 +83,7 @@ class GetExternalURLs:
                                 link = tag.get('href', None)
                                 parsedURL = urllib.parse.urlparse(link)
                                 if all([parsedURL.scheme, parsedURL.netloc]):
-                                    if domain not in link:
-                                        newLink = link.split('#')[0].split('?')[0]
-                                        try:
-                                            externalUrls[newLink].add(uid)
-                                        except KeyError:
-                                            externalUrls[newLink] = {uid}
-                                    else:
+                                    if domain in link:
                                         redirectLinks = redirectRegex.findall(link)
                                         if 'redirect' in link and len(redirectLinks) > 0:
                                             try:
@@ -106,31 +100,35 @@ class GetExternalURLs:
                                             except Exception:
                                                 pass
 
-                        if extract_img:
-                            linksInImgSrc = soupContents.find_all('img')
-                            for tag in linksInImgSrc:
-                                link = tag.get('src', None)
-                                parsedURL = urllib.parse.urlparse(link)
-                                if all([parsedURL.scheme, parsedURL.netloc]):
-                                    if domain not in link:
+                                    else:
                                         newLink = link.split('#')[0].split('?')[0]
                                         try:
                                             externalUrls[newLink].add(uid)
                                         except KeyError:
                                             externalUrls[newLink] = {uid}
+                        if extract_img:
+                            linksInImgSrc = soupContents.find_all('img')
+                            for tag in linksInImgSrc:
+                                link = tag.get('src', None)
+                                parsedURL = urllib.parse.urlparse(link)
+                                if all([parsedURL.scheme, parsedURL.netloc]) and domain not in link:
+                                    newLink = link.split('#')[0].split('?')[0]
+                                    try:
+                                        externalUrls[newLink].add(uid)
+                                    except KeyError:
+                                        externalUrls[newLink] = {uid}
 
                         if extract_link:
                             linksInLinkHref = soupContents.find_all('link')
                             for tag in linksInLinkHref:
                                 link = tag.get('href', None)
                                 parsedURL = urllib.parse.urlparse(link)
-                                if all([parsedURL.scheme, parsedURL.netloc]):
-                                    if domain not in link:
-                                        newLink = link.split('#')[0].split('?')[0]
-                                        try:
-                                            externalUrls[newLink].add(uid)
-                                        except KeyError:
-                                            externalUrls[newLink] = {uid}
+                                if all([parsedURL.scheme, parsedURL.netloc]) and domain not in link:
+                                    newLink = link.split('#')[0].split('?')[0]
+                                    try:
+                                        externalUrls[newLink].add(uid)
+                                    except KeyError:
+                                        externalUrls[newLink] = {uid}
                         break
                     except TimeoutError:
                         pass
@@ -143,12 +141,11 @@ class GetExternalURLs:
 
         for externalUrl in externalUrls:
             onionCheck = onionRegex.findall(externalUrl)
-            if len(onionCheck) == 1:
-                for urlUid in externalUrls[externalUrl]:
+            for urlUid in externalUrls[externalUrl]:
+                if len(onionCheck) == 1:
                     returnResult.append([{'Onion URL': externalUrl, 'Entity Type': 'Onion Website'},
                                          {urlUid: {'Resolution': 'External Link', 'Notes': ''}}])
-            else:
-                for urlUid in externalUrls[externalUrl]:
+                else:
                     returnResult.append([{'URL': externalUrl, 'Entity Type': 'Website'},
                                          {urlUid: {'Resolution': 'External Link', 'Notes': ''}}])
 

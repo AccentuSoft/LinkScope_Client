@@ -45,9 +45,10 @@ class ExtractPDFMeta:
                         strDate = strDate.split(':')[1].split('-')[0]
                         strDate1 = strDate[:-6]
                         strDate2 = strDate[-6:]
-                        strDate2 = ':'.join(strDate2[i:i+2] for i in range(0, 6, 2))
-                        strDate1 = strDate1[:-4] + '-' + '-'.join(strDate1[::-1][i:i+2] for i in range(0, 4, 2))[::-1]
-                        strDate = strDate1 + 'T' + strDate2
+                        strDate2 = ':'.join(strDate2[i:i + 2] for i in range(0, 6, 2))
+                        strDate1 = f'{strDate1[:-4]}-' + \
+                                   '-'.join(strDate1[::-1][i: i + 2] for i in range(0, 4, 2))[::-1]
+                        strDate = f'{strDate1}T{strDate2}'
                         returnResults.append([{'Date': strDate,
                                                'Entity Type': 'Date'},
                                               {uid: {'Resolution': metadataKey, 'Notes': ''}}])
@@ -58,12 +59,11 @@ class ExtractPDFMeta:
                                                'Entity Type': 'Date'},
                                               {uid: {'Resolution': metadataKey, 'Notes': ''}}])
                 else:
-                    returnResults.append([{'Phrase': metadataKey + ': ' + str(info[metadataKey]),
+                    returnResults.append([{'Phrase': f'{metadataKey}: {str(info[metadataKey])}',
                                            'Entity Type': 'Phrase'},
                                           {uid: {'Resolution': metadataKey, 'Notes': ''}}])
 
-            returnResults.append([{'Phrase': 'Number of Pages: ' + str(number_of_pages),
-                                   'Entity Type': 'Phrase'},
+            returnResults.append([{'Phrase': f'Number of Pages: {str(number_of_pages)}', 'Entity Type': 'Phrase'},
                                   {uid: {'Resolution': 'Number of Pages', 'Notes': ''}}])
 
         return returnResults
