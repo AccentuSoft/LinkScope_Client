@@ -25,7 +25,6 @@ class ResolutionManager:
         exceptionsCount = 0
         for resolution in listdir(directory):
             resolution = str(resolution)
-            resolutionCategory = "Uncategorized"
             try:
                 if resolution.endswith('.py'):
                     resolutionName = resolution[:-3]
@@ -44,7 +43,7 @@ class ResolutionManager:
                     with contextlib.suppress(AttributeError):
                         resolutionCategory = resClassInst.category
                         if not isinstance(resolutionCategory, str):
-                            raise AttributeError()
+                            resolutionCategory = "Uncategorized"
                     if self.resolutions.get(resolutionCategory) is None:
                         self.resolutions[resolutionCategory] = {}
                     self.resolutions[resolutionCategory][resNameString] = {'name': resNameString,
