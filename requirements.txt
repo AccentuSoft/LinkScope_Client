@@ -28,6 +28,10 @@ reportlab
 pandas
 svglib
 lxml
+# For opening spreadsheets
+odfpy
+openpyxl
+xlrd # For old Excel formats
 # Speeds up parsing of webpages by bs4
 cchardet
 bs4

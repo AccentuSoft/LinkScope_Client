@@ -541,21 +541,25 @@ class MenuBar(QtWidgets.QMenuBar):
                                                 self.parent().LENTDB.addEntity(existingEntity, updateTimeline=False)
 
                     elif importDialog.CSVFileChoice.isChecked():
-                        csvDF = pd.read_csv(fileDirectory)
+                        try:
+                            csvDF = pd.read_excel(fileDirectory)
+                        except ValueError:
+                            csvDF = pd.read_csv(fileDirectory)
+
+                        # If we have no rows or columns, we cannot import anything.
+                        # This is essentially a sanity check.
+                        if len(csvDF.index) < 1:
+                            raise ValueError("Invalid import file data - Not enough rows.")
+                        if len(csvDF.columns) < 1:
+                            raise ValueError("Invalid import file data - Not enough columns.")
 
                         # Remove duplicate column names
+                        # When importing, all columns should be given unique values,
+                        #   so this should be just another sanity check.
                         csvDF = csvDF.loc[:, ~csvDF.columns.duplicated()]
 
                         # Fill NaN values with an empty string
                         csvDF.fillna('')
-
-                        # If we have less than 2 rows, we cannot import
-                        rowNumber = len(csvDF.index)
-                        if rowNumber < 2:
-                            raise ValueError("Invalid CSV file data - Not enough rows.")
-
-                        if len(csvDF.columns) < 1:
-                            raise ValueError("Invalid CSV file data - Not enough columns.")
 
                         importEntityCSVDialog = ImportEntityFromCSVFile(self, csvDF)
                         if importEntityCSVDialog.exec_():
@@ -588,21 +592,25 @@ class MenuBar(QtWidgets.QMenuBar):
                                         self.parent().LENTDB.addEntity(existingEntity, updateTimeline=False)
 
                     elif importDialog.CSVFileChoiceLinks.isChecked():
-                        csvDF = pd.read_csv(fileDirectory)
+                        try:
+                            csvDF = pd.read_excel(fileDirectory)
+                        except ValueError:
+                            csvDF = pd.read_csv(fileDirectory)
+
+                        # If we have no rows or columns, we cannot import anything.
+                        # This is essentially a sanity check.
+                        if len(csvDF.index) < 1:
+                            raise ValueError("Invalid import file data - Not enough rows.")
+                        if len(csvDF.columns) < 1:
+                            raise ValueError("Invalid import file data - Not enough columns.")
 
                         # Remove duplicate column names
+                        # When importing, all columns should be given unique values,
+                        #   so this should be just another sanity check.
                         csvDF = csvDF.loc[:, ~csvDF.columns.duplicated()]
 
                         # Fill NaN values with an empty string
                         csvDF.fillna('')
-
-                        # If we have less than 2 rows, we cannot import
-                        rowNumber = len(csvDF.index)
-                        if rowNumber < 2:
-                            raise ValueError("Invalid CSV file data - Not enough rows.")
-
-                        if len(csvDF.columns) < 1:
-                            raise ValueError("Invalid CSV file data - Not enough columns.")
 
                         importLinksCSVDialog = ImportLinksFromCSVFile(self, csvDF)
                         if importLinksCSVDialog.exec_():
@@ -2201,10 +2209,11 @@ class ImportEntityFromCSVFile(QtWidgets.QDialog):
 class ImportFromFileDialog(QtWidgets.QDialog):
 
     def popupFileDialog(self):
-        self.fileDirectory = QtWidgets.QFileDialog().getOpenFileName(parent=self, caption='Select File to Import From',
-                                                                     dir=str(Path.home()),
-                                                                     options=QtWidgets.QFileDialog.DontUseNativeDialog,
-                                                                     filter="CSV or txt (*.csv *.txt)")[0]
+        self.fileDirectory = QtWidgets.QFileDialog().getOpenFileName(
+            parent=self, caption='Select File to Import From',
+            dir=str(Path.home()),
+            options=QtWidgets.QFileDialog.DontUseNativeDialog,
+            filter="Import File (*.csv *.txt *.xls *.xlsx *.ods)")[0]
         if self.fileDirectory != '':
             self.fileDirectoryLine.setText(self.fileDirectory)
 
@@ -2232,9 +2241,9 @@ class ImportFromFileDialog(QtWidgets.QDialog):
         self.textFileChoice = QtWidgets.QRadioButton('Text file - Entities Import')
         self.textFileChoice.setStyleSheet(Stylesheets.RADIO_BUTTON_STYLESHEET)
         self.textFileChoice.setChecked(True)
-        self.CSVFileChoice = QtWidgets.QRadioButton('CSV - Entities Import')
+        self.CSVFileChoice = QtWidgets.QRadioButton('Spreadsheet / CSV - Entities Import')
         self.CSVFileChoice.setStyleSheet(Stylesheets.RADIO_BUTTON_STYLESHEET)
-        self.CSVFileChoiceLinks = QtWidgets.QRadioButton('CSV - Links Import')
+        self.CSVFileChoiceLinks = QtWidgets.QRadioButton('Spreadsheet / CSV - Links Import')
         self.CSVFileChoiceLinks.setStyleSheet(Stylesheets.RADIO_BUTTON_STYLESHEET)
 
         dialogLayout.addWidget(self.fileDirectoryLine, 1, 0, 1, 2)
