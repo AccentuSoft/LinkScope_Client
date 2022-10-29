@@ -42,9 +42,9 @@ Note that the SFDP graph layout does not function on Windows, as an essential gr
 Since Version 1.0.0, installers are provided for Windows 11 and Linux (Ubuntu) platforms.
 
 Download the latest installer for your platform from the Releases page, and run it to install the software:
-https://github.com/AccentuSoft/LinkScope_Client/releases/tag/v1.0.0
+https://github.com/AccentuSoft/LinkScope_Client/releases/tag/v1.4.0
 
-Note: On Ubuntu, you may need to mark the downloaded installer as executable before you can run it. To do this, right-click the installer, and from the drop-down menu, select 'properties'. On the dialog window that pops up, navigate to the 'Permissions' tab, and make sure that 'Allow executing file as program' is checked. You should at this point be able to run the installer by double-clicking it.
+Note: On Ubuntu, you may need to mark the downloaded installer as executable before you can run it. To do this, right-click the installer, and from the drop-down menu, select 'properties'. On the dialog window that pops up, navigate to the 'Permissions' tab, and make sure that 'Allow executing file as program' is checked. You should at this point be able to run the installer by double-clicking it. If double-clicking the installer does not start it, you can also launch the installer through a terminal.
 
 ### Running from source
 One could also clone the repository and run the software as-is.
@@ -70,6 +70,8 @@ The software comes packaged in a 7zip archive. Uncompress the archive, and doubl
 The Wiki page contains a manual on using the tool, available here: https://github.com/AccentuSoft/LinkScope_Client/wiki
 
 We have an introductory blog post that explains the basics of using the tool, available here: https://accentusoft.com/tutorials/first-steps-with-linkscope-client/
+
+We also have some videos demonstrating how to use the software on our YouTube channel: https://www.youtube.com/channel/UC8h9Vde1OdezdC2cJ1nEUcw
 
 ## Extending the software
 LinkScope was built from the ground up to be modular! In this repository's wiki, there are instructions on how to create your own modules, which can contain custom Entities and Resolutions. There is also an example module in the Modules directory that can act as a template, and has a verbose description of most things that a module creator should need to consider.
