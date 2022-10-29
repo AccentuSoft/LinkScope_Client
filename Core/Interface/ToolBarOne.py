@@ -10,7 +10,7 @@ class ToolBarOne(QtWidgets.QToolBar):
         # Parent is (expected to be) mainWindow.
         super().__init__(title, parent=parent)
         self.setObjectName(title)
-        self.setToolButtonStyle(QtGui.Qt.ToolButtonTextUnderIcon)
+        self.setToolButtonStyle(QtGui.Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
         self.setStyleSheet(Stylesheets.TOOLBAR_STYLESHEET)
 
         newCanvas = QtGui.QAction("Add Canvas",

@@ -20,7 +20,7 @@ class BaseNode(QGraphicsItemGroup):
                  brush: QtGui.QBrush) -> None:
         super(BaseNode, self).__init__()
 
-        self.setCacheMode(self.DeviceCoordinateCache)
+        self.setCacheMode(QGraphicsItemGroup.CacheMode.DeviceCoordinateCache)
 
         self.pixmapItem = QtGui.QPixmap()
         self.pixmapItem.loadFromData(pictureByteArray)
@@ -39,8 +39,8 @@ class BaseNode(QGraphicsItemGroup):
         labelDocument = self.labelItem.document()
         labelDocument.setTextWidth(280)
         textOption = labelDocument.defaultTextOption()
-        textOption.setWrapMode(QtGui.QTextOption.WrapAtWordBoundaryOrAnywhere)
-        textOption.setAlignment(QtCore.Qt.AlignHCenter)
+        textOption.setWrapMode(QtGui.QTextOption.WrapMode.WrapAtWordBoundaryOrAnywhere)
+        textOption.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
         labelDocument.setDefaultTextOption(textOption)
         self.labelItem.setDocument(labelDocument)
 
@@ -117,7 +117,7 @@ class BaseNode(QGraphicsItemGroup):
 
     def paint(self, painter: QtGui.QPainter, option: QtWidgets.QStyleOptionGraphicsItem,
               widget: Optional[QtWidgets.QWidget] = ...) -> None:
-        painter.setPen(QtCore.Qt.NoPen)
+        painter.setPen(QtCore.Qt.PenStyle.NoPen)
         if self.scene().views()[0].zoom < self.scene().hideZoom:
             self.labelItem.hide()
         else:
@@ -145,7 +145,7 @@ class GroupNode(BaseNode):
         self.listProxyWidget = None
 
     def itemChange(self, change: QtWidgets.QGraphicsItem.GraphicsItemChange, value: Any) -> Any:
-        if change == QtWidgets.QGraphicsItem.ItemSelectedChange:
+        if change == QtWidgets.QGraphicsItem.GraphicsItemChange.ItemSelectedChange:
             if value:
                 self.showList(None)
             else:
@@ -185,7 +185,7 @@ class GroupNode(BaseNode):
     def formGroup(self, childNodeUIDs, listProxyWidget: QtWidgets.QGraphicsProxyWidget) -> None:
         [self.addItemToGroup(uid) for uid in childNodeUIDs]  # Should be faster than just a for loop
         self.listProxyWidget = listProxyWidget
-        self.listProxyWidget.setCacheMode(self.DeviceCoordinateCache)
+        self.listProxyWidget.setCacheMode(QGraphicsItemGroup.CacheMode.DeviceCoordinateCache)
 
     def addItemToGroup(self, uid: str) -> None:
         self.groupedNodesUid.add(uid)
@@ -250,8 +250,8 @@ class BaseConnector(QGraphicsItemGroup):
         self.colorDefault = QtGui.QColor(200, 200, 200)
         self.myColor = self.colorDefault
 
-        self.pen = QtGui.QPen(self.myColor, 2, QtCore.Qt.SolidLine,
-                              QtCore.Qt.RoundCap, QtCore.Qt.RoundJoin)
+        self.pen = QtGui.QPen(self.myColor, 2, QtCore.Qt.PenStyle.SolidLine,
+                              QtCore.Qt.PenCapStyle.RoundCap, QtCore.Qt.PenJoinStyle.RoundJoin)
 
         self.arrowHead = QtGui.QPolygonF()
         self.line = QtCore.QLineF()
@@ -371,7 +371,7 @@ class GroupNodeChildList(QtWidgets.QWidget):
 
         self.setLayout(QtWidgets.QVBoxLayout())
         titleLabel = QtWidgets.QLabel('Child Items')
-        titleLabel.setAlignment(QtCore.Qt.AlignVCenter | QtCore.Qt.AlignHCenter)
+        titleLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(titleLabel)
 
         self.itemList = ChildListWidget()

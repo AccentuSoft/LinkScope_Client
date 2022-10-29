@@ -157,7 +157,7 @@ class TwitterUser:
                     childIconImageScaled = childIconImageOriginal.scaled(QSize(40, 40))
                     childIconByteArrayFin = QByteArray()
                     childImageBuffer = QBuffer(childIconByteArrayFin)
-                    childImageBuffer.open(QIODevice.WriteOnly)
+                    childImageBuffer.open(QIODevice.OpenModeFlag.WriteOnly)
                     childIconImageScaled.save(childImageBuffer, "PNG")
                     childImageBuffer.close()
                 except Exception:
@@ -216,7 +216,7 @@ class TwitterUser:
                         iconImageScaled = iconImageOriginal.scaled(QSize(40, 40))
                         iconByteArrayFin = QByteArray()
                         imageBuffer = QBuffer(iconByteArrayFin)
-                        imageBuffer.open(QIODevice.WriteOnly)
+                        imageBuffer.open(QIODevice.OpenModeFlag.WriteOnly)
                         iconImageScaled.save(imageBuffer, "PNG")
                         imageBuffer.close()
                     except Exception:

@@ -149,10 +149,10 @@ class MainWindow(QtWidgets.QMainWindow):
         # Native file dialogs (at least on Ubuntu) return sandboxed paths in some occasions, which messes with the
         #   saving of the project, since we need to create a directory to save the project in.
         saveAsDialog = QtWidgets.QFileDialog()
-        saveAsDialog.setOption(QtWidgets.QFileDialog.DontUseNativeDialog, True)
-        saveAsDialog.setViewMode(QtWidgets.QFileDialog.List)
-        saveAsDialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
-        saveAsDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+        saveAsDialog.setOption(QtWidgets.QFileDialog.Option.DontUseNativeDialog, True)
+        saveAsDialog.setViewMode(QtWidgets.QFileDialog.ViewMode.List)
+        saveAsDialog.setFileMode(QtWidgets.QFileDialog.FileMode.AnyFile)
+        saveAsDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptMode.AcceptSave)
         saveAsDialog.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         saveAsDialog.setDirectory(str(Path.home()))
 
@@ -216,10 +216,10 @@ class MainWindow(QtWidgets.QMainWindow):
     def exportCanvasToGraphML(self):
         currentCanvasGraph = self.centralWidget().tabbedPane.getCurrentScene().sceneGraph
         saveAsDialog = QtWidgets.QFileDialog()
-        saveAsDialog.setOption(QtWidgets.QFileDialog.DontUseNativeDialog, True)
-        saveAsDialog.setViewMode(QtWidgets.QFileDialog.List)
+        saveAsDialog.setOption(QtWidgets.QFileDialog.Option.DontUseNativeDialog, True)
+        saveAsDialog.setViewMode(QtWidgets.QFileDialog.ViewMode.List)
         saveAsDialog.setNameFilter("GraphML (*.xml)")
-        saveAsDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+        saveAsDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptMode.AcceptSave)
         saveAsDialog.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         saveAsDialog.setDirectory(str(Path.home()))
 
@@ -236,8 +236,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def importCanvasFromGraphML(self):
         openDialog = QtWidgets.QFileDialog()
-        openDialog.setOption(QtWidgets.QFileDialog.DontUseNativeDialog, True)
-        openDialog.setViewMode(QtWidgets.QFileDialog.List)
+        openDialog.setOption(QtWidgets.QFileDialog.Option.DontUseNativeDialog, True)
+        openDialog.setViewMode(QtWidgets.QFileDialog.ViewMode.List)
         openDialog.setNameFilter("GraphML (*.xml)")
         openDialog.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         openDialog.setDirectory(str(Path.home()))
@@ -291,10 +291,10 @@ class MainWindow(QtWidgets.QMainWindow):
             currentDatabase.edges[edge]['uid'] = str(currentDatabase.edges[edge]['uid'])
 
         saveAsDialog = QtWidgets.QFileDialog()
-        saveAsDialog.setOption(QtWidgets.QFileDialog.DontUseNativeDialog, True)
-        saveAsDialog.setViewMode(QtWidgets.QFileDialog.List)
+        saveAsDialog.setOption(QtWidgets.QFileDialog.Option.DontUseNativeDialog, True)
+        saveAsDialog.setViewMode(QtWidgets.QFileDialog.ViewMode.List)
         saveAsDialog.setNameFilter("GraphML (*.xml)")
-        saveAsDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+        saveAsDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptMode.AcceptSave)
         saveAsDialog.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         saveAsDialog.setDirectory(str(Path.home()))
 
@@ -311,8 +311,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def importDatabaseFromGraphML(self):
         openDialog = QtWidgets.QFileDialog()
-        openDialog.setOption(QtWidgets.QFileDialog.DontUseNativeDialog, True)
-        openDialog.setViewMode(QtWidgets.QFileDialog.List)
+        openDialog.setOption(QtWidgets.QFileDialog.Option.DontUseNativeDialog, True)
+        openDialog.setViewMode(QtWidgets.QFileDialog.ViewMode.List)
         openDialog.setNameFilter("GraphML (*.xml)")
         openDialog.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         openDialog.setDirectory(str(Path.home()))
@@ -350,7 +350,7 @@ class MainWindow(QtWidgets.QMainWindow):
         newName, confirm = QtWidgets.QInputDialog.getText(self,
                                                           'Rename Project',
                                                           'New Name:',
-                                                          QtWidgets.QLineEdit.Normal,
+                                                          QtWidgets.QLineEdit.EchoMode.Normal,
                                                           text=self.SETTINGS.value("Project/Name"))
         if confirm:
             if newName == self.SETTINGS.value("Project/Name"):
@@ -419,14 +419,14 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.linkingNodes:
             self.centralWidget().tabbedPane.enableAllTabs()
             currentScene.linking = False
-            self.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
+            self.setCursor(QtGui.QCursor(QtCore.Qt.CursorShape.ArrowCursor))
             self.linkingNodes = False
         else:
             self.centralWidget().tabbedPane.disableAllTabsExceptCurrent()
             currentScene.linking = True
             currentScene.itemsToLink = []
             currentScene.clearSelection()
-            self.setCursor(QtGui.QCursor(QtCore.Qt.CrossCursor))
+            self.setCursor(QtGui.QCursor(QtCore.Qt.CursorShape.CrossCursor))
             self.linkingNodes = True
 
     def deleteSpecificEntity(self, itemUID: str) -> None:
@@ -458,10 +458,10 @@ class MainWindow(QtWidgets.QMainWindow):
             return
         if enable:
             self.centralWidget().tabbedPane.disableAllTabsExceptCurrent()
-            self.setCursor(QtGui.QCursor(QtCore.Qt.PointingHandCursor))
+            self.setCursor(QtGui.QCursor(QtCore.Qt.CursorShape.PointingHandCursor))
         else:
             self.centralWidget().tabbedPane.enableAllTabs()
-            self.setCursor(QtGui.QCursor(QtCore.Qt.ArrowCursor))
+            self.setCursor(QtGui.QCursor(QtCore.Qt.CursorShape.ArrowCursor))
 
     def selectLeafNodes(self) -> None:
         """
@@ -1871,11 +1871,11 @@ class MainWindow(QtWidgets.QMainWindow):
         self.restoreGeometry(QtCore.QByteArray(self.SETTINGS.value("MainWindow/Geometry")))
         self.restoreState(QtCore.QByteArray(self.SETTINGS.value("MainWindow/WindowState")))
 
-        self.addDockWidget(QtCore.Qt.LeftDockWidgetArea,
+        self.addDockWidget(QtCore.Qt.DockWidgetArea.LeftDockWidgetArea,
                            self.dockbarOne)
-        self.addDockWidget(QtCore.Qt.RightDockWidgetArea,
+        self.addDockWidget(QtCore.Qt.DockWidgetArea.RightDockWidgetArea,
                            self.dockbarTwo)
-        self.addDockWidget(QtCore.Qt.BottomDockWidgetArea,
+        self.addDockWidget(QtCore.Qt.DockWidgetArea.BottomDockWidgetArea,
                            self.dockbarThree)
 
         self.addToolBar(self.primaryToolbar)
@@ -1938,13 +1938,13 @@ class MainWindow(QtWidgets.QMainWindow):
                 QtWidgets.QMessageBox.warning(self, 'Cannot create project',
                                               'Cannot save project to an existing directory. '
                                               'Please choose a unique name.',
-                                              QtWidgets.QMessageBox.Ok)
+                                              QtWidgets.QMessageBox.StandardButton.Ok)
                 return
             except FileNotFoundError:
                 QtWidgets.QMessageBox.warning(self, 'Cannot create project',
                                               'Cannot save project into a non-existing parent directory. '
                                               'Please create the required parent directories and try again.',
-                                              QtWidgets.QMessageBox.Ok)
+                                              QtWidgets.QMessageBox.StandardButton.Ok)
                 return
 
         elif nW.openProject is not None:
@@ -1971,7 +1971,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.saveTimer = QtCore.QTimer(self)
         self.saveTimer.timeout.connect(self.autoSaveProject)
         self.saveTimer.setSingleShot(False)
-        self.saveTimer.setTimerType(QtCore.Qt.VeryCoarseTimer)
+        self.saveTimer.setTimerType(QtCore.Qt.TimerType.VeryCoarseTimer)
 
         self.syncedCanvases = []
         self.syncedCanvasesLock = threading.Lock()
@@ -2068,10 +2068,10 @@ class ReportWizard(QtWidgets.QWizard):
             self.primaryFieldsList.append(self.primaryField)
             self.addPage(EntityPage(self))
 
-        self.setWizardStyle(QtWidgets.QWizard.ModernStyle)
+        self.setWizardStyle(QtWidgets.QWizard.WizardStyle.ModernStyle)
         self.setWindowTitle("Generate Report Wizard")
 
-        self.button(QtWidgets.QWizard.FinishButton).clicked.connect(self.onFinish)
+        self.button(QtWidgets.QWizard.WizardButton.FinishButton).clicked.connect(self.onFinish)
 
     def onFinish(self):
         reportData = []
@@ -2173,7 +2173,7 @@ class InitialConfigPage(QtWidgets.QWizardPage):
                                                              "File Name to Save As",
                                                              str(Path.home()),
                                                              filter="PDF Files (*.pdf)",
-                                                             options=QtWidgets.QFileDialog.DontUseNativeDialog)
+                                                             options=QtWidgets.QFileDialog.Option.DontUseNativeDialog)
         selectedPath = selectedPath[0]
         if selectedPath != '':
             savePath = Path(selectedPath).absolute()
@@ -2310,7 +2310,7 @@ class EntityPage(QtWidgets.QWizardPage):
     def editPath(self) -> None:
         selectedPath = QtWidgets.QFileDialog().getOpenFileName(parent=self, caption='Select New Icon',
                                                                dir=str(Path.home()),
-                                                               options=QtWidgets.QFileDialog.DontUseNativeDialog,
+                                                               options=QtWidgets.QFileDialog.Option.DontUseNativeDialog,
                                                                filter="Image Files (*.png *.jpg)")[0]
         if selectedPath != '':
             self.inputImageEdit.setText(str(Path(selectedPath).absolute()))
@@ -2391,7 +2391,7 @@ class AppendixWidget(QtWidgets.QWidget):
     def editAppendixPath(self) -> None:
         selectedPath = QtWidgets.QFileDialog().getOpenFileName(parent=self, caption='Select New Icon',
                                                                dir=str(Path.home()),
-                                                               options=QtWidgets.QFileDialog.DontUseNativeDialog,
+                                                               options=QtWidgets.QFileDialog.Option.DontUseNativeDialog,
                                                                filter="Image Files (*.png *.jpg)")[0]
 
         if selectedPath != '':
@@ -2412,9 +2412,9 @@ class CreateOrOpenCanvas(QtWidgets.QDialog):
         createCanvasTitleLabel = QtWidgets.QLabel("Create New Canvas")
         createCanvasTitleLabel.setStyleSheet(Stylesheets.DOCK_BAR_LABEL)
 
-        createCanvasTitleLabel.setFont(QtGui.QFont("Times", 13, QtGui.QFont.Bold))
+        createCanvasTitleLabel.setFont(QtGui.QFont("Times", 13, QtGui.QFont.Weight.Bold))
 
-        createCanvasTitleLabel.setAlignment(QtCore.Qt.AlignCenter)
+        createCanvasTitleLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         createCanvasNameLabel = QtWidgets.QLabel("New Canvas Name:")
         self.createCanvasTextbox = QtWidgets.QLineEdit("")
         createCanvasButton = QtWidgets.QPushButton("Create New Canvas")
@@ -2432,13 +2432,13 @@ class CreateOrOpenCanvas(QtWidgets.QDialog):
         openExistingCanvasTitleLabel = QtWidgets.QLabel("Open Existing Canvas")
         openExistingCanvasTitleLabel.setStyleSheet(Stylesheets.DOCK_BAR_LABEL)
 
-        openExistingCanvasTitleLabel.setFont(QtGui.QFont("Times", 13, QtGui.QFont.Bold))
+        openExistingCanvasTitleLabel.setFont(QtGui.QFont("Times", 13, QtGui.QFont.Weight.Bold))
 
-        openExistingCanvasTitleLabel.setAlignment(QtCore.Qt.AlignCenter)
+        openExistingCanvasTitleLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         openExistingCanvasNameLabel = QtWidgets.QLabel("Canvas Name:")
         self.openExistingCanvasDropdown = QtWidgets.QComboBox()
         self.openExistingCanvasDropdown.setEditable(False)
-        self.openExistingCanvasDropdown.SizeAdjustPolicy(QtWidgets.QComboBox.AdjustToContents)
+        self.openExistingCanvasDropdown.SizeAdjustPolicy(QtWidgets.QComboBox.SizeAdjustPolicy.AdjustToContents)
         tabbedPane = self.parent().centralWidget().tabbedPane
         canvasTabs = tabbedPane.canvasTabs
         existingTabNames = []
@@ -2467,13 +2467,13 @@ class CreateOrOpenCanvas(QtWidgets.QDialog):
         openServerCanvasTitleLabel = QtWidgets.QLabel("Open Canvas From Server")
         openServerCanvasTitleLabel.setStyleSheet(Stylesheets.DOCK_BAR_LABEL)
 
-        openServerCanvasTitleLabel.setFont(QtGui.QFont("Times", 13, QtGui.QFont.Bold))
+        openServerCanvasTitleLabel.setFont(QtGui.QFont("Times", 13, QtGui.QFont.Weight.Bold))
 
-        openServerCanvasTitleLabel.setAlignment(QtCore.Qt.AlignCenter)
+        openServerCanvasTitleLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         openServerCanvasNameLabel = QtWidgets.QLabel("Canvas Name:")
         self.openServerCanvasDropdown = QtWidgets.QComboBox()
         self.openServerCanvasDropdown.setEditable(False)
-        self.openServerCanvasDropdown.SizeAdjustPolicy(QtWidgets.QComboBox.AdjustToContents)
+        self.openServerCanvasDropdown.SizeAdjustPolicy(QtWidgets.QComboBox.SizeAdjustPolicy.AdjustToContents)
         self.openServerCanvasDropdown.addItems(syncedCanvases)
         openServerCanvasButton = QtWidgets.QPushButton("Open Canvas from Server")
         openServerCanvasButton.clicked.connect(self.confirmOpenServerCanvas)
@@ -2532,19 +2532,19 @@ class NewOrOpenWidget(QtWidgets.QDialog):
         self.createProject = False
         newProjectNameLabel = QtWidgets.QLabel("New Project")
         newProjectNameLabel.setStyleSheet(Stylesheets.MENUS_STYLESHEET)
-        newProjectNameLabel.setAlignment(QtCore.Qt.AlignCenter)
+        newProjectNameLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
         pProjectPathLabel = QtWidgets.QLabel("Project Path:")
         pProjectPathLabel.setStyleSheet(Stylesheets.MENUS_STYLESHEET)
         pDirLabel = QtWidgets.QLabel("Directory")
         pDirLabel.setStyleSheet(Stylesheets.MENUS_STYLESHEET)
-        pDirLabel.setAlignment(QtCore.Qt.AlignCenter)
+        pDirLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         pNameLabel = QtWidgets.QLabel("Name")
         pNameLabel.setStyleSheet(Stylesheets.MENUS_STYLESHEET)
-        pNameLabel.setAlignment(QtCore.Qt.AlignCenter)
+        pNameLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         pSlashLabel = QtWidgets.QLabel("/")
         pSlashLabel.setStyleSheet(Stylesheets.MENUS_STYLESHEET)
-        pSlashLabel.setAlignment(QtCore.Qt.AlignCenter)
+        pSlashLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
         self.pName = QtWidgets.QLineEdit("Untitled")
         self.pName.setStyleSheet(Stylesheets.PATH_INPUT_STYLESHEET)
@@ -2576,7 +2576,7 @@ class NewOrOpenWidget(QtWidgets.QDialog):
         self.openProject = None
         openProjectFileLabel = QtWidgets.QLabel("Open Project File")
         openProjectFileLabel.setStyleSheet(Stylesheets.MENUS_STYLESHEET)
-        openProjectFileLabel.setAlignment(QtCore.Qt.AlignCenter)
+        openProjectFileLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         openProjectButton = QtWidgets.QPushButton("Open...")
         openProjectButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET)
         openProjectButton.clicked.connect(self.openFilename)
@@ -2593,8 +2593,8 @@ class NewOrOpenWidget(QtWidgets.QDialog):
         if errorMessage != "":
             showError = QtWidgets.QMessageBox(self)
             showError.setText(errorMessage)
-            showError.setStandardButtons(QtWidgets.QMessageBox().Ok)
-            showError.setDefaultButton(QtWidgets.QMessageBox().Ok)
+            showError.setStandardButtons(QtWidgets.QMessageBox().StandardButton.Ok)
+            showError.setDefaultButton(QtWidgets.QMessageBox().StandardButton.Ok)
             showError.exec()
 
         else:
@@ -2608,7 +2608,7 @@ class NewOrOpenWidget(QtWidgets.QDialog):
         filename = QtWidgets.QFileDialog.getExistingDirectory(self,
                                                               "Select Project Directory",
                                                               str(Path.home()),
-                                                              options=QtWidgets.QFileDialog.DontUseNativeDialog)
+                                                              options=QtWidgets.QFileDialog.Option.DontUseNativeDialog)
         if access(filename, R_OK | W_OK):
             self.pDir.setText(filename)
 
@@ -2620,7 +2620,7 @@ class NewOrOpenWidget(QtWidgets.QDialog):
                                                          "Open Project File",
                                                          str(Path.home()),
                                                          "LinkScope Projects(*.linkscope)",
-                                                         options=QtWidgets.QFileDialog.DontUseNativeDialog)
+                                                         options=QtWidgets.QFileDialog.Option.DontUseNativeDialog)
 
         if filename[0].endswith('.linkscope') and access(filename[0], R_OK | W_OK):
             self.openProject = filename[0]
@@ -2699,14 +2699,14 @@ class ResolutionParametersSelector(QtWidgets.QDialog):
             entitySelectTabLabel.setWordWrap(True)
             entitySelectTabLabel.setMaximumWidth(600)
 
-            entitySelectTabLabel.setAlignment(QtCore.Qt.AlignCenter)
+            entitySelectTabLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             entitySelectTab.layout().addWidget(entitySelectTabLabel)
 
             self.entitySelector = QtWidgets.QListWidget()
             self.entitySelector.setSortingEnabled(True)
             self.entitySelector.addItems(includeEntitySelector)
 
-            self.entitySelector.setSelectionMode(self.entitySelector.MultiSelection)
+            self.entitySelector.setSelectionMode(self.entitySelector.SelectionMode.MultiSelection)
             entitySelectTab.layout().addWidget(self.entitySelector)
 
             self.childWidget.addTab(entitySelectTab, 'Entities')
@@ -2720,7 +2720,7 @@ class ResolutionParametersSelector(QtWidgets.QDialog):
             propertyLabel.setWordWrap(True)
             propertyLabel.setMaximumWidth(600)
 
-            propertyLabel.setAlignment(QtCore.Qt.AlignCenter)
+            propertyLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             propertyKeyLayout.addWidget(propertyLabel)
 
             propertyType = properties[key].get('type')
@@ -2827,8 +2827,8 @@ class GraphicsEditDialog(QtWidgets.QDialog):
         editDialogLayout = QtWidgets.QGridLayout()
         self.setLayout(editDialogLayout)
         scrollArea = QtWidgets.QScrollArea()
-        scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-        scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         scrollArea.setWidgetResizable(True)
         scrollContainer = QtWidgets.QWidget()
         scrollLayout = QtWidgets.QVBoxLayout()
@@ -2841,10 +2841,10 @@ class GraphicsEditDialog(QtWidgets.QDialog):
         resolutionCategoryWidget.setLayout(self.resolutionCategoryLayout)
         resolutionCategoryLabel = QtWidgets.QLabel('Graphics Settings')
 
-        resolutionCategoryLabel.setFont(QtGui.QFont("Times", 13, QtGui.QFont.Bold))
-        resolutionCategoryLabel.setFrameStyle(QtWidgets.QFrame.Raised | QtWidgets.QFrame.Panel)
+        resolutionCategoryLabel.setFont(QtGui.QFont("Times", 13, QtGui.QFont.Weight.Bold))
+        resolutionCategoryLabel.setFrameStyle(QtWidgets.QFrame.Shadow.Raised | QtWidgets.QFrame.Shape.Panel)
 
-        resolutionCategoryLabel.setAlignment(QtCore.Qt.AlignCenter)
+        resolutionCategoryLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         scrollLayout.addWidget(resolutionCategoryLabel)
         scrollLayout.addWidget(resolutionCategoryWidget)
 
@@ -2884,7 +2884,7 @@ class GraphicsEditDialog(QtWidgets.QDialog):
 
         self.colorPicker = QtWidgets.QColorDialog()
         self.colorPicker.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
-        self.colorPicker.setOption(QtWidgets.QColorDialog.DontUseNativeDialog, True)
+        self.colorPicker.setOption(QtWidgets.QColorDialog.ColorDialogOption.DontUseNativeDialog, True)
 
         etcSettingWidget = QtWidgets.QWidget()
         etcSettingLayout = QtWidgets.QHBoxLayout()
@@ -2961,8 +2961,8 @@ class ProgramEditDialog(QtWidgets.QDialog):
         resolutionsEditDialog = QtWidgets.QGridLayout()
         self.setLayout(resolutionsEditDialog)
         scrollArea = QtWidgets.QScrollArea()
-        scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-        scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         scrollArea.setWidgetResizable(True)
         scrollContainer = QtWidgets.QWidget()
         scrollLayout = QtWidgets.QVBoxLayout()
@@ -2975,10 +2975,10 @@ class ProgramEditDialog(QtWidgets.QDialog):
         resolutionCategoryWidget.setLayout(self.resolutionCategoryLayout)
         resolutionCategoryLabel = QtWidgets.QLabel('Program Settings')
 
-        resolutionCategoryLabel.setFont(QtGui.QFont("Times", 13, QtGui.QFont.Bold))
-        resolutionCategoryLabel.setFrameStyle(QtWidgets.QFrame.Raised | QtWidgets.QFrame.Panel)
+        resolutionCategoryLabel.setFont(QtGui.QFont("Times", 13, QtGui.QFont.Weight.Bold))
+        resolutionCategoryLabel.setFrameStyle(QtWidgets.QFrame.Shadow.Raised | QtWidgets.QFrame.Shape.Panel)
 
-        resolutionCategoryLabel.setAlignment(QtCore.Qt.AlignCenter)
+        resolutionCategoryLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         scrollLayout.addWidget(resolutionCategoryLabel)
         scrollLayout.addWidget(resolutionCategoryWidget)
 
@@ -3042,8 +3042,8 @@ class ResolutionsEditDialog(QtWidgets.QDialog):
         resolutionsEditDialog = QtWidgets.QGridLayout()
         self.setLayout(resolutionsEditDialog)
         scrollArea = QtWidgets.QScrollArea()
-        scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-        scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         scrollArea.setWidgetResizable(True)
         scrollContainer = QtWidgets.QWidget()
         scrollLayout = QtWidgets.QVBoxLayout()
@@ -3056,10 +3056,10 @@ class ResolutionsEditDialog(QtWidgets.QDialog):
         resolutionCategoryWidget.setLayout(self.resolutionCategoryLayout)
         resolutionCategoryLabel = QtWidgets.QLabel('Resolutions Settings')
 
-        resolutionCategoryLabel.setFont(QtGui.QFont("Times", 13, QtGui.QFont.Bold))
-        resolutionCategoryLabel.setFrameStyle(QtWidgets.QFrame.Raised | QtWidgets.QFrame.Panel)
+        resolutionCategoryLabel.setFont(QtGui.QFont("Times", 13, QtGui.QFont.Weight.Bold))
+        resolutionCategoryLabel.setFrameStyle(QtWidgets.QFrame.Shadow.Raised | QtWidgets.QFrame.Shape.Panel)
 
-        resolutionCategoryLabel.setAlignment(QtCore.Qt.AlignCenter)
+        resolutionCategoryLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         scrollLayout.addWidget(resolutionCategoryLabel)
         scrollLayout.addWidget(resolutionCategoryWidget)
 
@@ -3109,8 +3109,8 @@ class LoggingSettingsDialog(QtWidgets.QDialog):
         loggingSettingsLayout = QtWidgets.QGridLayout()
         self.setLayout(loggingSettingsLayout)
         scrollArea = QtWidgets.QScrollArea()
-        scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-        scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         scrollArea.setWidgetResizable(True)
         scrollContainer = QtWidgets.QWidget()
         scrollLayout = QtWidgets.QVBoxLayout()
@@ -3125,10 +3125,10 @@ class LoggingSettingsDialog(QtWidgets.QDialog):
         loggingCategoryWidget.setLayout(self.loggingCategoryLayout)
         loggingCategoryLabel = QtWidgets.QLabel('Logging Settings')
 
-        loggingCategoryLabel.setFont(QtGui.QFont("Times", 13, QtGui.QFont.Bold))
-        loggingCategoryLabel.setFrameStyle(QtWidgets.QFrame.Raised | QtWidgets.QFrame.Panel)
+        loggingCategoryLabel.setFont(QtGui.QFont("Times", 13, QtGui.QFont.Weight.Bold))
+        loggingCategoryLabel.setFrameStyle(QtWidgets.QFrame.Shadow.Raised | QtWidgets.QFrame.Shape.Panel)
 
-        loggingCategoryLabel.setAlignment(QtCore.Qt.AlignCenter)
+        loggingCategoryLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         scrollLayout.addWidget(loggingCategoryLabel)
         scrollLayout.addWidget(loggingCategoryWidget)
 
@@ -3178,8 +3178,8 @@ class ProjectEditDialog(QtWidgets.QDialog):
         editDialogLayout = QtWidgets.QGridLayout()
         self.setLayout(editDialogLayout)
         scrollArea = QtWidgets.QScrollArea()
-        scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
-        scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        scrollArea.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        scrollArea.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         scrollArea.setWidgetResizable(True)
         scrollContainer = QtWidgets.QWidget()
         scrollLayout = QtWidgets.QVBoxLayout()
@@ -3192,10 +3192,10 @@ class ProjectEditDialog(QtWidgets.QDialog):
         resolutionCategoryWidget.setLayout(self.resolutionCategoryLayout)
         resolutionCategoryLabel = QtWidgets.QLabel('Project Settings')
 
-        resolutionCategoryLabel.setFont(QtGui.QFont("Times", 13, QtGui.QFont.Bold))
-        resolutionCategoryLabel.setFrameStyle(QtWidgets.QFrame.Raised | QtWidgets.QFrame.Panel)
+        resolutionCategoryLabel.setFont(QtGui.QFont("Times", 13, QtGui.QFont.Weight.Bold))
+        resolutionCategoryLabel.setFrameStyle(QtWidgets.QFrame.Shadow.Raised | QtWidgets.QFrame.Shape.Panel)
 
-        resolutionCategoryLabel.setAlignment(QtCore.Qt.AlignCenter)
+        resolutionCategoryLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         scrollLayout.addWidget(resolutionCategoryLabel)
         scrollLayout.addWidget(resolutionCategoryWidget)
 
@@ -3274,7 +3274,7 @@ class SettingsEditSingleChoice(QtWidgets.QWidget):
         self.settingsKey = settingsKey
         self.keyDeleted = False
         self.setLayout(QtWidgets.QVBoxLayout())
-        self.layout().setAlignment(QtCore.Qt.AlignCenter)
+        self.layout().setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
         self.options = []
 
@@ -3298,7 +3298,7 @@ class SettingsCategoryLayout(QtWidgets.QVBoxLayout):
         rowWidget.setLayout(rowWidgetLayout)
         keyLabel = QtWidgets.QLabel(labelText)
 
-        keyLabel.setAlignment(QtCore.Qt.AlignCenter)
+        keyLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         rowWidgetLayout.addWidget(keyLabel)
         rowWidgetLayout.addWidget(valueWidget)
         if self.supportsDeletion:
@@ -3333,7 +3333,7 @@ class FindEntityOnCanvasDialog(QtWidgets.QDialog):
 
         findLabel = QtWidgets.QLabel('Find:')
 
-        findLabel.setAlignment(QtCore.Qt.AlignCenter)
+        findLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.findInput = QtWidgets.QLineEdit('')
         self.findInput.setPlaceholderText('Type the primary field value to search for')
 
@@ -3351,8 +3351,8 @@ class FindEntityOnCanvasDialog(QtWidgets.QDialog):
             # autoCompleter.setFilterMode(QtGui.Qt.MatchRegularExpression)
             pass
         else:
-            autoCompleter.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
-            autoCompleter.setFilterMode(QtCore.Qt.MatchContains)
+            autoCompleter.setCaseSensitivity(QtCore.Qt.CaseSensitivity.CaseInsensitive)
+            autoCompleter.setFilterMode(QtCore.Qt.MatchFlag.MatchContains)
         self.findInput.setCompleter(autoCompleter)
 
         findLayout = QtWidgets.QGridLayout()
@@ -3384,7 +3384,7 @@ class FindEntityOfTypeOnCanvasDialog(QtWidgets.QDialog):
         self.typeInput.currentIndexChanged.connect(self.changeSelectedType)
         findLabel = QtWidgets.QLabel('Find Entity:')
 
-        findLabel.setAlignment(QtCore.Qt.AlignCenter)
+        findLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.findInput = QtWidgets.QLineEdit('')
         self.findInput.setPlaceholderText('Type the primary field value to search for')
 
@@ -3405,8 +3405,8 @@ class FindEntityOfTypeOnCanvasDialog(QtWidgets.QDialog):
                 # autoCompleter.setFilterMode(QtGui.Qt.MatchRegularExpression)
                 pass
             else:
-                autoCompleter.setCaseSensitivity(QtCore.Qt.CaseInsensitive)
-                autoCompleter.setFilterMode(QtCore.Qt.MatchContains)
+                autoCompleter.setCaseSensitivity(QtCore.Qt.CaseSensitivity.CaseInsensitive)
+                autoCompleter.setFilterMode(QtCore.Qt.MatchFlag.MatchContains)
 
         findLayout = QtWidgets.QGridLayout()
         self.setLayout(findLayout)
@@ -3606,7 +3606,7 @@ class MergeEntitiesDialog(QtWidgets.QDialog):
         entityPixmap.loadFromData(entityJSON.get('Icon'))
         pixmapLabel.setPixmap(entityPixmap)
 
-        pixmapLabel.setAlignment(QtCore.Qt.AlignCenter)
+        pixmapLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         entityTypeWidget = QtWidgets.QWidget()
         entityTypeWidgetLayout = QtWidgets.QHBoxLayout()
         entityTypeWidget.setLayout(entityTypeWidgetLayout)
@@ -3617,11 +3617,11 @@ class MergeEntitiesDialog(QtWidgets.QDialog):
 
         incomingLinks = QtWidgets.QLabel(str(len(self.parent.LENTDB.getIncomingLinks(entityJSON['uid']))))
 
-        incomingLinks.setAlignment(QtCore.Qt.AlignCenter)
+        incomingLinks.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.entitiesTable.setCellWidget(newRowIndex, 2, incomingLinks)
         outgoingLinks = QtWidgets.QLabel(str(len(self.parent.LENTDB.getOutgoingLinks(entityJSON['uid']))))
 
-        outgoingLinks.setAlignment(QtCore.Qt.AlignCenter)
+        outgoingLinks.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.entitiesTable.setCellWidget(newRowIndex, 3, outgoingLinks)
 
         upDownButtons = MergeTableShiftRowUpDownButtons(self.entitiesTable, entityJSON['uid'])
@@ -3876,7 +3876,7 @@ class QueryBuilderWizard(QtWidgets.QDialog):
         selectStatementValuePickerWidget.setLayout(self.selectStatementValuePickerLayout)
         self.selectStatementList = QtWidgets.QListWidget()
         self.selectStatementList.setSortingEnabled(True)
-        self.selectStatementList.setSelectionMode(QtWidgets.QListWidget.ExtendedSelection)
+        self.selectStatementList.setSelectionMode(QtWidgets.QListWidget.SelectionMode.ExtendedSelection)
         self.selectStatementList.setMinimumHeight(125)
         self.selectStatementList.setToolTip('Highlight all the fields you wish to select.')
         self.selectStatementTextbox = QtWidgets.QLineEdit('')
@@ -3906,7 +3906,7 @@ class QueryBuilderWizard(QtWidgets.QDialog):
         self.sourceValues = []
         self.sourceValuesArea = QtWidgets.QScrollArea()
         self.sourceValuesArea.setWidgetResizable(True)
-        self.sourceValuesArea.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        self.sourceValuesArea.setSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Minimum)
 
         sourceValuesAreaWidget = QtWidgets.QWidget()
         self.sourceValuesAreaWidgetLayout = QtWidgets.QVBoxLayout()
@@ -3947,7 +3947,8 @@ class QueryBuilderWizard(QtWidgets.QDialog):
         self.conditionValuesAreaWidgetLayout = QtWidgets.QVBoxLayout()
         conditionValuesAreaWidget.setLayout(self.conditionValuesAreaWidgetLayout)
         self.conditionValuesArea.setWidget(conditionValuesAreaWidget)
-        self.conditionValuesArea.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        self.conditionValuesArea.setSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum,
+                                               QtWidgets.QSizePolicy.Policy.Minimum)
 
         conditionsButtonsWidget = QtWidgets.QWidget()
         conditionsButtonsWidgetLayout = QtWidgets.QHBoxLayout()
@@ -3975,7 +3976,8 @@ class QueryBuilderWizard(QtWidgets.QDialog):
         self.modificationValues = []
         self.modificationValuesArea = QtWidgets.QScrollArea()
         self.modificationValuesArea.setWidgetResizable(True)
-        self.modificationValuesArea.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        self.modificationValuesArea.setSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum,
+                                                  QtWidgets.QSizePolicy.Policy.Minimum)
 
         modificationValuesAreaWidget = QtWidgets.QWidget()
         self.modificationValuesAreaWidgetLayout = QtWidgets.QVBoxLayout()
@@ -4003,12 +4005,12 @@ class QueryBuilderWizard(QtWidgets.QDialog):
         self.entityDropdownTriplets = []
 
         self.historyTable = QtWidgets.QTableWidget(0, 7, self)
-        self.historyTable.setSelectionBehavior(self.historyTable.SelectRows)
-        self.historyTable.setSelectionMode(self.historyTable.SingleSelection)
+        self.historyTable.setSelectionBehavior(self.historyTable.SelectionBehavior.SelectRows)
+        self.historyTable.setSelectionMode(self.historyTable.SelectionMode.SingleSelection)
         self.historyTable.setAcceptDrops(False)
-        self.historyTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.historyTable.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
         self.historyTable.verticalHeader().setCascadingSectionResizes(True)
-        self.historyTable.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        self.historyTable.horizontalHeader().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeMode.Stretch)
         self.historyTable.setHorizontalHeaderLabels(['Query UID', 'Select Clause', 'Select Value(s)', 'Source Clause',
                                                      'Source Value(s)', 'Condition Clause(s)', 'Modification Values'])
         self.queryNewOrHistory.addTab(self.historyTable, 'History')
@@ -4031,7 +4033,7 @@ class QueryBuilderWizard(QtWidgets.QDialog):
         clauseWidget = QtWidgets.QFrame()
         clauseWidgetLayout = QtWidgets.QVBoxLayout()
         clauseWidget.setLayout(clauseWidgetLayout)
-        clauseWidget.setFrameStyle(clauseWidget.Panel | clauseWidget.Raised)
+        clauseWidget.setFrameStyle(QtWidgets.QFrame.Shape.Panel | QtWidgets.QFrame.Shadow.Raised)
         clauseWidget.setLineWidth(3)
 
         andOrClause = QtWidgets.QComboBox()
@@ -4042,7 +4044,7 @@ class QueryBuilderWizard(QtWidgets.QDialog):
         negation.addItems(['MATCHES', 'DOES NOT MATCH'])
         inputDropdown = QtWidgets.QListWidget()
         inputDropdown.setSortingEnabled(True)
-        inputDropdown.setSelectionMode(QtWidgets.QListWidget.SingleSelection)
+        inputDropdown.setSelectionMode(QtWidgets.QListWidget.SelectionMode.SingleSelection)
         inputDropdown.setMinimumHeight(125)
         inputDropdown.addItems(self.mainWindowObject.LQLWIZARD.allCanvases)
         inputText = QtWidgets.QLineEdit('')
@@ -4098,7 +4100,7 @@ class QueryBuilderWizard(QtWidgets.QDialog):
         clauseWidget = QtWidgets.QFrame()
         clauseWidgetLayout = QtWidgets.QVBoxLayout()
         clauseWidget.setLayout(clauseWidgetLayout)
-        clauseWidget.setFrameStyle(clauseWidget.Panel | clauseWidget.Raised)
+        clauseWidget.setFrameStyle(QtWidgets.QFrame.Shape.Panel | QtWidgets.QFrame.Shadow.Raised)
         clauseWidget.setLineWidth(3)
 
         andOrClause = QtWidgets.QLabel('AND')
@@ -4113,7 +4115,7 @@ class QueryBuilderWizard(QtWidgets.QDialog):
 
         inputDropdown = QtWidgets.QListWidget()
         inputDropdown.setSortingEnabled(True)
-        inputDropdown.setSelectionMode(QtWidgets.QListWidget.SingleSelection)
+        inputDropdown.setSelectionMode(QtWidgets.QListWidget.SelectionMode.SingleSelection)
         inputDropdown.addItems(self.mainWindowObject.LQLWIZARD.allEntityFields)
         inputDropdown.setMinimumHeight(125)
         inputText = QtWidgets.QLineEdit('')
@@ -4313,10 +4315,10 @@ class QueryResultsViewer(QtWidgets.QDialog):
         self.resultsTable = QtWidgets.QTableWidget(0, len(self.headerFields), self)
         self.resultsTable.setHorizontalHeaderLabels(self.headerFields)
         self.resultsTable.setAcceptDrops(False)
-        self.resultsTable.setEditTriggers(QtWidgets.QAbstractItemView.NoEditTriggers)
+        self.resultsTable.setEditTriggers(QtWidgets.QAbstractItemView.EditTrigger.NoEditTriggers)
         self.resultsTable.verticalHeader().setCascadingSectionResizes(True)
         for index in range(1, len(self.headerFields)):
-            self.resultsTable.horizontalHeader().setSectionResizeMode(index, QtWidgets.QHeaderView.Stretch)
+            self.resultsTable.horizontalHeader().setSectionResizeMode(index, QtWidgets.QHeaderView.ResizeMode.Stretch)
 
         for count, uid in enumerate(selectedUIDs):
             self.resultsTable.insertRow(count)
@@ -4343,15 +4345,15 @@ class QueryResultsViewer(QtWidgets.QDialog):
             fieldChart = QtCharts.QChart()
             chartTitle = headerField + " Chart"
             fieldChart.setTitle(chartTitle)
-            fieldChart.setTheme(QtCharts.QChart.ChartThemeBlueCerulean)
+            fieldChart.setTheme(QtCharts.QChart.ChartTheme.ChartThemeBlueCerulean)
             fieldChart.setMargins(QtCore.QMargins(0, 0, 0, 0))
             chartView = QtCharts.QChartView(fieldChart)
-            chartView.setRubberBand(QtCharts.QChartView.NoRubberBand)
-            chartView.setRenderHint(QtGui.QPainter.Antialiasing)
-            fieldChart.setAnimationOptions(QtCharts.QChart.AllAnimations)
+            chartView.setRubberBand(QtCharts.QChartView.RubberBand.NoRubberBand)
+            chartView.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
+            fieldChart.setAnimationOptions(QtCharts.QChart.AnimationOption.AllAnimations)
             fieldChart.setAnimationDuration(250)
             fieldChart.legend().setVisible(True)
-            fieldChart.legend().setAlignment(QtCore.Qt.AlignBottom)
+            fieldChart.legend().setAlignment(QtCore.Qt.AlignmentFlag.AlignBottom)
 
             self.charts[headerField] = (fieldChart, chartView)
             self.resultsTabbedPane.addTab(chartView, chartTitle)
@@ -4367,13 +4369,13 @@ class QueryResultsViewer(QtWidgets.QDialog):
 
             xAxis = QtCharts.QBarCategoryAxis()
             xAxis.append([headerField])
-            fieldChart.addAxis(xAxis, QtCore.Qt.AlignBottom)
+            fieldChart.addAxis(xAxis, QtCore.Qt.AlignmentFlag.AlignBottom)
             barSeries.attachAxis(xAxis)
 
             yAxis = QtCharts.QValueAxis()
             yAxis.setRange(0, max(values.values()) + 1)
             yAxis.applyNiceNumbers()
-            fieldChart.addAxis(yAxis, QtCore.Qt.AlignLeft)
+            fieldChart.addAxis(yAxis, QtCore.Qt.AlignmentFlag.AlignLeft)
             barSeries.attachAxis(yAxis)
 
         if numifiedFields:
@@ -4433,10 +4435,10 @@ class QueryResultsViewer(QtWidgets.QDialog):
 
     def exportData(self):
         exportDialog = QtWidgets.QFileDialog()
-        exportDialog.setOption(QtWidgets.QFileDialog.DontUseNativeDialog, True)
-        exportDialog.setViewMode(QtWidgets.QFileDialog.List)
-        exportDialog.setFileMode(QtWidgets.QFileDialog.AnyFile)
-        exportDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+        exportDialog.setOption(QtWidgets.QFileDialog.Option.DontUseNativeDialog, True)
+        exportDialog.setViewMode(QtWidgets.QFileDialog.ViewMode.List)
+        exportDialog.setFileMode(QtWidgets.QFileDialog.FileMode.AnyFile)
+        exportDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptMode.AcceptSave)
         exportDialog.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         exportDialog.setDirectory(str(Path.home()))
 
@@ -4476,7 +4478,7 @@ class ConditionClauseWidget(QtWidgets.QFrame):
         super(ConditionClauseWidget, self).__init__()
         clauseWidgetLayout = QtWidgets.QVBoxLayout()
         self.setLayout(clauseWidgetLayout)
-        self.setFrameStyle(self.Panel | self.Raised)
+        self.setFrameStyle(QtWidgets.QFrame.Shape.Panel | QtWidgets.QFrame.Shadow.Raised)
         self.setLineWidth(3)
 
         self.andOrClause = QtWidgets.QComboBox()
@@ -4523,7 +4525,7 @@ class ConditionClauseWidget(QtWidgets.QFrame):
 
         graphEntitiesDropdown = QtWidgets.QTreeWidget()
         graphEntitiesDropdown.setHeaderLabels(['Primary Field', 'UID', 'Icon'])
-        graphEntitiesDropdown.setSelectionMode(QtWidgets.QAbstractItemView.SingleSelection)
+        graphEntitiesDropdown.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.SingleSelection)
         for entityDropdownTriplet in parentWizard.entityDropdownTriplets:
             newItem = QtWidgets.QTreeWidgetItem()
             newItem.setText(0, entityDropdownTriplet[0])
@@ -4630,14 +4632,14 @@ class MacroDialog(QtWidgets.QDialog):
                                       "Click on a Macro to view the Resolutions included in it.")
         macroLabel.setWordWrap(True)
         self.macroTree = MacroTree(self, mainWindowObject)
-        self.macroTree.setSelectionMode(self.macroTree.ExtendedSelection)
-        self.macroTree.setSelectionBehavior(self.macroTree.SelectRows)
+        self.macroTree.setSelectionMode(self.macroTree.SelectionMode.ExtendedSelection)
+        self.macroTree.setSelectionBehavior(self.macroTree.SelectionBehavior.SelectRows)
         self.macroTree.setHeaderLabels(['Macro UID', 'Delete'])
-        self.macroTree.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.macroTree.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
         self.macroTree.setSortingEnabled(False)
         # Stretch the first column, since it contains the primary field.
         self.macroTree.header().setStretchLastSection(False)
-        self.macroTree.header().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        self.macroTree.header().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeMode.Stretch)
 
         buttonsWidget = QtWidgets.QWidget()
         buttonsWidgetLayout = QtWidgets.QHBoxLayout()
@@ -4751,7 +4753,7 @@ class MacroCreatorDialog(QtWidgets.QDialog):
             viewItem = QtWidgets.QListWidgetItem(resolution)
             self.viewList.addItem(viewItem)
         self.viewList.sortItems()
-        self.viewList.setSelectionMode(self.viewList.ExtendedSelection)
+        self.viewList.setSelectionMode(self.viewList.SelectionMode.ExtendedSelection)
 
         buttonsAddRemoveWidget = QtWidgets.QWidget()
         buttonsAddRemoveWidgetLayout = QtWidgets.QVBoxLayout()
@@ -4773,9 +4775,9 @@ class MacroCreatorDialog(QtWidgets.QDialog):
         buttonsRearrangeWidgetLayout.addWidget(buttonMoveUp)
         buttonsRearrangeWidgetLayout.addWidget(buttonMoveDown)
         allResolutionsLabel = QtWidgets.QLabel('All Resolutions')
-        allResolutionsLabel.setAlignment(QtCore.Qt.AlignCenter)
+        allResolutionsLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         selectedResolutionsLabel = QtWidgets.QLabel('Selected Resolutions')
-        selectedResolutionsLabel.setAlignment(QtCore.Qt.AlignCenter)
+        selectedResolutionsLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         confirmButton = QtWidgets.QPushButton('Confirm')
         confirmButton.clicked.connect(self.accept)
         cancelButton = QtWidgets.QPushButton('Cancel')

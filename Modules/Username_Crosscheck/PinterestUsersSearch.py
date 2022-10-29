@@ -63,7 +63,7 @@ class PinterestUsersSearch:
                                 childIconImageScaled = childIconImageOriginal.scaled(QSize(40, 40))
                                 childIconByteArrayFin = QByteArray()
                                 childImageBuffer = QBuffer(childIconByteArrayFin)
-                                childImageBuffer.open(QIODevice.WriteOnly)
+                                childImageBuffer.open(QIODevice.OpenModeFlag.WriteOnly)
                                 childIconImageScaled.save(childImageBuffer, "PNG")
                                 childImageBuffer.close()
                             except Exception:

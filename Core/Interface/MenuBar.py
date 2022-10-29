@@ -1175,7 +1175,7 @@ class MenuBar(QtWidgets.QMenuBar):
             steps = 3
             progress = QtWidgets.QProgressDialog('Importing tabs, please wait...',
                                                  'Abort Import', 0, steps, self)
-            progress.setWindowModality(QtCore.Qt.WindowModal)
+            progress.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
             progress.setMinimumDuration(0)
             importTabsThread.progressSignal.connect(progress.setValue)
             progress.canceled.connect(lambda: importTabsThread.cancelOperation())
@@ -1342,7 +1342,7 @@ class DeleteProjectConfirmationDialog(QtWidgets.QDialog):
         resolutionsLabel = QtWidgets.QLabel(f'Delete Project: "{currentServerProject}" ?')
         resolutionsLabel.setWordWrap(True)
 
-        resolutionsLabel.setAlignment(QtCore.Qt.AlignCenter)
+        resolutionsLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(resolutionsLabel)
 
         buttonsWidget = QtWidgets.QWidget()
@@ -1449,7 +1449,7 @@ class ServerConnectWizard(QtWidgets.QDialog):
 
         serverPasswordLabel = QtWidgets.QLabel("Server Password:")
         self.serverPasswordTextbox = QtWidgets.QLineEdit()
-        self.serverPasswordTextbox.setEchoMode(QtWidgets.QLineEdit.Password)
+        self.serverPasswordTextbox.setEchoMode(QtWidgets.QLineEdit.EchoMode.Password)
         self.layout().addRow(serverPasswordLabel, self.serverPasswordTextbox)
 
         self.confirmConnect = False
@@ -1488,7 +1488,7 @@ class ServerCreateOrOpenProject(QtWidgets.QDialog):
         self.openProjectDropdown.addItems(serverProjects)
         self.openProjectPassword = QtWidgets.QLineEdit('')
         self.openProjectPassword.setToolTip('Enter the password of the selected server project.')
-        self.openProjectPassword.setEchoMode(QtWidgets.QLineEdit.Password)
+        self.openProjectPassword.setEchoMode(QtWidgets.QLineEdit.EchoMode.Password)
         openProjectLayout.addRow('Open Project:', self.openProjectDropdown)
         openProjectLayout.addRow('Password:', self.openProjectPassword)
         openProjectButton = QtWidgets.QPushButton('Open Project')
@@ -1502,7 +1502,7 @@ class ServerCreateOrOpenProject(QtWidgets.QDialog):
         self.createProjectNameTextbox = QtWidgets.QLineEdit('')
         self.createProjectNameTextbox.setToolTip('Specify the name of the server project. Must be unique.')
         self.createProjectPasswordTextbox = QtWidgets.QLineEdit('')
-        self.createProjectPasswordTextbox.setEchoMode(QtWidgets.QLineEdit.Password)
+        self.createProjectPasswordTextbox.setEchoMode(QtWidgets.QLineEdit.EchoMode.Password)
         self.createProjectPasswordTextbox.setToolTip('Specify a password to be entered'
                                                      ' in order to access this project.')
 
@@ -1546,7 +1546,7 @@ class ViewAndStopResolutionsDialog(QtWidgets.QDialog):
 
         resolutionsLabel = QtWidgets.QLabel('Running Resolutions:')
 
-        resolutionsLabel.setAlignment(QtCore.Qt.AlignCenter)
+        resolutionsLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.layout().addWidget(resolutionsLabel)
 
         scrollArea = QtWidgets.QScrollArea()
@@ -1603,7 +1603,7 @@ class CollectorsDialog(QtWidgets.QDialog):
         self.runningCollectorTreeItems = {}
 
         collectorsLabel = QtWidgets.QLabel("Collectors")
-        collectorsLabel.setAlignment(QtCore.Qt.AlignCenter)
+        collectorsLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.baseLayout.addWidget(collectorsLabel)
 
         if collectorsDict is None:
@@ -1633,9 +1633,10 @@ class CollectorsDialog(QtWidgets.QDialog):
                     newCollectorInstanceTree = QtWidgets.QTreeWidget()
                     newCollectorInstanceTree.setColumnCount(2)
                     newCollectorInstanceTree.setHeaderLabels(['UID', 'Stop Button'])
-                    newCollectorInstanceTree.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+                    newCollectorInstanceTree.setSelectionBehavior(
+                        QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
                     newCollectorInstanceTree.header().setStretchLastSection(False)
-                    newCollectorInstanceTree.header().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+                    newCollectorInstanceTree.header().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeMode.Stretch)
                     newCollectorWidgetLayout.addWidget(newCollectorInstanceTree, 1, 0, 2, 2)
 
                     if runningCollectors is not None:
@@ -1718,16 +1719,16 @@ class CollectorStartDialog(QtWidgets.QDialog):
         entitySelectTabLabel.setWordWrap(True)
         entitySelectTabLabel.setMaximumWidth(600)
 
-        entitySelectTabLabel.setAlignment(QtCore.Qt.AlignCenter)
+        entitySelectTabLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         entitySelectTab.layout().addWidget(entitySelectTabLabel)
 
         self.entitySelector = QtWidgets.QTreeWidget()
         self.entitySelector.setHeaderLabels(['Primary Field', 'Entity Type', 'Icon'])
-        self.entitySelector.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectRows)
+        self.entitySelector.setSelectionBehavior(QtWidgets.QAbstractItemView.SelectionBehavior.SelectRows)
         self.entitySelector.setSortingEnabled(True)
         # Stretch the first column, since it contains the primary field.
         self.entitySelector.header().setStretchLastSection(False)
-        self.entitySelector.header().setSectionResizeMode(0, QtWidgets.QHeaderView.Stretch)
+        self.entitySelector.header().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeMode.Stretch)
         relevantEntityFields = [(entity['uid'], entity[list(entity)[1]], entity['Entity Type'], entity['Icon'])
                                 for entity in entityDB.getAllEntities()
                                 if entity['Entity Type'] in originTypes or '*' in originTypes]
@@ -1741,7 +1742,7 @@ class CollectorStartDialog(QtWidgets.QDialog):
             # Hidden, so we can pull the UID later.
             newTreeWidgetItem.setText(3, eligibleEntity[0])
 
-        self.entitySelector.setSelectionMode(self.entitySelector.MultiSelection)
+        self.entitySelector.setSelectionMode(self.entitySelector.SelectionMode.MultiSelection)
         entitySelectTab.layout().addWidget(self.entitySelector)
 
         self.childWidget.addTab(entitySelectTab, 'Entities')
@@ -1756,7 +1757,7 @@ class CollectorStartDialog(QtWidgets.QDialog):
             propertyLabel.setWordWrap(True)
             propertyLabel.setMaximumWidth(600)
 
-            propertyLabel.setAlignment(QtCore.Qt.AlignCenter)
+            propertyLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
             propertyKeyLayout.addWidget(propertyLabel)
 
             propertyType = parameters[key].get('type')
@@ -1846,7 +1847,7 @@ class ImportLinksFromCSVFile(QtWidgets.QDialog):
         columnNumber = len(csvTableContents.columns)
 
         titleLabel = QtWidgets.QLabel("Import Links from CSV")
-        titleLabel.setAlignment(QtCore.Qt.AlignCenter)
+        titleLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
         descLabel = QtWidgets.QLabel("Select the Entity Type of the Parent entity (Entity One) and the Entity Type of "
                                      "the Child entity (Entity Two). Then, map these entities to columns in the CSV "
@@ -1902,7 +1903,7 @@ class ImportLinksFromCSVFile(QtWidgets.QDialog):
             rowValues = list(row)
             for column in range(columnNumber):
                 columnItem = QtWidgets.QTableWidgetItem(str(rowValues[column + 1]))
-                columnItem.setFlags(columnItem.flags() & ~QtCore.Qt.ItemIsEditable)
+                columnItem.setFlags(columnItem.flags() & ~QtCore.Qt.ItemFlag.ItemIsEditable)
                 csvTable.setItem(rowValues[0], column, columnItem)
 
         randomizationLabel = QtWidgets.QLabel("If the resolution identifiers (i.e. 'Resolution ID') are not guaranteed "
@@ -1911,7 +1912,7 @@ class ImportLinksFromCSVFile(QtWidgets.QDialog):
                                               "have random tokens as the Resolution IDs.\nPlease select what you would "
                                               "like to do:")
         randomizationLabel.setWordWrap(True)
-        randomizationLabel.setAlignment(QtCore.Qt.AlignCenter)
+        randomizationLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.randAsIs = QtWidgets.QRadioButton("Use 'Resolution ID' as-is.")
         self.randMerge = QtWidgets.QRadioButton("Append a random token to the values mapped to the 'Resolution ID' "
                                                 "field.")
@@ -1986,7 +1987,7 @@ class ImportLinkEntitiesFromCSVFile(QtWidgets.QDialog):
         columnNumber = len(csvTableContents.columns)
 
         titleLabel = QtWidgets.QLabel("Create Entities from Link Fields")
-        titleLabel.setAlignment(QtCore.Qt.AlignCenter)
+        titleLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
         descLabel = QtWidgets.QLabel("Select the entity type to import the remaining fields as. "
                                      "Then, configure the mapping between the CSV fields and entity attributes. To do "
@@ -2036,7 +2037,7 @@ class ImportLinkEntitiesFromCSVFile(QtWidgets.QDialog):
             rowValues = list(row)
             for column in range(columnNumber):
                 columnItem = QtWidgets.QTableWidgetItem(str(rowValues[column + 1]))
-                columnItem.setFlags(columnItem.flags() & ~QtCore.Qt.ItemIsEditable)
+                columnItem.setFlags(columnItem.flags() & ~QtCore.Qt.ItemFlag.ItemIsEditable)
                 csvTable.setItem(rowValues[0], column, columnItem)
 
         buttonsWidget = QtWidgets.QWidget()
@@ -2099,7 +2100,7 @@ class ImportEntityFromCSVFile(QtWidgets.QDialog):
         columnNumber = len(csvTableContents.columns)
 
         titleLabel = QtWidgets.QLabel("Import Entities from CSV")
-        titleLabel.setAlignment(QtCore.Qt.AlignCenter)
+        titleLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
         descLabel = QtWidgets.QLabel("Select the entity type to import the entities from the CSV file as. "
                                      "Then, configure the mapping between the CSV fields and entity attributes. To do "
@@ -2139,7 +2140,7 @@ class ImportEntityFromCSVFile(QtWidgets.QDialog):
             rowValues = list(row)
             for column in range(columnNumber):
                 columnItem = QtWidgets.QTableWidgetItem(str(rowValues[column + 1]))
-                columnItem.setFlags(columnItem.flags() & ~QtCore.Qt.ItemIsEditable)
+                columnItem.setFlags(columnItem.flags() & ~QtCore.Qt.ItemFlag.ItemIsEditable)
                 csvTable.setItem(rowValues[0], column, columnItem)
 
         importToCanvasChoiceWidget = QtWidgets.QWidget()
@@ -2212,7 +2213,7 @@ class ImportFromFileDialog(QtWidgets.QDialog):
         self.fileDirectory = QtWidgets.QFileDialog().getOpenFileName(
             parent=self, caption='Select File to Import From',
             dir=str(Path.home()),
-            options=QtWidgets.QFileDialog.DontUseNativeDialog,
+            options=QtWidgets.QFileDialog.Option.DontUseNativeDialog,
             filter="Import File (*.csv *.txt *.xls *.xlsx *.ods)")[0]
         if self.fileDirectory != '':
             self.fileDirectoryLine.setText(self.fileDirectory)
@@ -2226,7 +2227,7 @@ class ImportFromFileDialog(QtWidgets.QDialog):
         dialogLayout = QtWidgets.QGridLayout()
         self.setLayout(dialogLayout)
         descriptionLabel = QtWidgets.QLabel('Select the file to import Entities or Links from:')
-        descriptionLabel.setAlignment(QtCore.Qt.AlignCenter)
+        descriptionLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         descriptionLabel.setWordWrap(True)
         dialogLayout.addWidget(descriptionLabel, 0, 0, 1, 2)
 
@@ -2235,7 +2236,7 @@ class ImportFromFileDialog(QtWidgets.QDialog):
         self.fileDirectoryLine.setReadOnly(True)
 
         fileChoiceLabel = QtWidgets.QLabel('Specify the type of the chosen file and what to import:')
-        fileChoiceLabel.setAlignment(QtCore.Qt.AlignCenter)
+        fileChoiceLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         fileChoiceLabel.setWordWrap(True)
 
         self.textFileChoice = QtWidgets.QRadioButton('Text file - Entities Import')
@@ -2281,7 +2282,7 @@ class ImportFromTextFileDialog(QtWidgets.QDialog):
         dialogLayout = QtWidgets.QGridLayout()
         self.setLayout(dialogLayout)
         descriptionLabel = QtWidgets.QLabel('Importing entities from text file, one entity per line.')
-        descriptionLabel.setAlignment(QtCore.Qt.AlignCenter)
+        descriptionLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         descriptionLabel.setWordWrap(True)
         dialogLayout.addWidget(descriptionLabel, 0, 0, 1, 2)
 
@@ -2308,7 +2309,7 @@ class ImportFromTextFileDialog(QtWidgets.QDialog):
         textTable.setFixedWidth(450)
         for lineIndex, lineValue in enumerate(fileContents):
             columnItem = QtWidgets.QTableWidgetItem(lineValue)
-            columnItem.setFlags(columnItem.flags() & ~QtCore.Qt.ItemIsEditable)
+            columnItem.setFlags(columnItem.flags() & ~QtCore.Qt.ItemFlag.ItemIsEditable)
             textTable.setItem(lineIndex, 0, columnItem)
         textTable.setColumnWidth(0, 450)
         textTable.setHorizontalHeaderLabels(['File Entities Preview'])
@@ -2420,10 +2421,10 @@ class CanvasPictureDialog(QtWidgets.QDialog):
 
     def popupFileDialog(self):
         saveAsDialog = QtWidgets.QFileDialog()
-        saveAsDialog.setOption(QtWidgets.QFileDialog.DontUseNativeDialog, True)
-        saveAsDialog.setViewMode(QtWidgets.QFileDialog.List)
+        saveAsDialog.setOption(QtWidgets.QFileDialog.Option.DontUseNativeDialog, True)
+        saveAsDialog.setViewMode(QtWidgets.QFileDialog.ViewMode.List)
         saveAsDialog.setNameFilter("Image (*.png)")
-        saveAsDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptSave)
+        saveAsDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptMode.AcceptSave)
         saveAsDialog.setDirectory(str(Path.home()))
         saveAsDialog.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         saveAsDialog.exec()

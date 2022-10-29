@@ -35,11 +35,11 @@ class DockBarThree(QtWidgets.QDockWidget):
 
     def __init__(self, mainWindow, title="Dockbar Three"):
         super(DockBarThree, self).__init__(parent=mainWindow)
-        self.setAllowedAreas(QtCore.Qt.TopDockWidgetArea |
-                             QtCore.Qt.BottomDockWidgetArea)
-        self.setFeatures(QtWidgets.QDockWidget.DockWidgetMovable |
-                         QtWidgets.QDockWidget.DockWidgetFloatable |
-                         QtWidgets.QDockWidget.DockWidgetClosable)
+        self.setAllowedAreas(QtCore.Qt.DockWidgetArea.TopDockWidgetArea |
+                             QtCore.Qt.DockWidgetArea.BottomDockWidgetArea)
+        self.setFeatures(QtWidgets.QDockWidget.DockWidgetFeature.DockWidgetMovable |
+                         QtWidgets.QDockWidget.DockWidgetFeature.DockWidgetFloatable |
+                         QtWidgets.QDockWidget.DockWidgetFeature.DockWidgetClosable)
         self.setWindowTitle(title)
         self.setObjectName(title)
         self.setMaximumHeight(275)
@@ -77,11 +77,11 @@ class TimeWidget(QtWidgets.QWidget):
 
         self.timelineChart = QtCharts.QChart()
         self.timelineChart.setTitle("Timeline")
-        self.timelineChart.setTheme(QtCharts.QChart.ChartThemeBlueCerulean)
+        self.timelineChart.setTheme(QtCharts.QChart.ChartTheme.ChartThemeBlueCerulean)
         self.timelineChart.setMargins(QtCore.QMargins(0, 0, 0, 0))
         self.chartView = QtCharts.QChartView(self.timelineChart)
-        self.chartView.setRubberBand(QtCharts.QChartView.NoRubberBand)
-        self.timelineChart.setAnimationOptions(QtCharts.QChart.AllAnimations)
+        self.chartView.setRubberBand(QtCharts.QChartView.RubberBand.NoRubberBand)
+        self.timelineChart.setAnimationOptions(QtCharts.QChart.AnimationOption.AllAnimations)
         self.timelineChart.setAnimationDuration(250)
         self.timelineChart.legend().hide()
 
@@ -96,7 +96,7 @@ class TimeWidget(QtWidgets.QWidget):
         # Ref: https://qtcentre.org/threads/10975-Help-Export-QGraphicsView-to-Image-File
         # Rendering best optimized to rgb32 and argb32_premultiplied.
         # Ref: https://doc.qt.io/qtforpython/PySide6/QtGui/QImage.html?highlight=qimage#image-formats
-        picture = QtGui.QImage(self.chartView.size(), QtGui.QImage.Format_ARGB32_Premultiplied)
+        picture = QtGui.QImage(self.chartView.size(), QtGui.QImage.Format.Format_ARGB32_Premultiplied)
         # Pictures are initialised with junk data - need to clear it out before painting
         #   to avoid visual artifacts.
         picture.fill(QtGui.QColor(0, 0, 0, 0))
@@ -222,7 +222,7 @@ class TimeWidget(QtWidgets.QWidget):
         xAxisValues = []
 
         barSet = TimelineBarSet('Entities', self, timestep, list(barsDict))
-        barSet.setColor(QtGui.Qt.darkCyan)
+        barSet.setColor(QtGui.Qt.GlobalColor.darkCyan)
         for bar in barsDict:
             barSet.append(barsDict[bar])
             timelineSeries.append(barSet)
@@ -296,28 +296,28 @@ class TimelineTimescaleSelector(QtWidgets.QLabel):
         self.setMaximumHeight(150)
 
         self.setLayout(QtWidgets.QFormLayout())
-        self.setFrameStyle(QtWidgets.QFrame.Sunken)
+        self.setFrameStyle(QtWidgets.QFrame.Shadow.Sunken)
 
         self.yearButton = QtWidgets.QPushButton(' Year: ')
         self.yearButton.clicked.connect(self.yearButtonPressed)
         self.yearText = QtWidgets.QLabel('-')
-        self.yearText.setFrameStyle(QtWidgets.QFrame.Sunken)
+        self.yearText.setFrameStyle(QtWidgets.QFrame.Shadow.Sunken)
         self.monthButton = QtWidgets.QPushButton(' Month: ')
         self.monthButton.clicked.connect(self.monthButtonPressed)
         self.monthText = QtWidgets.QLabel('X')
-        self.monthText.setFrameStyle(QtWidgets.QFrame.Sunken)
+        self.monthText.setFrameStyle(QtWidgets.QFrame.Shadow.Sunken)
         self.dayButton = QtWidgets.QPushButton(' Day: ')
         self.dayButton.clicked.connect(self.dayButtonPressed)
         self.dayText = QtWidgets.QLabel('X')
-        self.dayText.setFrameStyle(QtWidgets.QFrame.Sunken)
+        self.dayText.setFrameStyle(QtWidgets.QFrame.Shadow.Sunken)
         self.hourButton = QtWidgets.QPushButton(' Hour: ')
         self.hourButton.clicked.connect(self.hourButtonPressed)
         self.hourText = QtWidgets.QLabel('X')
-        self.hourText.setFrameStyle(QtWidgets.QFrame.Sunken)
+        self.hourText.setFrameStyle(QtWidgets.QFrame.Shadow.Sunken)
         self.minuteButton = QtWidgets.QPushButton(' Minute: ')
         self.minuteButton.clicked.connect(self.minuteButtonPressed)
         self.minuteText = QtWidgets.QLabel('X')
-        self.minuteText.setFrameStyle(QtWidgets.QFrame.Sunken)
+        self.minuteText.setFrameStyle(QtWidgets.QFrame.Shadow.Sunken)
 
         self.layout().addRow(self.yearButton, self.yearText)
         self.layout().addRow(self.monthButton, self.monthText)
@@ -462,8 +462,8 @@ class ServerStatusBox(QtWidgets.QLabel):
 
     def __init__(self, parent):
         super(ServerStatusBox, self).__init__(parent=parent)
-        self.setAlignment(QtCore.Qt.AlignHCenter | QtCore.Qt.AlignVCenter)
-        self.setFrameStyle(QtWidgets.QFrame.Sunken | QtWidgets.QFrame.StyledPanel)
+        self.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        self.setFrameStyle(QtWidgets.QFrame.Shadow.Sunken | QtWidgets.QFrame.Shape.StyledPanel)
         self.setText("Not connected to a server")
 
     def updateStatus(self, status: str):
@@ -492,7 +492,7 @@ class ChatBox(QtWidgets.QWidget):
 
         chatLabel = QtWidgets.QLabel('Project Collaboration Chat')
         chatLabel.setStyleSheet(Stylesheets.DOCK_BAR_LABEL)
-        chatLabel.setAlignment(QtCore.Qt.AlignCenter)
+        chatLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.textView = QtWidgets.QPlainTextEdit()
         self.textView.setReadOnly(True)
         self.textSendBox = QtWidgets.QLineEdit()

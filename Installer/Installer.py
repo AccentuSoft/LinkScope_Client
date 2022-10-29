@@ -815,7 +815,7 @@ class InstallWizard(QtWidgets.QWizard):
                         sudoPassword = QtWidgets.QInputDialog.getText(self, 'Sudo Password',
                                                                       'Installation requires elevated privileges. '
                                                                       'Please enter your password: ',
-                                                                      QtWidgets.QLineEdit.Password)
+                                                                      QtWidgets.QLineEdit.EchoMode.Password)
                         if sudoPassword[1] and sudoPassword[0] != '':
                             sudoPrivs = subprocess.Popen(['sudo', '-S', '-H', '-k', sys.executable, *newArgs],
                                                          stdin=subprocess.PIPE, stdout=subprocess.PIPE,
@@ -865,7 +865,7 @@ class InstallWizard(QtWidgets.QWizard):
                     sys.exit(-2)
                 self.appPath = Path(sys.argv[6])
 
-        self.setWizardStyle(self.ModernStyle)
+        self.setWizardStyle(self.WizardStyle.ModernStyle)
         self.setWindowTitle('LinkScope Installer')
 
         # Normally one would use enums to keep track of pages, but the installer crashes if we try, so we
@@ -888,8 +888,8 @@ class InstallWizard(QtWidgets.QWizard):
         self.addPage(licensePage)
         self.addPage(installUpgradePage)
         self.addPage(DonePage())
-        self.setOptions(self.NoBackButtonOnStartPage | self.NoBackButtonOnLastPage | self.CancelButtonOnLeft |
-                        self.NoCancelButtonOnLastPage)
+        self.setOptions(self.WizardOption.NoBackButtonOnStartPage | self.WizardOption.NoBackButtonOnLastPage |
+                        self.WizardOption.CancelButtonOnLeft | self.WizardOption.NoCancelButtonOnLastPage)
 
         self.show()
 
@@ -1000,7 +1000,7 @@ class IntroInstallUninstallPage(QtWidgets.QWizardPage):
         self.setLayout(installUninstallLayout)
 
         actionLabel = QtWidgets.QLabel("Please select the action that you wish to carry out:")
-        actionLabel.setAlignment(QtCore.Qt.AlignCenter)
+        actionLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         installUninstallLayout.addWidget(actionLabel)
 
         self.installRadio = QtWidgets.QRadioButton('Install LinkScope')
@@ -1034,7 +1034,7 @@ class WindowsGraphVizPage(QtWidgets.QWizardPage):
                                          'function, and will be installed along with the software. The licensing terms '
                                          'for GraphViz can be found at: https://graphviz.org/license/.')
         graphVizLabel.setWordWrap(True)
-        graphVizLabel.setAlignment(QtCore.Qt.AlignCenter)
+        graphVizLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.setLayout(graphVizLayout)
         graphVizLayout.addWidget(graphVizLabel)
 
@@ -1082,7 +1082,7 @@ class LinkScopeInstallLatestPage(QtWidgets.QWizardPage):
         self.installThread = None
 
         self.installLabel.setWordWrap(True)
-        self.installLabel.setAlignment(QtCore.Qt.AlignCenter)
+        self.installLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         installLayout.addWidget(self.installLabel)
 
         self.installProgressWidget = QtWidgets.QWidget()
@@ -1097,7 +1097,7 @@ class LinkScopeInstallLatestPage(QtWidgets.QWizardPage):
 
         self.downloadingLabel = QtWidgets.QLabel('Downloading files. This may take some time...')
         self.downloadingLabel.setWordWrap(True)
-        self.downloadingLabel.setAlignment(QtCore.Qt.AlignCenter)
+        self.downloadingLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.downloadingLabel.setVisible(False)
 
         installLayout.addWidget(self.installProgressWidget)
@@ -1135,7 +1135,7 @@ class LinkScopeUninstallPage(QtWidgets.QWizardPage):
         self.uninstallLabel = QtWidgets.QLabel('The installer will now uninstall LinkScope from this computer. Click '
                                                '"Commit" to begin the removal process.')
         self.uninstallLabel.setWordWrap(True)
-        self.uninstallLabel.setAlignment(QtCore.Qt.AlignCenter)
+        self.uninstallLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         uninstallLayout.addWidget(self.uninstallLabel)
 
         self.uninstallProgressWidget = QtWidgets.QWidget()
@@ -1183,7 +1183,7 @@ class CreateDesktopShortcutPage(QtWidgets.QWizardPage):
         desktopShortcutLayout = QtWidgets.QVBoxLayout()
         self.setLayout(desktopShortcutLayout)
         desktopShortcutLabel = QtWidgets.QLabel('Create a Shortcut for LinkScope on the Desktop?')
-        desktopShortcutLabel.setAlignment(QtCore.Qt.AlignCenter)
+        desktopShortcutLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
         self.shortcutCheckbox = QtWidgets.QCheckBox('Create a Desktop Shortcut?')
         self.shortcutCheckbox.setChecked(True)
@@ -1202,7 +1202,7 @@ class LicensePage(QtWidgets.QWizardPage):
         self.setLayout(licenseLayout)
 
         licenseLabel = QtWidgets.QLabel('Please review carefully the license terms for the LinkScope Client software.')
-        licenseLabel.setAlignment(QtCore.Qt.AlignCenter)
+        licenseLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         licenseLabel.setWordWrap(True)
 
         licenseText = QtWidgets.QPlainTextEdit(AGPL_LICENSE)
@@ -1235,7 +1235,7 @@ class DonePage(QtWidgets.QWizardPage):
         self.setLayout(doneLayout)
         self.doneLabel = QtWidgets.QLabel('Thank you for using LinkScope!\nClick "Finish" to exit the installer.')
         self.doneLabel.setWordWrap(True)
-        self.doneLabel.setAlignment(QtCore.Qt.AlignCenter)
+        self.doneLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         doneLayout.addWidget(self.doneLabel)
 
 

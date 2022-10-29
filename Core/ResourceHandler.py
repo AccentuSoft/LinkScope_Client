@@ -421,7 +421,7 @@ class FilePropertyInput(QtWidgets.QLineEdit):
         fileChosen = self.fileDialog.getOpenFileName(self,
                                                      "Open File",
                                                      str(Path.home()),
-                                                     options=QtWidgets.QFileDialog.DontUseNativeDialog)
+                                                     options=QtWidgets.QFileDialog.Option.DontUseNativeDialog)
         self.setText(fileChosen[0])
 
 
@@ -536,7 +536,7 @@ class RichNotesEditor(QtWidgets.QTextBrowser):
 
     def mousePressEvent(self, ev: QtGui.QMouseEvent) -> None:
         potentialLink = self.anchorAt(ev.pos())
-        if not potentialLink and ev.button() == QtGui.Qt.LeftButton:
+        if not potentialLink and ev.button() == QtGui.Qt.MouseButton.LeftButton:
             self.startEditing()
         super(RichNotesEditor, self).mousePressEvent(ev)
 

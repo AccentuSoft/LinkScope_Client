@@ -49,7 +49,7 @@ class InterpolRedNotices:
                     thumbnailIconImageScaled = thumbnailIconImageOriginal.scaled(QSize(40, 40))
                     thumbnailByteArrayFin = QByteArray()
                     thumbnailImageBuffer = QBuffer(thumbnailByteArrayFin)
-                    thumbnailImageBuffer.open(QIODevice.WriteOnly)
+                    thumbnailImageBuffer.open(QIODevice.OpenModeFlag.WriteOnly)
                     thumbnailIconImageScaled.save(thumbnailImageBuffer, "PNG")
                     thumbnailImageBuffer.close()
                 except Exception:

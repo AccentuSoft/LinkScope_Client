@@ -48,7 +48,7 @@ class HaveIBeenPwnedBreachDomains:
 
                         breachIconByteArrayFin = QByteArray()
                         breachImageBuffer = QBuffer(breachIconByteArrayFin)
-                        breachImageBuffer.open(QIODevice.WriteOnly)
+                        breachImageBuffer.open(QIODevice.OpenModeFlag.WriteOnly)
                         breachIconImageRotated.save(breachImageBuffer, "PNG")
                         breachImageBuffer.close()
                     except Exception:

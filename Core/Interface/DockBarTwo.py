@@ -15,9 +15,9 @@ class DockBarTwo(QtWidgets.QDockWidget):
         scrollAreaWidget = QtWidgets.QScrollArea()
 
         scrollAreaWidget.setWidget(self.entDetails)
-        scrollAreaWidget.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAsNeeded)
+        scrollAreaWidget.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         scrollAreaWidget.setWidgetResizable(True)
-        scrollAreaWidget.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        scrollAreaWidget.setSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Minimum)
 
         childWidget.addTab(scrollAreaWidget, 'Entity Details')
         childWidget.addTab(self.oracle, 'Oracle')
@@ -30,11 +30,11 @@ class DockBarTwo(QtWidgets.QDockWidget):
                  title="DockBar Two"):
         super(DockBarTwo, self).__init__(parent=mainWindow)
 
-        self.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea |
-                             QtCore.Qt.RightDockWidgetArea)
-        self.setFeatures(QtWidgets.QDockWidget.DockWidgetMovable |
-                         QtWidgets.QDockWidget.DockWidgetFloatable |
-                         QtWidgets.QDockWidget.DockWidgetClosable)
+        self.setAllowedAreas(QtCore.Qt.DockWidgetArea.LeftDockWidgetArea |
+                             QtCore.Qt.DockWidgetArea.RightDockWidgetArea)
+        self.setFeatures(QtWidgets.QDockWidget.DockWidgetFeature.DockWidgetMovable |
+                         QtWidgets.QDockWidget.DockWidgetFeature.DockWidgetFloatable |
+                         QtWidgets.QDockWidget.DockWidgetFeature.DockWidgetClosable)
         self.setWindowTitle(title)
         self.resourceHandler = resourceHandler
         self.entityDB = entityDB
@@ -98,7 +98,7 @@ class EntityDetails(QtWidgets.QWidget):
         self.entityDB = entityDB
         self.detailsLayout = MinSizeStackedLayout()
         self.setLayout(self.detailsLayout)
-        self.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        self.setSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Minimum)
 
         layoutNothingSelected = QtWidgets.QVBoxLayout()
         widgetNothing = QtWidgets.QWidget()
@@ -118,7 +118,7 @@ class EntityDetails(QtWidgets.QWidget):
         # Need to keep track of how many nodes are selected.
         # ~ Nothing Selected/Hovered Layout
         nothingLabel = QtWidgets.QLabel("Nothing is Selected.")
-        nothingLabel.setAlignment(QtCore.Qt.AlignCenter)
+        nothingLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         layoutNothingSelected.addWidget(nothingLabel)
         ###
 
@@ -128,7 +128,7 @@ class EntityDetails(QtWidgets.QWidget):
         summaryPanel = QtWidgets.QWidget()
         summaryPanel.setLayout(summaryLayout)
         self.summaryIcon = QtWidgets.QLabel("")
-        self.summaryIcon.setSizePolicy(QtWidgets.QSizePolicy.Minimum, QtWidgets.QSizePolicy.Minimum)
+        self.summaryIcon.setSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Minimum)
         self.entityTypeLabel = QtWidgets.QLabel("")
         self.entityUIDLabel = QtWidgets.QLabel("")
         self.entityPrimaryLabel = QtWidgets.QLabel("")
@@ -168,7 +168,7 @@ class EntityDetails(QtWidgets.QWidget):
         self.linkIcon = QtWidgets.QLabel("")
         self.linkIcon.setMaximumHeight(90)
         self.linkIcon.setStyleSheet(Stylesheets.DOCK_BAR_TWO_LINK)
-        self.linkIcon.setAlignment(QtCore.Qt.AlignCenter)
+        self.linkIcon.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.linkChild = SingleLinkItem(self, mainWindow)
         self.linkChild.setStyleSheet(Stylesheets.DOCK_BAR_TWO_LINK)
         oneLinkRelLayout.addWidget(self.linkParent)
@@ -304,7 +304,9 @@ class EntityDetails(QtWidgets.QWidget):
                     else:
                         previewPixmap = QtGui.QPixmap(previewImage)
                         previewLabel = QtWidgets.QLabel()
-                        previewLabel.setPixmap(previewPixmap.scaled(250, 250, QtCore.Qt.KeepAspectRatio))
+                        previewLabel.setPixmap(previewPixmap.scaled(250,
+                                                                    250,
+                                                                    QtCore.Qt.AspectRatioMode.KeepAspectRatio))
                     self.detailsLayoutOneNode.addWidget(QtWidgets.QLabel('Preview:'), rowCount, 0)
                     self.detailsLayoutOneNode.addWidget(previewLabel, rowCount, 1, 10, 1)
 
@@ -415,10 +417,10 @@ class SingleLinkItem(QtWidgets.QWidget):
 
         self.linkItemPic = QtWidgets.QLabel()
 
-        self.linkItemPic.setAlignment(QtCore.Qt.AlignCenter)
+        self.linkItemPic.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.linkItemName = QtWidgets.QLabel()
 
-        self.linkItemName.setAlignment(QtCore.Qt.AlignCenter)
+        self.linkItemName.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.linkItemUid = ""
         self.setMaximumHeight(90)
 
@@ -543,8 +545,7 @@ class Oracle(QtWidgets.QWidget):
 
         self.answerLabel = QtWidgets.QLabel("Answer Section")
         self.answerLabel.setStyleSheet(Stylesheets.DOCK_BAR_LABEL)
-        self.answerLabel.setAlignment(QtCore.Qt.AlignHCenter |
-                                      QtCore.Qt.AlignVCenter)
+        self.answerLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         oracleLayout.addWidget(self.answerLabel, 1, 0, 1, 2)
         self.answerSection = QtWidgets.QPlainTextEdit()
         self.answerSection.setReadOnly(True)
@@ -555,8 +556,7 @@ class Oracle(QtWidgets.QWidget):
 
         self.questionLabel = QtWidgets.QLabel("Ask a Question")
         self.questionLabel.setStyleSheet(Stylesheets.DOCK_BAR_LABEL)
-        self.questionLabel.setAlignment(QtCore.Qt.AlignHCenter |
-                                        QtCore.Qt.AlignVCenter)
+        self.questionLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         oracleLayout.addWidget(self.questionLabel, 3, 0, 1, 2)
         self.questionSection = QtWidgets.QLineEdit()
         self.questionSection.setPlaceholderText("Ask a Question here.")

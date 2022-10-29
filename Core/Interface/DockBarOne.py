@@ -36,11 +36,11 @@ class DockBarOne(QtWidgets.QDockWidget):
         self.resolutionManager = resolutionManager
         self.resourceHandler = resourceHandler
         self.lentDB = entityDatabase
-        self.setAllowedAreas(QtCore.Qt.LeftDockWidgetArea |
-                             QtCore.Qt.RightDockWidgetArea)
-        self.setFeatures(QtWidgets.QDockWidget.DockWidgetMovable |
-                         QtWidgets.QDockWidget.DockWidgetFloatable |
-                         QtWidgets.QDockWidget.DockWidgetClosable)
+        self.setAllowedAreas(QtCore.Qt.DockWidgetArea.LeftDockWidgetArea |
+                             QtCore.Qt.DockWidgetArea.RightDockWidgetArea)
+        self.setFeatures(QtWidgets.QDockWidget.DockWidgetFeature.DockWidgetMovable |
+                         QtWidgets.QDockWidget.DockWidgetFeature.DockWidgetFloatable |
+                         QtWidgets.QDockWidget.DockWidgetFeature.DockWidgetClosable)
         self.setWindowTitle(title)
         self.setObjectName(title)
 
@@ -80,7 +80,7 @@ class EntityList(QtWidgets.QTreeWidget):
         self.setHeaderLabels(['Entity List'])
         self.setAlternatingRowColors(False)
         self.setMinimumWidth(200)
-        self.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection)
         self.menu = QtWidgets.QMenu()
 
         actionDelete = QtGui.QAction('Delete Selected Items',
@@ -250,7 +250,7 @@ class DocList(QtWidgets.QTreeWidget):
         self.setHeaderLabels(['Files Loaded'])
         self.uploadingFileWidgets = []
         self.uploadedFileWidgets = []
-        self.setSelectionMode(QtWidgets.QAbstractItemView.ExtendedSelection)
+        self.setSelectionMode(QtWidgets.QAbstractItemView.SelectionMode.ExtendedSelection)
 
     def addUploadingFileToList(self, fileName: str) -> None:
         newWidget = DocWidget(self,
@@ -310,7 +310,7 @@ class ResolutionList(QtWidgets.QTreeWidget):
         self.setAlternatingRowColors(False)
         self.setMinimumWidth(200)
         self.setSortingEnabled(True)
-        self.sortByColumn(0, QtCore.Qt.AscendingOrder)
+        self.sortByColumn(0, QtCore.Qt.SortOrder.AscendingOrder)
 
         self.loadAllResolutions()
 
@@ -374,7 +374,7 @@ class NodeList(QtWidgets.QTreeWidget):
         self.setHeaderLabels(['Entities'])
         self.setAlternatingRowColors(False)
         self.setSortingEnabled(True)
-        self.sortByColumn(0, QtCore.Qt.AscendingOrder)
+        self.sortByColumn(0, QtCore.Qt.SortOrder.AscendingOrder)
         self.allEntities = []
 
         self.loadEntities()

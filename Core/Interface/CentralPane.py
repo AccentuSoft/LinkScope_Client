@@ -90,7 +90,7 @@ class TabBar(QtWidgets.QTabBar):
         self.setMovable(True)
 
     def mouseDoubleClickEvent(self, event) -> None:
-        if event.button() != QtGui.Qt.LeftButton:
+        if event.button() != QtGui.Qt.MouseButton.LeftButton:
             return
         currIndex = self.currentIndex()
         currName = self.tabText(currIndex)
@@ -352,7 +352,7 @@ class TabbedPane(QtWidgets.QTabWidget):
         progress = QtWidgets.QProgressDialog(f'Resolving new nodes for resolution: {resolution_name}, please wait...',
                                              'Abort Resolving Nodes', 0, steps, self)
 
-        progress.setWindowModality(QtCore.Qt.WindowModal)
+        progress.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
         progress.setMinimumDuration(1500)
 
         # In case we have no entities in the database when the resolution finishes, i.e. the user deletes the origin
@@ -600,8 +600,9 @@ class TabbedPane(QtWidgets.QTabWidget):
 
         # Save canvases
         with open(canvasDBPathTmp, "wb") as canvasDBFile:
-            saveJson = {canvasName: [self.resourceHandler.deconstructGraphForFileDump(self.canvasTabs[canvasName].scene().sceneGraph),
-                                     self.canvasTabs[canvasName].scene().scenePos] for canvasName in self.canvasTabs}
+            saveJson = {canvasName: [self.resourceHandler.deconstructGraphForFileDump(
+                self.canvasTabs[canvasName].scene().sceneGraph),
+                self.canvasTabs[canvasName].scene().scenePos] for canvasName in self.canvasTabs}
 
             dump(saveJson, canvasDBFile)
         move(canvasDBPathTmp, canvasDBPath)
@@ -746,19 +747,19 @@ class CanvasView(QtWidgets.QGraphicsView):
         self.name = name
         self.urlManager = urlManager
 
-        self.setRenderHint(QtGui.QPainter.Antialiasing)
-        self.setTransformationAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
-        self.setViewportUpdateMode(QtWidgets.QGraphicsView.FullViewportUpdate)
-        self.setResizeAnchor(QtWidgets.QGraphicsView.AnchorUnderMouse)
+        self.setRenderHint(QtGui.QPainter.RenderHint.Antialiasing)
+        self.setTransformationAnchor(QtWidgets.QGraphicsView.ViewportAnchor.AnchorUnderMouse)
+        self.setViewportUpdateMode(QtWidgets.QGraphicsView.ViewportUpdateMode.FullViewportUpdate)
+        self.setResizeAnchor(QtWidgets.QGraphicsView.ViewportAnchor.AnchorUnderMouse)
         # self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         # self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setBackgroundBrush(QtGui.QBrush(QtGui.QColor(54, 69, 79)))
-        self.setFrameShape(QtWidgets.QFrame.NoFrame)
+        self.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
 
         self.setAcceptDrops(True)
-        self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
+        self.setDragMode(QtWidgets.QGraphicsView.DragMode.NoDrag)
         self.setSizePolicy(QtWidgets.QSizePolicy(
-            QtWidgets.QSizePolicy.Expanding, QtWidgets.QSizePolicy.Expanding))
+            QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding))
 
         self.dragOver = False
         self.synced = False
@@ -998,7 +999,7 @@ class CanvasView(QtWidgets.QGraphicsView):
 
     def mouseReleaseEvent(self, event) -> None:
         QtWidgets.QGraphicsView.mouseReleaseEvent(self, event)
-        self.setDragMode(QtWidgets.QGraphicsView.NoDrag)
+        self.setDragMode(QtWidgets.QGraphicsView.DragMode.NoDrag)
         itemsMoved = [item for item in self.scene().selectedItems()
                       if isinstance(item, Entity.BaseNode)]
         for item in itemsMoved:
@@ -1027,7 +1028,7 @@ class CanvasView(QtWidgets.QGraphicsView):
         if event.button() == QtCore.Qt.MouseButton.RightButton and \
                 not self.scene().linking and not self.scene().appendingToGroup:
             if len(self.scene().selectedItems()) == 0:
-                self.setDragMode(QtWidgets.QGraphicsView.RubberBandDrag)
+                self.setDragMode(QtWidgets.QGraphicsView.DragMode.RubberBandDrag)
             else:
                 items = self.scene().selectedItems()
                 groupItems = [groupItem for groupItem in items if isinstance(groupItem, Entity.GroupNode)]
@@ -1055,7 +1056,7 @@ class CanvasView(QtWidgets.QGraphicsView):
         elif event.button() == QtCore.Qt.MouseButton.RightButton and self.scene().appendingToGroup:
             self.scene().appendSelectedItemsToGroupToggle()
         elif event.button() == QtCore.Qt.MouseButton.LeftButton:
-            self.setDragMode(QtWidgets.QGraphicsView.ScrollHandDrag)
+            self.setDragMode(QtWidgets.QGraphicsView.DragMode.ScrollHandDrag)
         super(CanvasView, self).mousePressEvent(event)
 
     def deleteSelectedLinks(self) -> None:
@@ -1144,7 +1145,7 @@ class CanvasView(QtWidgets.QGraphicsView):
         for item in selectedItems:
             item.setSelected(False)
         if justViewport:
-            picture = QtGui.QImage(self.viewport().size(), QtGui.QImage.Format_ARGB32_Premultiplied)
+            picture = QtGui.QImage(self.viewport().size(), QtGui.QImage.Format.Format_ARGB32_Premultiplied)
             # Pictures are initialised with junk data - need to clear it out before painting
             #   to avoid visual artifacts.
             picture.fill(QtGui.QColor(0, 0, 0, 0))
@@ -1157,7 +1158,7 @@ class CanvasView(QtWidgets.QGraphicsView):
         else:
             # Convert QRectF to QRect - can't have floats when it comes to picture size.
             rectToPrint = self.scene().sceneRect().toRect()
-            picture = QtGui.QImage(rectToPrint.size(), QtGui.QImage.Format_ARGB32_Premultiplied)
+            picture = QtGui.QImage(rectToPrint.size(), QtGui.QImage.Format.Format_ARGB32_Premultiplied)
             # Pictures are initialised with junk data - need to clear it out before painting
             #   to avoid visual artifacts.
             picture.fill(QtGui.QColor(0, 0, 0, 0))
@@ -1365,7 +1366,7 @@ class CanvasScene(QtWidgets.QGraphicsScene):
         # Remove Cancel button from progress bar (user should not be able to stop canvas from loading).
         progress.setMinimumDuration(1500)
         progress.setCancelButton(None)
-        progress.setWindowModality(QtCore.Qt.WindowModal)
+        progress.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
         progressValue = 0
 
         for node in sceneGraphNodes:
@@ -2005,16 +2006,16 @@ class PropertiesEditor(QtWidgets.QDialog):
     def accept(self):
         for row in range(self.itemProperties.rowCount()):
             key = self.itemProperties.itemAt(
-                row, self.itemProperties.LabelRole).widget().text()
+                row, self.itemProperties.ItemRole.LabelRole).widget().text()
             if key == "Notes":
                 value = self.itemProperties.itemAt(
-                    row, self.itemProperties.FieldRole).widget().toMarkdown()
+                    row, self.itemProperties.ItemRole.FieldRole).widget().toMarkdown()
             elif key == 'Icon':
                 value = self.itemProperties.itemAt(
-                    row, self.itemProperties.FieldRole).widget().pictureByteArray
+                    row, self.itemProperties.ItemRole.FieldRole).widget().pictureByteArray
             elif key == 'File Path':
                 value = self.itemProperties.itemAt(
-                    row, self.itemProperties.FieldRole).widget().text()
+                    row, self.itemProperties.ItemRole.FieldRole).widget().text()
                 projectFilesPath = Path(self.canvas.parent().mainWindow.SETTINGS.value("Project/FilesDir"))
                 newPath = projectFilesPath / value
                 if not newPath.is_relative_to(projectFilesPath):
@@ -2024,7 +2025,7 @@ class PropertiesEditor(QtWidgets.QDialog):
                     value = 'None'
             else:
                 value = self.itemProperties.itemAt(
-                    row, self.itemProperties.FieldRole).widget().text()
+                    row, self.itemProperties.ItemRole.FieldRole).widget().text()
             # The last row is the Cancel / Accept buttons.
             if key != "Cancel":
                 self.objectJson[key] = value
@@ -2053,8 +2054,10 @@ class PropertiesEditorFilePathField(QtWidgets.QLineEdit):
         self.setText(str(value))
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
-        selectedPath = QtWidgets.QFileDialog().getOpenFileName(parent=self, caption='Select File Path',
-                                                               options=QtWidgets.QFileDialog.DontUseNativeDialog)[0]
+        selectedPath = QtWidgets.QFileDialog().getOpenFileName(
+            parent=self,
+            caption='Select File Path',
+            options=QtWidgets.QFileDialog.Option.DontUseNativeDialog)[0]
         if selectedPath != '':
             self.setText(str(Path(selectedPath).absolute()))
 
@@ -2075,7 +2078,7 @@ class PropertiesEditorIconField(QtWidgets.QLabel):
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
 
         selectedPath = QtWidgets.QFileDialog().getOpenFileName(parent=self, caption='Select New Icon',
-                                                               options=QtWidgets.QFileDialog.DontUseNativeDialog,
+                                                               options=QtWidgets.QFileDialog.Option.DontUseNativeDialog,
                                                                filter="Image Files (*.png *.jpg *.bmp *.svg)")[0]
         if selectedPath != '':
             try:
@@ -2099,7 +2102,7 @@ class PropertiesEditorIconField(QtWidgets.QLabel):
                     self.pictureByteArray = QtCore.QByteArray()
                     imageBuffer = QtCore.QBuffer(self.pictureByteArray)
 
-                    imageBuffer.open(QtCore.QIODevice.WriteOnly)
+                    imageBuffer.open(QtCore.QIODevice.OpenModeFlag.WriteOnly)
 
                     thumbnail.save(imageBuffer, "PNG")
                     imageBuffer.close()
