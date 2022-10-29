@@ -783,7 +783,7 @@ class InstallWizard(QtWidgets.QWizard):
                     self.graphvizExists = graphvizPath.exists()
                     self.baseSoftwarePath = Path(os.path.abspath(os.sep)) / 'Program Files' / 'LinkScope'
                     self.executablePath = self.baseSoftwarePath / 'LinkScope.exe'
-                    self.downloadURL = downloadURLBase + "LinkScope-Windows-x64.7z"
+                    self.downloadURL = f"{downloadURLBase}LinkScope-Windows-x64.7z"
 
                     newArgs = ['"' + str(self.desktopShortcutPath) + '"', str(self.graphvizExists),
                                '"' + str(self.baseSoftwarePath) + '"', '"' + str(self.executablePath) + '"',
@@ -804,7 +804,7 @@ class InstallWizard(QtWidgets.QWizard):
                     self.appPath = Path(
                         os.path.abspath(os.sep)) / 'usr' / 'share' / 'applications' / 'LinkScope.desktop'
                     self.executablePath = self.baseSoftwarePath / 'LinkScope'
-                    self.downloadURL = downloadURLBase + "LinkScope-Ubuntu-x64.7z"
+                    self.downloadURL = f"{downloadURLBase}LinkScope-Ubuntu-x64.7z"
 
                     # No need to wrap these in quotes
                     newArgs = [str(self.desktopShortcutPath), str(self.graphvizExists), str(self.baseSoftwarePath),
