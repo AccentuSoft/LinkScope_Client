@@ -163,7 +163,7 @@ class ResolutionManager:
             return False
 
     def getMacroFilePath(self):
-        return Path(self.mainWindow.SETTINGS.value("Project/BaseDir")) / "Project Files" / "Project Macros.lsmacros"
+        return Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) / "Macros.lsmacros"
 
     def loadMacros(self):
         # Load AFTER we load resolutions.
