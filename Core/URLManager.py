@@ -55,17 +55,26 @@ class URLManager:
         if savePathString == 'None':
             return None
 
+        fileType = magic.from_file(urlPathString, mime=True)
+        fileTypeSplit1, fileTypeSplit2 = fileType.split('/', 1)
+        # CSV files not considered - may have any dialect, hard to accommodate.
+        if urlPath.suffix in ('.ods', '.xls', '.xlsm', '.xlsx') and \
+                fileTypeSplit2 in ('vnd.oasis.opendocument.spreadsheet',
+                                   'vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+                                   'vnd.ms-excel',
+                                   'vnd.openxmlformats-officedocument.spreadsheetml.sheet'):
+            entityJson = {"Spreadsheet Name": urlName,
+                          "File Path": savePathString,
+                          "Entity Type": "Spreadsheet"}
         # Only support zip files for archives (for now) 10/Jul/2021).
-        if zipfile.is_zipfile(urlPathString):
+        elif zipfile.is_zipfile(urlPathString):
             entityJson = {"Archive Name": urlName, "File Path": savePathString, "Entity Type": "Archive"}
+        elif fileTypeSplit1 == "video":
+            entityJson = {"Video Name": urlName, "File Path": savePathString, "Entity Type": "Video"}
+        elif fileTypeSplit1 == "image":
+            entityJson = {"Image Name": urlName, "File Path": savePathString, "Entity Type": "Image"}
         else:
-            fileType = magic.from_file(urlPathString, mime=True).split('/')[0]
-            if fileType == "video":
-                entityJson = {"Video Name": urlName, "File Path": savePathString, "Entity Type": "Video"}
-            elif fileType == "image":
-                entityJson = {"Image Name": urlName, "File Path": savePathString, "Entity Type": "Image"}
-            else:
-                entityJson = {"Document Name": urlName, "File Path": savePathString, "Entity Type": "Document"}
+            entityJson = {"Document Name": urlName, "File Path": savePathString, "Entity Type": "Document"}
         return entityJson
 
     def moveURLToProjectFilesHelperIfNeeded(self, urlPath: Path):

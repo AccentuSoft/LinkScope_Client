@@ -8,6 +8,15 @@
       Document.svg
     </Icon>
   </Document>
+  <Spreadsheet>
+    <Attributes>
+      <Attribute default="Spreadsheet" check="String" primary="True">Spreadsheet Name</Attribute>
+      <Attribute default="DefaultFilePath" check="String" primary="False">File Path</Attribute>
+    </Attributes>
+    <Icon>
+      Default.svg
+    </Icon>
+  </Spreadsheet>
   <Image>
     <Attributes>
       <Attribute default="Image" check="String" primary="True">Image Name</Attribute>

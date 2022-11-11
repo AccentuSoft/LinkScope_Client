@@ -26,7 +26,7 @@ class FileExtractor:
 
     originTypes = {'Domain', 'Website'}
 
-    resultTypes = {'Website', 'Document', 'Image', 'Video', 'Archive'}
+    resultTypes = {'Website', 'Document', 'Spreadsheet', 'Image', 'Video', 'Archive'}
 
     parameters = {'Max Depth': {'description': 'Each link leading to another website in the same domain can be '
                                                'explored to discover more entities. Each entity discovered after '
@@ -55,12 +55,13 @@ class FileExtractor:
         except ValueError:
             return "Invalid value provided for Max Webpages to follow."
 
-        fileTypes = (".sxw", ".odt", ".ods", ".odg", ".odp", ".docx", ".xlsx", ".pptx", ".ppsx", ".doc", ".xls",
+        fileTypes = (".sxw", ".odt", ".odg", ".odp", ".docx", ".pptx", ".ppsx", ".doc", ".csv",
                      ".ppt", ".pps", ".pdf", ".wpd", ".raw", ".cr2", ".crw", ".indd", ".rdp", ".ica", ".ico", ".txt",
-                     ".text", ".bak", ".log", ".env", ".pub", ".docm", ".xlsm", ".old", ".csv", ".apk", ".sql", ".cfg",
+                     ".text", ".bak", ".log", ".env", ".pub", ".docm", ".old", ".apk", ".sql", ".cfg",
                      ".key", ".reg", ".yml", ".yaml", ".mail", ".eml", ".mbox", ".mbx", ".url", ".csr", ".config",
                      ".mdb", ".user", ".adr", ".ini", ".plist", ".conf", ".dat", ".pcf", ".bok", ".properties", ".json",
                      ".backup", ".sh", ".py", ".md", ".inc")
+        spreadsheetTypes = (".xlsx", ".xls", ".ods", ".xlsm")
         videoTypes = (".mp3", ".mp4")
         imageTypes = (".jpg", ".jpeg", ".png", ".svg", ".svgz")
         archiveTypes = (".zip", ".rar", ".7z", ".gz")
@@ -104,6 +105,8 @@ class FileExtractor:
                             fileTypeIdentified = 'Image'
                         elif link.endswith(archiveTypes):
                             fileTypeIdentified = 'Archive'
+                        elif link.endswith(spreadsheetTypes):
+                            fileTypeIdentified = 'Spreadsheet'
 
                         if fileTypeIdentified:
                             childIndex = len(returnResults)
