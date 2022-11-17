@@ -60,10 +60,10 @@ class FileExtractor:
                      ".text", ".bak", ".log", ".env", ".pub", ".docm", ".old", ".apk", ".sql", ".cfg",
                      ".key", ".reg", ".yml", ".yaml", ".mail", ".eml", ".mbox", ".mbx", ".url", ".csr", ".config",
                      ".mdb", ".user", ".adr", ".ini", ".plist", ".conf", ".dat", ".pcf", ".bok", ".properties", ".json",
-                     ".backup", ".sh", ".py", ".md", ".inc")
+                     ".backup", ".sh", ".py", ".md", ".inc", '.ovpn', '.bat')
         spreadsheetTypes = (".xlsx", ".xls", ".ods", ".xlsm")
-        videoTypes = (".mp3", ".mp4")
-        imageTypes = (".jpg", ".jpeg", ".png", ".svg", ".svgz")
+        videoTypes = (".mp3", ".mp4", ".mov", ".webm", ".amv")
+        imageTypes = (".jpg", ".jpeg", ".png", ".svg", ".svgz", ".bmp")
         archiveTypes = (".zip", ".rar", ".7z", ".gz")
 
         returnResults = []
