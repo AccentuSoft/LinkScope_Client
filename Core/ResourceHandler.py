@@ -4,6 +4,7 @@
 import contextlib
 import re
 from typing import Union
+from glob import glob
 
 import networkx as nx
 from datetime import timezone
@@ -52,6 +53,9 @@ class ResourceHandler:
                       "rearrange": str(self.programBaseDirPath / "Resources" / "Icons" / "RearrangeGraph.png"),
                       "colorPicker": str(self.programBaseDirPath / "Resources" / "Icons" / "ColorPicker.png"),
                       }
+
+        self.banners = {f"{bannerPath.split('_')[1].split('.')[0]}": str(bannerPath)
+                        for bannerPath in glob(str(self.programBaseDirPath / "Resources" / "Icons" / "Banner_*.svg"))}
         # These are not meant to be strict - just restrictive enough such that users don't put in utter nonsense.
         # Note that regex isn't always the best way of validating fields, but it should be good enough for our
         #   purposes.
