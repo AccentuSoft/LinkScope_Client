@@ -4,7 +4,7 @@
 #   to a new directory along with this file.
 # Then, run the script.
 
-PYTHON_VER=3.9
+PYTHON_VER=3.10
 
 python${PYTHON_VER} -m venv buildEnv
 
@@ -15,7 +15,7 @@ python${PYTHON_VER} -m pip install --upgrade wheel pip nuitka orderedset
 
 python${PYTHON_VER} -m pip cache purge
 
-python${PYTHON_VER} -m pip install -r requirements.txt
+python${PYTHON_VER} -m pip install --upgrade -r requirements.txt
 
 # Stop snscrape from messing with directories that will not exist in the final build.
 echo "" > "buildEnv/lib/python${PYTHON_VER}/site-packages/snscrape/modules/__init__.py"

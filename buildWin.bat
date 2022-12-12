@@ -8,7 +8,7 @@
 ::   PatchMagicWin.py to a new directory along with this file.
 :: Then, run the script.
 
-SET PYTHON_VER=3.9
+SET PYTHON_VER=3.10
 
 python -m venv buildEnv
 
@@ -18,7 +18,7 @@ python -m pip install --upgrade wheel pip nuitka orderedset
 
 python -m pip cache purge
 
-python -m pip install -r requirements.txt
+python -m pip install --upgrade -r requirements.txt
 
 :: Patch magic library with our own binaries
 python PatchMagicWin.py

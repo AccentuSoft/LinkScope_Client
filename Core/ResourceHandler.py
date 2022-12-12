@@ -2,10 +2,10 @@
 
 
 import contextlib
+import re
 from typing import Union
 
 import networkx as nx
-import re
 from datetime import timezone
 from defusedxml.ElementTree import parse
 from datetime import datetime
@@ -31,62 +31,50 @@ class ResourceHandler:
     def __init__(self, mainWindow, messageHandler) -> None:
         self.mainWindow = mainWindow
         self.messageHandler = messageHandler
+        self.programBaseDirPath = Path(self.mainWindow.SETTINGS.value("Program/BaseDir"))
         self.entityCategoryList = {}
 
-        self.icons = {"uploading": str(Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) /
-                                       "Resources" / "Icons" / "Uploading.png"),
-                      "uploaded": str(Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) /
-                                      "Resources" / "Icons" / "Uploaded.png"),
-                      "upArrow": str(Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) /
-                                     "Resources" / "Icons" / "UpArrow.png"),
-                      "downArrow": str(Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) /
-                                       "Resources" / "Icons" / "DownArrow.png"),
-                      "isolatedNodes": str(Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) /
-                                           "Resources" / "Icons" / "SelectIsolated.png"),
-                      "addCanvas": str(Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) /
-                                       "Resources" / "Icons" / "Add_Canvas.png"),
-                      "generateReport": str(Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) /
-                                            "Resources" / "Icons" / "Generate_Report.png"),
-                      "leafNodes": str(Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) /
-                                       "Resources" / "Icons" / "SelectLeaf.png"),
-                      "nonIsolatedNodes": str(Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) /
-                                              "Resources" / "Icons" / "SelectNonIsolated.png"),
-                      "rootNodes": str(Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) /
-                                       "Resources" / "Icons" / "SelectRoot.png"),
-                      "split": str(Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) /
-                                   "Resources" / "Icons" / "Split.png"),
-                      "merge": str(Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) /
-                                   "Resources" / "Icons" / "Merge.png"),
-                      "shortestPath": str(Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) /
-                                          "Resources" / "Icons" / "ShortestPath.png"),
-                      "drawLink": str(Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) /
-                                      "Resources" / "Icons" / "DrawLink.png"),
-                      "rearrange": str(Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) /
-                                       "Resources" / "Icons" / "RearrangeGraph.png"),
-                      "colorPicker": str(Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) /
-                                         "Resources" / "Icons" / "ColorPicker.png"),
+        self.icons = {"uploading": str(self.programBaseDirPath / "Resources" / "Icons" / "Uploading.png"),
+                      "uploaded": str(self.programBaseDirPath / "Resources" / "Icons" / "Uploaded.png"),
+                      "upArrow": str(self.programBaseDirPath / "Resources" / "Icons" / "UpArrow.png"),
+                      "downArrow": str(self.programBaseDirPath / "Resources" / "Icons" / "DownArrow.png"),
+                      "isolatedNodes": str(self.programBaseDirPath / "Resources" / "Icons" / "SelectIsolated.png"),
+                      "addCanvas": str(self.programBaseDirPath / "Resources" / "Icons" / "Add_Canvas.png"),
+                      "generateReport": str(self.programBaseDirPath / "Resources" / "Icons" / "Generate_Report.png"),
+                      "leafNodes": str(self.programBaseDirPath / "Resources" / "Icons" / "SelectLeaf.png"),
+                      "nonIsolatedNodes": str(self.programBaseDirPath / "Resources" / "Icons" /
+                                              "SelectNonIsolated.png"),
+                      "rootNodes": str(self.programBaseDirPath / "Resources" / "Icons" / "SelectRoot.png"),
+                      "split": str(self.programBaseDirPath / "Resources" / "Icons" / "Split.png"),
+                      "merge": str(self.programBaseDirPath / "Resources" / "Icons" / "Merge.png"),
+                      "shortestPath": str(self.programBaseDirPath / "Resources" / "Icons" / "ShortestPath.png"),
+                      "drawLink": str(self.programBaseDirPath / "Resources" / "Icons" / "DrawLink.png"),
+                      "rearrange": str(self.programBaseDirPath / "Resources" / "Icons" / "RearrangeGraph.png"),
+                      "colorPicker": str(self.programBaseDirPath / "Resources" / "Icons" / "ColorPicker.png"),
                       }
         # These are not meant to be strict - just restrictive enough such that users don't put in utter nonsense.
         # Note that regex isn't always the best way of validating fields, but it should be good enough for our
         #   purposes.
-        self.checks = {'Email': re.compile(r"""(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])"""),
-                       'Phonenumber': re.compile(r"""^(\+|00)?[0-9\(\) \-]{3,32}$"""),
-                       'String': re.compile(r""".+"""),
-                       'URL': re.compile(r"""^(?:(?:http|ftp)s?|file)://(\S(?<!\.)){1,63}(\.(\S(?<!\.)){1,63})+$"""),
-                       'Onion': re.compile(r"""^https?://\w{56}\.onion/?(\S(?<!\.))*(\.(\S(?<!\.))*)?$"""),
-                       'Domain': re.compile(r"""^(\S(?<!\.)(?!/)(?<!/)){1,63}(\.(\S(?<!\.)(?!/)(?<!/)){1,63})+$"""),
-                       'Float': re.compile(r"""^([-+])?(\d|\.(?=\d))+$"""),
-                       'WordString': re.compile(r"""^\D+$"""),
-                       'Numbers': re.compile(r"""^\d+$"""),
-                       'IPv4': re.compile(r"""^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)(\.(?!$)|$)){4}$"""),
-                       'IPv6': re.compile(r"""^(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]+|::(ffff(:0{1,4})?:)?((25[0-5]|(2[0-4]|1?[0-9])?[0-9])\.){3}(25[0-5]|(2[0-4]|1?[0-9])?[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1?[0-9])?[0-9])\.){3}(25[0-5]|(2[0-4]|1?[0-9])?[0-9]))$"""),
-                       'MAC': re.compile(r"""^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$"""),
-                       'ASN': re.compile(r"""^(AS)?\d+$"""),
-                       'CUSIP': re.compile(r"""^[a-zA-Z0-9]{9}$"""),
-                       'EIN': re.compile(r"""^\d{2}-?\d{7}$"""),
-                       'LEIID': re.compile(r"""^[a-zA-Z0-9]{20}$"""),
-                       'ISINID': re.compile(r"""^[a-zA-Z0-9]{2}-?[a-zA-Z0-9]{9}-?[a-zA-Z0-9]$"""),
-                       'SIC/NAICS': re.compile(r"""^[0-9]{4,6}$""")}
+        self.checks = {'Email': re.compile(
+            r"""(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)])"""),
+            'Phonenumber': re.compile(r"""^(\+|00)?[0-9() \-]{3,32}$"""),
+            'String': re.compile(r""".+"""),
+            'URL': re.compile(r"""^(?:(?:http|ftp)s?|file)://(\S(?<!\.)){1,63}(\.(\S(?<!\.)){1,63})+$"""),
+            'Onion': re.compile(r"""^https?://\w{56}\.onion/?(\S(?<!\.))*(\.(\S(?<!\.))*)?$"""),
+            'Domain': re.compile(r"""^(\S(?<!\.)(?!/)(?<!/)){1,63}(\.(\S(?<!\.)(?!/)(?<!/)){1,63})+$"""),
+            'Float': re.compile(r"""^([-+])?(\d|\.(?=\d))+$"""),
+            'WordString': re.compile(r"""^\D+$"""),
+            'Numbers': re.compile(r"""^\d+$"""),
+            'IPv4': re.compile(r"""^((25[0-5]|(2[0-4]|1\d|[1-9]|)\d)(\.(?!$)|$)){4}$"""),
+            'IPv6': re.compile(
+                r"""^(([0-9a-fA-F]{1,4}:){7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)|fe80:(:[0-9a-fA-F]{0,4}){0,4}%[0-9a-zA-Z]+|::(ffff(:0{1,4})?:)?((25[0-5]|(2[0-4]|1?[0-9])?[0-9])\.){3}(25[0-5]|(2[0-4]|1?[0-9])?[0-9])|([0-9a-fA-F]{1,4}:){1,4}:((25[0-5]|(2[0-4]|1?[0-9])?[0-9])\.){3}(25[0-5]|(2[0-4]|1?[0-9])?[0-9]))$"""),
+            'MAC': re.compile(r"""^([0-9A-Fa-f]{2}[:-]){5}([0-9A-Fa-f]{2})$"""),
+            'ASN': re.compile(r"""^(AS)?\d+$"""),
+            'CUSIP': re.compile(r"""^[a-zA-Z0-9]{9}$"""),
+            'EIN': re.compile(r"""^\d{2}-?\d{7}$"""),
+            'LEIID': re.compile(r"""^[a-zA-Z0-9]{20}$"""),
+            'ISINID': re.compile(r"""^[a-zA-Z0-9]{2}-?[a-zA-Z0-9]{9}-?[a-zA-Z0-9]$"""),
+            'SIC/NAICS': re.compile(r"""^[0-9]{4,6}$""")}
 
         self.loadCoreEntities()
 
@@ -208,7 +196,7 @@ class ResourceHandler:
                     self.entityCategoryList[category] = {}
                 self.entityCategoryList[category][entityName] = {
                     'Attributes': attributesDict,
-                    'Icon': str(Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) / "Resources" / "Icons" / icon)}
+                    'Icon': str(self.programBaseDirPath / "Resources" / "Icons" / icon)}
             except (KeyError, AttributeError) as err:
                 # Ignore malformed entities
                 self.messageHandler.error(f'Error: {str(err)}', popUp=False)
@@ -216,13 +204,13 @@ class ResourceHandler:
         return True
 
     def loadCoreEntities(self) -> None:
-        entDir = Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) / "Core" / "Entities"
+        entDir = self.programBaseDirPath / "Core" / "Entities"
         for entFile in listdir(entDir):
             if entFile.endswith('.xml'):
                 self.addRecognisedEntityTypes(entDir / entFile)
 
     def loadModuleEntities(self) -> None:
-        entDir = Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) / "Modules"
+        entDir = self.programBaseDirPath / "Modules"
         for module in listdir(entDir):
             for entFile in listdir(entDir / module):
                 if entFile.endswith('.xml'):
@@ -325,7 +313,7 @@ class ResourceHandler:
         return linkJson
 
     def getEntityDefaultPicture(self, entityType) -> QByteArray:
-        picture = Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) / "Resources" / "Icons" / "Default.svg"
+        picture = self.programBaseDirPath / "Resources" / "Icons" / "Default.svg"
         try:
             for category in self.entityCategoryList:
                 if entityType in self.entityCategoryList[category]:
@@ -342,11 +330,11 @@ class ResourceHandler:
             return QByteArray(pictureContents)
 
     def getLinkPicture(self):
-        picture = Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) / "Resources" / "Icons" / "Resolution.png"
+        picture = self.programBaseDirPath / "Resources" / "Icons" / "Resolution.png"
         return QtGui.QIcon(str(picture)).pixmap(40, 40)
 
     def getLinkArrowPicture(self):
-        picture = Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) / "Resources" / "Icons" / "Right-Arrow.svg"
+        picture = self.programBaseDirPath / "Resources" / "Icons" / "Right-Arrow.svg"
         return QtGui.QIcon(str(picture)).pixmap(40, 40)
 
     def deconstructGraph(self, graph: nx.DiGraph) -> tuple:
@@ -488,6 +476,7 @@ class MinSizeStackedLayout(QtWidgets.QStackedLayout):
 
     https://stackoverflow.com/a/34300567
     """
+
     def sizeHint(self) -> QSize:
         return self.currentWidget().sizeHint()
 
