@@ -22,7 +22,7 @@ from os.path import abspath, dirname
 from msgpack import load
 from pathlib import Path
 from datetime import datetime
-from typing import Union
+from typing import Union, Any
 from PySide6 import QtWidgets, QtGui, QtCore, QtCharts
 
 from Core import MessageHandler, SettingsObject
@@ -4662,12 +4662,13 @@ class MacroDialog(QtWidgets.QDialog):
 
     def updateMacroTree(self) -> None:
         self.macroTree.clear()
-        allMacros = self.mainWindowObject.RESOLUTIONMANAGER.macros
+        with self.mainWindowObject.macrosLock:
+            allMacros = self.mainWindowObject.RESOLUTIONMANAGER.macros
 
-        for macro in allMacros:
-            newMacro = MacroTreeItem(macro, allMacros[macro])
-            self.macroTree.addTopLevelItem(newMacro)
-            self.macroTree.setItemWidget(newMacro, 1, newMacro.deleteButton)
+            for macro in allMacros:
+                newMacro = MacroTreeItem(macro, allMacros[macro])
+                self.macroTree.addTopLevelItem(newMacro)
+                self.macroTree.setItemWidget(newMacro, 1, newMacro.deleteButton)
 
     def createMacro(self) -> None:
         createMacroDialog = MacroCreatorDialog(self.resolutionList)
@@ -4728,6 +4729,8 @@ class MacroTreeItem(QtWidgets.QTreeWidgetItem):
     def __init__(self, uid: str, resolutionList: list):
         super(MacroTreeItem, self).__init__()
         self.setText(0, uid)
+        self.uid = uid
+        self.setFlags(QtCore.Qt.ItemFlag.ItemIsEditable | self.flags())
 
         self.deleteButton = QtWidgets.QPushButton('X')
         self.deleteButton.clicked.connect(self.removeSelf)
@@ -4736,6 +4739,15 @@ class MacroTreeItem(QtWidgets.QTreeWidgetItem):
             resolutionItem = QtWidgets.QTreeWidgetItem()
             resolutionItem.setText(0, 'Resolution: ' + resolution[0])
             self.addChild(resolutionItem)
+
+    def setData(self, column: int, role: int, value: Any):
+        if self.treeWidget() is not None:
+            if self.treeWidget().mainWindowObject.RESOLUTIONMANAGER.renameMacro(self.uid, value):
+                super().setData(column, role, value)
+                self.uid = value
+        else:
+            # Happens during initialization
+            super().setData(column, role, value)
 
     def removeSelf(self):
         self.treeWidget().deleteMacro(self)

@@ -152,6 +152,21 @@ class ResolutionManager:
 
         return macroUID
 
+    def renameMacro(self, oldName: str, newName: str) -> bool:
+        if oldName != newName:
+            with self.mainWindow.macrosLock:
+                if newName in self.macros:
+                    self.mainWindow.MESSAGEHANDLER.warning('The specified name already exists. '
+                                                           'Macro names must be unique.',
+                                                           popUp=True)
+                    return False
+                if oldName not in self.macros:
+                    self.mainWindow.MESSAGEHANDLER.error('Attempting to rename a nonexistent macro.', popUp=True)
+                    return False
+                oldMacro = self.macros.pop(oldName)
+                self.macros[newName] = oldMacro
+        return True
+
     def deleteMacro(self, macroUID: str) -> bool:
         # We don't have to worry about running macros, because the details of the macro are saved in memory.
         # We do however want to get the thread lock because of potential race conditions.
