@@ -130,6 +130,18 @@ MAIN_WINDOW_STYLESHEET = """
                         QTextBrowser {
                          background-color:rgb(60, 60, 80);
                         }
+                        
+                        QListWidget::item{
+                         height: 70px;
+                         width: 70px;
+                        }
+                        
+                        QListWidget::item:selected {
+                         border-left: 2px solid rgb(0, 173, 238);
+                         border-right: 2px solid rgb(0, 173, 238);
+                         border-top: 2px solid rgb(0, 173, 238);
+                         border-bottom: 2px solid rgb(0, 173, 238);
+                        }
                         """
 
 DOCK_BAR_TWO_LINK = """

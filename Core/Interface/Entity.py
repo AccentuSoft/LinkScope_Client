@@ -22,9 +22,6 @@ class BaseNode(QGraphicsItemGroup):
 
         self.setCacheMode(QGraphicsItemGroup.CacheMode.DeviceCoordinateCache)
 
-        self.pixmapItem = QtGui.QPixmap()
-        self.pixmapItem.loadFromData(pictureByteArray)
-
         if pictureByteArray.data().startswith(b'<svg '):
             self.iconItem = QGraphicsSvgItem()
             self.iconItem.renderer().load(pictureByteArray)
@@ -32,7 +29,9 @@ class BaseNode(QGraphicsItemGroup):
             # https://stackoverflow.com/a/68182093
             self.iconItem.setElementId("")
         else:
-            self.iconItem = QGraphicsPixmapItem(self.pixmapItem)
+            pixmapItem = QtGui.QPixmap()
+            pixmapItem.loadFromData(pictureByteArray)
+            self.iconItem = QGraphicsPixmapItem(pixmapItem)
 
         self.labelItem = QGraphicsTextItem('')
         # Have to do it this way; directly assigning stuff does not work due to how PySide6 works.
@@ -44,8 +43,13 @@ class BaseNode(QGraphicsItemGroup):
         labelDocument.setDefaultTextOption(textOption)
         self.labelItem.setDocument(labelDocument)
 
+        self.bannerIconItem = QGraphicsSvgItem()
+        self.bannerIconItem.setElementId("")
+
         self.addToGroup(self.iconItem)
         self.addToGroup(self.labelItem)
+        self.addToGroup(self.bannerIconItem)
+
         if font is not None:
             self.labelItem.setFont(font)
         else:
@@ -56,6 +60,8 @@ class BaseNode(QGraphicsItemGroup):
         self.labelItem.setPos(self.iconItem.x() - 120, self.iconItem.y() + 45)
         self.updateLabel(primaryAttribute)
 
+        self.bannerIconItem.setPos(self.iconItem.x() + 15, self.iconItem.y() - 9)
+
         self.uid = uid
         self.setFlag(QGraphicsItem.ItemIsMovable, True)
         self.setFlag(QGraphicsItem.ItemIsSelectable, True)
@@ -64,9 +70,6 @@ class BaseNode(QGraphicsItemGroup):
         self.setAcceptHoverEvents(True)
 
         self.connectors = []
-        self.bookmarked = False
-        self.isBeingResolved = False
-        self.parentGroup = None
 
     def updateLabel(self, newText: str = '') -> None:
         if not isinstance(newText, str):
@@ -75,6 +78,16 @@ class BaseNode(QGraphicsItemGroup):
             if len(newText) > 50:
                 newText = f"{newText[:47]}..."
             self.labelItem.setPlainText(newText)
+
+    def updateBanner(self, bannerHidden: bool = True, bannerGraphic: QtCore.QByteArray = None) -> None:
+        if bannerHidden:  # No icon visible
+            self.bannerIconItem.hide()
+            self.bannerIconItem.setVisible(False)
+            return
+        self.bannerIconItem.renderer().load(bannerGraphic)
+        self.bannerIconItem.show()
+        self.bannerIconItem.setVisible(True)
+        self.bannerIconItem.setElementId("")
 
     def removeConnector(self, connector) -> None:
         # Exception could be thrown if the connector is already deleted.

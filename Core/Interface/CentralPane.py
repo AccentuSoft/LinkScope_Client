@@ -772,6 +772,8 @@ class CanvasView(QtWidgets.QGraphicsView):
         viewMenu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
         groupingMenu = self.menu.addMenu("Grouping...")
         groupingMenu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
+        bannersMenu = self.menu.addMenu("Banners...")
+        bannersMenu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
 
         actionSelectChildren = QtGui.QAction('Select Child Nodes',
                                              selectMenu,
@@ -835,6 +837,18 @@ class CanvasView(QtWidgets.QGraphicsView):
                                                                 "this canvas.",
                                                       triggered=self.importConnectedEntities)
         self.menu.addAction(importConnectedEntitiesAction)
+
+        clearBannerMenu = QtGui.QAction('Clear Banners',
+                                        bannersMenu,
+                                        statusTip="Remove banners from the selected entities.",
+                                        triggered=self.clearBanners)
+        bannersMenu.addAction(clearBannerMenu)
+
+        setBannerIconMenu = QtGui.QAction('Set Banner Icon',
+                                          bannersMenu,
+                                          statusTip="Set a banner icon for the selected entities.",
+                                          triggered=self.setBanners)
+        bannersMenu.addAction(setBannerIconMenu)
 
     def deleteItemsFromDatabase(self) -> None:
         items = self.scene().selectedItems()
@@ -916,8 +930,7 @@ class CanvasView(QtWidgets.QGraphicsView):
                 if entityUID in self.scene().sceneGraph.nodes():
                     wasGrouped = False
                     for groupNode in [node for node in self.items() if isinstance(node, Entity.GroupNode)]:
-                        wasGrouped = \
-                                groupNode.removeSpecificItemFromGroupIfExists(entityUID)
+                        wasGrouped = groupNode.removeSpecificItemFromGroupIfExists(entityUID)
                         if wasGrouped:
                             self.removeGroupNodeLinksForUID(groupNode.uid, entityUID)
                             groupNodeJson = self.tabbedPane.entityDB.getEntity(groupNode.uid)
@@ -1135,6 +1148,34 @@ class CanvasView(QtWidgets.QGraphicsView):
                     newNode = self.scene().addNodeProgrammatic(regularEntity)
                     newNode.setSelected(True)
         self.scene().rearrangeGraph()
+
+    def clearBanners(self) -> None:
+        selectedEntities = [item for item in self.scene().selectedItems() if isinstance(item, Entity.BaseNode)]
+        for entity in selectedEntities:
+            entity.updateBanner(True, None)
+
+    def setBanners(self) -> None:
+        selectedEntities = [item for item in self.scene().selectedItems() if isinstance(item, Entity.BaseNode)]
+        if len(selectedEntities) < 1:
+            self.tabbedPane.mainWindow.MESSAGEHANDLER.warning('Need to select at least one Entity to set its banner.')
+            return
+        allBanners = {bannerID: bannerPath
+                      for bannerID, bannerPath in self.tabbedPane.mainWindow.RESOURCEHANDLER.banners.items()}
+        bannerDialog = BannerSelector(allBanners)
+        if bannerDialog.exec():
+            try:
+                selectedBannerItem = bannerDialog.bannerIconContainer.selectedItems()[0]
+                bannerPathStr = allBanners[selectedBannerItem.text()]
+                with open(bannerPathStr, 'rb') as bannerFile:
+                    bannerByteArray = QtCore.QByteArray(bannerFile.read())
+                for entity in selectedEntities:
+                    entity.updateBanner(False, bannerByteArray)
+            except IndexError:
+                self.tabbedPane.mainWindow.MESSAGEHANDLER.warning('No Banner selected.', popUp=True)
+            except FileNotFoundError:
+                self.tabbedPane.mainWindow.MESSAGEHANDLER.error('Banner Icon not found in filesystem.',
+                                                                popUp=True,
+                                                                exc_info=False)
 
     def takePictureOfView(self, justViewport: bool = True, transparentBackground: bool = False) -> QtGui.QImage:
         # Need to set size and format of pic before using it.
@@ -1796,13 +1837,13 @@ class CanvasScene(QtWidgets.QGraphicsScene):
             self.removeItem(item.iconItem)
 
             pictureByteArray = pEditor.objectJson['Icon']
-            item.pixmapItem = QtGui.QPixmap()
-            item.pixmapItem.loadFromData(pictureByteArray)
             if pictureByteArray.data().startswith(b'<svg '):
                 item.iconItem = QGraphicsSvgItem()
                 item.iconItem.renderer().load(pictureByteArray)
                 item.iconItem.setElementId("")  # Force recalculation of geometry, else this looks like 1 pixel.
             else:
+                item.pixmapItem = QtGui.QPixmap()
+                item.pixmapItem.loadFromData(pictureByteArray)
                 item.iconItem = QGraphicsPixmapItem(item.pixmapItem)
 
             item.iconItem.setPos(item.pos())
@@ -2146,3 +2187,48 @@ class SendToOtherTabCanvasSelector(QtWidgets.QDialog):
         sendToOtherCanvasLayout.addWidget(self.canvasNameSelector, 1, 1, 1, 2)
         sendToOtherCanvasLayout.addWidget(cancelButton, 2, 0, 1, 1)
         sendToOtherCanvasLayout.addWidget(confirmButton, 2, 1, 1, 2)
+
+
+class BannerSelector(QtWidgets.QDialog):
+
+    def __init__(self,  bannerDict: dict):
+        super(BannerSelector, self).__init__()
+        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
+        self.setModal(True)
+        self.setWindowTitle('Select Banner')
+
+        bannerLayout = QtWidgets.QVBoxLayout()
+        self.setLayout(bannerLayout)
+
+        descriptionLabel = QtWidgets.QLabel("Select the Banner that you want to apply to the selected Entities:")
+        descriptionLabel.setWordWrap(True)
+        bannerLayout.addWidget(descriptionLabel)
+
+        self.bannerIconContainer = QtWidgets.QListWidget()
+        self.bannerIconContainer.setFlow(self.bannerIconContainer.Flow.LeftToRight)
+        self.bannerIconContainer.setMovement(self.bannerIconContainer.Movement.Static)
+        self.bannerIconContainer.setViewMode(self.bannerIconContainer.ViewMode.IconMode)
+        self.bannerIconContainer.setLayoutMode(self.bannerIconContainer.LayoutMode.SinglePass)
+        self.bannerIconContainer.setSelectionMode(self.bannerIconContainer.SelectionMode.SingleSelection)
+        self.bannerIconContainer.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.bannerIconContainer.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
+        self.bannerIconContainer.setSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Minimum)
+
+        for bannerID, bannerPathStr in bannerDict.items():
+            bannerPixmap = QtGui.QIcon(bannerPathStr)
+            QtWidgets.QListWidgetItem(bannerPixmap, bannerID, self.bannerIconContainer)
+
+        bannerLayout.addWidget(self.bannerIconContainer)
+
+        buttonsWidget = QtWidgets.QWidget()
+        buttonsWidgetLayout = QtWidgets.QHBoxLayout()
+        buttonsWidget.setLayout(buttonsWidgetLayout)
+        cancelButton = QtWidgets.QPushButton('Cancel')
+        cancelButton.clicked.connect(self.reject)
+        acceptButton = QtWidgets.QPushButton('Confirm')
+        acceptButton.clicked.connect(self.accept)
+        acceptButton.setAutoDefault(True)
+        acceptButton.setDefault(True)
+        buttonsWidgetLayout.addWidget(cancelButton)
+        buttonsWidgetLayout.addWidget(acceptButton)
+        bannerLayout.addWidget(buttonsWidget)
