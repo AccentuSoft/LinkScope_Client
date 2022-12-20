@@ -838,17 +838,17 @@ class CanvasView(QtWidgets.QGraphicsView):
                                                       triggered=self.importConnectedEntities)
         self.menu.addAction(importConnectedEntitiesAction)
 
-        clearBannerMenu = QtGui.QAction('Clear Banners',
-                                        bannersMenu,
-                                        statusTip="Remove banners from the selected entities.",
-                                        triggered=self.clearBanners)
-        bannersMenu.addAction(clearBannerMenu)
+        self.clearBannerMenu = QtGui.QAction('Clear Banners',
+                                             bannersMenu,
+                                             statusTip="Remove banners from the selected entities.",
+                                             triggered=self.clearBanners)
+        bannersMenu.addAction(self.clearBannerMenu)
 
-        setBannerIconMenu = QtGui.QAction('Set Banner Icon',
-                                          bannersMenu,
-                                          statusTip="Set a banner icon for the selected entities.",
-                                          triggered=self.setBanners)
-        bannersMenu.addAction(setBannerIconMenu)
+        self.setBannerIconMenu = QtGui.QAction('Set Banner Icon',
+                                               bannersMenu,
+                                               statusTip="Set a banner icon for the selected entities.",
+                                               triggered=self.setBanners)
+        bannersMenu.addAction(self.setBannerIconMenu)
 
     def deleteItemsFromDatabase(self) -> None:
         items = self.scene().selectedItems()
@@ -1044,7 +1044,8 @@ class CanvasView(QtWidgets.QGraphicsView):
                 self.setDragMode(QtWidgets.QGraphicsView.DragMode.RubberBandDrag)
             else:
                 items = self.scene().selectedItems()
-                groupItems = [groupItem for groupItem in items if isinstance(groupItem, Entity.GroupNode)]
+                entityItems = [entityItem for entityItem in items if isinstance(entityItem, Entity.BaseNode)]
+                groupItems = [groupItem for groupItem in entityItems if isinstance(groupItem, Entity.GroupNode)]
                 linkItems = [linkItem for linkItem in items if isinstance(linkItem, Entity.BaseConnector)]
                 if groupItems:
                     self.actionUngroup.setDisabled(False)
@@ -1052,12 +1053,23 @@ class CanvasView(QtWidgets.QGraphicsView):
                 else:
                     self.actionUngroup.setDisabled(True)
                     self.actionUngroup.setEnabled(False)
-                if len(items) > 1:
-                    self.actionGroup.setDisabled(False)
-                    self.actionGroup.setEnabled(True)
+                if entityItems:
+                    self.clearBannerMenu.setDisabled(False)
+                    self.clearBannerMenu.setEnabled(True)
+                    self.setBannerIconMenu.setDisabled(False)
+                    self.setBannerIconMenu.setEnabled(True)
+
+                    if len(entityItems) > 1:
+                        self.actionGroup.setDisabled(False)
+                        self.actionGroup.setEnabled(True)
+                    else:
+                        self.actionGroup.setDisabled(True)
+                        self.actionGroup.setEnabled(False)
                 else:
-                    self.actionGroup.setDisabled(True)
-                    self.actionGroup.setEnabled(False)
+                    self.clearBannerMenu.setDisabled(True)
+                    self.clearBannerMenu.setEnabled(False)
+                    self.setBannerIconMenu.setDisabled(True)
+                    self.setBannerIconMenu.setEnabled(False)
                 if linkItems:
                     self.actionLinkDelete.setDisabled(False)
                     self.actionLinkDelete.setEnabled(True)
@@ -1157,7 +1169,8 @@ class CanvasView(QtWidgets.QGraphicsView):
     def setBanners(self) -> None:
         selectedEntities = [item for item in self.scene().selectedItems() if isinstance(item, Entity.BaseNode)]
         if len(selectedEntities) < 1:
-            self.tabbedPane.mainWindow.MESSAGEHANDLER.warning('Need to select at least one Entity to set its banner.')
+            self.tabbedPane.mainWindow.MESSAGEHANDLER.warning('Need to select at least one Entity to set its banner.',
+                                                              popUp=True)
             return
         allBanners = {bannerID: bannerPath
                       for bannerID, bannerPath in self.tabbedPane.mainWindow.RESOURCEHANDLER.banners.items()}
@@ -2191,7 +2204,7 @@ class SendToOtherTabCanvasSelector(QtWidgets.QDialog):
 
 class BannerSelector(QtWidgets.QDialog):
 
-    def __init__(self,  bannerDict: dict):
+    def __init__(self, bannerDict: dict):
         super(BannerSelector, self).__init__()
         self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         self.setModal(True)
@@ -2212,7 +2225,8 @@ class BannerSelector(QtWidgets.QDialog):
         self.bannerIconContainer.setSelectionMode(self.bannerIconContainer.SelectionMode.SingleSelection)
         self.bannerIconContainer.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
         self.bannerIconContainer.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarPolicy.ScrollBarAsNeeded)
-        self.bannerIconContainer.setSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Minimum)
+        self.bannerIconContainer.setSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum,
+                                               QtWidgets.QSizePolicy.Policy.Minimum)
 
         for bannerID, bannerPathStr in bannerDict.items():
             bannerPixmap = QtGui.QIcon(bannerPathStr)
