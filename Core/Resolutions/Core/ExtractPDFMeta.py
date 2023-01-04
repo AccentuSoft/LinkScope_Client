@@ -7,7 +7,7 @@ class ExtractPDFMeta:
     category = "File Operations"
 
     # A string that describes this resolution.
-    description = "Returns a set of nodes that contain all the metadata info of pdf files."
+    description = "Returns a set of nodes that contain notable metadata info of pdf files."
 
     originTypes = {'Document'}
 
@@ -16,7 +16,8 @@ class ExtractPDFMeta:
     parameters = {}
 
     def resolution(self, entityJsonList, parameters):
-        from PyPDF2 import PdfFileReader
+        from pypdf import PdfReader
+        from datetime import datetime, timedelta
         import magic
         from pathlib import Path
 
@@ -29,41 +30,57 @@ class ExtractPDFMeta:
             if not (filePath.exists() and filePath.is_file()):
                 continue
 
-            if magic.from_file(str(filePath), mime=True) != \
-                    'application/pdf':
+            if magic.from_file(str(filePath), mime=True) != 'application/pdf':
                 continue
 
             with open(filePath, 'rb') as f:
-                pdf = PdfFileReader(f)
-                info = pdf.getDocumentInfo()
-                number_of_pages = pdf.getNumPages()
+                pdf = PdfReader(f)
+                info = pdf.metadata
+                number_of_pages = len(pdf.pages)
 
             for metadataKey in info:
+                if metadataKey.startswith('/'):
+                    attrValue = metadataKey[1:]
+                else:
+                    attrValue = metadataKey
                 if 'Date' in metadataKey:
                     try:
-                        strDate = info[metadataKey]
-                        strDate = strDate.split(':')[1].split('-')[0]
-                        strDate1 = strDate[:-6]
-                        strDate2 = strDate[-6:]
-                        strDate2 = ':'.join(strDate2[i:i + 2] for i in range(0, 6, 2))
-                        strDate1 = f'{strDate1[:-4]}-' + \
-                                   '-'.join(strDate1[::-1][i: i + 2] for i in range(0, 4, 2))[::-1]
-                        strDate = f'{strDate1}T{strDate2}'
-                        returnResults.append([{'Date': strDate,
+                        strDate = info[metadataKey].split(':', 1)[1]
+                        if strDate.endswith('Z'):
+                            dateString = datetime.strptime(strDate, "%Y%m%d%H%M%SZ").isoformat()
+                        elif '+' in strDate:
+                            datePart1, datePart2 = strDate.split('+', 1)
+                            date1 = datetime.strptime(datePart1, "%Y%m%d%H%M%S")
+                            date2 = timedelta(hours=int(datePart2.split("'")[0]), minutes=int(datePart2.split("'")[1]))
+                            dateString = (date1 + date2).isoformat()
+                        elif '-' in strDate:
+                            datePart1, datePart2 = strDate.split('-', 1)
+                            date1 = datetime.strptime(datePart1, "%Y%m%d%H%M%S")
+                            date2 = timedelta(hours=int(datePart2.split("'")[0]), minutes=int(datePart2.split("'")[1]))
+                            dateString = (date1 - date2).isoformat()
+                        else:
+                            raise ValueError('Cannot parse Date format.')
+
+                        returnResults.append([{'Date': dateString,
                                                'Entity Type': 'Date'},
-                                              {uid: {'Resolution': metadataKey, 'Notes': ''}}])
+                                              {uid: {'Resolution': attrValue, 'Notes': ''}}])
                     except Exception:
                         # Reset strDate to default value
                         strDate = info[metadataKey]
                         returnResults.append([{'Date': strDate,
                                                'Entity Type': 'Date'},
-                                              {uid: {'Resolution': metadataKey, 'Notes': ''}}])
+                                              {uid: {'Resolution': attrValue, 'Notes': ''}}])
                 else:
-                    returnResults.append([{'Phrase': f'{metadataKey}: {str(info[metadataKey])}',
-                                           'Entity Type': 'Phrase'},
-                                          {uid: {'Resolution': metadataKey, 'Notes': ''}}])
+                    # Clean some misshapen strings
+                    value = str(info[metadataKey])
+                    if value.startswith('/'):
+                        value = value[1:]
 
-            returnResults.append([{'Phrase': f'Number of Pages: {str(number_of_pages)}', 'Entity Type': 'Phrase'},
+                    returnResults.append([{'Phrase': f'{attrValue}: {value}',
+                                           'Entity Type': 'Phrase'},
+                                          {uid: {'Resolution': attrValue, 'Notes': ''}}])
+
+            returnResults.append([{'Phrase': f'Number of Pages: {number_of_pages}', 'Entity Type': 'Phrase'},
                                   {uid: {'Resolution': 'Number of Pages', 'Notes': ''}}])
 
         return returnResults

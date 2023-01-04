@@ -46,7 +46,7 @@ playwright
 requests
 shodan
 docx2python
-PyPDF2
+pypdf
 beautifulsoup4
 python-Wappalyzer
 vtapi3
