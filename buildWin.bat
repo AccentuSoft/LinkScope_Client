@@ -14,7 +14,7 @@ python -m venv buildEnv
 
 call buildEnv\Scripts\activate.bat
 
-python -m pip install --upgrade wheel pip nuitka orderedset
+python -m pip install --upgrade wheel pip nuitka ordered-set
 
 python -m pip cache purge
 
@@ -34,7 +34,7 @@ FOR /F "usebackq" %%L in (`python -c "from pathlib import Path;x=Path('buildEnv\
 
 python -m nuitka --follow-imports --standalone --noinclude-pytest-mode=nofollow --noinclude-setuptools-mode=nofollow ^
 --noinclude-custom-mode=setuptools:error --noinclude-IPython-mode=nofollow --enable-plugin=pyside6 ^
---enable-plugin=numpy --enable-plugin=trio --assume-yes-for-downloads --remove-output --disable-console ^
+--noinclude-unittest-mode=nofollow --enable-plugin=trio --assume-yes-for-downloads --remove-output --disable-console ^
 --include-data-dir="Resources=Resources" --include-plugin-directory=Modules --include-package=Core ^
 --include-data-dir="Core\Entities=Core\Entities" --include-data-dir="Core\Resolutions\Core=Core\Resolutions\Core" ^
 --include-data-dir="Modules=Modules" --warn-unusual-code --show-modules --include-data-files="Icon.ico=Icon.ico" ^

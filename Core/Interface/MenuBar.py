@@ -2732,12 +2732,13 @@ class ImportBrowserTabsThread(QtCore.QThread):
                                     first = True
                                     for browserEntry in browserTab['entries']:
                                         url = browserEntry['url']
+                                        title = browserEntry.get('title', '')
                                         if not url.startswith('about:'):
                                             if first:
-                                                tabsToOpen.append((url, browserEntry['title'], True))
+                                                tabsToOpen.append((url, title, True))
                                                 first = False
                                             else:
-                                                tabsToOpen.append((url, browserEntry['title'], False))
+                                                tabsToOpen.append((url, title, False))
                                 else:
                                     browserEntry = browserTab['entries'][browserTab['index'] - 1]
                                     url = browserEntry['url']
@@ -2833,7 +2834,9 @@ class ImportBrowserTabsThread(QtCore.QThread):
                                                 [screenshotEntity,
                                                  {len(returnResults) + 1: {'Resolution': 'Screenshot of Tab',
                                                                            'Notes': ''}}])
-
+                            else:
+                                newEntity = [{'Phrase': actualURL,
+                                              'Entity Type': 'Phrase'}]
                             if len(tabToOpen) == 3:
                                 if historyMark != -1 and not tabToOpen[2]:
                                     newEntity.append({historyMark: {'Resolution': 'Next Page'}})

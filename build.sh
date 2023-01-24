@@ -11,7 +11,7 @@ python${PYTHON_VER} -m venv buildEnv
 source buildEnv/bin/activate
 
 # orderedset package installed for compile time performance.
-python${PYTHON_VER} -m pip install --upgrade wheel pip nuitka orderedset
+python${PYTHON_VER} -m pip install --upgrade wheel pip nuitka ordered-set
 
 python${PYTHON_VER} -m pip cache purge
 
@@ -26,7 +26,7 @@ FIREFOX_VER=$(python -c "from pathlib import Path;x=Path(\"buildEnv/lib/python${
 
 python${PYTHON_VER} -m nuitka --follow-imports --standalone --noinclude-pytest-mode=nofollow \
 --noinclude-setuptools-mode=nofollow --noinclude-custom-mode=setuptools:error --noinclude-IPython-mode=nofollow \
---enable-plugin=pyside6 --enable-plugin=numpy --enable-plugin=trio --assume-yes-for-downloads --remove-output \
+--noinclude-unittest-mode=nofollow --enable-plugin=pyside6 --enable-plugin=trio --assume-yes-for-downloads --remove-output \
 --disable-console --include-data-dir="Resources=Resources" --include-plugin-directory=Modules --include-package=Core \
 --include-data-dir="Core/Entities=Core/Entities" --include-data-dir="Core/Resolutions/Core=Core/Resolutions/Core" \
 --include-data-dir="Modules=Modules" --warn-unusual-code --show-modules --include-data-files="Icon.ico=Icon.ico" \

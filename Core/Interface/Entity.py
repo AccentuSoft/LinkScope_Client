@@ -36,7 +36,6 @@ class BaseNode(QGraphicsItemGroup):
         self.labelItem = QGraphicsTextItem('')
         # Have to do it this way; directly assigning stuff does not work due to how PySide6 works.
         labelDocument = self.labelItem.document()
-        labelDocument.setTextWidth(280)
         textOption = labelDocument.defaultTextOption()
         textOption.setWrapMode(QtGui.QTextOption.WrapMode.WrapAtWordBoundaryOrAnywhere)
         textOption.setAlignment(QtCore.Qt.AlignmentFlag.AlignHCenter)
@@ -57,10 +56,10 @@ class BaseNode(QGraphicsItemGroup):
         if brush is not None:
             self.labelItem.setDefaultTextColor(brush.color())
 
-        self.labelItem.setPos(self.iconItem.x() - 120, self.iconItem.y() + 45)
         self.updateLabel(primaryAttribute)
 
         self.bannerIconItem.setPos(self.iconItem.x() + 15, self.iconItem.y() - 9)
+        self.bannerIconItem.setZValue(10)
 
         self.uid = uid
         self.setFlag(QGraphicsItem.ItemIsMovable, True)
@@ -72,12 +71,12 @@ class BaseNode(QGraphicsItemGroup):
         self.connectors = []
 
     def updateLabel(self, newText: str = '') -> None:
-        if not isinstance(newText, str):
-            newText = newText
         if newText != '':
             if len(newText) > 50:
                 newText = f"{newText[:47]}..."
             self.labelItem.setPlainText(newText)
+        self.labelItem.document().adjustSize()
+        self.labelItem.setPos(self.iconItem.x() + 20 - (self.labelItem.textWidth() / 2), self.iconItem.y() + 45)
 
     def updateBanner(self, bannerHidden: bool = True, bannerGraphic: QtCore.QByteArray = None) -> None:
         if bannerHidden:  # No icon visible

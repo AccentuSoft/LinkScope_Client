@@ -5,6 +5,7 @@ import magic
 from PySide6 import QtWidgets, QtCore, QtGui
 from Core.Interface import Stylesheets
 from Core.ResourceHandler import MinSizeStackedLayout, RichNotesEditor
+from Core.GlobalVariables import hidden_fields_dockbars
 
 
 class DockBarTwo(QtWidgets.QDockWidget):
@@ -276,7 +277,7 @@ class EntityDetails(QtWidgets.QWidget):
             return
         rowCount = 0
         for key in jsonDict:
-            if key in ["uid", "Child UIDs", "Icon"]:
+            if key in hidden_fields_dockbars:
                 continue
             elif key == "Notes":
                 notesTextArea = RichNotesEditor(self, jsonDict[key], False)

@@ -1882,7 +1882,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setMenuBar(MenuBar.MenuBar(self))
 
         # Set the main window title and show it to the user.
-        self.setWindowTitle("LinkScope 1.4.0 - " + self.SETTINGS.get('Project/Name', 'Untitled'))
+        self.setWindowTitle(f"LinkScope {self.SETTINGS.get('Program/Version', 'VU')}"
+                            f" - {self.SETTINGS.get('Project/Name', 'Untitled')}")
         iconPath = Path(self.SETTINGS.get('Program/BaseDir')) / 'Icon.ico'
         appIcon = QtGui.QIcon(str(iconPath))
         self.setWindowIcon(appIcon)
@@ -1959,10 +1960,11 @@ class MainWindow(QtWidgets.QMainWindow):
             self.SETTINGS.setValue("Project/FilesDir", str(projectDir / "Project Files"))
 
         self.MESSAGEHANDLER = MessageHandler.MessageHandler(self)
-        self.RESOURCEHANDLER = ResourceHandler.ResourceHandler(self, self.MESSAGEHANDLER)
-        self.dockbarThree = DockBarThree.DockBarThree(self)
-        self.LENTDB = EntityDB.EntitiesDB(self, self.MESSAGEHANDLER, self.RESOURCEHANDLER)
+        self.MESSAGEHANDLER.info(f'Starting LinkScope Client, Version {self.SETTINGS.value("Program/Version", "N/A")}')
         self.URLMANAGER = URLManager.URLManager(self)
+        self.dockbarThree = DockBarThree.DockBarThree(self)
+        self.RESOURCEHANDLER = ResourceHandler.ResourceHandler(self, self.MESSAGEHANDLER)
+        self.LENTDB = EntityDB.EntitiesDB(self, self.MESSAGEHANDLER, self.RESOURCEHANDLER)
         self.RESOLUTIONMANAGER = ResolutionManager.ResolutionManager(self, self.MESSAGEHANDLER)
         self.FCOM = FrontendCommunicationsHandler.CommunicationsHandler(self)
         self.LQLWIZARD = LQLQueryBuilder(self)
@@ -2998,7 +3000,8 @@ class ProgramEditDialog(QtWidgets.QDialog):
         for setting in self.settings:
             if setting.startswith('Program/'):
                 keyName = setting.split('Program/', 1)[1]
-                if keyName != "BaseDir" and len(setting.split('/')) == 2:  # Don't allow users to mess with these.
+                # Don't allow users to mess with sensitive settings.
+                if keyName not in ["BaseDir", "Version"] and len(setting.split('/')) == 2:
                     # A bit redundant to do it this way, but it'll be cleaner if / when more settings are added.
                     if keyName == "GraphLayout":
                         settingSingleChoice = SettingsEditSingleChoice(['dot', 'sfdp', 'neato'],

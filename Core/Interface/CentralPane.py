@@ -22,6 +22,7 @@ from PySide6.QtWebEngineWidgets import QWebEngineView
 
 from Core.Interface import Entity, Stylesheets
 from Core.ResourceHandler import RichNotesEditor
+from Core.GlobalVariables import hidden_fields
 
 
 class WorkspaceWidget(QtWidgets.QWidget):
@@ -192,6 +193,9 @@ class TabbedPane(QtWidgets.QTabWidget):
 
         self.tabsNotesDict = {}
         self.previousTab = None
+
+        self.allBanners = {bannerID: bannerPath
+                           for bannerID, bannerPath in self.mainWindow.RESOURCEHANDLER.banners.items()}
 
         self.currentChanged.connect(self.currentTabChangedListener)
 
@@ -1164,7 +1168,10 @@ class CanvasView(QtWidgets.QGraphicsView):
     def clearBanners(self) -> None:
         selectedEntities = [item for item in self.scene().selectedItems() if isinstance(item, Entity.BaseNode)]
         for entity in selectedEntities:
+            entityJson = self.tabbedPane.mainWindow.LENTDB.getEntity(entity.uid)
+            entityJson['Canvas Banner'] = ''
             entity.updateBanner(True, None)
+            self.tabbedPane.mainWindow.LENTDB.addEntity(entityJson, updateTimeline=False)
 
     def setBanners(self) -> None:
         selectedEntities = [item for item in self.scene().selectedItems() if isinstance(item, Entity.BaseNode)]
@@ -1172,23 +1179,18 @@ class CanvasView(QtWidgets.QGraphicsView):
             self.tabbedPane.mainWindow.MESSAGEHANDLER.warning('Need to select at least one Entity to set its banner.',
                                                               popUp=True)
             return
-        allBanners = {bannerID: bannerPath
-                      for bannerID, bannerPath in self.tabbedPane.mainWindow.RESOURCEHANDLER.banners.items()}
-        bannerDialog = BannerSelector(allBanners)
+        bannerDialog = BannerSelector(self.tabbedPane.allBanners)
         if bannerDialog.exec():
             try:
-                selectedBannerItem = bannerDialog.bannerIconContainer.selectedItems()[0]
-                bannerPathStr = allBanners[selectedBannerItem.text()]
-                with open(bannerPathStr, 'rb') as bannerFile:
-                    bannerByteArray = QtCore.QByteArray(bannerFile.read())
+                # This following line will throw IndexError if no banner is selected.
+                selectedBannerItem = bannerDialog.bannerIconContainer.selectedItems()[0].text()
+                self.scene().bannerDrawHelper(selectedEntities, selectedBannerItem)
                 for entity in selectedEntities:
-                    entity.updateBanner(False, bannerByteArray)
+                    entityJson = self.tabbedPane.mainWindow.LENTDB.getEntity(entity.uid)
+                    entityJson['Canvas Banner'] = selectedBannerItem
+                    self.tabbedPane.mainWindow.LENTDB.addEntity(entityJson, updateTimeline=False)
             except IndexError:
                 self.tabbedPane.mainWindow.MESSAGEHANDLER.warning('No Banner selected.', popUp=True)
-            except FileNotFoundError:
-                self.tabbedPane.mainWindow.MESSAGEHANDLER.error('Banner Icon not found in filesystem.',
-                                                                popUp=True,
-                                                                exc_info=False)
 
     def takePictureOfView(self, justViewport: bool = True, transparentBackground: bool = False) -> QtGui.QImage:
         # Need to set size and format of pic before using it.
@@ -1279,6 +1281,48 @@ class CanvasScene(QtWidgets.QGraphicsScene):
                 # Re-Center the Label
                 item.updateLabel(item.labelItem.text())
 
+    def bannerDrawHelper(self, entities: list, bannerName: str = None) -> None:
+        """
+        If we are given a banner name, try to set each canvas entity banner to the banner with the given name.
+        If not, then instead we get the banner that each entity is already assigned, and make sure it's drawn.
+        """
+        if bannerName:
+            try:
+                bannerPathStr = self.parent().allBanners[bannerName]
+                with open(bannerPathStr, 'rb') as bannerFile:
+                    bannerByteArray = QtCore.QByteArray(bannerFile.read())
+                for entity in entities:
+                    entity.updateBanner(False, bannerByteArray)
+            except FileNotFoundError:
+                self.parent().mainWindow.MESSAGEHANDLER.error(f'Banner Icon not found in filesystem: {bannerName}',
+                                                              popUp=True,
+                                                              exc_info=False)
+            except KeyError:
+                self.parent().mainWindow.MESSAGEHANDLER.warning(f'Invalid Banner: {bannerName}', popUp=True)
+        else:
+            notFoundBanners = set()
+            for entity in entities:
+                try:
+                    entityJson = self.parent().mainWindow.LENTDB.getEntity(entity.uid)
+                    bannerPathStr = self.parent().allBanners.get(entityJson.get('Canvas Banner', ''), '')
+                    if not bannerPathStr:
+                        entity.updateBanner(True, None)
+                    else:
+                        with open(bannerPathStr, 'rb') as bannerFile:
+                            bannerByteArray = QtCore.QByteArray(bannerFile.read())
+                        entity.updateBanner(False, bannerByteArray)
+                except FileNotFoundError:
+                    if bannerName not in notFoundBanners:
+                        self.parent().mainWindow.MESSAGEHANDLER.error(f'Banner Icon not found in filesystem: '
+                                                                      f'{bannerName}',
+                                                                      popUp=True,
+                                                                      exc_info=False)
+                        notFoundBanners.add(bannerName)
+                except KeyError:
+                    if bannerName not in notFoundBanners:
+                        self.parent().mainWindow.MESSAGEHANDLER.warning(f'Invalid Banner: {bannerName}', popUp=True)
+                        notFoundBanners.add(bannerName)
+
     # Redefined so that the BaseConnector items are not considered.
     def itemsBoundingRect(self) -> QtCore.QRectF:
         try:
@@ -1301,6 +1345,7 @@ class CanvasScene(QtWidgets.QGraphicsScene):
     def addNodeToScene(self, item, x=0, y=0) -> None:
         self.nodesDict[item.uid] = item
         self.addItem(item)
+        self.bannerDrawHelper([item])
         item.setPos(QtCore.QPointF(x, y))
         self.parent().mainWindow.MESSAGEHANDLER.info(f'Added node: {str(item.uid)} | {item.labelItem.toPlainText()}')
 
@@ -2033,7 +2078,7 @@ class PropertiesEditor(QtWidgets.QDialog):
 
         self.itemProperties = QtWidgets.QFormLayout()
         for key in objectJson:
-            if key in ('uid', 'Entity Type', 'Date Last Edited', 'Child UIDs'):
+            if key in hidden_fields:
                 continue
             keyField = QtWidgets.QLabel(key)
             if key == "Notes":

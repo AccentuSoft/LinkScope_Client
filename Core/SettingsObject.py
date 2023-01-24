@@ -22,6 +22,8 @@ class SettingsObject(dict):
     def __init__(self):
         super().__init__()
         self.setValue("Program/BaseDir", "Unset")  # dirname(abspath(getsourcefile(lambda:0))) + "/../" )
+        self.setValue("Program/Version", "v1.4.5")
+        self.setValue("Program/DarkWeb/TORProfileLocation", "")
         self.setValue("Program/GraphLayout", "dot")
         self.setValue("Program/Graphics/EntityTextFontType", "Mono")
         self.setValue("Program/Graphics/EntityTextFontSize", "11")
@@ -36,7 +38,7 @@ class SettingsObject(dict):
         self.setValue("Project/BaseDir", "")
         self.setValue("Project/FilesDir", "")
         # For any entity with a Path variable, this dictates whether a copy of the original is made or whether a
-        #   symlink is created. Symlinks require special permissions or developer mode in Windows however.
+        #   symlink is created. Symlinks however require special permissions or developer mode in Windows.
         # To ensure that the software works out-of-the-box on all platforms, the default is set to 'Copy'.
         self.setValue("Project/Symlink or Copy Materials", "Copy")  # Values are 'Copy' or 'Symlink'.
         self.setValue("Project/Resolution Result Grouping Threshold", "15")

@@ -3,9 +3,10 @@
 import random
 
 non_string_fields = ('Icon', 'Child UIDs')
-hidden_fields = ('uid', 'Date Last Edited', 'Child UIDs')
+hidden_fields = ('uid', 'Date Last Edited', 'Child UIDs', 'Canvas Banner', 'Entity Type')
+hidden_fields_dockbars = ('uid', 'Child UIDs', 'Canvas Banner', 'Icon')
 meta_fields = ('Child UIDs',)
-avoid_parsing_fields = ('uid', 'Date Last Edited', 'Child UIDs', 'Icon')
+avoid_parsing_fields = ('uid', 'Date Last Edited', 'Child UIDs', 'Icon', 'Canvas Banner')
 
 # Closer to the top means more recent.
 user_agents = {'Chrome': {'Windows': ('Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 '
