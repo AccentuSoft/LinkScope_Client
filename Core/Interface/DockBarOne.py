@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 from json import dumps
 from Core.Interface.Entity import BaseNode
-from Core.Interface import Stylesheets
 from PySide6 import QtWidgets, QtCore, QtGui
 
 
@@ -73,7 +72,6 @@ class EntityList(QtWidgets.QTreeWidget):
     def __init__(self, entityDB, mainWindow, parent=None):
         super(EntityList, self).__init__(parent=parent)
 
-        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         self.entityDB = entityDB
         self.mainWindow = mainWindow
         self.setDragEnabled(True)
@@ -94,8 +92,6 @@ class EntityList(QtWidgets.QTreeWidget):
                                                  statusTip="Add the selected entities to the current canvas.",
                                                  triggered=self.addItemsToCurrentCanvas)
         self.menu.addAction(actionAddToCurrentCanvas)
-
-        self.menu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
 
         self.entityCategories: dict = {}
         self.entityTypes: dict = {}
@@ -178,7 +174,12 @@ class EntityList(QtWidgets.QTreeWidget):
         """
         Handle dragging of entities onto canvas.
         """
-        itemDragged = self.itemAt(event.pos())
+        super().mouseMoveEvent(event)
+
+        if event.buttons() == QtCore.Qt.MouseButton.LeftButton:
+            itemDragged = self.itemAt(event.pos())
+        else:
+            return
 
         # Categories & entity names don't have uids.
         try:
@@ -201,7 +202,6 @@ class EntityList(QtWidgets.QTreeWidget):
             drag.setPixmap(pixmap)
         drag.setHotSpot(QtCore.QPoint(pixmap.rect().width() // 2, pixmap.rect().height() // 2))
         drag.exec_()
-        super().mouseMoveEvent(event)
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
         super(EntityList, self).mousePressEvent(event)
@@ -244,7 +244,6 @@ class DocList(QtWidgets.QTreeWidget):
     def __init__(self, resourceHandler, parent=None) -> None:
         super(DocList, self).__init__(parent=parent)
 
-        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         self.resourceHandler = resourceHandler
         self.setAlternatingRowColors(False)
         self.setHeaderLabels(['Files Loaded'])
@@ -301,7 +300,6 @@ class ResolutionList(QtWidgets.QTreeWidget):
 
         super(ResolutionList, self).__init__(parent=parent)
 
-        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         self.resolutionManager = resolutionManager
         self.lentDB = entityDatabase
         self.mainWindow = mainWindow
@@ -368,7 +366,6 @@ class NodeList(QtWidgets.QTreeWidget):
     def __init__(self, resourceHandler, parent=None) -> None:
         super(NodeList, self).__init__(parent=parent)
 
-        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         self.resourceHandler = resourceHandler
         self.setDragEnabled(True)
         self.setHeaderLabels(['Entities'])
@@ -398,8 +395,7 @@ class NodeList(QtWidgets.QTreeWidget):
         """
         Handle dragging of entities onto canvas.
         """
-        # No, I have no idea why this is the case: v
-        if event.button() == QtGui.Qt.MouseButton.NoButton:
+        if event.buttons() == QtCore.Qt.MouseButton.LeftButton:
             itemDragged = self.itemAt(event.pos())
             if itemDragged is None or \
                     itemDragged.text(0) not in self.allEntities:
@@ -419,9 +415,6 @@ class NodeList(QtWidgets.QTreeWidget):
                 drag.setPixmap(pixmap)
             drag.setHotSpot(QtCore.QPoint(pixmap.rect().width() // 2, pixmap.rect().height() // 2))
             drag.exec_()
-        else:
-            # This should never happen.
-            super(NodeList, self).mousePressEvent(event)
 
 
 class NodeWidget(QtWidgets.QTreeWidgetItem):

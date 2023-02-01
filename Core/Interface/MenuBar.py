@@ -27,14 +27,13 @@ from playwright.sync_api import sync_playwright, Error, TimeoutError
 
 from PySide6 import QtWidgets, QtGui, QtCore
 from Core.GlobalVariables import user_agents
-from Core.Interface import Stylesheets
 from Core.Interface.Entity import BaseNode
 from Core.ResourceHandler import StringPropertyInput, FilePropertyInput, SingleChoicePropertyInput, \
     MultiChoicePropertyInput
 
 
 class MenuBar(QtWidgets.QMenuBar):
-    browserTabsImportDoneSignalListener = QtCore.Signal(list, bool, str)
+    browserTabsImportDoneSignalListener = QtCore.Signal(list, str)
 
     def __init__(self, parent):
         super().__init__(parent=parent)
@@ -42,7 +41,6 @@ class MenuBar(QtWidgets.QMenuBar):
         self.browserTabsImportDoneSignalListener.connect(self.importBrowserTabsFindings)
 
         fileMenu = self.addMenu("File")
-        fileMenu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
 
         saveAction = QtGui.QAction("&Save",
                                    self,
@@ -64,12 +62,16 @@ class MenuBar(QtWidgets.QMenuBar):
         fileMenu.addAction(renameAction)
 
         importMenu = self.addMenu("Import")
-        importMenu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
 
         fromBrowserAction = QtGui.QAction("From Browser",
                                           self,
                                           statusTip="Import open tabs as Website and materials entities.",
                                           triggered=self.importFromBrowser)
+
+        fromTorBrowserAction = QtGui.QAction("From TOR Browser",
+                                             self,
+                                             statusTip="Import open TOR tabs as Website and materials entities.",
+                                             triggered=self.importFromTORBrowser)
 
         fromFileAction = QtGui.QAction("From File",
                                        self,
@@ -86,12 +88,12 @@ class MenuBar(QtWidgets.QMenuBar):
                                               statusTip="Import database from a GraphML file.",
                                               triggered=self.parent().importDatabaseFromGraphML)
         importMenu.addAction(fromBrowserAction)
+        importMenu.addAction(fromTorBrowserAction)
         importMenu.addAction(fromFileAction)
         importMenu.addAction(graphMLCanvasAction)
         importMenu.addAction(graphMLDatabaseAction)
 
         exportMenu = self.addMenu("Export")
-        exportMenu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
 
         canvasPictureAction = QtGui.QAction("Save Picture of Canvas", self,
                                             statusTip="Save a picture of your canvas",
@@ -148,7 +150,6 @@ class MenuBar(QtWidgets.QMenuBar):
         fileMenu.addAction(exitAction)
 
         viewMenu = self.addMenu("View")
-        viewMenu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
 
         findAction = QtGui.QAction("&Find",
                                    self,
@@ -237,7 +238,6 @@ class MenuBar(QtWidgets.QMenuBar):
         toolbarVisibilityMenu.addAction(self.primaryToolbarVisibilityAction)
 
         nodeOperationsMenu = self.addMenu("Node Operations")
-        nodeOperationsMenu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
 
         actionSelectAllNodes = QtGui.QAction('Select All Nodes',
                                              self,
@@ -339,7 +339,6 @@ class MenuBar(QtWidgets.QMenuBar):
         nodeOperationsMenu.addAction(detectCyclesAction)
 
         projectMenu = self.addMenu("Project Operations")
-        projectMenu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
         generateReportAction = QtGui.QAction("Generate Report",
                                              self,
                                              statusTip="Generate a report from the set of currently selected nodes.",
@@ -353,7 +352,6 @@ class MenuBar(QtWidgets.QMenuBar):
         projectMenu.addAction(queryAction)
 
         modulesMenu = self.addMenu("Modules")
-        modulesMenu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
 
         reloadModulesAction = QtGui.QAction("Reload Modules", self,
                                             statusTip="Reload all Entities and Transforms from Modules",
@@ -361,7 +359,6 @@ class MenuBar(QtWidgets.QMenuBar):
         modulesMenu.addAction(reloadModulesAction)
 
         serverMenu = self.addMenu("&Server")
-        serverMenu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
 
         connectAction = QtGui.QAction("Connect", self,
                                       statusTip="Connect to a Server",
@@ -1181,6 +1178,27 @@ class MenuBar(QtWidgets.QMenuBar):
             progress.canceled.connect(lambda: importTabsThread.cancelOperation())
             importTabsThread.start()
 
+    def importFromTORBrowser(self) -> None:
+        """
+        Import TOR session tabs to canvas.
+
+        :return:
+        """
+
+        importDialog = TORBrowserImportDialog(self)
+
+        if importDialog.exec_():
+            importTorTabsThread = ImportTorBrowserTabsThread(importDialog, self.parent(), self)
+
+            steps = 4
+            progress = QtWidgets.QProgressDialog('Importing tabs, please wait...',
+                                                 'Abort Import', 0, steps, self)
+            progress.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
+            progress.setMinimumDuration(0)
+            importTorTabsThread.progressSignal.connect(progress.setValue)
+            progress.canceled.connect(lambda: importTorTabsThread.cancelOperation())
+            importTorTabsThread.start()
+
     def firefoxCookiesHelper(self, cookiesDatabasePath: Path) -> list:
         """
         Used by threads to get firefox's cookies.
@@ -1233,107 +1251,25 @@ class MenuBar(QtWidgets.QMenuBar):
                 cookieHash.update(chunk)
         return cookieHash.digest()
 
-    def importBrowserTabsFindings(self, resolution_result: list, importToCanvas: Union[bool, None] = None,
-                                  canvasToImportTo: Union[str, None] = None) -> None:
-        # See the function 'facilitateResolution' in CentralPane for guidance.
-
-        # Get all the entities, then split it into several lists, to make searching & iterating through them faster.
-        allEntities = [(entity['uid'], (entity[list(entity)[1]], entity['Entity Type']))
-                       for entity in self.parent().LENTDB.getAllEntities()]
-        if allEntities:
-            allEntityUIDs, allEntityPrimaryFieldsAndTypes = map(list, zip(*allEntities))
-        else:
-            allEntityUIDs = []
-            allEntityPrimaryFieldsAndTypes = []
-        allLinks = [linkUID['uid'] for linkUID in self.parent().LENTDB.getAllLinks()]
-        links = []
-        newNodeUIDs = []
-        for resultList in resolution_result:
-            newNodeJSON = resultList[0]
-            newNodeEntityType = newNodeJSON['Entity Type']
-            # Cannot assume proper order of dicts sent over the net.
-            newNodePrimaryFieldKey = self.parent().RESOURCEHANDLER.getPrimaryFieldForEntityType(newNodeEntityType)
-            newNodePrimaryField = newNodeJSON[newNodePrimaryFieldKey]
-
-            try:
-                # Attempt to get the index of an existing entity that shares primary field and type with the new
-                #   entity. Those two entities are considered to be referring to the same thing.
-                newNodeExistsIndex = allEntityPrimaryFieldsAndTypes.index((newNodePrimaryField, newNodeEntityType))
-
-                # If entity already exists, update the fields and re-add
-                newNodeExistingUID = allEntityUIDs[newNodeExistsIndex]
-                existingEntityJSON = self.parent().LENTDB.getEntity(newNodeExistingUID)
-                # Remove primary field and entity type, since those are duplicates. Primary field is the first element.
-                del newNodeJSON['Entity Type']
-                del newNodeJSON[newNodePrimaryFieldKey]
-                try:
-                    notesField = newNodeJSON.pop('Notes')
-                    existingEntityJSON['Notes'] += f'\n{notesField}'
-                except KeyError:
-                    # If no new field was actually added to the entity, don't re-add to the database
-                    if len(newNodeJSON) == 0:
-                        newNodeUIDs.append(newNodeExistingUID)
-                        continue
-                # Remove any 'None' values from new nodes - we want to keep all collected info.
-                for potentiallyNoneKey, potentiallyNoneValue in dict(newNodeJSON).items():
-                    if potentiallyNoneValue is None or potentiallyNoneValue == 'None':
-                        del newNodeJSON[potentiallyNoneKey]
-                # Update old values to new ones, and add new ones where applicable.
-                existingEntityJSON.update(newNodeJSON)
-                self.parent().LENTDB.addEntity(existingEntityJSON, fromServer=True, updateTimeline=False)
-                newNodeUIDs.append(newNodeExistingUID)
-            except ValueError:
-                # If there is no index for which the primary field and entity type of the new node match one of the
-                #   existing ones, the node must indeed be new. We add it here.
-                entityJson = self.parent().LENTDB.addEntity(newNodeJSON, fromServer=True, updateTimeline=False)
-                newNodeUIDs.append(entityJson['uid'])
-                # Ensure that different entities involved in the resolution can't independently
-                #   create the same new entities.
-                allEntityUIDs.append(entityJson['uid'])
-                allEntityPrimaryFieldsAndTypes.append((newNodePrimaryField, newNodeEntityType))
-
-        for parentsDictHolder, outputEntityUID in zip(resolution_result, newNodeUIDs):
-            if len(parentsDictHolder) > 1:
-                parentsDict = parentsDictHolder[1]
-                for parentID in parentsDict:
-                    parentUID = parentID
-                    if isinstance(parentUID, int):
-                        parentUID = newNodeUIDs[parentUID]
-                    # Sanity check: Check that the node that was used for this resolution still exists.
-                    if parentUID in allEntityUIDs:
-                        resolutionName = parentsDict[parentID]['Resolution']
-                        newLinkUID = (parentUID, outputEntityUID)
-                        # Avoid creating more links between the same two entities.
-                        if newLinkUID in allLinks:
-                            linkJson = self.parent().LENTDB.getLinkIfExists(newLinkUID)
-                            if resolutionName not in linkJson['Notes']:
-                                linkJson['Notes'] += f'\nConnection also produced by Resolution: {resolutionName}'
-                                self.parent().LENTDB.addLink(linkJson, fromServer=True)
-                        else:
-                            self.parent().LENTDB.addLink({'uid': newLinkUID, 'Resolution': resolutionName,
-                                                          'Notes': parentsDict[parentID].get('Notes', '')},
-                                                         fromServer=True)
-                            links.append((parentUID, outputEntityUID, resolutionName))
-                            allLinks.append(newLinkUID)
-
-        self.parent().syncDatabase()
-        if importToCanvas:
+    def importBrowserTabsFindings(self, resolution_result: list, canvasToImportTo: Union[str, None] = None) -> None:
+        for finding in resolution_result:
+            if len(finding) < 2:
+                # Add dummy parents
+                finding.append({'@^@^@^@': {'Resolution': 'Browser Import', 'Notes': ''}})
+        newNodeUIDs = self.parent().centralWidget().tabbedPane.facilitateResolution('Importing Entities from Browser',
+                                                                                    resolution_result)
+        if canvasToImportTo:
             sceneToAddTo = self.parent().centralWidget().tabbedPane.getSceneByName(canvasToImportTo)
             for newNodeUID in newNodeUIDs:
                 if newNodeUID is not None and newNodeUID not in sceneToAddTo.sceneGraph.nodes:
                     sceneToAddTo.addNodeProgrammatic(newNodeUID)
             sceneToAddTo.rearrangeGraph()
-        self.parent().centralWidget().tabbedPane.addLinksToTabs(links, "Browser Import")
-        self.parent().LENTDB.resetTimeline()
-        self.parent().saveProject()
-        self.parent().MESSAGEHANDLER.info('Imported tabs from browser successfully.')
 
 
 class DeleteProjectConfirmationDialog(QtWidgets.QDialog):
 
     def __init__(self, mainWindowObject, currentServerProject: str):
         super(DeleteProjectConfirmationDialog, self).__init__()
-        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         self.setModal(True)
         self.setLayout(QtWidgets.QVBoxLayout())
         self.mainWindowObject = mainWindowObject
@@ -1379,9 +1315,7 @@ class BrowserImportDialog(QtWidgets.QDialog):
         firefoxGroupLayout = QtWidgets.QVBoxLayout()
         firefoxGroup.setLayout(firefoxGroupLayout)
         self.firefoxChoice = QtWidgets.QCheckBox('Get tabs from Firefox')
-        self.firefoxChoice.setStyleSheet(Stylesheets.CHECK_BOX_STYLESHEET)
         self.firefoxSessionChoice = QtWidgets.QCheckBox('Get entire session instead of latest tabs')
-        self.firefoxSessionChoice.setStyleSheet(Stylesheets.CHECK_BOX_STYLESHEET)
         firefoxGroupLayout.addWidget(self.firefoxChoice)
         firefoxGroupLayout.addWidget(self.firefoxSessionChoice)
 
@@ -1389,18 +1323,15 @@ class BrowserImportDialog(QtWidgets.QDialog):
         chromeGroupLayout = QtWidgets.QVBoxLayout()
         chromeGroup.setLayout(chromeGroupLayout)
         self.chromeChoice = QtWidgets.QCheckBox('Get tabs from Chrome / Chromium (Experimental)')
-        self.chromeChoice.setStyleSheet(Stylesheets.CHECK_BOX_STYLESHEET)
         chromeGroupLayout.addWidget(self.chromeChoice)
 
         dialogLayout.addWidget(firefoxGroup, 1, 0, 1, 2)
         dialogLayout.addWidget(chromeGroup, 2, 0, 1, 2)
 
         self.importScreenshotsCheckbox = QtWidgets.QCheckBox('Take screenshots of sites')
-        self.importScreenshotsCheckbox.setStyleSheet(Stylesheets.CHECK_BOX_STYLESHEET)
         dialogLayout.addWidget(self.importScreenshotsCheckbox, 3, 0, 1, 2)
 
         self.importToCanvasCheckbox = QtWidgets.QCheckBox('Import To Canvas:')
-        self.importToCanvasCheckbox.setStyleSheet(Stylesheets.CHECK_BOX_STYLESHEET)
         self.importToCanvasDropdown = QtWidgets.QComboBox()
         self.importToCanvasDropdown.addItems(list(parent.parent().centralWidget().tabbedPane.canvasTabs))
         self.importToCanvasDropdown.setEditable(False)
@@ -1425,6 +1356,39 @@ class BrowserImportDialog(QtWidgets.QDialog):
 
         dialogLayout.addWidget(cancelButton, 5, 0, 1, 1)
         dialogLayout.addWidget(acceptButton, 5, 1, 1, 1)
+
+
+class TORBrowserImportDialog(QtWidgets.QDialog):
+
+    def __init__(self, parent):
+        super(TORBrowserImportDialog, self).__init__(parent=parent)
+        self.setWindowTitle('Import TOR Browser Tabs')
+        self.setModal(True)
+
+        dialogLayout = QtWidgets.QGridLayout()
+        self.setLayout(dialogLayout)
+        self.entireSessionChoice = QtWidgets.QCheckBox('Get entire session instead of latest tabs')
+        dialogLayout.addWidget(self.entireSessionChoice, 0, 0, 1, 2)
+        self.importToCanvasCheckbox = QtWidgets.QCheckBox('Import To Canvas:')
+        self.importToCanvasDropdown = QtWidgets.QComboBox()
+        self.importToCanvasDropdown.addItems(list(parent.parent().centralWidget().tabbedPane.canvasTabs))
+        self.importToCanvasDropdown.setEditable(False)
+        self.importToCanvasDropdown.setDisabled(True)
+        self.importToCanvasCheckbox.toggled.connect(lambda: self.importToCanvasDropdown.setDisabled(
+            self.importToCanvasDropdown.isEnabled()))
+        dialogLayout.addWidget(self.importToCanvasCheckbox, 1, 0, 1, 2)
+        dialogLayout.addWidget(self.importToCanvasDropdown, 2, 0, 1, 2)
+
+        acceptButton = QtWidgets.QPushButton('Accept')
+        acceptButton.setAutoDefault(True)
+        acceptButton.setDefault(True)
+        cancelButton = QtWidgets.QPushButton('Cancel')
+        acceptButton.clicked.connect(self.accept)
+        cancelButton.clicked.connect(self.reject)
+        acceptButton.setFocus()
+
+        dialogLayout.addWidget(cancelButton, 4, 0, 1, 1)
+        dialogLayout.addWidget(acceptButton, 4, 1, 1, 1)
 
 
 class ServerConnectWizard(QtWidgets.QDialog):
@@ -1539,7 +1503,6 @@ class ViewAndStopResolutionsDialog(QtWidgets.QDialog):
 
     def __init__(self, mainWindowObject):
         super(ViewAndStopResolutionsDialog, self).__init__()
-        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         self.setModal(True)
         self.setLayout(QtWidgets.QVBoxLayout())
         self.mainWindowObject = mainWindowObject
@@ -1574,7 +1537,6 @@ class ViewAndStopResolutionsDialogOption(QtWidgets.QPushButton):
 
     def __init__(self, resolutionThread, fromServer, mainWindowObject):
         super(ViewAndStopResolutionsDialogOption, self).__init__()
-        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         self.mainWindowObject = mainWindowObject
         self.resolutionThread = resolutionThread
         self.fromServer = fromServer
@@ -1596,7 +1558,6 @@ class CollectorsDialog(QtWidgets.QDialog):
     def __init__(self, mainWindow, collectorsDict: dict = None, runningCollectors: dict = None):
         super(CollectorsDialog, self).__init__()
         self.mainWindow = mainWindow
-        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         self.baseLayout = QtWidgets.QVBoxLayout()
         self.setLayout(self.baseLayout)
         self.setModal(True)
@@ -1695,7 +1656,6 @@ class CollectorStartDialog(QtWidgets.QDialog):
     def __init__(self, entityDB, collectorDict: dict):
         super(CollectorStartDialog, self).__init__()
         self.entityDB = entityDB
-        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         self.setModal(True)
         self.setWindowTitle('Collector Wizard')
         self.parametersList = []
@@ -1778,7 +1738,6 @@ class CollectorStartDialog(QtWidgets.QDialog):
 
             if propertyInputField is not None:
                 propertyKeyLayout.addWidget(propertyInputField)
-                propertyInputField.setStyleSheet(Stylesheets.CHECK_BOX_STYLESHEET)
 
             propertyKeyLayout.setStretch(1, 1)
 
@@ -1786,18 +1745,14 @@ class CollectorStartDialog(QtWidgets.QDialog):
             self.parametersList.append((key, propertyInputField))
 
         nextButton = QtWidgets.QPushButton('Next')
-        nextButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET_2)
         nextButton.clicked.connect(self.nextTab)
         previousButton = QtWidgets.QPushButton('Previous')
-        previousButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET_2)
         previousButton.clicked.connect(self.previousTab)
         acceptButton = QtWidgets.QPushButton('Accept')
         acceptButton.setAutoDefault(True)
         acceptButton.setDefault(True)
-        acceptButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET_2)
         acceptButton.clicked.connect(self.accept)
         cancelButton = QtWidgets.QPushButton('Cancel')
-        cancelButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET_2)
         cancelButton.clicked.connect(self.reject)
 
         dialogLayout.addWidget(previousButton, 4, 0, 1, 1)
@@ -1838,7 +1793,6 @@ class ImportLinksFromCSVFile(QtWidgets.QDialog):
     def __init__(self, parent, csvTableContents: pd.DataFrame):
         super(ImportLinksFromCSVFile, self).__init__(parent=parent)
 
-        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         self.setModal(True)
         importLayout = QtWidgets.QVBoxLayout()
         self.setLayout(importLayout)
@@ -1978,7 +1932,6 @@ class ImportLinkEntitiesFromCSVFile(QtWidgets.QDialog):
     def __init__(self, parent, csvTableContents: pd.DataFrame):
         super(ImportLinkEntitiesFromCSVFile, self).__init__(parent=parent)
 
-        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         self.setModal(True)
         importLayout = QtWidgets.QVBoxLayout()
         self.setLayout(importLayout)
@@ -2091,7 +2044,6 @@ class ImportEntityFromCSVFile(QtWidgets.QDialog):
     def __init__(self, parent, csvTableContents: pd.DataFrame):
         super(ImportEntityFromCSVFile, self).__init__(parent=parent)
 
-        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         self.setModal(True)
         importLayout = QtWidgets.QVBoxLayout()
         self.setLayout(importLayout)
@@ -2147,7 +2099,6 @@ class ImportEntityFromCSVFile(QtWidgets.QDialog):
         importToCanvasChoiceLayout = QtWidgets.QHBoxLayout()
         importToCanvasChoiceWidget.setLayout(importToCanvasChoiceLayout)
         self.importToCanvasCheckbox = QtWidgets.QCheckBox('Import To Canvas:')
-        self.importToCanvasCheckbox.setStyleSheet(Stylesheets.CHECK_BOX_STYLESHEET)
         self.importToCanvasDropdown = QtWidgets.QComboBox()
         self.importToCanvasDropdown.addItems(list(parent.parent().centralWidget().tabbedPane.canvasTabs))
         self.importToCanvasDropdown.setEditable(False)
@@ -2240,12 +2191,9 @@ class ImportFromFileDialog(QtWidgets.QDialog):
         fileChoiceLabel.setWordWrap(True)
 
         self.textFileChoice = QtWidgets.QRadioButton('Text file - Entities Import')
-        self.textFileChoice.setStyleSheet(Stylesheets.RADIO_BUTTON_STYLESHEET)
         self.textFileChoice.setChecked(True)
         self.CSVFileChoice = QtWidgets.QRadioButton('Spreadsheet / CSV - Entities Import')
-        self.CSVFileChoice.setStyleSheet(Stylesheets.RADIO_BUTTON_STYLESHEET)
         self.CSVFileChoiceLinks = QtWidgets.QRadioButton('Spreadsheet / CSV - Links Import')
-        self.CSVFileChoiceLinks.setStyleSheet(Stylesheets.RADIO_BUTTON_STYLESHEET)
 
         dialogLayout.addWidget(self.fileDirectoryLine, 1, 0, 1, 2)
         dialogLayout.addWidget(self.fileDirectoryButton, 2, 0, 1, 2)
@@ -2317,7 +2265,6 @@ class ImportFromTextFileDialog(QtWidgets.QDialog):
         dialogLayout.addWidget(textTable, 3, 0, 1, 2)
 
         self.importToCanvasCheckbox = QtWidgets.QCheckBox('Import To Canvas:')
-        self.importToCanvasCheckbox.setStyleSheet(Stylesheets.CHECK_BOX_STYLESHEET)
         self.importToCanvasDropdown = QtWidgets.QComboBox()
         self.importToCanvasDropdown.addItems(list(parent.parent().centralWidget().tabbedPane.canvasTabs))
         self.importToCanvasDropdown.setEditable(False)
@@ -2357,7 +2304,6 @@ class CanvasPictureDialog(QtWidgets.QDialog):
         self.fileDirectory = ""
         self.setWindowTitle('Save Canvas Picture')
         self.setModal(True)
-        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
 
         dialogLayout = QtWidgets.QGridLayout()
         self.setLayout(dialogLayout)
@@ -2426,7 +2372,6 @@ class CanvasPictureDialog(QtWidgets.QDialog):
         saveAsDialog.setNameFilter("Image (*.png)")
         saveAsDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptMode.AcceptSave)
         saveAsDialog.setDirectory(str(Path.home()))
-        saveAsDialog.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         saveAsDialog.exec()
         self.fileDirectory = saveAsDialog.selectedFiles()[0]
         if self.fileDirectory != '':
@@ -2446,7 +2391,6 @@ class SearchEngineDialog(QtWidgets.QDialog):
         super(SearchEngineDialog, self).__init__(parent=parent)
         self.setWindowTitle('Search Engine Lookup')
         self.setModal(True)
-        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
 
         layout = QtWidgets.QVBoxLayout()
         self.setLayout(layout)
@@ -2483,7 +2427,6 @@ class SearchImageEngineDialog(QtWidgets.QDialog):
         super(SearchImageEngineDialog, self).__init__(parent=parent)
         self.setWindowTitle('Image Search Engine Lookup')
         self.setModal(True)
-        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
 
         layout = QtWidgets.QVBoxLayout()
         self.setLayout(layout)
@@ -2540,6 +2483,8 @@ class ScreenshotWebsiteThread(QtCore.QThread):
                     user_agent=user_agents['Firefox']['Linux'][0]
                 )
                 urlPath = Path.home() / '.mozilla' / 'firefox'
+                if not (urlPath / 'profiles.ini').exists():
+                    urlPath = Path.home() / 'snap' / 'firefox' / 'common' / '.mozilla' / 'firefox'
             else:  # We already checked before that the platform is either 'Linux' or 'Windows'.
                 context = browser.new_context(
                     viewport={'width': 1920, 'height': 1080},
@@ -2631,6 +2576,8 @@ class SaveWebsiteThread(QtCore.QThread):
                     user_agent=user_agents['Firefox']['Linux'][0]
                 )
                 urlPath = Path.home() / '.mozilla' / 'firefox'
+                if not (urlPath / 'profiles.ini').exists():
+                    urlPath = Path.home() / 'snap' / 'firefox' / 'common' / '.mozilla' / 'firefox'
             else:  # We already checked before that the platform is either 'Linux' or 'Windows'.
                 context = browser.new_context(
                     viewport={'width': 1920, 'height': 1080},
@@ -2707,6 +2654,8 @@ class ImportBrowserTabsThread(QtCore.QThread):
                             user_agent=user_agents['Firefox']['Linux'][0]
                         )
                         urlPath = Path.home() / '.mozilla' / 'firefox'
+                        if not (urlPath / 'profiles.ini').exists():
+                            urlPath = Path.home() / 'snap' / 'firefox' / 'common' / '.mozilla' / 'firefox'
                     else:  # We already checked before that the platform is either 'Linux' or 'Windows'.
                         context = browser.new_context(
                             viewport={'width': 1920, 'height': 1080},
@@ -3012,5 +2961,151 @@ class ImportBrowserTabsThread(QtCore.QThread):
             progressValue = 3
             self.progressSignal.emit(progressValue)
             self.menuObject.browserTabsImportDoneSignalListener.emit(
-                returnResults, self.importDialog.importToCanvasCheckbox.isChecked(),
-                self.importDialog.importToCanvasDropdown.currentText())
+                returnResults,
+                self.importDialog.importToCanvasDropdown.currentText() if
+                self.importDialog.importToCanvasCheckbox.isChecked() else '')
+
+
+class ImportTorBrowserTabsThread(QtCore.QThread):
+    progressSignal = QtCore.Signal(int)
+    cancelled = False
+
+    def __init__(self, importDialog: TORBrowserImportDialog, mainWindowObject, menuObject):
+        super(ImportTorBrowserTabsThread, self).__init__(parent=mainWindowObject)
+        self.importDialog = importDialog
+        self.mainWindow = mainWindowObject
+        self.menuObject = menuObject
+
+    def cancelOperation(self):
+        self.cancelled = True
+
+    def run(self) -> None:
+
+        progressValue = 1
+        self.progressSignal.emit(progressValue)
+
+        returnResults = []
+
+        torBrowserProfilePath = Path(self.mainWindow.SETTINGS.value("Program/TOR Profile Location", "/"))
+        tabsFilePath = torBrowserProfilePath / 'sessionstore-backups' / 'recovery.jsonlz4'
+        if not tabsFilePath.exists():
+            progressValue = 4
+            self.progressSignal.emit(progressValue)
+            self.menuObject.browserTabsImportDoneSignalListener.emit(
+                returnResults,
+                '')
+            return
+        if self.importDialog.entireSessionChoice.isChecked():
+            tabsToOpen = []
+        else:
+            tabsToOpen = set()
+
+        tabsBytes = tabsFilePath.read_bytes()
+        if tabsBytes[:8] == b'mozLz40\0':
+            tabsBytes = lz4.block.decompress(tabsBytes[8:])
+        tabsJson = json.loads(tabsBytes)
+        for browserWindow in tabsJson['windows']:
+            for browserTab in browserWindow['tabs']:
+                if self.importDialog.entireSessionChoice.isChecked():
+                    first = True
+                    for browserEntry in browserTab['entries']:
+                        url = browserEntry['url']
+                        title = browserEntry.get('title', '')
+                        if not url.startswith('about:'):
+                            if first:
+                                tabsToOpen.append((url, title, True))
+                                first = False
+                            else:
+                                tabsToOpen.append((url, title, False))
+                else:
+                    browserEntry = browserTab['entries'][browserTab['index'] - 1]
+                    url = browserEntry['url']
+                    if not url.startswith('about:'):
+                        tabsToOpen.add((url, browserEntry['title']))
+
+        cookiesDatabasePath = torBrowserProfilePath / 'cookies.sqlite'
+        browserCookies = self.menuObject.firefoxCookiesHelper(cookiesDatabasePath)
+
+        historyMark = -1
+        for tabToOpen in tabsToOpen:
+            if self.cancelled:
+                break
+            urlTitle = tabToOpen[1]
+            actualURL = tabToOpen[0]
+            decodedPath = parse.unquote(actualURL)
+            parsedURL = parse.urlparse(decodedPath)
+            urlPath = parsedURL.path
+
+            if parsedURL.scheme == 'file':
+                try:
+                    mime = magic.Magic(mime=True)
+                    pathType = mime.from_file(urlPath)
+                except FileNotFoundError:
+                    continue
+
+                if 'application' in pathType:
+                    newEntity = [{'Document Name': urlTitle,
+                                  'File Path': urlPath,
+                                  'Entity Type': 'Document'}]
+                elif 'image' in pathType:
+                    newEntity = [{'Image Name': urlTitle,
+                                  'File Path': urlPath,
+                                  'Entity Type': 'Image'}]
+                elif 'video' in pathType:
+                    newEntity = [{'Video Name': urlTitle,
+                                  'File Path': urlPath,
+                                  'Entity Type': 'Video'}]
+                elif 'archive' in pathType:
+                    newEntity = [{'Archive Name': urlTitle,
+                                  'File Path': urlPath,
+                                  'Entity Type': 'Archive'}]
+
+            elif parsedURL.scheme.startswith('http'):
+                if '.onion' in actualURL:
+                    newEntity = [{'Onion URL': actualURL,
+                                  'Entity Type': 'Onion Website'}]
+                else:
+                    newEntity = [{'URL': actualURL,
+                                  'Entity Type': 'Website'}]
+            else:
+                newEntity = [{'Phrase': actualURL,
+                              'Entity Type': 'Phrase'}]
+
+            if len(tabToOpen) == 3:
+                if historyMark != -1 and not tabToOpen[2]:
+                    newEntity.append({historyMark: {'Resolution': 'Next Page'}})
+                historyMark = len(returnResults)
+            returnResults.append(newEntity)
+
+        progressValue = 3
+        self.progressSignal.emit(progressValue)
+        if self.cancelled:
+            self.mainWindow.statusBarSignalListener.emit('Cancelled importing entities from Browser.')
+        else:
+            newTabEntities = len(returnResults)
+            for cookie in browserCookies:
+                cookieParents = []
+                cookieURI = cookie['domain'] + cookie['path']
+                if cookieURI.startswith('.'):
+                    cookieURI = cookieURI[1:]
+                for index, tabEntity in enumerate(returnResults[:newTabEntities]):
+                    for key, value in tabEntity[0].items():
+                        if key != 'Entity Type' and cookieURI in value:
+                            cookieParents.append(index)
+                cookieEntity = cookie
+                cookieEntity['Phrase'] = f'Cookie {uuid4()}'
+                cookieEntity['Entity Type'] = 'Phrase'
+
+                cookieParentDict: dict = {}
+                for cookieParent in cookieParents:
+                    cookieParentDict[cookieParent] = {'Resolution': 'Site Cookie', 'Notes': ''}
+
+                cookieResult = [cookieEntity, cookieParentDict]
+                returnResults.append(cookieResult)
+
+            progressValue = 4
+            self.progressSignal.emit(progressValue)
+            self.menuObject.browserTabsImportDoneSignalListener.emit(
+                returnResults,
+                self.importDialog.importToCanvasDropdown.currentText() if
+                self.importDialog.importToCanvasCheckbox.isChecked() else '')

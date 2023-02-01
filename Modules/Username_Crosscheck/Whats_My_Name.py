@@ -39,10 +39,9 @@ class Whats_My_Name:
             file = json.load(web_accounts_list)
 
         with sync_playwright() as p:
-            browser = p.firefox.launch()
+            browser = p.chromium.launch()
             context = browser.new_context(
-                viewport={'width': 1920, 'height': 1080},
-                user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:94.0) Gecko/20100101 Firefox/94.0'
+                viewport={'width': 1920, 'height': 1080}
             )
             page = context.new_page()
 
@@ -59,10 +58,14 @@ class Whats_My_Name:
                         original_uri = site['uri_check'].replace('{account}', social_field)
                         account_existence_code = site['e_code']
                         account_existence_string = site['e_string']
+                        account_missing_string = site['m_string']
+                        account_missing_code = site['m_code']
                         requires_javascript = site.get('requires_javascript', False)
                         if site['valid']:
                             account_existence_string = re.escape(account_existence_string)
                             account_existence_string = re.compile(account_existence_string)
+                            account_missing_string = re.escape(account_missing_string)
+                            account_missing_string = re.compile(account_missing_string)
                             if requires_javascript:
                                 for _ in range(3):
                                     with contextlib.suppress(TimeoutError):
@@ -71,36 +74,46 @@ class Whats_My_Name:
                                         page_source = page.content()
                                         if status_code == account_existence_code and \
                                                 account_existence_string != "" and \
-                                                len(account_existence_string.findall(page_source)) > 0:
-                                            return_result.append([{'URL': original_uri,
-                                                                   'Entity Type': 'Website'},
-                                                                  {uid: {'Resolution': 'Whats My Name Account Match',
-                                                                         'Notes': ''}}])
+                                                len(account_existence_string.findall(page_source)) > 0 and \
+                                                (len(account_missing_string.findall(page_source)) == 0
+                                                if account_missing_code == account_existence_code else True):
+                                            return_result.append(
+                                                [{'URL': original_uri,
+                                                  'Entity Type': 'Website'},
+                                                 {uid: {'Resolution': 'Whats My Name Account Match',
+                                                        'Notes': ''}}])
                                         break
                             else:
                                 post_body = site['post_body']
                                 if post_body != "":
                                     futures[session.post(original_uri, data=post_body, headers=headers,
                                                          timeout=10, allow_redirects=False)] = \
-                                        (account_existence_code, account_existence_string)
+                                        (uid, account_existence_code, account_existence_string,
+                                         account_missing_string, account_missing_code)
                                 else:
                                     futures[session.get(original_uri, headers=headers,
                                                         timeout=10, allow_redirects=False)] = \
-                                        (account_existence_code, account_existence_string)
+                                        (uid, account_existence_code, account_existence_string,
+                                         account_missing_string, account_missing_code)
                 for future in as_completed(futures):
-                    account_existence_code = futures[future][0]
-                    account_existence_string = futures[future][1]
+                    parent_uid = futures[future][0]
+                    account_existence_code = futures[future][1]
+                    account_existence_string = futures[future][2]
+                    account_missing_string = futures[future][3]
+                    account_missing_code = futures[future][4]
                     try:
                         first_response = future.result()
                     except RequestException:
                         continue
                     page_source = first_response.text
-                    if first_response.status_code == account_existence_code and \
-                            account_existence_string != "" and \
-                            len(account_existence_string.findall(page_source)) > 0:
+                    if first_response.status_code == account_existence_code and account_existence_string != "" and \
+                            len(account_existence_string.findall(page_source)) > 0 and \
+                            (len(account_missing_string.findall(page_source)) == 0
+                            if account_missing_code == account_existence_code else True):
                         return_result.append([{'URL': first_response.url,
                                                'Entity Type': 'Website'},
-                                              {uid: {'Resolution': 'Whats My Name Account Match', 'Notes': ''}}])
+                                              {parent_uid: {'Resolution': 'Whats My Name Account Match',
+                                                            'Notes': ''}}])
             page.close()
             browser.close()
         return return_result

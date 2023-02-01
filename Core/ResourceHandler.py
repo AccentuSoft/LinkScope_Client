@@ -20,8 +20,6 @@ from dateutil import parser
 from PySide6.QtCore import QByteArray, QSize, QUrl, Qt
 from PySide6 import QtWidgets, QtGui
 
-from Core.Interface import Stylesheets
-
 
 class ResourceHandler:
 
@@ -432,7 +430,6 @@ class SingleChoicePropertyInput(QtWidgets.QGroupBox):
 
         for option in enforceOptionsSet:
             radioButton = QtWidgets.QRadioButton(option)
-            radioButton.setStyleSheet(Stylesheets.RADIO_BUTTON_STYLESHEET)
             if option == defaultOption:
                 radioButton.setChecked(True)
             else:
@@ -459,7 +456,6 @@ class MultiChoicePropertyInput(QtWidgets.QGroupBox):
 
         for option in enforceOptionsSet:
             checkBox = QtWidgets.QCheckBox(option)
-            checkBox.setStyleSheet(Stylesheets.CHECK_BOX_STYLESHEET)
             if option in defaultOptions:
                 checkBox.setChecked(True)
             else:

@@ -6,7 +6,6 @@ from logging import handlers
 from multiprocessing import Queue
 from pathlib import Path
 from PySide6 import QtWidgets
-from Core.Interface import Stylesheets
 
 
 class MessageHandler:
@@ -26,7 +25,6 @@ class MessageHandler:
         self.linkScopeLogger.info(message, exc_info=exc_info)
         if popUp:
             msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
             QtWidgets.QMessageBox.information(msgBox,
                                               self.mainWindow.tr("Info"),
                                               self.mainWindow.tr(message))
@@ -36,7 +34,6 @@ class MessageHandler:
         self.linkScopeLogger.warning(message, exc_info=exc_info)
         if popUp:
             msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
             QtWidgets.QMessageBox.warning(msgBox,
                                           self.mainWindow.tr("Warning"),
                                           self.mainWindow.tr(message))
@@ -46,7 +43,6 @@ class MessageHandler:
         self.linkScopeLogger.error(message, exc_info=exc_info)
         if popUp:
             msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
             QtWidgets.QMessageBox.critical(msgBox,
                                            self.mainWindow.tr("Error"),
                                            self.mainWindow.tr(message))
@@ -56,7 +52,6 @@ class MessageHandler:
         self.linkScopeLogger.critical(message, exc_info=exc_info)
         if popUp:
             msgBox = QtWidgets.QMessageBox()
-            msgBox.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
             QtWidgets.QMessageBox.critical(msgBox,
                                            self.mainWindow.tr("Critical"),
                                            self.mainWindow.tr(message))

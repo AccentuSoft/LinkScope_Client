@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 from PySide6 import QtWidgets, QtGui
-from Core.Interface import Stylesheets
 
 
 class ToolBarOne(QtWidgets.QToolBar):
@@ -11,7 +10,6 @@ class ToolBarOne(QtWidgets.QToolBar):
         super().__init__(title, parent=parent)
         self.setObjectName(title)
         self.setToolButtonStyle(QtGui.Qt.ToolButtonStyle.ToolButtonTextUnderIcon)
-        self.setStyleSheet(Stylesheets.TOOLBAR_STYLESHEET)
 
         newCanvas = QtGui.QAction("Add Canvas",
                                   self,

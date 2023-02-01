@@ -36,8 +36,8 @@ python -m nuitka --follow-imports --standalone --noinclude-pytest-mode=nofollow 
 --noinclude-custom-mode=setuptools:error --noinclude-IPython-mode=nofollow --enable-plugin=pyside6 ^
 --noinclude-unittest-mode=nofollow --enable-plugin=trio --assume-yes-for-downloads --remove-output --disable-console ^
 --include-data-dir="Resources=Resources" --include-plugin-directory=Modules --include-package=Core ^
---include-data-dir="Core\Entities=Core\Entities" --include-data-dir="Core\Resolutions\Core=Core\Resolutions\Core" ^
---include-data-dir="Modules=Modules" --warn-unusual-code --show-modules --include-data-files="Icon.ico=Icon.ico" ^
+--include-data-dir="Core\Entities=Core\Entities" ^
+--warn-unusual-code --show-modules --include-data-files="Icon.ico=Icon.ico" ^
 --windows-icon-from-ico=".\Icon.ico" --include-data-dir="magic=magic" --windows-company-name=AccentuSoft ^
 --windows-product-name="LinkScope Client" --windows-product-version="1.3.8.0" ^
 --windows-file-description="LinkScope Client Software" ^
@@ -53,7 +53,11 @@ python -m nuitka --follow-imports --standalone --noinclude-pytest-mode=nofollow 
 --include-package=jellyfish ^
 --include-package=ipwhois ^
 --include-package=tweepy ^
---include-data-dir="buildEnv\Lib\site-packages\playwright\driver\package\.local-browsers\firefox-%FIREFOX_VER%\firefox=playwright\driver\package\.local-browsers\firefox-%FIREFOX_VER%\firefox" ^
 ".\LinkScope.py"
+
+:: We need the code, dll & etc files to be present.
+xcopy "buildEnv\Lib\site-packages\playwright\driver\package\.local-browsers\firefox-%FIREFOX_VER%\firefox" "LinkScope.dist\playwright\driver\package\.local-browsers\firefox-%FIREFOX_VER%" /S /E /Y
+xcopy Modules\ LinkScope.dist /S /E /Y
+xcopy Core\Resolutions LinkScope.dist\Core /S /E /Y
 
 call buildEnv\Scripts\deactivate.bat

@@ -80,7 +80,7 @@ LinkScope was built from the ground up to be modular! In this repository's wiki,
 Warnings and best practices on using the software:
 
 ### Do NOT use Resolutions obtained by untrusted sources.
-Resolutions are essentially Python code that ingests information from various data sources. Make sure that the people providing you with code to run are trustworthy, and that you inspect all the modules you use before installing them. Pre-compiled binaries on systems without Python installed are not able to install new resolutions, so compiling custom versions of the client to suit your investigators' needs should effectively mitigate this risk.
+Resolutions are essentially Python code that ingests information from various data sources. Make sure that the people providing you with code to run are trustworthy, and that you inspect all the modules you use before installing them.
 
 ### Do NOT interact with unsafe resources without sufficient protection measures.
 Some resources that an investigator may access through the software may pose a risk to the investigator and/or the assets used during the investigation. Some examples include, but are not limited to: Sites that host malicious code, torrents for malware, or forums that contain illegal materials. Handling the risk of investigating targets and materials that may be harmful to the investigator and/or the equipment used during the investigation is completely up to the investigator.

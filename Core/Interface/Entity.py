@@ -131,7 +131,12 @@ class BaseNode(QGraphicsItemGroup):
               widget: Optional[QtWidgets.QWidget] = ...) -> None:
         painter.setPen(QtCore.Qt.PenStyle.NoPen)
         if self.scene().views()[0].zoom < self.scene().hideZoom:
-            self.labelItem.hide()
+            # Looks stupid, but fixes bug where entities are deselected when zooming out past hideZoom level.
+            if self.isSelected():
+                self.labelItem.hide()
+                self.setSelected(True)
+            else:
+                self.labelItem.hide()
         else:
             self.labelItem.show()
         if self.isSelected():
@@ -324,14 +329,22 @@ class BaseConnector(QGraphicsItemGroup):
         line = QtCore.QLineF(p1, p2)
 
         if line.length() < 45:
-            self.labelItem.hide()
+            if self.isSelected():
+                self.labelItem.hide()
+                self.setSelected(True)
+            else:
+                self.labelItem.hide()
             return
 
         angle = math.atan2(line.dy(), - line.dx())
 
         if (line.length() < 50 + len(self.labelItem.text()) * 15) or \
                 self.scene().views()[0].zoom < self.scene().hideZoom:
-            self.labelItem.hide()
+            if self.isSelected():
+                self.labelItem.hide()
+                self.setSelected(True)
+            else:
+                self.labelItem.hide()
         else:
             self.labelItem.show()
             angle2 = math.degrees(math.pi - angle)
@@ -398,7 +411,11 @@ class ChildListWidget(QtWidgets.QListWidget):
         self.setSortingEnabled(True)
 
     def mouseMoveEvent(self, event: QtGui.QMouseEvent) -> None:
-        itemDragged = self.itemAt(event.pos())
+        super().mouseMoveEvent(event)
+
+        itemDragged = None
+        if event.buttons() == QtCore.Qt.MouseButton.LeftButton:
+            itemDragged = self.itemAt(event.pos())
 
         if itemDragged is None:
             return
@@ -417,5 +434,3 @@ class ChildListWidget(QtWidgets.QListWidget):
             drag.setPixmap(pixmap)
         drag.setHotSpot(QtCore.QPoint(pixmap.rect().width() / 2, pixmap.rect().height() / 2))
         drag.exec_()
-
-        super().mousePressEvent(event)

@@ -28,8 +28,8 @@ python${PYTHON_VER} -m nuitka --follow-imports --standalone --noinclude-pytest-m
 --noinclude-setuptools-mode=nofollow --noinclude-custom-mode=setuptools:error --noinclude-IPython-mode=nofollow \
 --noinclude-unittest-mode=nofollow --enable-plugin=pyside6 --enable-plugin=trio --assume-yes-for-downloads --remove-output \
 --disable-console --include-data-dir="Resources=Resources" --include-plugin-directory=Modules --include-package=Core \
---include-data-dir="Core/Entities=Core/Entities" --include-data-dir="Core/Resolutions/Core=Core/Resolutions/Core" \
---include-data-dir="Modules=Modules" --warn-unusual-code --show-modules --include-data-files="Icon.ico=Icon.ico" \
+--include-data-dir="Core/Entities=Core/Entities" \
+--warn-unusual-code --show-modules --include-data-files="Icon.ico=Icon.ico" \
 --linux-icon="Icon.ico" \
 --include-package-data=playwright \
 --include-package-data=folium --include-package-data=branca \
@@ -43,7 +43,11 @@ python${PYTHON_VER} -m nuitka --follow-imports --standalone --noinclude-pytest-m
 --include-package=jellyfish \
 --include-package=ipwhois \
 --include-package=tweepy \
---include-data-dir="buildEnv/lib/python${PYTHON_VER}/site-packages/playwright/driver/package/.local-browsers/firefox-${FIREFOX_VER}/firefox=playwright/driver/package/.local-browsers/firefox-${FIREFOX_VER}/firefox" \
 LinkScope.py
+
+# We need the code, dll & etc files to be present.
+cp -r "buildEnv/lib/python${PYTHON_VER}/site-packages/playwright/driver/package/.local-browsers/firefox-${FIREFOX_VER}/firefox" "LinkScope.dist/playwright/driver/package/.local-browsers/firefox-${FIREFOX_VER}"
+cp -r Modules/ LinkScope.dist
+cp -r Core/Resolutions LinkScope.dist/Core
 
 deactivate

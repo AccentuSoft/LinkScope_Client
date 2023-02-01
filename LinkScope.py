@@ -12,6 +12,7 @@ import itertools
 import threading
 
 import networkx as nx
+import qdarktheme
 from svglib.svglib import svg2rlg
 from ast import literal_eval
 from uuid import uuid4
@@ -38,7 +39,6 @@ from Core.Interface import CentralPane
 from Core.Interface import DockBarOne, DockBarTwo, DockBarThree
 from Core.Interface import ToolBarOne
 from Core.Interface import MenuBar
-from Core.Interface import Stylesheets
 from Core.Interface.Entity import BaseNode, BaseConnector, GroupNode
 from Core.LQL import LQLQueryBuilder
 from Core.PathHelper import is_path_exists_or_creatable_portable
@@ -92,8 +92,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.dockbarThree.logViewerUpdateThread.endLogging = True
         self.saveTimer.stop()
         # Save the window settings
-        self.SETTINGS.setValue("MainWindow/Geometry", self.saveGeometry().data())
-        self.SETTINGS.setValue("MainWindow/WindowState", self.saveState().data())
+        self.SETTINGS.setGlobalValue("MainWindow/Geometry", self.saveGeometry().data())
+        self.SETTINGS.setGlobalValue("MainWindow/WindowState", self.saveState().data())
         if self.FCOM.isConnected():
             self.FCOM.close()
         self.SETTINGS.setValue("Project/Server/Project", "")
@@ -153,7 +153,6 @@ class MainWindow(QtWidgets.QMainWindow):
         saveAsDialog.setViewMode(QtWidgets.QFileDialog.ViewMode.List)
         saveAsDialog.setFileMode(QtWidgets.QFileDialog.FileMode.AnyFile)
         saveAsDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptMode.AcceptSave)
-        saveAsDialog.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         saveAsDialog.setDirectory(str(Path.home()))
 
         saveAsExec = saveAsDialog.exec()
@@ -208,7 +207,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.SETTINGS.setValue("Project/Name", oldName)
             return
 
-        self.setWindowTitle("LinkScope - " + self.SETTINGS.get('Project/Name', 'Untitled'))
+        self.setWindowTitle("LinkScope - " + self.SETTINGS.value('Project/Name', 'Untitled'))
         self.saveProject()
         self.setStatus(f'Project Saved As: {newProjectPath.name}')
 
@@ -220,7 +219,6 @@ class MainWindow(QtWidgets.QMainWindow):
         saveAsDialog.setViewMode(QtWidgets.QFileDialog.ViewMode.List)
         saveAsDialog.setNameFilter("GraphML (*.xml)")
         saveAsDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptMode.AcceptSave)
-        saveAsDialog.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         saveAsDialog.setDirectory(str(Path.home()))
 
         if saveAsDialog.exec():
@@ -239,7 +237,6 @@ class MainWindow(QtWidgets.QMainWindow):
         openDialog.setOption(QtWidgets.QFileDialog.Option.DontUseNativeDialog, True)
         openDialog.setViewMode(QtWidgets.QFileDialog.ViewMode.List)
         openDialog.setNameFilter("GraphML (*.xml)")
-        openDialog.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         openDialog.setDirectory(str(Path.home()))
 
         if openDialog.exec():
@@ -295,7 +292,6 @@ class MainWindow(QtWidgets.QMainWindow):
         saveAsDialog.setViewMode(QtWidgets.QFileDialog.ViewMode.List)
         saveAsDialog.setNameFilter("GraphML (*.xml)")
         saveAsDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptMode.AcceptSave)
-        saveAsDialog.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         saveAsDialog.setDirectory(str(Path.home()))
 
         if saveAsDialog.exec():
@@ -314,7 +310,6 @@ class MainWindow(QtWidgets.QMainWindow):
         openDialog.setOption(QtWidgets.QFileDialog.Option.DontUseNativeDialog, True)
         openDialog.setViewMode(QtWidgets.QFileDialog.ViewMode.List)
         openDialog.setNameFilter("GraphML (*.xml)")
-        openDialog.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         openDialog.setDirectory(str(Path.home()))
 
         if openDialog.exec():
@@ -390,7 +385,7 @@ class MainWindow(QtWidgets.QMainWindow):
         oldProjectFile = newBaseDir.joinpath(f'{oldName}.linkscope')
         oldProjectFile.unlink(missing_ok=True)
 
-        self.setWindowTitle("LinkScope - " + self.SETTINGS.get('Project/Name', 'Untitled'))
+        self.setWindowTitle("LinkScope - " + self.SETTINGS.value('Project/Name', 'Untitled'))
         self.saveProject()
         statusMessage = f'Project Renamed to: {newName}'
         self.setStatus(statusMessage)
@@ -826,7 +821,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 newSettingValue = newSettings[key]
                 if newSettingValue[1]:
                     # Delete key
-                    self.SETTINGS.pop(key)
+                    self.SETTINGS.removeKey(key)
                 elif newSettingValue[0] != '':
                     # Do not allow blank settings.
                     if key in ['Project/Resolution Result Grouping Threshold', 'Project/Number of Answers Returned',
@@ -848,7 +843,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 newSettingValue = newSettings[key]
                 if newSettingValue[1]:
                     # Delete key
-                    self.SETTINGS.pop(key)
+                    self.SETTINGS.removeKey(key)
                 elif newSettingValue[0] != '':
                     # Do not allow blank settings.
                     self.SETTINGS.setValue(key, newSettingValue[0])
@@ -864,7 +859,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 newSettingValue = newSettings[key]
                 if newSettingValue[1]:
                     # Delete key
-                    self.SETTINGS.pop(key)
+                    self.SETTINGS.removeKey(key)
                 elif newSettingValue[0] != '':
                     # Do not allow blank settings.
                     self.SETTINGS.setValue(key, newSettingValue[0])
@@ -874,7 +869,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.saveProject()
 
     def editProgramSettings(self) -> None:
-        settingsDialog = ProgramEditDialog(self.SETTINGS)
+        settingsDialog = ProgramEditDialog(self)
         if settingsDialog.exec():
             # Save new settings
             newSettings = settingsDialog.newSettings
@@ -882,7 +877,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 newSettingValue = newSettings[key]
                 if newSettingValue[1]:
                     # Delete key
-                    self.SETTINGS.pop(key)
+                    self.SETTINGS.removeKey(key)
                 elif newSettingValue[0] != '':
                     # Do not allow blank settings.
                     self.SETTINGS.setValue(key, newSettingValue[0])
@@ -897,26 +892,26 @@ class MainWindow(QtWidgets.QMainWindow):
             with contextlib.suppress(ValueError):
                 etfVal = int(newSettings["ETF"])
                 self.centralWidget().tabbedPane.entityTextFont.setPointSize(etfVal)
-                self.SETTINGS.setValue("Program/Graphics/EntityTextFontSize", str(newSettings["ETF"]))
+                self.SETTINGS.setGlobalValue("Program/Graphics/Entity Text Font Size", str(newSettings["ETF"]))
             with contextlib.suppress(ValueError):
                 ltfVal = int(newSettings["LTF"])
                 self.centralWidget().tabbedPane.linkTextFont.setPointSize(ltfVal)
-                self.SETTINGS.setValue("Program/Graphics/LinkTextFontSize", str(newSettings["LTF"]))
+                self.SETTINGS.setGlobalValue("Program/Graphics/Link Text Font Size", str(newSettings["LTF"]))
             with contextlib.suppress(ValueError):
                 lfVal = int(newSettings["LF"])
                 self.centralWidget().tabbedPane.hideZoom = -lfVal
                 self.centralWidget().tabbedPane.updateCanvasHideZoom()
-                self.SETTINGS.setValue("Program/Graphics/LabelFade", str(newSettings["LF"]))
+                self.SETTINGS.setGlobalValue("Program/Graphics/Label Fade Scroll Distance", str(newSettings["LF"]))
             etcVal = newSettings["ETC"]
             newEtcColor = QtGui.QColor(etcVal)
             if newEtcColor.isValid():
                 self.centralWidget().tabbedPane.entityTextBrush.setColor(newEtcColor)
-                self.SETTINGS.setValue("Program/Graphics/EntityTextColor", newEtcColor.name())
+                self.SETTINGS.setGlobalValue("Program/Graphics/Entity Text Color", newEtcColor.name())
             ltcVal = newSettings["LTC"]
             newLtcColor = QtGui.QColor(ltcVal)
             if newLtcColor.isValid():
                 self.centralWidget().tabbedPane.linkTextBrush.setColor(newLtcColor)
-                self.SETTINGS.setValue("Program/Graphics/LinkTextColor", newLtcColor.name())
+                self.SETTINGS.setGlobalValue("Program/Graphics/Link Text Color", newLtcColor.name())
 
             self.centralWidget().tabbedPane.updateCanvasGraphics()
             self.saveProject()
@@ -1882,18 +1877,14 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setMenuBar(MenuBar.MenuBar(self))
 
         # Set the main window title and show it to the user.
-        self.setWindowTitle(f"LinkScope {self.SETTINGS.get('Program/Version', 'VU')}"
-                            f" - {self.SETTINGS.get('Project/Name', 'Untitled')}")
-        iconPath = Path(self.SETTINGS.get('Program/BaseDir')) / 'Icon.ico'
+        self.setWindowTitle(f"LinkScope {self.SETTINGS.value('Program/Version', 'N/A')}"
+                            f" - {self.SETTINGS.value('Project/Name', 'Untitled')}")
+        iconPath = Path(self.SETTINGS.value('Program/BaseDir')) / 'Icon.ico'
         appIcon = QtGui.QIcon(str(iconPath))
         self.setWindowIcon(appIcon)
         self.trayIcon = QtWidgets.QSystemTrayIcon(appIcon, self)
         # Whether the icon is shown or not depends on the Desktop environment.
         self.trayIcon.show()
-
-        self.dockbarOne.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
-        self.dockbarTwo.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
-        self.dockbarThree.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
 
         # Autosave approximately once every ten minutes.
         # Margin of error: 500 ms.
@@ -1912,7 +1903,6 @@ class MainWindow(QtWidgets.QMainWindow):
     def __init__(self):
         super(MainWindow, self).__init__()
         self.linkingNodes = False
-        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
 
         # Create or open project
         nW = NewOrOpenWidget(self)
@@ -1990,15 +1980,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.RESOLUTIONMANAGER.loadResolutionsFromDir(
             Path(self.SETTINGS.value("Program/BaseDir")) / "Core" / "Resolutions" / "Core")
 
-        entityTextFont = QtGui.QFont(self.SETTINGS.value("Program/Graphics/EntityTextFontType"),
-                                     int(self.SETTINGS.value("Program/Graphics/EntityTextFontSize")),
-                                     int(self.SETTINGS.value("Program/Graphics/EntityTextFontBoldness")))
-        entityTextBrush = QtGui.QBrush(self.SETTINGS.value("Program/Graphics/EntityTextColor"))
-        linkTextFont = QtGui.QFont(self.SETTINGS.value("Program/Graphics/LinkTextFontType"),
-                                   int(self.SETTINGS.value("Program/Graphics/LinkTextFontSize")),
-                                   int(self.SETTINGS.value("Program/Graphics/LinkTextFontBoldness")))
-        linkTextBrush = QtGui.QBrush(self.SETTINGS.value("Program/Graphics/LinkTextColor"))
-        zoomHide = - int(self.SETTINGS.value("Program/Graphics/LabelFade"))
+        entityTextFont = QtGui.QFont(self.SETTINGS.value("Program/Graphics/Entity Text Font Type"),
+                                     int(self.SETTINGS.value("Program/Graphics/Entity Text Font Size")),
+                                     int(self.SETTINGS.value("Program/Graphics/Entity Text Font Boldness")))
+        entityTextBrush = QtGui.QBrush(self.SETTINGS.value("Program/Graphics/Entity Text Color"))
+        linkTextFont = QtGui.QFont(self.SETTINGS.value("Program/Graphics/Link Text Font Type"),
+                                   int(self.SETTINGS.value("Program/Graphics/Link Text Font Size")),
+                                   int(self.SETTINGS.value("Program/Graphics/Link Text Font Boldness")))
+        linkTextBrush = QtGui.QBrush(self.SETTINGS.value("Program/Graphics/Link Text Color"))
+        zoomHide = - int(self.SETTINGS.value("Program/Graphics/Label Fade Scroll Distance"))
 
         self.setCentralWidget(CentralPane.WorkspaceWidget(self,
                                                           self.MESSAGEHANDLER,
@@ -2412,9 +2402,8 @@ class CreateOrOpenCanvas(QtWidgets.QDialog):
         self.setMinimumSize(400, 200)
 
         createCanvasTitleLabel = QtWidgets.QLabel("Create New Canvas")
-        createCanvasTitleLabel.setStyleSheet(Stylesheets.DOCK_BAR_LABEL)
 
-        createCanvasTitleLabel.setFont(QtGui.QFont("Times", 13, QtGui.QFont.Weight.Bold))
+        createCanvasTitleLabel.setFont(QtGui.QFont("Mono", 13, QtGui.QFont.Weight.Bold))
 
         createCanvasTitleLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         createCanvasNameLabel = QtWidgets.QLabel("New Canvas Name:")
@@ -2428,13 +2417,11 @@ class CreateOrOpenCanvas(QtWidgets.QDialog):
         dialogLayout.addWidget(createCanvasButton, 2, 1, 1, 2)
         # Add some space in the layout
         spacer = QtWidgets.QLabel()
-        spacer.setStyleSheet(Stylesheets.DOCK_BAR_TWO_LINK)
         dialogLayout.addWidget(spacer, 3, 1)
 
         openExistingCanvasTitleLabel = QtWidgets.QLabel("Open Existing Canvas")
-        openExistingCanvasTitleLabel.setStyleSheet(Stylesheets.DOCK_BAR_LABEL)
 
-        openExistingCanvasTitleLabel.setFont(QtGui.QFont("Times", 13, QtGui.QFont.Weight.Bold))
+        openExistingCanvasTitleLabel.setFont(QtGui.QFont("Mono", 13, QtGui.QFont.Weight.Bold))
 
         openExistingCanvasTitleLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         openExistingCanvasNameLabel = QtWidgets.QLabel("Canvas Name:")
@@ -2463,13 +2450,11 @@ class CreateOrOpenCanvas(QtWidgets.QDialog):
         dialogLayout.addWidget(openExistingCanvasButton, 6, 1, 1, 2)
         # Add some space in the layout
         spacer = QtWidgets.QLabel()
-        spacer.setStyleSheet(Stylesheets.DOCK_BAR_TWO_LINK)
         dialogLayout.addWidget(spacer, 7, 1)
 
         openServerCanvasTitleLabel = QtWidgets.QLabel("Open Canvas From Server")
-        openServerCanvasTitleLabel.setStyleSheet(Stylesheets.DOCK_BAR_LABEL)
 
-        openServerCanvasTitleLabel.setFont(QtGui.QFont("Times", 13, QtGui.QFont.Weight.Bold))
+        openServerCanvasTitleLabel.setFont(QtGui.QFont("Mono", 13, QtGui.QFont.Weight.Bold))
 
         openServerCanvasTitleLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         openServerCanvasNameLabel = QtWidgets.QLabel("Canvas Name:")
@@ -2528,38 +2513,28 @@ class NewOrOpenWidget(QtWidgets.QDialog):
         self.setWindowTitle("Create New Project Or Open Existing")
         self.setMinimumSize(700, 300)
         self.setObjectName("settingsWidget")
-        self.setStyleSheet(Stylesheets.SETTINGS_WIDGET_STYLESHEET)
 
         # New Project
         self.createProject = False
         newProjectNameLabel = QtWidgets.QLabel("New Project")
-        newProjectNameLabel.setStyleSheet(Stylesheets.MENUS_STYLESHEET)
         newProjectNameLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
         pProjectPathLabel = QtWidgets.QLabel("Project Path:")
-        pProjectPathLabel.setStyleSheet(Stylesheets.MENUS_STYLESHEET)
         pDirLabel = QtWidgets.QLabel("Directory")
-        pDirLabel.setStyleSheet(Stylesheets.MENUS_STYLESHEET)
         pDirLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         pNameLabel = QtWidgets.QLabel("Name")
-        pNameLabel.setStyleSheet(Stylesheets.MENUS_STYLESHEET)
         pNameLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         pSlashLabel = QtWidgets.QLabel("/")
-        pSlashLabel.setStyleSheet(Stylesheets.MENUS_STYLESHEET)
         pSlashLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
         self.pName = QtWidgets.QLineEdit("Untitled")
-        self.pName.setStyleSheet(Stylesheets.PATH_INPUT_STYLESHEET)
         self.pDir = QtWidgets.QLineEdit("")
-        self.pDir.setStyleSheet(Stylesheets.PATH_INPUT_STYLESHEET)
         self.pDir.setMinimumSize(400, 10)
         self.pDir.setReadOnly(True)
 
         pDirButton = QtWidgets.QPushButton("Select Directory...")
-        pDirButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET)
         pDirButton.clicked.connect(self.selectProjectDirectory)
         newProjectConfirm = QtWidgets.QPushButton("Create")
-        newProjectConfirm.setStyleSheet(Stylesheets.BUTTON_STYLESHEET)
 
         newProjectConfirm.clicked.connect(self.createNewProject)
 
@@ -2577,10 +2552,8 @@ class NewOrOpenWidget(QtWidgets.QDialog):
         # Existing
         self.openProject = None
         openProjectFileLabel = QtWidgets.QLabel("Open Project File")
-        openProjectFileLabel.setStyleSheet(Stylesheets.MENUS_STYLESHEET)
         openProjectFileLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         openProjectButton = QtWidgets.QPushButton("Open...")
-        openProjectButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET)
         openProjectButton.clicked.connect(self.openFilename)
         newOrOpenLayout.addWidget(openProjectFileLabel, 5, 0, 1, 4)
         newOrOpenLayout.addWidget(openProjectButton, 6, 0, 1, 4)
@@ -2605,8 +2578,6 @@ class NewOrOpenWidget(QtWidgets.QDialog):
 
     def selectProjectDirectory(self):
 
-        self.setStyleSheet(Stylesheets.SELECT_PROJECT_STYLESHEET)
-
         filename = QtWidgets.QFileDialog.getExistingDirectory(self,
                                                               "Select Project Directory",
                                                               str(Path.home()),
@@ -2615,8 +2586,6 @@ class NewOrOpenWidget(QtWidgets.QDialog):
             self.pDir.setText(filename)
 
     def openFilename(self):
-
-        self.setStyleSheet(Stylesheets.SELECT_PROJECT_STYLESHEET)
 
         filename = QtWidgets.QFileDialog.getOpenFileName(self,
                                                          "Open Project File",
@@ -2672,7 +2641,6 @@ class ResolutionParametersSelector(QtWidgets.QDialog):
                  windowTitle: str = 'Resolution Parameter Selector') -> None:
         super(ResolutionParametersSelector, self).__init__()
 
-        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         self.setModal(True)
         self.setWindowTitle(windowTitle)
         self.parametersList = []
@@ -2743,10 +2711,8 @@ class ResolutionParametersSelector(QtWidgets.QDialog):
 
             if propertyInputField is not None:
                 propertyKeyLayout.addWidget(propertyInputField)
-                propertyInputField.setStyleSheet(Stylesheets.CHECK_BOX_STYLESHEET)
 
             rememberChoiceCheckbox = QtWidgets.QCheckBox('Remember Choice')
-            rememberChoiceCheckbox.setStyleSheet(Stylesheets.CHECK_BOX_STYLESHEET)
             rememberChoiceCheckbox.setChecked(False)
             propertyKeyLayout.addWidget(rememberChoiceCheckbox)
             propertyKeyLayout.setStretch(1, 1)
@@ -2755,18 +2721,14 @@ class ResolutionParametersSelector(QtWidgets.QDialog):
             self.parametersList.append((key, propertyInputField, rememberChoiceCheckbox))
 
         nextButton = QtWidgets.QPushButton('Next')
-        nextButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET_2)
         nextButton.clicked.connect(self.nextTab)
         previousButton = QtWidgets.QPushButton('Previous')
-        previousButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET_2)
         previousButton.clicked.connect(self.previousTab)
         acceptButton = QtWidgets.QPushButton('Accept')
         acceptButton.setAutoDefault(True)
         acceptButton.setDefault(True)
-        acceptButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET_2)
         acceptButton.clicked.connect(self.accept)
         cancelButton = QtWidgets.QPushButton('Cancel')
-        cancelButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET_2)
         cancelButton.clicked.connect(self.reject)
 
         dialogLayout.addWidget(previousButton, 4, 0, 1, 1)
@@ -2801,14 +2763,15 @@ class ResolutionParametersSelector(QtWidgets.QDialog):
             if resolutionParameterRemember.isChecked():
                 savedParameters[resolutionParameterName] = value
 
-        # Only save paramters after we verify that everything is filled in properly.
+        # Only save parameters after we verify that everything is filled in properly.
         for savedParameter in savedParameters:
             if self.properties[savedParameter].get('global') is True:
-                self.mainWindowObject.SETTINGS.setValue('Resolutions/Global/Parameters/' + savedParameter,
-                                                        savedParameters[savedParameter])
+                self.mainWindowObject.SETTINGS.setGlobalValue('Resolutions/Global/Parameters/' + savedParameter,
+                                                              savedParameters[savedParameter])
             else:
-                self.mainWindowObject.SETTINGS.setValue('Resolutions/' + self.resolutionName + '/' + savedParameter,
-                                                        savedParameters[savedParameter])
+                self.mainWindowObject.SETTINGS.setGlobalValue(
+                    'Resolutions/' + self.resolutionName + '/' + savedParameter,
+                    savedParameters[savedParameter])
 
         super(ResolutionParametersSelector, self).accept()
 
@@ -2824,7 +2787,6 @@ class GraphicsEditDialog(QtWidgets.QDialog):
         self.setMaximumHeight(600)
         self.setMinimumHeight(400)
         self.settings = settingsObject
-        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
 
         editDialogLayout = QtWidgets.QGridLayout()
         self.setLayout(editDialogLayout)
@@ -2843,7 +2805,7 @@ class GraphicsEditDialog(QtWidgets.QDialog):
         resolutionCategoryWidget.setLayout(self.resolutionCategoryLayout)
         resolutionCategoryLabel = QtWidgets.QLabel('Graphics Settings')
 
-        resolutionCategoryLabel.setFont(QtGui.QFont("Times", 13, QtGui.QFont.Weight.Bold))
+        resolutionCategoryLabel.setFont(QtGui.QFont("Mono", 13, QtGui.QFont.Weight.Bold))
         resolutionCategoryLabel.setFrameStyle(QtWidgets.QFrame.Shadow.Raised | QtWidgets.QFrame.Shape.Panel)
 
         resolutionCategoryLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
@@ -2851,11 +2813,9 @@ class GraphicsEditDialog(QtWidgets.QDialog):
         scrollLayout.addWidget(resolutionCategoryWidget)
 
         confirmButton = QtWidgets.QPushButton('Confirm')
-        confirmButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET_2)
         confirmButton.clicked.connect(self.accept)
         editDialogLayout.addWidget(confirmButton, 2, 1, 1, 1)
         cancelButton = QtWidgets.QPushButton('Cancel')
-        cancelButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET_2)
         cancelButton.clicked.connect(self.reject)
         editDialogLayout.addWidget(cancelButton, 2, 0, 1, 1)
 
@@ -2863,38 +2823,33 @@ class GraphicsEditDialog(QtWidgets.QDialog):
         self.settingsValueTextboxes = []
         self.newSettings = {}
 
-        etfSettingTextbox = SettingsIntegerEditTextBox(int(self.settings.value("Program/Graphics/EntityTextFontSize")),
-                                                       "ETF",
-                                                       50, 5)
-        etfSettingTextbox.setStyleSheet(Stylesheets.TEXT_BOX_STYLESHEET)
+        etfSettingTextbox = SettingsIntegerEditTextBox(
+            int(self.settings.value("Program/Graphics/Entity Text Font Size")),
+            "ETF",
+            50, 5)
         self.settingsValueTextboxes.append(etfSettingTextbox)
         self.resolutionCategoryLayout.addRow("Entity Text Font Size", etfSettingTextbox)
 
-        ltfSettingTextbox = SettingsIntegerEditTextBox(int(self.settings.value("Program/Graphics/LinkTextFontSize")),
-                                                       "LTF",
-                                                       50, 5)
-        ltfSettingTextbox.setStyleSheet(Stylesheets.TEXT_BOX_STYLESHEET)
+        ltfSettingTextbox = SettingsIntegerEditTextBox(
+            int(self.settings.value("Program/Graphics/Link Text Font Size")),
+            "LTF",
+            50, 5)
         self.settingsValueTextboxes.append(ltfSettingTextbox)
         self.resolutionCategoryLayout.addRow("Link Text Font Size", ltfSettingTextbox)
 
-        labelFadeSettingTextbox = SettingsIntegerEditTextBox(int(self.settings.value("Program/Graphics/LabelFade")),
-                                                             "LF",
-                                                             12, 0)
-        labelFadeSettingTextbox.setStyleSheet(Stylesheets.TEXT_BOX_STYLESHEET)
+        labelFadeSettingTextbox = SettingsIntegerEditTextBox(
+            int(self.settings.value("Program/Graphics/Label Fade Scroll Distance")),
+            "LF",
+            12, 0)
         self.settingsValueTextboxes.append(labelFadeSettingTextbox)
         self.resolutionCategoryLayout.addRow("Label Fade Threshold", labelFadeSettingTextbox)
-
-        self.colorPicker = QtWidgets.QColorDialog()
-        self.colorPicker.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
-        self.colorPicker.setOption(QtWidgets.QColorDialog.ColorDialogOption.DontUseNativeDialog, True)
 
         etcSettingWidget = QtWidgets.QWidget()
         etcSettingLayout = QtWidgets.QHBoxLayout()
         etcSettingWidget.setLayout(etcSettingLayout)
 
-        etcSettingTextbox = SettingsEditTextBox(self.settings.value("Program/Graphics/EntityTextColor"), "ETC")
-        etcSettingTextbox.setReadOnly(True)
-        etcSettingTextbox.setStyleSheet(Stylesheets.TEXT_BOX_STYLESHEET)
+        etcSettingTextbox = SettingsEditTextBox(self.settings.value("Program/Graphics/Entity Text Color"), "ETC")
+        etcSettingTextbox.setToolTip('Hex color code')
         etcSettingLayout.addWidget(etcSettingTextbox, 5)
 
         etcSettingPalettePrompt = QtWidgets.QPushButton(QtGui.QIcon(resourceHandler.getIcon("colorPicker")),
@@ -2909,9 +2864,8 @@ class GraphicsEditDialog(QtWidgets.QDialog):
         ltcSettingLayout = QtWidgets.QHBoxLayout()
         ltcSettingWidget.setLayout(ltcSettingLayout)
 
-        ltcSettingTextbox = SettingsEditTextBox(self.settings.value("Program/Graphics/LinkTextColor"), "LTC")
-        ltcSettingTextbox.setReadOnly(True)
-        ltcSettingTextbox.setStyleSheet(Stylesheets.TEXT_BOX_STYLESHEET)
+        ltcSettingTextbox = SettingsEditTextBox(self.settings.value("Program/Graphics/Link Text Color"), "LTC")
+        ltcSettingTextbox.setToolTip('Hex color code')
         ltcSettingLayout.addWidget(ltcSettingTextbox, 5)
 
         ltcSettingPalettePrompt = QtWidgets.QPushButton(QtGui.QIcon(resourceHandler.getIcon("colorPicker")),
@@ -2923,14 +2877,14 @@ class GraphicsEditDialog(QtWidgets.QDialog):
         self.resolutionCategoryLayout.addRow("Link Text Color", ltcSettingWidget)
 
     def runEntityColorPicker(self):
-        color = self.colorPicker.getColor(QtGui.QColor(self.settings.value("Program/Graphics/EntityTextColor")),
-                                          title="Select New Entity Text Color")
+        color = QtWidgets.QColorDialog.getColor(QtGui.QColor(self.settings.value("Program/Graphics/Entity Text Color")),
+                                                title="Select New Entity Text Color")
         if color.isValid():
             self.settingsTextboxes[0].setText(color.name())
 
     def runLinkColorPicker(self):
-        color = self.colorPicker.getColor(QtGui.QColor(self.settings.value("Program/Graphics/LinkTextColor")),
-                                          title="Select New Link Text Color")
+        color = QtWidgets.QColorDialog.getColor(QtGui.QColor(self.settings.value("Program/Graphics/Link Text Color")),
+                                                title="Select New Link Text Color")
         if color.isValid():
             self.settingsTextboxes[1].setText(color.name())
 
@@ -2950,15 +2904,14 @@ class GraphicsEditDialog(QtWidgets.QDialog):
 
 class ProgramEditDialog(QtWidgets.QDialog):
 
-    def __init__(self, settingsObject):
+    def __init__(self, mainWindowObject):
         super(ProgramEditDialog, self).__init__()
         self.setModal(True)
         self.setMaximumWidth(850)
         self.setMinimumWidth(600)
         self.setMaximumHeight(600)
         self.setMinimumHeight(400)
-        self.settings = settingsObject
-        self.setStyleSheet(Stylesheets.MENUS_STYLESHEET)
+        self.mainWindow = mainWindowObject
 
         resolutionsEditDialog = QtWidgets.QGridLayout()
         self.setLayout(resolutionsEditDialog)
@@ -2977,7 +2930,7 @@ class ProgramEditDialog(QtWidgets.QDialog):
         resolutionCategoryWidget.setLayout(self.resolutionCategoryLayout)
         resolutionCategoryLabel = QtWidgets.QLabel('Program Settings')
 
-        resolutionCategoryLabel.setFont(QtGui.QFont("Times", 13, QtGui.QFont.Weight.Bold))
+        resolutionCategoryLabel.setFont(QtGui.QFont("Mono", 13, QtGui.QFont.Weight.Bold))
         resolutionCategoryLabel.setFrameStyle(QtWidgets.QFrame.Shadow.Raised | QtWidgets.QFrame.Shape.Panel)
 
         resolutionCategoryLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
@@ -2985,35 +2938,64 @@ class ProgramEditDialog(QtWidgets.QDialog):
         scrollLayout.addWidget(resolutionCategoryWidget)
 
         confirmButton = QtWidgets.QPushButton('Confirm')
-        confirmButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET_2)
         confirmButton.clicked.connect(self.accept)
         resolutionsEditDialog.addWidget(confirmButton, 2, 1, 1, 1)
         cancelButton = QtWidgets.QPushButton('Cancel')
-        cancelButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET_2)
         cancelButton.clicked.connect(self.reject)
         resolutionsEditDialog.addWidget(cancelButton, 2, 0, 1, 1)
 
         self.settingsTextboxes = []
         self.newSettings = {}
         self.settingsSingleChoice = []
+        self.torProfileTextBox = None
 
-        for setting in self.settings:
-            if setting.startswith('Program/'):
-                keyName = setting.split('Program/', 1)[1]
-                # Don't allow users to mess with sensitive settings.
-                if keyName not in ["BaseDir", "Version"] and len(setting.split('/')) == 2:
-                    # A bit redundant to do it this way, but it'll be cleaner if / when more settings are added.
-                    if keyName == "GraphLayout":
-                        settingSingleChoice = SettingsEditSingleChoice(['dot', 'sfdp', 'neato'],
-                                                                       self.settings.value(setting),
-                                                                       setting)
-                        settingSingleChoice.setStyleSheet(Stylesheets.RADIO_BUTTON_STYLESHEET)
-                        self.settingsSingleChoice.append(settingSingleChoice)
-                        self.resolutionCategoryLayout.addRow(keyName, settingSingleChoice)
-                    else:
-                        settingTextbox = SettingsEditTextBox(self.settings.value(setting), setting)
-                        self.settingsTextboxes.append(settingTextbox)
-                        self.resolutionCategoryLayout.addRow(keyName, settingTextbox)
+        for setting, settingValue in self.mainWindow.SETTINGS.getGroupSettings('Program/').items():
+            keyName = setting.split('Program/', 1)[1]
+            # Don't allow users to mess with sensitive settings.
+            if keyName not in ["BaseDir", "Version", "Macros"] and len(setting.split('/')) == 2:
+                # A bit redundant to do it this way, but it'll be cleaner if / when more settings are added.
+                if keyName == "Graph Layout":
+                    settingSingleChoice = SettingsEditSingleChoice(['dot', 'sfdp', 'neato'],
+                                                                   settingValue,
+                                                                   setting)
+                    self.settingsSingleChoice.append(settingSingleChoice)
+                    self.resolutionCategoryLayout.addRow(keyName, settingSingleChoice)
+                elif keyName == "TOR Profile Location":
+                    self.torProfileTextBox = SettingsEditTextBox(settingValue, setting)
+                    self.settingsTextboxes.append(self.torProfileTextBox)
+                    torValueWidget = QtWidgets.QWidget()
+                    torValueWidgetLayout = QtWidgets.QHBoxLayout()
+                    torValueWidget.setLayout(torValueWidgetLayout)
+                    torValueWidgetLayout.addWidget(self.torProfileTextBox)
+                    fileSelectButton = QtWidgets.QPushButton('Select Folder')
+                    fileSelectButton.clicked.connect(self.getTORProfileLocation)
+                    torValueWidgetLayout.addWidget(fileSelectButton)
+
+                    self.resolutionCategoryLayout.addRow(keyName, torValueWidget)
+
+                else:
+                    settingTextbox = SettingsEditTextBox(settingValue, setting)
+                    self.settingsTextboxes.append(settingTextbox)
+                    self.resolutionCategoryLayout.addRow(keyName, settingTextbox)
+
+    def getTORProfileLocation(self):
+        getTORProfileDialog = QtWidgets.QFileDialog()
+        getTORProfileDialog.setOption(QtWidgets.QFileDialog.Option.DontUseNativeDialog, True)
+        getTORProfileDialog.setViewMode(QtWidgets.QFileDialog.ViewMode.List)
+        getTORProfileDialog.setFileMode(QtWidgets.QFileDialog.FileMode.Directory)
+        getTORProfileDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptMode.AcceptOpen)
+        getTORProfileDialog.setDirectory(str(Path.home()))
+
+        if getTORProfileDialog.exec():
+            try:
+                filePath = Path(getTORProfileDialog.selectedFiles()[0])
+                # Basic sanity check.
+                if not (filePath / 'sessionstore-backups').exists():
+                    self.mainWindow.MESSAGEHANDLER.error('Path selected is not a TOR browser profile.\n'
+                                                         'TOR operations may not work.', exc_info=False)
+                self.torProfileTextBox.setText(str(filePath.absolute()))
+            except Exception:
+                self.mainWindow.MESSAGEHANDLER.info('TOR profile path selection cancelled.')
 
     def accept(self) -> None:
         for settingTextbox in self.settingsTextboxes:
@@ -3040,7 +3022,6 @@ class ResolutionsEditDialog(QtWidgets.QDialog):
         self.setMaximumHeight(600)
         self.setMinimumHeight(400)
         self.settings = settingsObject
-        self.setStyleSheet(Stylesheets.MENUS_STYLESHEET)
 
         resolutionsEditDialog = QtWidgets.QGridLayout()
         self.setLayout(resolutionsEditDialog)
@@ -3059,7 +3040,7 @@ class ResolutionsEditDialog(QtWidgets.QDialog):
         resolutionCategoryWidget.setLayout(self.resolutionCategoryLayout)
         resolutionCategoryLabel = QtWidgets.QLabel('Resolutions Settings')
 
-        resolutionCategoryLabel.setFont(QtGui.QFont("Times", 13, QtGui.QFont.Weight.Bold))
+        resolutionCategoryLabel.setFont(QtGui.QFont("Mono", 13, QtGui.QFont.Weight.Bold))
         resolutionCategoryLabel.setFrameStyle(QtWidgets.QFrame.Shadow.Raised | QtWidgets.QFrame.Shape.Panel)
 
         resolutionCategoryLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
@@ -3067,24 +3048,20 @@ class ResolutionsEditDialog(QtWidgets.QDialog):
         scrollLayout.addWidget(resolutionCategoryWidget)
 
         confirmButton = QtWidgets.QPushButton('Confirm')
-        confirmButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET_2)
         confirmButton.clicked.connect(self.accept)
         resolutionsEditDialog.addWidget(confirmButton, 2, 1, 1, 1)
         cancelButton = QtWidgets.QPushButton('Cancel')
-        cancelButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET_2)
         cancelButton.clicked.connect(self.reject)
         resolutionsEditDialog.addWidget(cancelButton, 2, 0, 1, 1)
 
         self.settingsTextboxes = []
         self.newSettings = {}
 
-        for setting in self.settings:
-            settingTextbox = SettingsEditTextBox(self.settings.value(setting), setting)
+        for setting, settingValue in self.settings.getGroupSettings('Resolutions/').items():
+            keyName = setting.split('Resolutions/', 1)[1]
+            settingTextbox = SettingsEditTextBox(settingValue, setting)
             self.settingsTextboxes.append(settingTextbox)
-
-            if setting.startswith('Resolutions/'):
-                keyName = setting.split('Resolutions/', 1)[1]
-                self.resolutionCategoryLayout.addRow(keyName, settingTextbox)
+            self.resolutionCategoryLayout.addRow(keyName, settingTextbox)
 
     def accept(self) -> None:
         for settingTextbox in self.settingsTextboxes:
@@ -3107,7 +3084,6 @@ class LoggingSettingsDialog(QtWidgets.QDialog):
         self.setMaximumHeight(600)
         self.setMinimumHeight(400)
         self.settings = settingsObject
-        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
 
         loggingSettingsLayout = QtWidgets.QGridLayout()
         self.setLayout(loggingSettingsLayout)
@@ -3128,7 +3104,7 @@ class LoggingSettingsDialog(QtWidgets.QDialog):
         loggingCategoryWidget.setLayout(self.loggingCategoryLayout)
         loggingCategoryLabel = QtWidgets.QLabel('Logging Settings')
 
-        loggingCategoryLabel.setFont(QtGui.QFont("Times", 13, QtGui.QFont.Weight.Bold))
+        loggingCategoryLabel.setFont(QtGui.QFont("Mono", 13, QtGui.QFont.Weight.Bold))
         loggingCategoryLabel.setFrameStyle(QtWidgets.QFrame.Shadow.Raised | QtWidgets.QFrame.Shape.Panel)
 
         loggingCategoryLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
@@ -3136,24 +3112,20 @@ class LoggingSettingsDialog(QtWidgets.QDialog):
         scrollLayout.addWidget(loggingCategoryWidget)
 
         confirmButton = QtWidgets.QPushButton('Confirm')
-        confirmButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET_2)
         confirmButton.clicked.connect(self.accept)
         loggingSettingsLayout.addWidget(confirmButton, 2, 1, 1, 1)
         cancelButton = QtWidgets.QPushButton('Cancel')
-        cancelButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET_2)
         cancelButton.clicked.connect(self.reject)
         loggingSettingsLayout.addWidget(cancelButton, 2, 0, 1, 1)
 
         self.settingsTextboxes = []
         self.newSettings = {}
 
-        for setting in self.settings:
-            settingTextbox = SettingsEditTextBox(self.settings.value(setting), setting)
-            settingTextbox.setStyleSheet(Stylesheets.TEXT_BOX_STYLESHEET)
+        for setting, settingValue in self.settings.getGroupSettings('Logging/').items():
+            settingTextbox = SettingsEditTextBox(settingValue, setting)
             self.settingsTextboxes.append(settingTextbox)
-            if setting.startswith('Logging/'):
-                keyName = setting.split('Logging/', 1)[1]
-                self.loggingCategoryLayout.addRow(keyName, settingTextbox)
+            keyName = setting.split('Logging/', 1)[1]
+            self.loggingCategoryLayout.addRow(keyName, settingTextbox)
 
     def accept(self) -> None:
         for settingTextbox in self.settingsTextboxes:
@@ -3176,7 +3148,6 @@ class ProjectEditDialog(QtWidgets.QDialog):
         self.setMaximumHeight(600)
         self.setMinimumHeight(400)
         self.settings = settingsObject
-        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
 
         editDialogLayout = QtWidgets.QGridLayout()
         self.setLayout(editDialogLayout)
@@ -3195,7 +3166,7 @@ class ProjectEditDialog(QtWidgets.QDialog):
         resolutionCategoryWidget.setLayout(self.resolutionCategoryLayout)
         resolutionCategoryLabel = QtWidgets.QLabel('Project Settings')
 
-        resolutionCategoryLabel.setFont(QtGui.QFont("Times", 13, QtGui.QFont.Weight.Bold))
+        resolutionCategoryLabel.setFont(QtGui.QFont("Mono", 13, QtGui.QFont.Weight.Bold))
         resolutionCategoryLabel.setFrameStyle(QtWidgets.QFrame.Shadow.Raised | QtWidgets.QFrame.Shape.Panel)
 
         resolutionCategoryLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
@@ -3203,11 +3174,9 @@ class ProjectEditDialog(QtWidgets.QDialog):
         scrollLayout.addWidget(resolutionCategoryWidget)
 
         confirmButton = QtWidgets.QPushButton('Confirm')
-        confirmButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET_2)
         confirmButton.clicked.connect(self.accept)
         editDialogLayout.addWidget(confirmButton, 2, 1, 1, 1)
         cancelButton = QtWidgets.QPushButton('Cancel')
-        cancelButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET_2)
         cancelButton.clicked.connect(self.reject)
         editDialogLayout.addWidget(cancelButton, 2, 0, 1, 1)
 
@@ -3215,22 +3184,18 @@ class ProjectEditDialog(QtWidgets.QDialog):
         self.settingsSingleChoice = []
         self.newSettings = {}
 
-        for setting in self.settings:
-            if setting == 'Project/Resolution Result Grouping Threshold' or \
-                    setting == 'Project/Number of Answers Returned' or \
-                    setting == 'Project/Question Answering Retriever Value' or \
-                    setting == 'Project/Question Answering Reader Value':
-                keyName = setting.split('Project/', 1)[1]
-                settingTextbox = SettingsEditTextBox(self.settings.value(setting), setting)
-                settingTextbox.setStyleSheet(Stylesheets.TEXT_BOX_STYLESHEET)
+        for setting, settingValue in self.settings.getGroupSettings('Project/').items():
+            keyName = setting.split('Project/', 1)[1]
+            if keyName == 'Resolution Result Grouping Threshold' or \
+                    setting == 'Number of Answers Returned' or \
+                    setting == 'Question Answering Retriever Value' or \
+                    setting == 'Question Answering Reader Value':
+                settingTextbox = SettingsEditTextBox(settingValue, setting)
                 self.settingsTextboxes.append(settingTextbox)
                 self.resolutionCategoryLayout.addRow(keyName, settingTextbox)
 
-            elif setting == 'Project/Symlink or Copy Materials':
-                keyName = setting.split('Project/', 1)[1]
-                settingSingleChoice = SettingsEditSingleChoice(['Symlink', 'Copy'], self.settings.value(setting),
-                                                               setting)
-                settingSingleChoice.setStyleSheet(Stylesheets.RADIO_BUTTON_STYLESHEET)
+            elif keyName == 'Symlink or Copy Materials':
+                settingSingleChoice = SettingsEditSingleChoice(['Symlink', 'Copy'], settingValue, setting)
                 self.settingsSingleChoice.append(settingSingleChoice)
                 self.resolutionCategoryLayout.addRow(keyName, settingSingleChoice)
 
@@ -3332,7 +3297,6 @@ class FindEntityOnCanvasDialog(QtWidgets.QDialog):
             self.setWindowTitle('Regex Find Entity or Link')
         else:
             self.setWindowTitle('Find Entity or Link')
-        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
 
         findLabel = QtWidgets.QLabel('Find:')
 
@@ -3341,10 +3305,8 @@ class FindEntityOnCanvasDialog(QtWidgets.QDialog):
         self.findInput.setPlaceholderText('Type the primary field value to search for')
 
         confirmButton = QtWidgets.QPushButton('Confirm')
-        confirmButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET_2)
         confirmButton.clicked.connect(self.accept)
         cancelButton = QtWidgets.QPushButton('Cancel')
-        cancelButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET_2)
         cancelButton.clicked.connect(self.reject)
 
         autoCompleter = QtWidgets.QCompleter(primaryFieldsList)
@@ -3378,7 +3340,6 @@ class FindEntityOfTypeOnCanvasDialog(QtWidgets.QDialog):
             self.setWindowTitle('Regex Find Entity Of Type')
         else:
             self.setWindowTitle('Find Entity Of Type')
-        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
 
         typeLabel = QtWidgets.QLabel('Entity Type:')
         self.typeInput = QtWidgets.QComboBox()
@@ -3392,10 +3353,8 @@ class FindEntityOfTypeOnCanvasDialog(QtWidgets.QDialog):
         self.findInput.setPlaceholderText('Type the primary field value to search for')
 
         confirmButton = QtWidgets.QPushButton('Confirm')
-        confirmButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET_2)
         confirmButton.clicked.connect(self.accept)
         cancelButton = QtWidgets.QPushButton('Cancel')
-        cancelButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET_2)
         cancelButton.clicked.connect(self.reject)
 
         self.autoCompleters = {}
@@ -3452,7 +3411,6 @@ class FindResolutionDialog(QtWidgets.QDialog):
         self.resolutions = resolutionDict
         self.setModal(True)
         self.setWindowTitle('Find Resolutions')
-        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
 
         dialogLayout = QtWidgets.QGridLayout()
         self.setLayout(dialogLayout)
@@ -3552,7 +3510,6 @@ class MergeEntitiesDialog(QtWidgets.QDialog):
         self.entitiesToMerge = entitiesToMerge
         self.primaryEntityUID = None
         self.otherEntitiesUIDs = []
-        self.setStyleSheet(Stylesheets.MERGE_STYLESHEET)
 
         descriptionLabel = QtWidgets.QLabel("Select the primary entity onto which the fields of the "
                                             "other entities will be merged. The order in which the "
@@ -3582,9 +3539,7 @@ class MergeEntitiesDialog(QtWidgets.QDialog):
         dialogLayout.setRowStretch(3, 1)
 
         acceptButton = QtWidgets.QPushButton('Accept')
-        acceptButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET_2)
         cancelButton = QtWidgets.QPushButton('Cancel')
-        cancelButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET_2)
         acceptButton.clicked.connect(self.accept)
         cancelButton.clicked.connect(self.reject)
         dialogLayout.addWidget(cancelButton, 4, 0, 1, 1)
@@ -3599,7 +3554,6 @@ class MergeEntitiesDialog(QtWidgets.QDialog):
         self.entitiesTable.insertRow(newRowIndex)
         self.entitiesTable.setRowHeight(newRowIndex, 70)
         isPrimaryRadioButton = QtWidgets.QRadioButton()
-        isPrimaryRadioButton.setStyleSheet(Stylesheets.RADIO_BUTTON_STYLESHEET)
         isPrimaryRadioButton.setText(entityJSON[list(entityJSON)[1]])
 
         self.entitiesTable.setCellWidget(newRowIndex, 0, isPrimaryRadioButton)
@@ -3692,10 +3646,8 @@ class MergeTableShiftRowUpDownButtons(QtWidgets.QWidget):
         self.uid = uid
 
         upButton = QtWidgets.QPushButton('^')
-        upButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET)
 
         downButton = QtWidgets.QPushButton('v')
-        downButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET)
 
         upButton.clicked.connect(lambda: self.shiftRow(True))
         downButton.clicked.connect(lambda: self.shiftRow(False))
@@ -3722,7 +3674,6 @@ class SplitEntitiesDialog(QtWidgets.QDialog):
         # for that primary field. This takes up more memory, but less processing time.
         self.splitEntities = []
         self.splitEntitiesWithLinks = []
-        self.setStyleSheet(Stylesheets.MERGE_STYLESHEET)
 
         incomingLinks = list(parent.LENTDB.getIncomingLinks(entityToSplit['uid']))
         outgoingLinks = list(parent.LENTDB.getOutgoingLinks(entityToSplit['uid']))
@@ -3796,7 +3747,6 @@ class SplitEntitiesDialog(QtWidgets.QDialog):
 
         for count, link in enumerate(self.allLinks, start=1):
             selectResolution = QtWidgets.QCheckBox(link['Resolution'])
-            selectResolution.setStyleSheet(Stylesheets.CHECK_BOX_STYLESHEET)
             selectResolution.linkUID = link['uid']
             self.entitiesTable.setCellWidget(newRowIndex, count, selectResolution)
 
@@ -3844,7 +3794,6 @@ class QueryBuilderWizard(QtWidgets.QDialog):
         self.mainWindowObject = mainWindowObject
         self.setModal(True)
         self.setWindowTitle('LQL Query Wizard')
-        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         dialogLayout = QtWidgets.QGridLayout()
         self.setLayout(dialogLayout)
 
@@ -4301,7 +4250,6 @@ class QueryResultsViewer(QtWidgets.QDialog):
         self.mainWindowObject = mainWindowObject
         self.setModal(True)
         self.setWindowTitle('Query Results')
-        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         dialogLayout = QtWidgets.QGridLayout()
         self.setLayout(dialogLayout)
 
@@ -4442,7 +4390,6 @@ class QueryResultsViewer(QtWidgets.QDialog):
         exportDialog.setViewMode(QtWidgets.QFileDialog.ViewMode.List)
         exportDialog.setFileMode(QtWidgets.QFileDialog.FileMode.AnyFile)
         exportDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptMode.AcceptSave)
-        exportDialog.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         exportDialog.setDirectory(str(Path.home()))
 
         exportExec = exportDialog.exec()
@@ -4620,7 +4567,6 @@ class MacroDialog(QtWidgets.QDialog):
         super(MacroDialog, self).__init__()
         self.mainWindowObject = mainWindowObject
         self.setModal(True)
-        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
 
         self.resolutionList = []
         for category in mainWindowObject.RESOLUTIONMANAGER.getResolutionCategories():
@@ -4761,7 +4707,6 @@ class MacroCreatorDialog(QtWidgets.QDialog):
     def __init__(self, resolutionsWithCategoriesList: list):
         super(MacroCreatorDialog, self).__init__()
         self.setWindowTitle('Create new Macro')
-        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
 
         self.viewList = QtWidgets.QListWidget()
         for resolution in resolutionsWithCategoriesList:
@@ -4884,5 +4829,8 @@ class ExtractCyclesThread(QtCore.QThread):
 if __name__ == '__main__':
     # Create a graphical application
     application = QtWidgets.QApplication(sys.argv)
+    application.setOrganizationName("AccentuSoft")
+    application.setApplicationName("LinkScope Client")
+    qdarktheme.setup_theme()
     mainWindow = MainWindow()
     sys.exit(application.exec())

@@ -2,7 +2,6 @@
 
 import contextlib
 from PySide6 import QtWidgets, QtCore, QtCharts, QtGui
-from Core.Interface import Stylesheets
 from datetime import datetime
 from getpass import getuser
 import networkx as nx
@@ -15,7 +14,6 @@ class DockBarThree(QtWidgets.QDockWidget):
     """
 
     def initialiseLayout(self):
-        # self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         childWidget = QtWidgets.QWidget()
         childWidget.setLayout(QtWidgets.QVBoxLayout())
         childWidget.setContentsMargins(0, 0, 0, 0)
@@ -30,7 +28,6 @@ class DockBarThree(QtWidgets.QDockWidget):
         self.tabPane.addTab(self.logViewer, 'Program Log')
         self.tabPane.addTab(self.timeWidget, 'Timeline')
         childWidget2.layout().addWidget(self.chatBox)
-        self.serverStatus.setStyleSheet(Stylesheets.DOCK_BAR_LABEL)
         childWidget.layout().addWidget(self.serverStatus)
 
     def __init__(self, mainWindow, title="Dockbar Three"):
@@ -42,8 +39,7 @@ class DockBarThree(QtWidgets.QDockWidget):
                          QtWidgets.QDockWidget.DockWidgetFeature.DockWidgetClosable)
         self.setWindowTitle(title)
         self.setObjectName(title)
-        self.setMaximumHeight(275)
-        self.setMinimumHeight(275)
+        self.setMinimumHeight(300)
 
         self.tabPane = QtWidgets.QTabWidget()
 
@@ -51,7 +47,6 @@ class DockBarThree(QtWidgets.QDockWidget):
         self.chatBox = ChatBox(self, self.parent())
         self.timeWidget = TimeWidget(self, self.parent())
         self.logViewer = QtWidgets.QPlainTextEdit()
-        self.logViewer.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
 
         # Because we're not going to stop the thread before closing, an error will be thrown by Qt.
         # That error can be safely ignored.
@@ -289,11 +284,9 @@ class TimelineTimescaleSelector(QtWidgets.QLabel):
 
     def __init__(self, timeWidget: TimeWidget):
         super(TimelineTimescaleSelector, self).__init__(parent=timeWidget)
-        self.setStyleSheet("""border: 2px solid rgb(44, 49, 58);""")
 
         self.timeWidget = timeWidget
         self.setMinimumWidth(150)
-        self.setMaximumHeight(150)
 
         self.setLayout(QtWidgets.QFormLayout())
         self.setFrameStyle(QtWidgets.QFrame.Shadow.Sunken)
@@ -491,7 +484,6 @@ class ChatBox(QtWidgets.QWidget):
         self.setLayout(chatLayout)
 
         chatLabel = QtWidgets.QLabel('Project Collaboration Chat')
-        chatLabel.setStyleSheet(Stylesheets.DOCK_BAR_LABEL)
         chatLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.textView = QtWidgets.QPlainTextEdit()
         self.textView.setReadOnly(True)

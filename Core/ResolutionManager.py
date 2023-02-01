@@ -7,8 +7,6 @@ from os import listdir
 from pathlib import Path
 from uuid import uuid4
 from typing import Union
-from shutil import move
-from msgpack import dump, load
 
 
 class ResolutionManager:
@@ -177,31 +175,9 @@ class ResolutionManager:
         except KeyError:
             return False
 
-    def getMacroFilePath(self):
-        return Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) / "Macros.lsmacros"
-
-    def loadMacros(self):
+    def loadMacros(self) -> None:
         # Load AFTER we load resolutions.
-        macroFilePath = self.getMacroFilePath()
+        self.macros = self.mainWindow.SETTINGS.value("Program/Macros", {})
 
-        try:
-            with open(macroFilePath, "rb") as macroFile:
-                self.macros = load(macroFile)
-        except ValueError:
-            # If the Macros file is empty or contains invalid input, ignore it.
-            pass
-        except FileNotFoundError:
-            # Create new placeholder notes file if it doesn't exist.
-            try:
-                macroFilePath.touch(0o700, exist_ok=False)
-                self.mainWindow.MESSAGEHANDLER.info('Created new Macros file.')
-            except FileExistsError:
-                self.mainWindow.MESSAGEHANDLER.error('Race condition occurred while trying to create Macros file.')
-
-    def save(self):
-        macroFilePath = self.getMacroFilePath()
-        macroFilePathTmp = macroFilePath.with_suffix(f'{macroFilePath.suffix}.tmp')
-
-        with open(macroFilePathTmp, "wb") as macroFile:
-            dump(self.macros, macroFile)
-        move(macroFilePathTmp, macroFilePath)
+    def save(self) -> None:
+        self.mainWindow.SETTINGS.setGlobalValue("Program/Macros", self.macros)

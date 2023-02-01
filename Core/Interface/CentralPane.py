@@ -20,7 +20,7 @@ from PySide6.QtWidgets import QGraphicsPixmapItem
 from PySide6.QtSvgWidgets import QGraphicsSvgItem
 from PySide6.QtWebEngineWidgets import QWebEngineView
 
-from Core.Interface import Entity, Stylesheets
+from Core.Interface import Entity
 from Core.ResourceHandler import RichNotesEditor
 from Core.GlobalVariables import hidden_fields
 
@@ -124,7 +124,6 @@ class RenameOrDeleteTabDialog(QtWidgets.QDialog):
 
     def __init__(self, isSynced: bool, currName: str) -> None:
         super(RenameOrDeleteTabDialog, self).__init__()
-        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         self.setModal(True)
         self.setWindowTitle('Rename Or Delete Tab')
 
@@ -755,8 +754,6 @@ class CanvasView(QtWidgets.QGraphicsView):
         self.setTransformationAnchor(QtWidgets.QGraphicsView.ViewportAnchor.AnchorUnderMouse)
         self.setViewportUpdateMode(QtWidgets.QGraphicsView.ViewportUpdateMode.FullViewportUpdate)
         self.setResizeAnchor(QtWidgets.QGraphicsView.ViewportAnchor.AnchorUnderMouse)
-        # self.setVerticalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
-        # self.setHorizontalScrollBarPolicy(QtCore.Qt.ScrollBarAlwaysOff)
         self.setBackgroundBrush(QtGui.QBrush(QtGui.QColor(54, 69, 79)))
         self.setFrameShape(QtWidgets.QFrame.Shape.NoFrame)
 
@@ -769,15 +766,10 @@ class CanvasView(QtWidgets.QGraphicsView):
         self.synced = False
 
         self.menu = QtWidgets.QMenu()
-        self.menu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
         selectMenu = self.menu.addMenu("Select...")
-        selectMenu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
         viewMenu = self.menu.addMenu("Hide / Delete...")
-        viewMenu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
         groupingMenu = self.menu.addMenu("Grouping...")
-        groupingMenu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
         bannersMenu = self.menu.addMenu("Banners...")
-        bannersMenu.setStyleSheet(Stylesheets.MENUS_STYLESHEET_2)
 
         actionSelectChildren = QtGui.QAction('Select Child Nodes',
                                              selectMenu,
@@ -1615,7 +1607,7 @@ class CanvasScene(QtWidgets.QGraphicsScene):
         # No triangulation library on Windows, so sfdp can't be used there.
 
         if graphAlgorithm is None or graphAlgorithm not in ('sfdp', 'neato', 'dot', 'circular'):
-            graphAlgorithm = self.parent().mainWindow.SETTINGS.value("Program/GraphLayout", 'dot')
+            graphAlgorithm = self.parent().mainWindow.SETTINGS.value("Program/Graph Layout", 'dot')
 
         # No real 'links' to group nodes by default (links to internal nodes don't count). This means that the
         #   graph algorithms can create odd graphs where group nodes are concerned.
@@ -2071,7 +2063,6 @@ class PropertiesEditor(QtWidgets.QDialog):
         self.isEditingNode = isNode
 
         self.setWindowTitle("Properties Editor")
-        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         self.setMinimumSize(500, 300)
         self.objectJson = objectJson
         self.canvas = canvas
@@ -2091,9 +2082,7 @@ class PropertiesEditor(QtWidgets.QDialog):
                 valueField = QtWidgets.QLineEdit(str(objectJson[key]))
             self.itemProperties.addRow(keyField, valueField)
         acceptButton = QtWidgets.QPushButton("Confirm")
-        acceptButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET)
         cancelButton = QtWidgets.QPushButton("Cancel")
-        cancelButton.setStyleSheet(Stylesheets.BUTTON_STYLESHEET)
         acceptButton.setAutoDefault(True)
         acceptButton.setDefault(True)
         acceptButton.clicked.connect(self.accept)
@@ -2221,7 +2210,6 @@ class SendToOtherTabCanvasSelector(QtWidgets.QDialog):
 
     def __init__(self, canvasNames: list):
         super(SendToOtherTabCanvasSelector, self).__init__()
-        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         self.setModal(True)
         self.setWindowTitle('Move Selected Entities to New Canvas')
 
@@ -2251,7 +2239,6 @@ class BannerSelector(QtWidgets.QDialog):
 
     def __init__(self, bannerDict: dict):
         super(BannerSelector, self).__init__()
-        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         self.setModal(True)
         self.setWindowTitle('Select Banner')
 

@@ -3,7 +3,6 @@
 from pathlib import Path
 import magic
 from PySide6 import QtWidgets, QtCore, QtGui
-from Core.Interface import Stylesheets
 from Core.ResourceHandler import MinSizeStackedLayout, RichNotesEditor
 from Core.GlobalVariables import hidden_fields_dockbars
 
@@ -165,13 +164,10 @@ class EntityDetails(QtWidgets.QWidget):
         oneLinkRelPanel.setMaximumHeight(150)
         oneLinkRelPanel.setLayout(oneLinkRelLayout)
         self.linkParent = SingleLinkItem(self, mainWindow)
-        self.linkParent.setStyleSheet(Stylesheets.DOCK_BAR_TWO_LINK)
         self.linkIcon = QtWidgets.QLabel("")
         self.linkIcon.setMaximumHeight(90)
-        self.linkIcon.setStyleSheet(Stylesheets.DOCK_BAR_TWO_LINK)
         self.linkIcon.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.linkChild = SingleLinkItem(self, mainWindow)
-        self.linkChild.setStyleSheet(Stylesheets.DOCK_BAR_TWO_LINK)
         oneLinkRelLayout.addWidget(self.linkParent)
         oneLinkRelLayout.addWidget(self.linkIcon)
         oneLinkRelLayout.addWidget(self.linkChild)
@@ -444,7 +440,6 @@ class RelationshipsTable(QtWidgets.QTreeWidget):
     def __init__(self, parent, mainWindow, uidLabel: QtWidgets.QLabel = None, incomingOrOutgoing: int = None):
         super().__init__(parent=parent)
 
-        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         self.mainWindow = mainWindow
         self.incomingOrOutgoing = incomingOrOutgoing
         self.uidLabel = uidLabel
@@ -477,7 +472,6 @@ class LinksTable(QtWidgets.QTreeWidget):
     def __init__(self, parent, mainWindow):
         super().__init__(parent=parent)
 
-        self.setStyleSheet(Stylesheets.MAIN_WINDOW_STYLESHEET)
         self.mainWindow = mainWindow
 
     def mousePressEvent(self, event):
@@ -545,7 +539,6 @@ class Oracle(QtWidgets.QWidget):
         self.setLayout(oracleLayout)
 
         self.answerLabel = QtWidgets.QLabel("Answer Section")
-        self.answerLabel.setStyleSheet(Stylesheets.DOCK_BAR_LABEL)
         self.answerLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         oracleLayout.addWidget(self.answerLabel, 1, 0, 1, 2)
         self.answerSection = QtWidgets.QPlainTextEdit()
@@ -556,7 +549,6 @@ class Oracle(QtWidgets.QWidget):
         oracleLayout.addWidget(self.answerSection, 2, 0, 1, 2)
 
         self.questionLabel = QtWidgets.QLabel("Ask a Question")
-        self.questionLabel.setStyleSheet(Stylesheets.DOCK_BAR_LABEL)
         self.questionLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         oracleLayout.addWidget(self.questionLabel, 3, 0, 1, 2)
         self.questionSection = QtWidgets.QLineEdit()

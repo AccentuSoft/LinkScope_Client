@@ -4,6 +4,7 @@ from msgpack import dump
 from shutil import move
 from pathlib import Path
 from Core.PathHelper import is_path_exists_or_creatable_portable
+from PySide6.QtCore import QSettings
 
 
 class SettingsObject(dict):
@@ -21,19 +22,43 @@ class SettingsObject(dict):
 
     def __init__(self):
         super().__init__()
-        self.setValue("Program/BaseDir", "Unset")  # dirname(abspath(getsourcefile(lambda:0))) + "/../" )
-        self.setValue("Program/Version", "v1.4.5")
-        self.setValue("Program/DarkWeb/TORProfileLocation", "")
-        self.setValue("Program/GraphLayout", "dot")
-        self.setValue("Program/Graphics/EntityTextFontType", "Mono")
-        self.setValue("Program/Graphics/EntityTextFontSize", "11")
-        self.setValue("Program/Graphics/EntityTextFontBoldness", "700")
-        self.setValue("Program/Graphics/LinkTextFontType", "Mono")
-        self.setValue("Program/Graphics/LinkTextFontSize", "11")
-        self.setValue("Program/Graphics/LinkTextFontBoldness", "700")
-        self.setValue("Program/Graphics/EntityTextColor", "#000000")  # RGB
-        self.setValue("Program/Graphics/LinkTextColor", "#000000")  # RGB
-        self.setValue("Program/Graphics/LabelFade", "3")
+        self.globalSettings = QSettings()
+        self.globalSettings.setValue("Program/Version", "v1.5.0")
+        self.globalSettings.setValue("Program/TOR Profile Location",
+                                     self.globalSettings.value("Program/TOR Profile Location", ""))
+        self.globalSettings.setValue("Program/BaseDir",
+                                     self.globalSettings.value("Program/BaseDir", "Unset"))
+
+        # The value '20' equates to logging.INFO
+        # It's not necessary to set this, but we will for
+        #   the sake of completeness
+        self.globalSettings.setValue("Logging/Severity",
+                                     self.globalSettings.value("Logging/Severity", "20"))
+        self.globalSettings.setValue("Logging/Logfile",
+                                     self.globalSettings.value("Logging/Logfile",
+                                                               str(Path.home() / 'LinkScope_logfile.log')))
+
+        self.globalSettings.setValue("Program/Graph Layout",
+                                     self.globalSettings.value("Program/Graph Layout", "dot"))
+        self.globalSettings.setValue("Program/Graphics/Entity Text Font Type",
+                                     self.globalSettings.value("Program/Graphics/Entity Text Font Type", "Mono"))
+        self.globalSettings.setValue("Program/Graphics/Entity Text Font Size",
+                                     self.globalSettings.value("Program/Graphics/Entity Text Font Size", "11"))
+        self.globalSettings.setValue("Program/Graphics/Entity Text Font Boldness",
+                                     self.globalSettings.value("Program/Graphics/Entity Text Font Boldness", "700"))
+        self.globalSettings.setValue("Program/Graphics/Link Text Font Type",
+                                     self.globalSettings.value("Program/Graphics/Link Text Font Type", "Mono"))
+        self.globalSettings.setValue("Program/Graphics/Link Text Font Size",
+                                     self.globalSettings.value("Program/Graphics/Link Text Font Size", "11"))
+        self.globalSettings.setValue("Program/Graphics/Link Text Font Boldness",
+                                     self.globalSettings.value("Program/Graphics/Link Text Font Boldness", "700"))
+        self.globalSettings.setValue("Program/Graphics/Entity Text Color",
+                                     self.globalSettings.value("Program/Graphics/Entity Text Color", "#000000"))
+        self.globalSettings.setValue("Program/Graphics/Link Text Color",
+                                     self.globalSettings.value("Program/Graphics/Link Text Color", "#000000"))
+        self.globalSettings.setValue("Program/Graphics/Label Fade Scroll Distance",
+                                     self.globalSettings.value("Program/Graphics/Label Fade Scroll Distance", "3"))
+
         self.setValue("Project/Name", "Untitled")
         self.setValue("Project/BaseDir", "")
         self.setValue("Project/FilesDir", "")
@@ -48,20 +73,45 @@ class SettingsObject(dict):
         self.setValue("Project/Server/Project", "")
         self.setValue("Project/Server/Collectors", "{}")
 
-        # The value '20' equates to logging.INFO
-        # It's not necessary to set this, but we will for
-        #   the sake of completeness
-        self.setValue("Logging/Severity", "20")
-        self.setValue("Logging/Logfile", str(Path.home() / 'LinkScope_logfile.log'))
+    def getGroupSettings(self, settingsGroup: str) -> dict:
+        if not settingsGroup.endswith('/'):
+            settingsGroup += '/'
+        settingsDict = {}
+        for setting in self.globalSettings.allKeys():
+            if setting.startswith(settingsGroup):
+                settingsDict[setting] = self.globalSettings.value(setting)
+        for setting in self:
+            if setting.startswith(settingsGroup):
+                settingsDict[setting] = self[setting]
+        return dict(sorted(settingsDict.items()))
 
-    # Usability Alias
-    def setValue(self, key, value):
+    def setValue(self, key, value) -> None:
+        if self.globalSettings.contains(key):
+            self.globalSettings.setValue(key, value)
         self[key] = value
 
+    def setGlobalValue(self, key, value) -> None:
+        """
+        Helper in the case we want to be explicit in setting a value globally.
+        """
+        self.globalSettings.setValue(key, value)
+
     def value(self, key, alt=None):
+        if self.globalSettings.contains(key):
+            return self.globalSettings.value(key)
         return self.get(key, alt)
 
-    def save(self):
+    def removeKey(self, key) -> bool:
+        try:
+            if self.globalSettings.contains(key):
+                self.globalSettings.remove(key)
+            else:
+                self.pop(key)
+            return True
+        except KeyError:
+            return False
+
+    def save(self) -> None:
         # Save and then move to prevent corruption if the application closes unexpectedly.
         actualSavePath = str(Path(self.value("Project/BaseDir")).joinpath(self.value("Project/Name") + ".linkscope"))
         if is_path_exists_or_creatable_portable(actualSavePath):
@@ -69,7 +119,12 @@ class SettingsObject(dict):
             with open(tempSavePath, "wb") as projectFile:
                 dump(self, projectFile)
             move(tempSavePath, actualSavePath)
+        self.globalSettings.sync()
+        globalSettingsSavingError = self.globalSettings.status()
+        if globalSettingsSavingError != self.globalSettings.Status.NoError:
+            raise Exception(f'Could not save global settings: {globalSettingsSavingError}')
 
-    def load(self, savedDict: dict):
+    def load(self, savedDict: dict) -> None:
+        # No need to do anything with global settings.
         for key in savedDict:
             self[key] = savedDict[key]
