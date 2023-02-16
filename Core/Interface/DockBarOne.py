@@ -174,8 +174,6 @@ class EntityList(QtWidgets.QTreeWidget):
         """
         Handle dragging of entities onto canvas.
         """
-        super().mouseMoveEvent(event)
-
         if event.buttons() == QtCore.Qt.MouseButton.LeftButton:
             itemDragged = self.itemAt(event.pos())
         else:
