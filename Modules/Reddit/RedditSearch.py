@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
 
-class Reddit:
+class RedditSearch:
     name = "Reddit Comments and Submissions Lookup"
     category = "Reddit"
     description = "Search Reddit for Phrases or Persons ('Authors') sorted by most recent."
     originTypes = {'Phrase', 'Person'}
-    resultTypes = {'Phrase'}
+    resultTypes = {'Reddit Comment', 'Social Media Handle', 'Reddit Subreddit'}
     parameters = {'Content to search': {'description': "Select the type of content to search:\n The Comments endpoint "
                                                        "will search for users' comments.\n The Submission will "
                                                        "look for posts by users in subreddits.",
