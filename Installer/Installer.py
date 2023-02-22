@@ -763,10 +763,7 @@ class InstallWizard(QtWidgets.QWizard):
         self.trayIcon.show()
 
         if len(sys.argv) < 5:
-            latestReleaseDetails = requests.get('https://github.com/AccentuSoft/LinkScope_Client/releases/latest',
-                                                headers={'Accept': 'application/json'})
-            latestVersion = latestReleaseDetails.json()['tag_name']
-            downloadURLBase = f"https://github.com/AccentuSoft/LinkScope_Client/releases/download/{latestVersion}/"
+            downloadURLBase = f"https://github.com/AccentuSoft/LinkScope_Client/releases/latest/download/"
 
             if self.currentOS == 'Windows':
                 try:
