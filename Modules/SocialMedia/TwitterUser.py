@@ -50,7 +50,7 @@ class TwitterUser:
 
         arguments = argparse.Namespace(citation=None, verbosity=0, dumpLocals=False, retries=3, maxResults=None,
                                        format=None, jsonl=True, withEntity=False, since=None, progress=False,
-                                       scraper='twitter-user', isUserId=False, username='')
+                                       scraper='twitter-user', isUserId=False, user='')
 
         if parameters['Username or User ID'] == 'User IDs':
             arguments.isUserId = True
@@ -87,13 +87,17 @@ class TwitterUser:
                                    'Place': str(tweetItem.place),
                                    'Entity Type': 'Tweet',
                                    'Date Created': tweetItem.date.isoformat(),
-                                   'Notes': str(tweetItem.content)},
+                                   'Notes': str(tweetItem.rawContent)},
                                   {parentItemIndex: {'Resolution': 'Tweet'}}])
-            if tweetItem.outlinks:
-                for link in set(tweetItem.outlinks):
-                    returnResults.append([{'URL': link,
-                                           'Entity Type': 'Website'},
-                                          {selfItemIndex: {'Resolution': 'External Link in Tweet'}}])
+            if tweetItem.links:
+                seen_urls = set()
+                for link in tweetItem.links:
+                    link_url = link.url
+                    if link_url not in seen_urls:
+                        seen_urls.add(link_url)
+                        returnResults.append([{'URL': link.url,
+                                               'Entity Type': 'Website'},
+                                              {selfItemIndex: {'Resolution': 'External Link in Tweet'}}])
             if tweetItem.cashtags:
                 for cashtag in set(tweetItem.cashtags):
                     returnResults.append([{'Ticker ID': cashtag,
@@ -199,9 +203,9 @@ class TwitterUser:
                 continue
             if primaryField.startswith('@'):
                 primaryField = primaryField[1:]
-            arguments.username = primaryField
+            arguments.user = primaryField
 
-            scraper = TwitterUserScraper.cli_from_args(arguments)
+            scraper = TwitterUserScraper._cli_from_args(arguments)
 
             for index, item in enumerate(scraper.get_items(), start=1):
                 if arguments.since is not None and item.date < arguments.since:
@@ -227,7 +231,7 @@ class TwitterUser:
                                            'Verified': str(item.user.verified),
                                            'Display Name': str(item.user.displayname),
                                            'Location': str(item.user.location),
-                                           'Description': item.user.description,
+                                           'Description': item.user.renderedDescription,
                                            'Protected': str(item.user.protected),
                                            'Followers': str(item.user.followersCount),
                                            'Following': str(item.user.friendsCount),
