@@ -13,6 +13,7 @@ import threading
 
 import networkx as nx
 import qdarktheme
+from shutil import rmtree
 from svglib.svglib import svg2rlg
 from ast import literal_eval
 from uuid import uuid4
@@ -2040,6 +2041,7 @@ class MainWindow(QtWidgets.QMainWindow):
 class ReportWizard(QtWidgets.QWizard):
     def __init__(self, parent):
         super(ReportWizard, self).__init__(parent=parent)
+        self.reportTempFolder = tempfile.mkdtemp()
 
         self.primaryFieldsList = []
 
@@ -2113,8 +2115,7 @@ class ReportWizard(QtWidgets.QWizard):
         viewPortBool = reportData[2].get('ViewPort')
 
         canvasPicture = self.parent().getPictureOfCanvas(canvas, viewPortBool, True)
-        temp_dir = tempfile.TemporaryDirectory()
-        canvasImagePath = Path(temp_dir.name) / 'canvas.png'
+        canvasImagePath = Path(self.reportTempFolder) / 'canvas.png'
         canvasPicture.save(str(canvasImagePath), "PNG")
 
         # timelinePicture = self.parent().dockbarThree.timeWidget.takePictureOfView(False)
@@ -2137,8 +2138,7 @@ class ReportWizard(QtWidgets.QWizard):
         except Exception as exc:
             self.parent().MESSAGEHANDLER.error("Could not generate report: " + str(exc), popUp=True, exc_info=True)
         finally:
-            # Technically not necessary as the temp directory is deleted.
-            canvasImagePath.unlink(missing_ok=True)
+            rmtree(self.reportTempFolder)
 
 
 class InitialConfigPage(QtWidgets.QWizardPage):
@@ -2243,6 +2243,7 @@ class SummaryPage(QtWidgets.QWizardPage):
 class EntityPage(QtWidgets.QWizardPage):
     def __init__(self, parent: ReportWizard):
         super(EntityPage, self).__init__(parent=parent.parent())
+        self.reportWizard = parent
 
         self.setTitle(self.tr(f"Entity Page Wizard"))
         self.setMinimumSize(300, 700)
@@ -2323,8 +2324,7 @@ class EntityPage(QtWidgets.QWizardPage):
             data = {'EntityNotes': self.inputNotesEdit.toPlainText(), 'EntityImage': self.inputImageEdit.text()}
         else:
             if 'PNG' in str(self.defaultpic):
-                temp_dir = tempfile.TemporaryDirectory()
-                imagePath = Path(temp_dir.name) / 'entity.png'
+                imagePath = Path(self.reportWizard.reportTempFolder) / (str(uuid4()) + '.png')
                 with open(imagePath, 'wb') as tempFile:
                     tempFile.write(bytearray(self.defaultpic.data()))
 
@@ -2344,8 +2344,7 @@ class EntityPage(QtWidgets.QWizardPage):
                     fileContents = contents.replace(heightMatches, b' ')
                 fileContents = fileContents.replace(b'<svg ', b'<svg height="150" width="150" ')
 
-                temp_dir = tempfile.TemporaryDirectory()
-                imagePath = Path(temp_dir.name) / 'entity.svg'
+                imagePath = Path(self.reportWizard.reportTempFolder) / (str(uuid4()) + '.svg')
                 with open(imagePath, 'wb') as tempFile:
                     tempFile.write(bytearray(fileContents))
 
