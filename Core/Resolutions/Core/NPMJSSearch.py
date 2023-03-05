@@ -21,8 +21,7 @@ class NPMJSSearch:
         for entity in entityJsonList:
             primaryField = entity[list(entity)[1]].lower()
 
-            string_checks = set()
-            string_checks.add(''.join(primaryField.split(' ')))
+            string_checks = {''.join(primaryField.split(' '))}
             string_checks.add('_'.join(primaryField.split(' ')))
             string_checks.add('-'.join(primaryField.split(' ')))
 

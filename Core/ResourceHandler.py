@@ -27,11 +27,11 @@ class ResourceHandler:
         return self.icons[iconName]
 
     # Load all resources needed.
-    def __init__(self, mainWindow, messageHandler) -> None:
+    def __init__(self, mainWindow) -> None:
         self.mainWindow = mainWindow
-        self.messageHandler = messageHandler
         self.programBaseDirPath = Path(self.mainWindow.SETTINGS.value("Program/BaseDir"))
         self.entityCategoryList = {}
+        self.moduleAssetPaths = []
 
         self.icons = {"uploading": str(self.programBaseDirPath / "Resources" / "Icons" / "Uploading.png"),
                       "uploaded": str(self.programBaseDirPath / "Resources" / "Icons" / "Uploaded.png"),
@@ -61,7 +61,7 @@ class ResourceHandler:
             r"""(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)])"""),
             'Phonenumber': re.compile(r"""^(\+|00)?[0-9() \-]{3,32}$"""),
             'String': re.compile(r""".+"""),
-            'URL': re.compile(r"""^(?:(?:http|ftp)s?|file)://(\S(?<!\.)){1,63}(\.(\S(?<!\.)){1,63})+$"""),
+            'URL': re.compile(r"""[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)"""),
             'Onion': re.compile(r"""^https?://\w{56}\.onion/?(\S(?<!\.))*(\.(\S(?<!\.))*)?$"""),
             'Domain': re.compile(r"""^(\S(?<!\.)(?!/)(?<!/)){1,63}(\.(\S(?<!\.)(?!/)(?<!/)){1,63})+$"""),
             'Float': re.compile(r"""^([-+])?(\d|\.(?=\d))+$"""),
@@ -88,8 +88,7 @@ class ResourceHandler:
         for entity in self.entityCategoryList[category]:
             entityValue = self.entityCategoryList[category][entity]
             eList.append((self.getBareBonesEntityJson(entity),
-                          entityValue['Icon']
-                          ))
+                          entityValue['Icon']))
         return eList
 
     def getEntityAttributes(self, entityType) -> Union[None, list]:
@@ -100,8 +99,8 @@ class ResourceHandler:
                     aList.extend(iter(self.entityCategoryList[category][entityType]['Attributes']))
                     break
         except KeyError:
-            self.messageHandler.error("Attempted to get attributes for "
-                                      "nonexistent entity type: " + str(entityType), True)
+            self.mainWindow.MESSAGEHANDLER.error(
+                f"Attempted to get attributes for nonexistent entity type: {entityType}", True)
             return None
         return aList
 
@@ -157,13 +156,24 @@ class ResourceHandler:
         result = attrCheck.findall(attribute)
         return len(result) == 1
 
-    def addRecognisedEntityTypes(self, entityFile: Path) -> bool:
+    def getIconPathForIconFile(self, iconFile: str) -> Union[None, Path]:
+        iconPath = self.programBaseDirPath / "Resources" / "Icons" / iconFile
+        if iconPath.exists():
+            return iconPath
+        for assetPath in self.moduleAssetPaths:
+            iconPath = assetPath / iconFile
+            if iconPath.exists():
+                return iconPath
+        return self.programBaseDirPath / "Resources" / "Icons" / "Default.svg"
+
+    def addRecognisedEntityTypes(self, entityFile: Path) -> list:
+        entityTypesAdded = []
         try:
             tree = parse(entityFile, forbid_dtd=True, forbid_entities=True, forbid_external=True)
         except Exception as exc:
-            self.mainWindow.MESSAGEHANDLER.warning('Error occurred when loading entities from '
-                                                   + str(entityFile) + ': ' + str(exc) + ', skipping.')
-            return False
+            self.mainWindow.MESSAGEHANDLER.warning(
+                f'Error occurred when loading entities from {entityFile}: {exc}, skipping.')
+            return []
 
         root = tree.getroot()
 
@@ -198,12 +208,13 @@ class ResourceHandler:
                     self.entityCategoryList[category] = {}
                 self.entityCategoryList[category][entityName] = {
                     'Attributes': attributesDict,
-                    'Icon': str(self.programBaseDirPath / "Resources" / "Icons" / icon)}
+                    'Icon': str(self.getIconPathForIconFile(icon))}
+                entityTypesAdded.append(f'{category}/{entityName}')
             except (KeyError, AttributeError) as err:
                 # Ignore malformed entities
-                self.messageHandler.error(f'Error: {str(err)}', popUp=False)
+                self.mainWindow.MESSAGEHANDLER.error(f'Error: {str(err)}', popUp=False)
                 continue
-        return True
+        return entityTypesAdded
 
     def loadCoreEntities(self) -> None:
         entDir = self.programBaseDirPath / "Core" / "Entities"
@@ -230,7 +241,8 @@ class ResourceHandler:
                         eJson[attribute] = self.entityCategoryList[category][entityType]['Attributes'][attribute][0]
                     break
         except KeyError:
-            self.messageHandler.error(f"Attempted to get attributes for malformed entity type: {entityType}", True)
+            self.mainWindow.MESSAGEHANDLER.error(
+                f"Attempted to get attributes for malformed entity type: {entityType}", True)
             return None
         eJson['Entity Type'] = entityType
         eJson['Date Created'] = None
@@ -267,8 +279,8 @@ class ResourceHandler:
                         if self.entityCategoryList[category][entityType]['Attributes'][attribute][2]:
                             return attribute
         except KeyError:
-            self.messageHandler.error(f"Attempted to get primary attribute for malformed entity type: {entityType}",
-                                      True)
+            self.mainWindow.MESSAGEHANDLER.error(
+                f"Attempted to get primary attribute for malformed entity type: {entityType}", True)
         return None
 
     def getBareBonesEntityJson(self, entityType: str) -> Union[dict, None]:
@@ -280,7 +292,8 @@ class ResourceHandler:
                         eJson[attribute] = self.entityCategoryList[category][entityType]['Attributes'][attribute][0]
                     break
         except KeyError:
-            self.messageHandler.error(f"Attempted to get attributes for malformed entity type: {entityType}", True)
+            self.mainWindow.MESSAGEHANDLER.error(
+                f"Attempted to get attributes for malformed entity type: {entityType}", True)
             return None
         eJson['Entity Type'] = entityType
 
@@ -314,7 +327,7 @@ class ResourceHandler:
 
         return linkJson
 
-    def getEntityDefaultPicture(self, entityType) -> QByteArray:
+    def getEntityDefaultPicture(self, entityType: str) -> QByteArray:
         picture = self.programBaseDirPath / "Resources" / "Icons" / "Default.svg"
         try:
             for category in self.entityCategoryList:
@@ -324,8 +337,8 @@ class ResourceHandler:
                         picture = entityPicture
                     break
         except KeyError:
-            self.messageHandler.warning("Attempted to get icon for "
-                                        "nonexistent entity type: " + str(entityType), popUp=False)
+            self.mainWindow.MESSAGEHANDLER.warning(
+                f"Attempted to get icon for nonexistent entity type: {entityType}", popUp=False)
         finally:
             with open(picture, 'rb') as pictureFile:
                 pictureContents = pictureFile.read()

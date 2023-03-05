@@ -43,37 +43,36 @@ class IPQualityScore_Email:
                                                                         "query. Please contact IPQualityScore " \
                                                                         " support if this error persists.":
                 return "Your account doesn't have sufficient credits to complete this operation."
-            else:
-                valid = f"valid: {response['valid']}\n"
-                disposable = f"disposable: {response['disposable']}\n"
-                smtp_score = f"smtp_score: {response['smtp_score']}\n"
-                overall_score = f"overall_score: {response['overall_score']}\n"
-                generic = f"generic: {response['generic']}\n"
-                common = f"common: {response['common']}\n"
-                dns_valid = f"dns_valid: {response['dns_valid']}\n"
-                honeypot = f"honeypot: {response['honeypot']}\n"
-                deliverability = f"deliverability: {response['deliverability']}\n"
-                frequent_complainer = f"frequent_complainer: {response['frequent_complainer']}\n"
-                spam_trap_score = f"spam_trap_score: {response['spam_trap_score']}\n"
-                catch_all = f"catch_all: {response['catch_all']}\n"
-                suspect = f"suspect: {response['suspect']}\n"
-                recent_abuse = f"recent_abuse: {response['recent_abuse']}\n"
-                fraud_score = f"fraud_score: {response['fraud_score']}\n"
-                suggested_domain = f"suggested_domain: {response['suggested_domain']}\n"
-                leaked = f"leaked: {response['leaked']}\n"
-                return_result.append([{'Phrase': response['request_id'],
-                                       'Notes': valid + disposable + smtp_score + overall_score + generic + common +
-                                                dns_valid + honeypot + deliverability + frequent_complainer +
-                                                spam_trap_score + catch_all + suspect + recent_abuse + fraud_score +
-                                                suggested_domain + leaked,
-                                       'Entity Type': 'Phrase'},
-                                      {uid: {'Resolution': 'IPQualityScore Scan ID', 'Notes': ''}}])
-                if response['first_name'] != "":
-                    return_result.append([{'Full Name': response['first_name'],
-                                           'Entity Type': 'Person'},
-                                          {uid: {'Resolution': 'IPQualityScore First Name', 'Notes': ''}}])
-                if response['sanitized_email'] != primary_field:
-                    return_result.append([{'Email Address': response['sanitized_email'],
-                                           'Entity Type': 'Email Address'},
-                                          {uid: {'Resolution': 'IPQualityScore Sanitized Email', 'Notes': ''}}])
+            valid = f"valid: {response['valid']}\n"
+            disposable = f"disposable: {response['disposable']}\n"
+            smtp_score = f"smtp_score: {response['smtp_score']}\n"
+            overall_score = f"overall_score: {response['overall_score']}\n"
+            generic = f"generic: {response['generic']}\n"
+            common = f"common: {response['common']}\n"
+            dns_valid = f"dns_valid: {response['dns_valid']}\n"
+            honeypot = f"honeypot: {response['honeypot']}\n"
+            deliverability = f"deliverability: {response['deliverability']}\n"
+            frequent_complainer = f"frequent_complainer: {response['frequent_complainer']}\n"
+            spam_trap_score = f"spam_trap_score: {response['spam_trap_score']}\n"
+            catch_all = f"catch_all: {response['catch_all']}\n"
+            suspect = f"suspect: {response['suspect']}\n"
+            recent_abuse = f"recent_abuse: {response['recent_abuse']}\n"
+            fraud_score = f"fraud_score: {response['fraud_score']}\n"
+            suggested_domain = f"suggested_domain: {response['suggested_domain']}\n"
+            leaked = f"leaked: {response['leaked']}\n"
+            return_result.append([{'Phrase': response['request_id'],
+                                   'Notes': valid + disposable + smtp_score + overall_score + generic + common +
+                                            dns_valid + honeypot + deliverability + frequent_complainer +
+                                            spam_trap_score + catch_all + suspect + recent_abuse + fraud_score +
+                                            suggested_domain + leaked,
+                                   'Entity Type': 'Phrase'},
+                                  {uid: {'Resolution': 'IPQualityScore Scan ID', 'Notes': ''}}])
+            if response['first_name'] != "":
+                return_result.append([{'Full Name': response['first_name'],
+                                       'Entity Type': 'Person'},
+                                      {uid: {'Resolution': 'IPQualityScore First Name', 'Notes': ''}}])
+            if response['sanitized_email'] != primary_field:
+                return_result.append([{'Email Address': response['sanitized_email'],
+                                       'Entity Type': 'Email Address'},
+                                      {uid: {'Resolution': 'IPQualityScore Sanitized Email', 'Notes': ''}}])
         return return_result

@@ -1125,7 +1125,9 @@ class MainWindow(QtWidgets.QMainWindow):
         try:
             category, resolution = resolutionName.split('/', 1)
         except ValueError:
-            self.MESSAGEHANDLER.error('Category name or resolution name should not contain slashes: ' + resolutionName)
+            self.MESSAGEHANDLER.error(
+                f'Category name or resolution name should not contain slashes: {resolutionName}'
+            )
             return ""
 
         if preSpecifiedEntities:
@@ -1137,7 +1139,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         parameters = self.RESOLUTIONMANAGER.getResolutionParameters(category, resolution)
         if parameters is None:
-            message = 'Resolution parameters not found for resolution: ' + resolution
+            message = f'Resolution parameters not found for resolution: {resolution}'
             self.MESSAGEHANDLER.error(message, popUp=True, exc_info=False)
             self.setStatus(message)
             return ""
@@ -1148,12 +1150,12 @@ class MainWindow(QtWidgets.QMainWindow):
         #   if the user did not select any items to run the resolution on.
         # Note that at this point, the parameters dict contains only the parameters that are unspecified, i.e.
         #   ones that were not saved previously.
-        if len(resolutionInputEntities) == 0 or 0 < len(parameters):
+        if not resolutionInputEntities or parameters:
             selectEntityList = None
             uidAndPrimaryFields: list = []
             acceptableOriginTypes = None
             resolutionDescription = None
-            if len(resolutionInputEntities) == 0:
+            if not resolutionInputEntities:
                 acceptableOriginTypes = self.RESOLUTIONMANAGER.getResolutionOriginTypes(resolutionName)
                 uidAndPrimaryFields = [(entity['uid'], entity[list(entity)[1]])
                                        for entity in self.LENTDB.getAllEntities()
@@ -1164,35 +1166,30 @@ class MainWindow(QtWidgets.QMainWindow):
             parameterSelector = ResolutionParametersSelector(self, resolution, parameters,
                                                              selectEntityList, acceptableOriginTypes,
                                                              resolutionDescription)
-            parameterSelectorConfirm = parameterSelector.exec()
-
-            if not parameterSelectorConfirm:
-                self.setStatus('Resolution ' + resolution + ' aborted.')
-                return ""
-            else:
+            if parameterSelector.exec():
                 resolutionParameterValues.update(parameterSelector.chosenParameters)
 
-                if len(resolutionInputEntities) == 0:
+                if not resolutionInputEntities:
                     selectedEntities = parameterSelector.entitySelector.selectedItems()
                     if len(selectedEntities) == 0:
-                        self.setStatus('Resolution ' + resolution + ' did not run: No entities selected.')
+                        self.setStatus(f'Resolution {resolution} did not run: No entities selected.')
                         return ""
 
                     for selectedEntity in selectedEntities:
                         uid = uidAndPrimaryFields[selectEntityList.index(selectedEntity.text())][0]
                         resolutionInputEntities.append(self.LENTDB.getEntity(uid))
 
+            else:
+                self.setStatus(f'Resolution {resolution} aborted.')
+                return ""
         resolutionParameterValues['Project Files Directory'] = self.SETTINGS.value("Project/FilesDir")
-        if preSpecifiedUID:
-            resolutionUID = preSpecifiedUID
-        else:
-            resolutionUID = str(uuid4())
+        resolutionUID = preSpecifiedUID or str(uuid4())
         resolutionThread = ResolutionExecutorThread(
             resolutionName, resolutionInputEntities, resolutionParameterValues, self, resolutionUID)
         resolutionThread.sig.connect(self.resolutionSignalListener)
         resolutionThread.sigError.connect(self.resolutionErrorSignalListener)
-        self.MESSAGEHANDLER.info('Running Resolution: ' + resolution)
-        self.setStatus("Running Resolution: " + resolution)
+        self.MESSAGEHANDLER.info(f'Running Resolution: {resolution}')
+        self.setStatus(f"Running Resolution: {resolution}")
         resolutionThread.start()
         self.resolutions.append((resolutionThread, category == 'Server Resolutions'))
         return resolutionUID
@@ -1213,7 +1210,7 @@ class MainWindow(QtWidgets.QMainWindow):
             affectedUIDs = self.centralWidget().tabbedPane.facilitateResolution(resolution_name, resolution_result)
 
         self.cleanUpLocalFinishedResolutions()
-        self.setStatus("Resolution: " + resolution_name + " completed.")
+        self.setStatus(f"Resolution: {resolution_name} completed.")
         self.runningMacroResolutionFinishedSignalListener.emit(resolution_name, resolution_uid, affectedUIDs)
 
     def resolutionErrorSignalListener(self, error_message: str):
@@ -1242,7 +1239,7 @@ class MainWindow(QtWidgets.QMainWindow):
         """
         with self.macrosLock:
             macroValid = False
-            for macroIndex, runningMacro in enumerate(self.runningMacros):
+            for runningMacro in self.runningMacros:
                 currentResolutionForMacro = runningMacro[0]
                 if resolution_name == currentResolutionForMacro[0] and \
                         resolution_uid == currentResolutionForMacro[1]:
@@ -1257,9 +1254,11 @@ class MainWindow(QtWidgets.QMainWindow):
 
                     acceptableOriginTypes = self.RESOLUTIONMANAGER.getResolutionOriginTypes(nextResolutionForMacro[0])
                     fullEntityJsonList = [self.LENTDB.getEntity(entityUID) for entityUID in set(affectedEntityUIDs)]
-                    filteredEntityJsonList = [entity for entity in fullEntityJsonList
-                                              if entity['Entity Type'] in acceptableOriginTypes]
-                    if filteredEntityJsonList:
+                    if filteredEntityJsonList := [
+                        entity
+                        for entity in fullEntityJsonList
+                        if entity['Entity Type'] in acceptableOriginTypes
+                    ]:
                         preparedResolutionArguments = [nextResolutionForMacro[0], nextResolutionForMacro[1],
                                                        filteredEntityJsonList, nextResolutionForMacro[2]]
                         runNext = True
@@ -1302,11 +1301,11 @@ class MainWindow(QtWidgets.QMainWindow):
             runResResult = self.runResolution(firstResolutionDetails[0], firstResolutionDetails[1], selectedEntities,
                                               firstResolutionDetails[2])
             if runResResult != "":
-                self.MESSAGEHANDLER.info('Running Macro: ' + uid)
+                self.MESSAGEHANDLER.info(f'Running Macro: {uid}')
             else:
                 self.setStatus("Did not run Macro.")
         except Exception as e:
-            message = "Failed to run Macro. Reason: " + str(e)
+            message = f"Failed to run Macro. Reason: {str(e)}"
             self.MESSAGEHANDLER.error(message, popUp=True, exc_info=False)
             self.setStatus(message)
 
@@ -1320,15 +1319,15 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.MESSAGEHANDLER.error('Unable to load Collectors from Settings file.',
                                           popUp=False,
                                           exc_info=False)
-                self.MESSAGEHANDLER.debug('Cannot eval Project/Server/Collectors setting: ' + str(e))
+                self.MESSAGEHANDLER.debug(f'Cannot eval Project/Server/Collectors setting: {str(e)}')
                 clientCollectorUIDs = {}
         return clientCollectorUIDs
 
     def setClientCollectors(self, newClientCollectorsDict: dict) -> None:
         if not isinstance(newClientCollectorsDict, dict):
             self.MESSAGEHANDLER.error('Unable to save Collectors to Settings: Invalid format.')
-            self.MESSAGEHANDLER.debug('Collectors argument: ' + str(newClientCollectorsDict))
-            self.MESSAGEHANDLER.debug('Collectors format: ' + str(type(newClientCollectorsDict)))
+            self.MESSAGEHANDLER.debug(f'Collectors argument: {newClientCollectorsDict}')
+            self.MESSAGEHANDLER.debug(f'Collectors format: {str(type(newClientCollectorsDict))}')
         else:
             with self.serverCollectorsLock:
                 self.SETTINGS.setValue('Project/Server/Collectors', str(newClientCollectorsDict))
@@ -1340,8 +1339,8 @@ class MainWindow(QtWidgets.QMainWindow):
         currentCollectors = self.getClientCollectors()
         currentCollectors[collector_uid] = int(timestamp)
         self.setClientCollectors(currentCollectors)
-        self.centralWidget().tabbedPane.facilitateResolution('Collector ' + str(collector_uid), results)
-        self.notifyUser("New entities discovered by collector: " + str(collector_name), "Collector Update")
+        self.centralWidget().tabbedPane.facilitateResolution(f'Collector {collector_uid}', results)
+        self.notifyUser(f"New entities discovered by collector: {collector_name}", "Collector Update")
 
     # Server functions
     def statusMessageListener(self, message: str, showPopup: bool = True) -> None:
@@ -1350,8 +1349,8 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setStatus(message)
 
     def connectedToServerListener(self, server: str) -> None:
-        self.setStatus("Connected to server: " + server)
-        self.dockbarThree.serverStatus.updateStatus("Connected to server: " + server)
+        self.setStatus(f"Connected to server: {server}")
+        self.dockbarThree.serverStatus.updateStatus(f"Connected to server: {server}")
         self.SETTINGS.setValue("Project/Server", server)
         self.MESSAGEHANDLER.info("Communications successfully initialized with the server.", popUp=True)
 
@@ -1360,7 +1359,7 @@ class MainWindow(QtWidgets.QMainWindow):
         if self.FCOM.isConnected():
             self.disconnectFromServer()
 
-        self.MESSAGEHANDLER.info("Connecting to server: " + server)
+        self.MESSAGEHANDLER.info(f"Connecting to server: {server}")
         try:
             if self.FCOM.beginCommunications(password=password, server=server, port=port):
                 status = "Getting Resolutions..."
@@ -1380,8 +1379,7 @@ class MainWindow(QtWidgets.QMainWindow):
         except ConnectionRefusedError:
             self.MESSAGEHANDLER.info("Connection Refused.", popUp=True)
         except Exception as exception:
-            self.MESSAGEHANDLER.error(
-                "Exception occurred while connecting to server: " + repr(exception))
+            self.MESSAGEHANDLER.error(f"Exception occurred while connecting to server: {repr(exception)}")
             self.disconnectFromServer()
             return
 
@@ -1432,11 +1430,10 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.runningCollectors[collector_category][collector_name] = []
 
             # Re-running a collector would generate duplicate info; we don't want that.
-            duplicateExists = False
-            for collectorInstance in self.runningCollectors[collector_category][collector_name]:
-                if collectorInstance['uid'] == collector_uid:
-                    duplicateExists = True
-                    break
+            duplicateExists = any(
+                collectorInstance['uid'] == collector_uid
+                for collectorInstance in self.runningCollectors[collector_category][collector_name]
+            )
             if not duplicateExists:
                 self.runningCollectors[collector_category][collector_name].append({'uid': collector_uid,
                                                                                    'entities': collector_entities,
@@ -1466,22 +1463,19 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def receiveProjectDeleteListener(self, deleted_project: str) -> None:
         with self.serverProjectsLock:
-            try:
+            with contextlib.suppress(ValueError):
                 self.serverProjects.remove(deleted_project)
                 self.closeServerProjectListener()
-            except ValueError:
-                # If the client doesn't know about the deleted project, nothing to do.
-                pass
 
     def openServerProjectListener(self, project_name: str) -> None:
         self.SETTINGS.setValue("Project/Server/Project", project_name)
-        self.setStatus("Opened Server Project: " + project_name)
+        self.setStatus(f"Opened Server Project: {project_name}")
         self.dockbarThree.serverStatus.updateStatus("Connected to server: " +
                                                     self.SETTINGS.value("Project/Server") + " Project: " + project_name)
         self.syncDatabase()
         self.FCOM.askProjectCanvasesList(project_name)
         self.FCOM.askServerForFileList(project_name)
-        self.MESSAGEHANDLER.info("Opened Server Project: " + project_name, popUp=True)
+        self.MESSAGEHANDLER.info(f"Opened Server Project: {project_name}", popUp=True)
 
     def closeCurrentServerProject(self) -> None:
         if self.FCOM.isConnected():
@@ -1501,9 +1495,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.FCOM.sendFileAbortAll(project_name)
         self.unSyncCanvasByName()
         if server is not None:
-            self.dockbarThree.serverStatus.updateStatus("Connected to server: " + server)
+            self.dockbarThree.serverStatus.updateStatus(f"Connected to server: {server}")
             if project_name != "":
-                statusMessage = "Closed Server project: " + str(project_name)
+                statusMessage = f"Closed Server project: {str(project_name)}"
                 self.MESSAGEHANDLER.info(statusMessage)
                 self.setStatus(statusMessage)
 
@@ -1513,7 +1507,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def openServerCanvasListener(self, canvas_name: str) -> None:
         project_name = self.SETTINGS.value("Project/Server/Project")
-        self.setStatus("Opened Server Canvas: " + canvas_name + " on project: " + project_name)
+        self.setStatus(
+            f"Opened Server Canvas: {canvas_name} on project: {project_name}"
+        )
         self.dockbarThree.serverStatus.updateStatus("Connected to server: " +
                                                     self.SETTINGS.value("Project/Server") + " Project: " +
                                                     project_name + " Canvas: " + canvas_name)
@@ -1521,7 +1517,9 @@ class MainWindow(QtWidgets.QMainWindow):
     def closeServerCanvasListener(self, canvas_name: str) -> None:
         project_name = self.SETTINGS.value("Project/Server/Project")
         self.centralWidget().tabbedPane.unmarkSyncedCanvasesByName(canvas_name)
-        self.setStatus("Closed Server Canvas: " + canvas_name + " on project: " + project_name)
+        self.setStatus(
+            f"Closed Server Canvas: {canvas_name} on project: {project_name}"
+        )
         self.dockbarThree.serverStatus.updateStatus("Connected to server: " +
                                                     self.SETTINGS.value("Project/Server") + " Project: " +
                                                     project_name)
@@ -1532,7 +1530,7 @@ class MainWindow(QtWidgets.QMainWindow):
             if project_name != "":
                 with self.LENTDB.dbLock:
                     self.FCOM.syncDatabase(project_name, self.LENTDB.database)
-                self.MESSAGEHANDLER.info('Database Synced for project: ' + project_name)
+                self.MESSAGEHANDLER.info(f'Database Synced for project: {project_name}')
 
     def syncCanvasByName(self, canvasName: str = None) -> None:
         """
@@ -1546,7 +1544,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 canvas_name, canvas_graph = self.centralWidget().tabbedPane.markCanvasAsSyncedByName(canvasName)
                 if canvas_name is not None:
                     self.FCOM.syncCanvasSend(project_name, canvas_name, canvas_graph)
-                    self.MESSAGEHANDLER.info('Syncing Canvas: ' + canvas_name)
+                    self.MESSAGEHANDLER.info(f'Syncing Canvas: {canvas_name}')
                 else:
                     self.setStatus('No canvas to sync!')
             else:
@@ -1570,20 +1568,19 @@ class MainWindow(QtWidgets.QMainWindow):
         if project_name != '':
             self.FCOM.closeCanvas(project_name, canvasName)
         if canvasName is not None:
-            statusMessage = 'Stopped syncing Canvas: ' + canvasName
-            self.setStatus(statusMessage)
-            self.MESSAGEHANDLER.info(statusMessage)
+            statusMessage = f'Stopped syncing Canvas: {canvasName}'
         else:
             statusMessage = 'Stopped syncing all Canvases.'
-            self.setStatus(statusMessage)
-            self.MESSAGEHANDLER.info(statusMessage)
+
+        self.setStatus(statusMessage)
+        self.MESSAGEHANDLER.info(statusMessage)
 
     def receiveSyncCanvasListener(self, canvas_name: str, canvas_nodes: dict, canvas_edges: dict) -> None:
         if canvas_name in self.centralWidget().tabbedPane.canvasTabs:
             canvasToSync = self.centralWidget().tabbedPane.canvasTabs[canvas_name]
             if canvasToSync.synced:
                 canvasToSync.scene().syncCanvas(canvas_nodes, canvas_edges)
-                self.MESSAGEHANDLER.debug('Canvas ' + canvas_name + ' synced.')
+                self.MESSAGEHANDLER.debug(f'Canvas {canvas_name} synced.')
 
     def receiveSyncDatabaseListener(self, database_nodes: dict, database_edges: dict) -> None:
         """
@@ -1599,27 +1596,25 @@ class MainWindow(QtWidgets.QMainWindow):
         project_name = self.SETTINGS.value("Project/Server/Project")
         if project_name != '':
             self.FCOM.sendCanvasUpdateEvent(project_name, canvas_name, entity_or_link_uid)
-            self.MESSAGEHANDLER.debug('Project canvas ' + canvas_name + ' send update for entity / link: ' +
-                                      str(entity_or_link_uid))
+            self.MESSAGEHANDLER.debug(
+                f'Project canvas {canvas_name} send update for entity / link: {str(entity_or_link_uid)}'
+            )
 
     def receiveServerCanvasUpdate(self, canvas_name: str, entity_or_link_uid: Union[str, tuple]) -> None:
         scene = self.centralWidget().tabbedPane.getSceneByName(canvas_name)
-        if scene is not None:
-            # Check that the argument in the update is not empty.
-            if entity_or_link_uid:
-                if isinstance(entity_or_link_uid, str):
-                    # Add Entity
-                    if entity_or_link_uid not in scene.nodesDict:
-                        scene.addNodeProgrammatic(entity_or_link_uid, fromServer=True)
-                        scene.rearrangeGraph()
-                else:
-                    # Add Link
-                    if entity_or_link_uid not in scene.linksDict:
-                        scene.addLinkProgrammatic(entity_or_link_uid, fromServer=True)
-                        scene.rearrangeGraph()
+        if scene is not None and entity_or_link_uid:
+            if isinstance(entity_or_link_uid, str):
+                # Add Entity
+                if entity_or_link_uid not in scene.nodesDict:
+                    scene.addNodeProgrammatic(entity_or_link_uid, fromServer=True)
+                    scene.rearrangeGraph()
+            elif entity_or_link_uid not in scene.linksDict:
+                scene.addLinkProgrammatic(entity_or_link_uid, fromServer=True)
+                scene.rearrangeGraph()
 
-        self.MESSAGEHANDLER.debug('Received update to canvas: ' + canvas_name + ' for entity / link: ' +
-                                  str(entity_or_link_uid))
+        self.MESSAGEHANDLER.debug(
+            f'Received update to canvas: {canvas_name} for entity / link: {str(entity_or_link_uid)}'
+        )
 
     def sendLocalDatabaseUpdateToServer(self, entityJson: dict, add: int) -> None:
         """
@@ -1631,8 +1626,9 @@ class MainWindow(QtWidgets.QMainWindow):
         project_name = self.SETTINGS.value("Project/Server/Project")
         if project_name != '':
             self.FCOM.sendDatabaseUpdateEvent(project_name, entityJson, add)
-            self.MESSAGEHANDLER.debug('Sent database update to server: ' + str(entityJson) + ' - Operation: ' +
-                                      str(add))
+            self.MESSAGEHANDLER.debug(
+                f'Sent database update to server: {entityJson} - Operation: {add}'
+            )
 
     def receiveServerDatabaseUpdate(self, entityJson: dict, add: int) -> None:
         # Check that the JSON received is not empty.
@@ -1660,8 +1656,9 @@ class MainWindow(QtWidgets.QMainWindow):
                 # Overwrite existing link
                 self.centralWidget().tabbedPane.serverLinkAddHelper(entityJson, overwrite=True)
 
-        self.MESSAGEHANDLER.debug('Received database update from server: ' + str(entityJson) + ' - Operation: ' +
-                                  str(add))
+        self.MESSAGEHANDLER.debug(
+            f'Received database update from server: {entityJson} - Operation: {add}'
+        )
 
     def uploadFiles(self, items=None) -> None:
         if not self.FCOM.isConnected():
@@ -1725,11 +1722,11 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.dockbarOne.documentsList.uploadingFileWidgets.remove(uploadingFile)
 
     def receiveFileListListener(self, fileList: list) -> None:
-        self.MESSAGEHANDLER.debug('Received file list from server: ' + str(fileList))
+        self.MESSAGEHANDLER.debug(f'Received file list from server: {fileList}')
         self.dockbarOne.documentsList.updateFileListFromServer(fileList)
 
     def fileUploadFinishedListener(self, file_name: str) -> None:
-        self.MESSAGEHANDLER.debug('File upload finished:' + file_name)
+        self.MESSAGEHANDLER.debug(f'File upload finished: {file_name}')
         self.dockbarOne.documentsList.finishUploadingFile(file_name)
 
     def abortUpload(self, file_name: str) -> None:
@@ -1823,7 +1820,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 )
             else:
                 self.dockbarTwo.oracle.answerSection.setPlainText("Calculating Answer...")
-                self.MESSAGEHANDLER.info('Asking question: ' + question)
+                self.MESSAGEHANDLER.info(f'Asking question: {question}')
                 self.FCOM.askQuestion(project_name, question,
                                       int(self.SETTINGS.value("Project/Question Answering Reader Value")),
                                       int(self.SETTINGS.value("Project/Question Answering Retriever Value")),
@@ -1941,10 +1938,8 @@ class MainWindow(QtWidgets.QMainWindow):
 
         elif nW.openProject is not None:
             projectDir = Path(nW.openProject).parent.absolute()
-            projectDirFile = open(nW.openProject, "rb")
-            self.SETTINGS.load(load(projectDirFile))
-            projectDirFile.close()
-
+            with open(nW.openProject, "rb") as projectDirFile:
+                self.SETTINGS.load(load(projectDirFile))
             # Re-set file path related settings in case the project or the software was moved.
             self.SETTINGS.setValue("Program/BaseDir", dirname(abspath(getsourcefile(lambda: 0))))
             self.SETTINGS.setValue("Project/BaseDir", str(projectDir))
@@ -1954,9 +1949,9 @@ class MainWindow(QtWidgets.QMainWindow):
         self.MESSAGEHANDLER.info(f'Starting LinkScope Client, Version {self.SETTINGS.value("Program/Version", "N/A")}')
         self.URLMANAGER = URLManager.URLManager(self)
         self.dockbarThree = DockBarThree.DockBarThree(self)
-        self.RESOURCEHANDLER = ResourceHandler.ResourceHandler(self, self.MESSAGEHANDLER)
+        self.RESOURCEHANDLER = ResourceHandler.ResourceHandler(self)
         self.LENTDB = EntityDB.EntitiesDB(self, self.MESSAGEHANDLER, self.RESOURCEHANDLER)
-        self.RESOLUTIONMANAGER = ResolutionManager.ResolutionManager(self, self.MESSAGEHANDLER)
+        self.RESOLUTIONMANAGER = ResolutionManager.ResolutionManager(self)
         self.FCOM = FrontendCommunicationsHandler.CommunicationsHandler(self)
         self.LQLWIZARD = LQLQueryBuilder(self)
 
@@ -1977,9 +1972,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.cycleExtractionThreads = []
         self.macrosLock = threading.Lock()
         self.runningMacros = []
-
-        self.RESOLUTIONMANAGER.loadResolutionsFromDir(
-            Path(self.SETTINGS.value("Program/BaseDir")) / "Core" / "Resolutions" / "Core")
 
         entityTextFont = QtGui.QFont(self.SETTINGS.value("Program/Graphics/Entity Text Font Type"),
                                      int(self.SETTINGS.value("Program/Graphics/Entity Text Font Size")),
@@ -2068,14 +2060,13 @@ class ReportWizard(QtWidgets.QWizard):
         self.button(QtWidgets.QWizard.WizardButton.FinishButton).clicked.connect(self.onFinish)
 
     def onFinish(self):
-        reportData = []
-
         outgoingEntitiesForEachEntity = []
         incomingEntitiesForEachEntity = []
         outgoingEntityPrimaryFieldsForEachEntity = []
         incomingEntityPrimaryFieldsForEachEntity = []
 
         entityList = []
+        reportData = []
         for pageID in self.pageIds():
             pageObject = self.page(pageID)
             reportData.append(pageObject.getData())
@@ -2131,12 +2122,19 @@ class ReportWizard(QtWidgets.QWizard):
                                        outgoingEntityPrimaryFieldsForEachEntity)
 
             self.parent().MESSAGEHANDLER.debug(reportData)
-            self.parent().MESSAGEHANDLER.info("Saved Report at: " + str(savePath), popUp=True)
+            self.parent().MESSAGEHANDLER.info(
+                f"Saved Report at: {str(savePath)}", popUp=True
+            )
         except PermissionError:
-            self.parent().MESSAGEHANDLER.error("Could not generate report. No permission to save at the chosen "
-                                               "location: " + str(savePath), popUp=True, exc_info=False)
+            self.parent().MESSAGEHANDLER.error(
+                f"Could not generate report. No permission to save at the chosen location: {str(savePath)}",
+                popUp=True,
+                exc_info=False,
+            )
         except Exception as exc:
-            self.parent().MESSAGEHANDLER.error("Could not generate report: " + str(exc), popUp=True, exc_info=True)
+            self.parent().MESSAGEHANDLER.error(
+                f"Could not generate report: {str(exc)}", popUp=True, exc_info=True
+            )
         finally:
             rmtree(self.reportTempFolder)
 
@@ -2174,8 +2172,7 @@ class InitialConfigPage(QtWidgets.QWizardPage):
             self.savePathEdit.setText(str(savePath))
 
     def getData(self):
-        data = {'SavePath': self.savePathEdit.text()}
-        return data
+        return {'SavePath': self.savePathEdit.text()}
 
 
 class TitlePage(QtWidgets.QWizardPage):
@@ -2203,9 +2200,11 @@ class TitlePage(QtWidgets.QWizardPage):
         self.setLayout(layout)
 
     def getData(self):
-        data = {'Title': self.inputTitleEdit.text(), 'Subtitle': self.inputSubtitleEdit.text(),
-                'Authors': self.inputAuthorsEdit.text()}
-        return data
+        return {
+            'Title': self.inputTitleEdit.text(),
+            'Subtitle': self.inputSubtitleEdit.text(),
+            'Authors': self.inputAuthorsEdit.text(),
+        }
 
 
 class SummaryPage(QtWidgets.QWizardPage):
@@ -2235,9 +2234,11 @@ class SummaryPage(QtWidgets.QWizardPage):
         self.setLayout(layout)
 
     def getData(self):
-        data = {'SummaryNotes': self.inputNotesEdit.toPlainText(), 'CanvasName': self.canvasDropDownMenu.currentText(),
-                'ViewPort': self.viewPortCheckBox.isChecked()}
-        return data
+        return {
+            'SummaryNotes': self.inputNotesEdit.toPlainText(),
+            'CanvasName': self.canvasDropDownMenu.currentText(),
+            'ViewPort': self.viewPortCheckBox.isChecked(),
+        }
 
 
 class EntityPage(QtWidgets.QWizardPage):
@@ -2245,7 +2246,7 @@ class EntityPage(QtWidgets.QWizardPage):
         super(EntityPage, self).__init__(parent=parent.parent())
         self.reportWizard = parent
 
-        self.setTitle(self.tr(f"Entity Page Wizard"))
+        self.setTitle(self.tr("Entity Page Wizard"))
         self.setMinimumSize(300, 700)
 
         self.entityName = parent.primaryField
@@ -2313,8 +2314,7 @@ class EntityPage(QtWidgets.QWizardPage):
         self.scrolllayout.addWidget(appendixWidget)
 
     def removeSection(self) -> None:
-        numChildren = self.scrolllayout.count()
-        if numChildren:
+        if numChildren := self.scrolllayout.count():
             appendixItem = self.scrolllayout.takeAt(numChildren - 1)
             appendixItem.widget().deleteLater()
 
@@ -2322,34 +2322,33 @@ class EntityPage(QtWidgets.QWizardPage):
         appendixNotes = []
         if self.inputImageEdit.text() != '' and self.imageCheckBox.isChecked():
             data = {'EntityNotes': self.inputNotesEdit.toPlainText(), 'EntityImage': self.inputImageEdit.text()}
+        elif 'PNG' in str(self.defaultpic):
+            imagePath = Path(self.reportWizard.reportTempFolder) / f'{str(uuid4())}.png'
+            with open(imagePath, 'wb') as tempFile:
+                tempFile.write(bytearray(self.defaultpic.data()))
+
+            data = {'EntityNotes': self.inputNotesEdit.toPlainText(), 'EntityImage': str(imagePath)}
         else:
-            if 'PNG' in str(self.defaultpic):
-                imagePath = Path(self.reportWizard.reportTempFolder) / (str(uuid4()) + '.png')
-                with open(imagePath, 'wb') as tempFile:
-                    tempFile.write(bytearray(self.defaultpic.data()))
+            if 'svg' not in str(self.defaultpic):
+                # Default picture is an SVG.
+                self.defaultpic = self.parent().RESOURCEHANDLER.getEntityDefaultPicture(
+                    self.parent().LENTDB.getEntity(self.entityUID)['Entity Type'])
+            contents = bytearray(self.defaultpic)
+            widthRegex = re.compile(b' width="\d*" ')
+            fileContents = ''
+            for widthMatches in widthRegex.findall(self.defaultpic):
+                fileContents = contents.replace(widthMatches, b' ')
+            heightRegex = re.compile(b' height="\d*" ')
+            for heightMatches in heightRegex.findall(self.defaultpic):
+                fileContents = contents.replace(heightMatches, b' ')
+            fileContents = fileContents.replace(b'<svg ', b'<svg height="150" width="150" ')
 
-                data = {'EntityNotes': self.inputNotesEdit.toPlainText(), 'EntityImage': str(imagePath)}
-            else:
-                if 'svg' not in str(self.defaultpic):
-                    # Default picture is an SVG.
-                    self.defaultpic = self.parent().RESOURCEHANDLER.getEntityDefaultPicture(
-                        self.parent().LENTDB.getEntity(self.entityUID)['Entity Type'])
-                contents = bytearray(self.defaultpic)
-                widthRegex = re.compile(b' width="\d*" ')
-                fileContents = ''
-                for widthMatches in widthRegex.findall(self.defaultpic):
-                    fileContents = contents.replace(widthMatches, b' ')
-                heightRegex = re.compile(b' height="\d*" ')
-                for heightMatches in heightRegex.findall(self.defaultpic):
-                    fileContents = contents.replace(heightMatches, b' ')
-                fileContents = fileContents.replace(b'<svg ', b'<svg height="150" width="150" ')
+            imagePath = Path(self.reportWizard.reportTempFolder) / f'{str(uuid4())}.svg'
+            with open(imagePath, 'wb') as tempFile:
+                tempFile.write(bytearray(fileContents))
 
-                imagePath = Path(self.reportWizard.reportTempFolder) / (str(uuid4()) + '.svg')
-                with open(imagePath, 'wb') as tempFile:
-                    tempFile.write(bytearray(fileContents))
-
-                image = svg2rlg(imagePath)
-                data = {'EntityNotes': self.inputNotesEdit.toPlainText(), 'EntityImage': image}
+            image = svg2rlg(imagePath)
+            data = {'EntityNotes': self.inputNotesEdit.toPlainText(), 'EntityImage': image}
 
         for index in range(self.scrolllayout.count()):
             childWidget = self.scrolllayout.itemAt(index).widget()
@@ -2429,17 +2428,16 @@ class CreateOrOpenCanvas(QtWidgets.QDialog):
         self.openExistingCanvasDropdown.SizeAdjustPolicy(QtWidgets.QComboBox.SizeAdjustPolicy.AdjustToContents)
         tabbedPane = self.parent().centralWidget().tabbedPane
         canvasTabs = tabbedPane.canvasTabs
-        existingTabNames = []
-        for tabIndex in range(tabbedPane.count()):
-            existingTabNames.append(tabbedPane.tabText(tabIndex))
-
+        existingTabNames = [
+            tabbedPane.tabText(tabIndex) for tabIndex in range(tabbedPane.count())
+        ]
         openExistingCanvasButton = QtWidgets.QPushButton('Open Existing Canvas')
         openExistingCanvasButton.clicked.connect(self.confirmOpenExistingCanvas)
 
         canvasesToOpen = [tabName for tabName in canvasTabs if tabName not in existingTabNames]
         self.openExistingCanvasDropdown.addItems(canvasesToOpen)
 
-        if len(canvasesToOpen) == 0:
+        if not canvasesToOpen:
             self.openExistingCanvasDropdown.setEnabled(False)
             openExistingCanvasButton.setEnabled(False)
 
@@ -2476,16 +2474,14 @@ class CreateOrOpenCanvas(QtWidgets.QDialog):
 
     def confirmCreateCanvas(self):
         self.canvasName = self.createCanvasTextbox.text()
-        createStatus = self.parent().centralWidget().tabbedPane.addCanvas(self.canvasName)
-        if createStatus:
+        if self.parent().centralWidget().tabbedPane.addCanvas(self.canvasName):
             self.accept()
         else:
             self.parent().MESSAGEHANDLER.warning("A Canvas with that name already exists!", popUp=True)
 
     def confirmOpenServerCanvas(self):
         self.canvasName = self.openServerCanvasDropdown.currentText()
-        createStatus = self.parent().centralWidget().tabbedPane.addCanvas(self.canvasName)
-        if createStatus:
+        if self.parent().centralWidget().tabbedPane.addCanvas(self.canvasName):
             self.parent().syncCanvasByName(self.canvasName)
             self.accept()
         else:
@@ -2564,16 +2560,15 @@ class NewOrOpenWidget(QtWidgets.QDialog):
             errorMessage += "Chosen Directory is not Readable and Writeable!\n"
         if newProjectDir.exists():
             errorMessage += "Chosen Project Path already exists!\n"
-        if errorMessage != "":
+        if not errorMessage:
+            self.createProject = True
+            self.close()
+        else:
             showError = QtWidgets.QMessageBox(self)
             showError.setText(errorMessage)
             showError.setStandardButtons(QtWidgets.QMessageBox().StandardButton.Ok)
             showError.setDefaultButton(QtWidgets.QMessageBox().StandardButton.Ok)
             showError.exec()
-
-        else:
-            self.createProject = True
-            self.close()
 
     def selectProjectDirectory(self):
 
@@ -2619,12 +2614,12 @@ class ResolutionExecutorThread(QtCore.QThread):
                                                                       self.resolutionParameters,
                                                                       self.uid)
             if ret is None:
-                self.sigError.emit('Resolution ' + self.resolution + ' failed during run.')
+                self.sigError.emit(f'Resolution {self.resolution} failed during run.')
             elif isinstance(ret, bool):
                 # Resolution is running on the server, we do not have results right now.
                 ret = None
         except Exception as e:
-            self.sigError.emit('Resolution ' + self.resolution + ' failed during run: ' + str(e))
+            self.sigError.emit(f'Resolution {self.resolution} failed during run: {str(e)}')
             ret = None
 
         # If the resolution is ran on the server or there is a problem, don't emit signal.
@@ -2765,12 +2760,15 @@ class ResolutionParametersSelector(QtWidgets.QDialog):
         # Only save parameters after we verify that everything is filled in properly.
         for savedParameter in savedParameters:
             if self.properties[savedParameter].get('global') is True:
-                self.mainWindowObject.SETTINGS.setGlobalValue('Resolutions/Global/Parameters/' + savedParameter,
-                                                              savedParameters[savedParameter])
+                self.mainWindowObject.SETTINGS.setGlobalValue(
+                    f'Resolutions/Global/Parameters/{savedParameter}',
+                    savedParameters[savedParameter],
+                )
             else:
                 self.mainWindowObject.SETTINGS.setGlobalValue(
-                    'Resolutions/' + self.resolutionName + '/' + savedParameter,
-                    savedParameters[savedParameter])
+                    f'Resolutions/{self.resolutionName}/{savedParameter}',
+                    savedParameters[savedParameter],
+                )
 
         super(ResolutionParametersSelector, self).accept()
 
@@ -3473,13 +3471,8 @@ class FindResolutionDialog(QtWidgets.QDialog):
             for category in self.resolutions:
                 for resolution in self.resolutions[category]:
                     if origin not in self.resolutions[category][resolution]['originTypes']:
-                        try:
-                            validResolutions.remove(str(category) + '/' + str(resolution))
-                        except KeyError:
-                            # Python's philosophy of asking for forgiveness instead of asking for permission
-                            #   is not one to live your life by. When in Rome, though.
-                            pass
-
+                        with contextlib.suppress(KeyError):
+                            validResolutions.remove(f'{str(category)}/{str(resolution)}')
         # Try to see if any of the keywords are a substring of the name or description of any resolution.
         keywordFilter = self.keywordsWidget.text().strip()
         if keywordFilter != '':
@@ -3490,11 +3483,8 @@ class FindResolutionDialog(QtWidgets.QDialog):
                     descriptionText = self.resolutions[category][resolution]['description']
                     for keyword in wordsToFind:
                         if keyword not in titleText and keyword not in descriptionText:
-                            try:
-                                validResolutions.remove(str(category) + '/' + str(resolution))
-                            except KeyError:
-                                pass
-
+                            with contextlib.suppress(KeyError):
+                                validResolutions.remove(f'{str(category)}/{str(resolution)}')
         for result in validResolutions:
             self.resultsWidget.addItem(result)
 
@@ -3585,7 +3575,7 @@ class MergeEntitiesDialog(QtWidgets.QDialog):
         self.entitiesTable.setCellWidget(newRowIndex, 4, upDownButtons)
 
     def accept(self) -> None:
-        for rowIndex in range(0, self.entitiesTable.rowCount()):
+        for rowIndex in range(self.entitiesTable.rowCount()):
             if self.entitiesTable.cellWidget(rowIndex, 0).isChecked():
                 self.primaryEntityUID = self.entitiesTable.cellWidget(rowIndex, 4).uid
             else:
@@ -3613,9 +3603,10 @@ class MergeTableWidget(QtWidgets.QTableWidget):
         rowIndex = self.findRowOfShiftingWidget(widget)
         if rowIndex == 0:
             return rowIndex
-        widgetsToShift = []
-        for widgetColumnIndex in range(5):
-            widgetsToShift.append(self.cellWidget(rowIndex, widgetColumnIndex))
+        widgetsToShift = [
+            self.cellWidget(rowIndex, widgetColumnIndex)
+            for widgetColumnIndex in range(5)
+        ]
         self.insertRow(rowIndex - 1)
         self.setRowHeight(rowIndex - 1, 70)
         for widgetColumnIndex in range(5):
@@ -3626,9 +3617,10 @@ class MergeTableWidget(QtWidgets.QTableWidget):
         rowIndex = self.findRowOfShiftingWidget(widget)
         if rowIndex == self.rowCount() - 1:
             return
-        widgetsToShift = []
-        for widgetColumnIndex in range(5):
-            widgetsToShift.append(self.cellWidget(rowIndex, widgetColumnIndex))
+        widgetsToShift = [
+            self.cellWidget(rowIndex, widgetColumnIndex)
+            for widgetColumnIndex in range(5)
+        ]
         self.insertRow(rowIndex + 2)
         self.setRowHeight(rowIndex + 2, 70)
         for widgetColumnIndex in range(5):
@@ -3758,32 +3750,34 @@ class SplitEntitiesDialog(QtWidgets.QDialog):
             if entityName == '':
                 self.parent.MESSAGEHANDLER.info('Cannot split into entities with blank primary fields.',
                                                 popUp=True)
-                self.splitEntities = []
-                self.splitEntitiesWithLinks = []
-                return
+                return self.clearSplitEntitiesHelper()
             elif self.parent.LENTDB.doesEntityExist(entityName) and entityName != self.entityToSplitPrimaryField:
                 self.parent.MESSAGEHANDLER.info("Entity primary field value specified already exists:\n" + entityName,
                                                 popUp=True)
-                self.splitEntities = []
-                self.splitEntitiesWithLinks = []
-                return
+                return self.clearSplitEntitiesHelper()
             elif entityName in self.splitEntities:
                 self.parent.MESSAGEHANDLER.info("Duplicate primary field value specified:\n" + entityName,
                                                 popUp=True)
-                self.splitEntities = []
-                self.splitEntitiesWithLinks = []
-                return
+                return self.clearSplitEntitiesHelper()
             self.splitEntities.append(entityName)
 
-            allLinkUIDsForEntity = []
-            for columnIndex in range(1, self.entitiesTable.columnCount()):
-                if self.entitiesTable.cellWidget(newEntityRow, columnIndex).isChecked():
-                    allLinkUIDsForEntity.append(self.allLinks[columnIndex - 1])
+            allLinkUIDsForEntity = [
+                self.allLinks[columnIndex - 1]
+                for columnIndex in range(1, self.entitiesTable.columnCount())
+                if self.entitiesTable.cellWidget(
+                    newEntityRow, columnIndex
+                ).isChecked()
+            ]
             self.splitEntitiesWithLinks.append((entityName, allLinkUIDsForEntity))
 
         # Clear out this list, no more need for it
         self.splitEntities = []
         super(SplitEntitiesDialog, self).accept()
+
+    def clearSplitEntitiesHelper(self):
+        self.splitEntities = []
+        self.splitEntitiesWithLinks = []
+        return
 
 
 class QueryBuilderWizard(QtWidgets.QDialog):
@@ -4231,11 +4225,7 @@ class QueryBuilderWizard(QtWidgets.QDialog):
             self.mainWindowObject.MESSAGEHANDLER.warning('Query returned no results.', popUp=True)
             return
 
-        if modificationsSet:
-            numified = modificationsSet[1]
-        else:
-            numified = None
-
+        numified = modificationsSet[1] if modificationsSet else None
         qResultsViewer = QueryResultsViewer(self.mainWindowObject, self.mainWindowObject.LQLWIZARD.allEntities,
                                             resultsSet[0], resultsSet[1], numified)
         qResultsViewer.exec()
@@ -4256,10 +4246,8 @@ class QueryResultsViewer(QtWidgets.QDialog):
         dialogLayout.addWidget(self.resultsTabbedPane, 0, 0, 2, 2)
 
         self.headerFields = list(selectedFields)
-        try:
+        with contextlib.suppress(ValueError):
             self.headerFields.remove('uid')
-        except ValueError:
-            pass
         self.headerFields.insert(0, 'uid')
 
         self.resultsTable = QtWidgets.QTableWidget(0, len(self.headerFields), self)
@@ -4293,7 +4281,7 @@ class QueryResultsViewer(QtWidgets.QDialog):
                 continue
 
             fieldChart = QtCharts.QChart()
-            chartTitle = headerField + " Chart"
+            chartTitle = f"{headerField} Chart"
             fieldChart.setTitle(chartTitle)
             fieldChart.setTheme(QtCharts.QChart.ChartTheme.ChartThemeBlueCerulean)
             fieldChart.setMargins(QtCore.QMargins(0, 0, 0, 0))
@@ -4310,9 +4298,9 @@ class QueryResultsViewer(QtWidgets.QDialog):
 
             barSeries = QtCharts.QBarSeries()
             barSeries.setName(headerField)
-            for barValue in values:
+            for barValue, value in values.items():
                 barSet = QtCharts.QBarSet(barValue)
-                barSet.append(values[barValue])
+                barSet.append(value)
                 barSeries.append(barSet)
 
             fieldChart.addSeries(barSeries)
@@ -4353,7 +4341,7 @@ class QueryResultsViewer(QtWidgets.QDialog):
                 numifiedFieldWidget = QtWidgets.QWidget()
                 numifiedFieldWidgetLayout = QtWidgets.QVBoxLayout()
                 numifiedFieldWidget.setLayout(numifiedFieldWidgetLayout)
-                fieldLabel = QtWidgets.QLabel('Numerical Information for field: ' + field)
+                fieldLabel = QtWidgets.QLabel(f'Numerical Information for field: {field}')
                 numifiedValuesWidget = QtWidgets.QWidget()
                 numifiedValuesWidgetLayout = QtWidgets.QFormLayout()
                 numifiedValuesWidget.setLayout(numifiedValuesWidgetLayout)
@@ -4373,7 +4361,9 @@ class QueryResultsViewer(QtWidgets.QDialog):
                 numifiedFieldWidgetLayout.addWidget(fieldLabel, 0)
                 numifiedFieldWidgetLayout.addWidget(numifiedValuesWidget, 1)
 
-                self.resultsTabbedPane.addTab(numifiedFieldWidget, field + ' Field Values Information')
+                self.resultsTabbedPane.addTab(
+                    numifiedFieldWidget, f'{field} Field Values Information'
+                )
 
         closeButton = QtWidgets.QPushButton('Close')
         closeButton.clicked.connect(self.accept)
@@ -4407,9 +4397,10 @@ class QueryResultsViewer(QtWidgets.QDialog):
                 csvWriter = csv.writer(fileToWrite, delimiter=',', quotechar='"', quoting=csv.QUOTE_MINIMAL)
                 csvWriter.writerow(self.headerFields)
                 for rowIndex in range(self.resultsTable.rowCount()):
-                    currColumnValues = []
-                    for columnIndex in range(self.resultsTable.columnCount()):
-                        currColumnValues.append(self.resultsTable.item(rowIndex, columnIndex).text())
+                    currColumnValues = [
+                        self.resultsTable.item(rowIndex, columnIndex).text()
+                        for columnIndex in range(self.resultsTable.columnCount())
+                    ]
                     csvWriter.writerow(currColumnValues)
         except FileNotFoundError:
             self.mainWindowObject.MESSAGEHANDLER.error('Cannot write file into a non-existing parent directory. '
@@ -4569,8 +4560,10 @@ class MacroDialog(QtWidgets.QDialog):
 
         self.resolutionList = []
         for category in mainWindowObject.RESOLUTIONMANAGER.getResolutionCategories():
-            for resolution in mainWindowObject.RESOLUTIONMANAGER.getResolutionsInCategory(category):
-                self.resolutionList.append(category + '/' + resolution)
+            self.resolutionList.extend(
+                f'{category}/{resolution}'
+                for resolution in mainWindowObject.RESOLUTIONMANAGER.getResolutionsInCategory(category)
+            )
         self.resolutionList.sort()
 
         layout = QtWidgets.QVBoxLayout()
@@ -4629,15 +4622,15 @@ class MacroDialog(QtWidgets.QDialog):
                 rParameters = self.mainWindowObject.RESOLUTIONMANAGER.getResolutionParameters(resolutionCategory,
                                                                                               resolutionName)
                 if rParameters is None:
-                    message = 'Resolution parameters not found for resolution: ' + resolutionName
+                    message = f'Resolution parameters not found for resolution: {resolutionName}'
                     self.mainWindowObject.MESSAGEHANDLER.error(message, popUp=True, exc_info=False)
-                    self.mainWindowObject.setStatus(message + ', Macro creation aborted.')
+                    self.mainWindowObject.setStatus(f'{message}, Macro creation aborted.')
                     return
 
                 resolutionParameterValues = self.mainWindowObject.popParameterValuesAndReturnSpecified(resolutionName,
                                                                                                        rParameters)
 
-                if 0 < len(rParameters):
+                if rParameters:
                     parameterSelector = ResolutionParametersSelector(
                         self.mainWindowObject, resolutionName, rParameters,
                         windowTitle=f'[{str(itemIndex + 1)}/{str(numberOfResolutionsSelected)}] Select Parameter '
@@ -4685,17 +4678,17 @@ class MacroTreeItem(QtWidgets.QTreeWidgetItem):
 
         for resolution in resolutionList:
             resolutionItem = QtWidgets.QTreeWidgetItem()
-            resolutionItem.setText(0, 'Resolution: ' + resolution[0])
+            resolutionItem.setText(0, f'Resolution: {resolution[0]}')
             self.addChild(resolutionItem)
 
     def setData(self, column: int, role: int, value: Any):
-        if self.treeWidget() is not None:
-            if self.treeWidget().mainWindowObject.RESOLUTIONMANAGER.renameMacro(self.uid, value):
-                super().setData(column, role, value)
-                self.uid = value
-        else:
+        if self.treeWidget() is None:
             # Happens during initialization
             super().setData(column, role, value)
+
+        elif self.treeWidget().mainWindowObject.RESOLUTIONMANAGER.renameMacro(self.uid, value):
+            super().setData(column, role, value)
+            self.uid = value
 
     def removeSelf(self):
         self.treeWidget().deleteMacro(self)

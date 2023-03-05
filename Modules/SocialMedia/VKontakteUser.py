@@ -106,11 +106,9 @@ class VKontakteUser:
             else:
                 continue
             # Strip the '@' if it exists.
-            if primaryField.startswith('@'):
-                primaryField = primaryField[1:]
-            arguments.username = primaryField
+            arguments.username = primaryField.removeprefix('@')
 
-            scraper = VKontakteUserScraper.cli_from_args(arguments)
+            scraper = VKontakteUserScraper._cli_from_args(arguments)
             item = scraper.entity
 
             childIndex = len(returnResults)

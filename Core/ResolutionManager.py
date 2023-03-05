@@ -12,14 +12,17 @@ from typing import Union
 class ResolutionManager:
 
     # Load all resources needed.
-    def __init__(self, mainWindow, messageHandler):
-        self.messageHandler = messageHandler
+    def __init__(self, mainWindow):
         self.mainWindow = mainWindow
         self.resolutions = {}
         # Macro dict item contents: tuple of (resolution, parameter values)
         self.macros = {}
 
-    def loadResolutionsFromDir(self, directory: Path) -> None:
+        self.loadResolutionsFromDir(
+            Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) / "Core" / "Resolutions" / "Core")
+
+    def loadResolutionsFromDir(self, directory: Path) -> list:
+        resolutionsLoaded = []
         exceptionsCount = 0
         for resolution in listdir(directory):
             resolution = str(resolution)
@@ -52,14 +55,17 @@ class ResolutionManager:
                                                                            'category': resolutionCategory,
                                                                            'resolution': resClass
                                                                            }
-                    self.messageHandler.info(f"Loaded Resolution: {resNameString}")
+                    self.mainWindow.MESSAGEHANDLER.info(f"Loaded Resolution: {resNameString}")
+                    resolutionsLoaded.append(f'{resolutionCategory}/{resNameString}')
             except Exception as e:
-                self.messageHandler.error(f"Cannot load resolutions from {str(directory)}" + "\n Info: " + repr(e))
+                self.mainWindow.MESSAGEHANDLER.error(
+                    f"Cannot load resolutions from {str(directory)}\n Info: {repr(e)}")
                 exceptionsCount += 1
                 if exceptionsCount > 3:
                     # Will not occur when loading modules with 3 or fewer resolutions, but that should be fine.
-                    self.messageHandler.critical("Failed loading too many resolutions to proceed.")
+                    self.mainWindow.MESSAGEHANDLER.critical("Failed loading too many resolutions to proceed.")
                     sys.exit(5)
+        return resolutionsLoaded
 
     def getResolutionParameters(self, resolutionCategory, resolutionNameString):
         resolutionsList = self.resolutions.get(resolutionCategory)

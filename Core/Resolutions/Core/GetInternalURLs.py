@@ -24,7 +24,7 @@ class GetInternalURLs:
         returnResult = []
         internalUrls = {}
 
-        considerResources = False if parameters['Include Resources'] == 'Only consider links to pages' else True
+        considerResources = parameters['Include Resources'] != 'Only consider links to pages'
 
         def handleLink(currentLink, currentUrl, currentDomain):
             if currentLink is None:
@@ -35,14 +35,16 @@ class GetInternalURLs:
                 currentLink = currentUrl + currentLink[1:]
             elif currentLink.startswith('/'):
                 urlParts = urllib.parse.urlparse(currentUrl)
-                currentLink = urlParts.scheme + '://' + urlParts.netloc + currentLink
+                currentLink = f'{urlParts.scheme}://{urlParts.netloc}{currentLink}'
             parsedCurrentURL = urllib.parse.urlparse(currentLink)
-            if all([parsedCurrentURL.scheme, parsedCurrentURL.netloc]):
-                if currentDomain in currentLink:
-                    newLink = currentLink.split('#')[0].split('?')[0]
-                    if newLink.endswith('/'):
-                        newLink = newLink[:-1]
-                    return newLink
+            if (
+                all([parsedCurrentURL.scheme, parsedCurrentURL.netloc])
+                and currentDomain in currentLink
+            ):
+                newLink = currentLink.split('#')[0].split('?')[0]
+                if newLink.endswith('/'):
+                    newLink = newLink[:-1]
+                return newLink
 
         with sync_playwright() as p:
             browser = p.chromium.launch()

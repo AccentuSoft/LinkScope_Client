@@ -39,7 +39,7 @@ class Whats_My_Name:
             file = json.load(web_accounts_list)
 
         with sync_playwright() as p:
-            browser = p.chromium.launch()
+            browser = p.firefox.launch()
             context = browser.new_context(
                 viewport={'width': 1920, 'height': 1080}
             )
@@ -84,8 +84,8 @@ class Whats_My_Name:
                                                         'Notes': ''}}])
                                         break
                             else:
-                                post_body = site['post_body']
-                                if post_body != "":
+                                post_body = site.get('post_body')
+                                if post_body:
                                     futures[session.post(original_uri, data=post_body, headers=headers,
                                                          timeout=10, allow_redirects=False)] = \
                                         (uid, account_existence_code, account_existence_string,

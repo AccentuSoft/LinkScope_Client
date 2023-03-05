@@ -39,7 +39,11 @@ class GetExternalURLs:
         from playwright.sync_api import sync_playwright, TimeoutError, Error
         from bs4 import BeautifulSoup
         import re
-        import urllib.parse
+        import contextlib
+        from urllib.parse import urlparse
+        from urllib.parse import parse_qs
+        from urllib.parse import unquote
+        from base64 import b64decode
 
         onionRegex = re.compile(r"""^https?://\w{56}\.onion/?(\S(?<!\.))*(\.(\S(?<!\.))*)?$""")
         returnResult = []
@@ -48,16 +52,23 @@ class GetExternalURLs:
         extract_img = '<img> elements' in parameters['Element types to check']
         extract_link = '<link> elements' in parameters['Element types to check']
 
-        # Sites like youtube replace external links with a redirect link originating
-        #   from the site itself. This sort of gets around that.
-        redirectRegex = re.compile(r'\?.*(q|url)=\S[^&#?]+', re.IGNORECASE)
+        def get_potential_redirect_value(potential_redirect_url: str) -> str:
+            parsed_url = urlparse(potential_redirect_url, allow_fragments=False)
+            parsed_url_params = parse_qs(parsed_url.query)
+            for param, param_value in parsed_url_params.items():
+                with contextlib.suppress(Exception):
+                    clean_val = unquote(', '.join(param_value))
+                    if urlparse(clean_val).scheme:
+                        return clean_val
+                    clean_val = unquote(b64decode(', '.join(param_value)).decode('UTF-8'))
+                    if urlparse(clean_val).scheme:
+                        return clean_val
+            return ''
 
         with sync_playwright() as p:
             browser = p.chromium.launch()
             context = browser.new_context(
-                viewport={'width': 1920, 'height': 1080},
-                user_agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) '
-                           'Chrome/101.0.4951.64 Safari/537.36'
+                viewport={'width': 1920, 'height': 1080}
             )
             page = context.new_page()
             externalUrls = {}
@@ -65,7 +76,7 @@ class GetExternalURLs:
             for site in entityJsonList:
                 uid = site['uid']
                 url = site['URL']
-                parsedURL = urllib.parse.urlparse(url)
+                parsedURL = urlparse(url)
                 if not all([parsedURL.scheme, parsedURL.netloc]):
                     continue
                 domain = tldextract.extract(url).fqdn
@@ -75,31 +86,28 @@ class GetExternalURLs:
                 for _ in range(3):
                     try:
                         page.goto(url, wait_until="networkidle", timeout=10000)
+
+                        ### Youtube
+                        with contextlib.suppress(Exception):
+                            page.get_by_role("button",
+                                             name="Reject the use of cookies and other data for the purposes described").click()
+                        with contextlib.suppress(Exception):
+                            page.get_by_role("button", name="Show more").click()
                         soupContents = BeautifulSoup(page.content(), 'lxml')
 
                         if extract_a:
                             linksInAHref = soupContents.find_all('a')
                             for tag in linksInAHref:
                                 link = tag.get('href', None)
-                                parsedURL = urllib.parse.urlparse(link)
+                                parsedURL = urlparse(link)
                                 if all([parsedURL.scheme, parsedURL.netloc]):
                                     if domain in link:
-                                        redirectLinks = redirectRegex.findall(link)
-                                        if 'redirect' in link and len(redirectLinks) > 0:
+                                        redirectLink = get_potential_redirect_value(link)
+                                        if redirectLink:
                                             try:
-                                                newLink = str(urllib.parse.unquote(redirectLinks[0]))[2:]
-                                                try:
-                                                    externalUrls[newLink].add(uid)
-                                                except KeyError:
-                                                    externalUrls[newLink] = {uid}
-                                            except IndexError:
-                                                try:
-                                                    externalUrls[redirectLinks[0]].add(uid)
-                                                except KeyError:
-                                                    externalUrls[redirectLinks[0]] = {uid}
-                                            except Exception:
-                                                pass
-
+                                                externalUrls[redirectLink].add(uid)
+                                            except KeyError:
+                                                externalUrls[redirectLink] = {uid}
                                     else:
                                         newLink = link.split('#')[0].split('?')[0]
                                         try:
@@ -110,7 +118,7 @@ class GetExternalURLs:
                             linksInImgSrc = soupContents.find_all('img')
                             for tag in linksInImgSrc:
                                 link = tag.get('src', None)
-                                parsedURL = urllib.parse.urlparse(link)
+                                parsedURL = urlparse(link)
                                 if all([parsedURL.scheme, parsedURL.netloc]) and domain not in link:
                                     newLink = link.split('#')[0].split('?')[0]
                                     try:
@@ -122,7 +130,7 @@ class GetExternalURLs:
                             linksInLinkHref = soupContents.find_all('link')
                             for tag in linksInLinkHref:
                                 link = tag.get('href', None)
-                                parsedURL = urllib.parse.urlparse(link)
+                                parsedURL = urlparse(link)
                                 if all([parsedURL.scheme, parsedURL.netloc]) and domain not in link:
                                     newLink = link.split('#')[0].split('?')[0]
                                     try:

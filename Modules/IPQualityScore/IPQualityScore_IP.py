@@ -44,45 +44,44 @@ class IPQualityScore_IP:
                                                                         "query. Please contact IPQualityScore " \
                                                                         " support if this error persists.":
                 return "Your account doesn't have sufficient credits to complete this operation."
-            else:
-                Country_Code = response['country_code']
-                # Region = response['region']
-                City = response['city']
-                # ISP = response['ISP']
-                ASN = response['ASN']
-                Organization = response['organization']
-                latitude = response['latitude']
-                longitude = response['longitude']
-                fraud_score = f"fraud_score: {response['fraud_score']}\n"
-                proxy = f"proxy: {response['proxy']}\n"
-                vpn = f"vpn: {response['vpn']}\n"
-                tor = f"tor: {response['tor']}\n"
-                is_crawler = f"iscrawler {response['is_crawler']}\n"
-                active_vpn = f"active vpn: {response['active_vpn']}\n"
-                active_tor = f"active tor: {response['active_tor']}\n"
-                recent_abuse = f"recent abuse: {response['recent_abuse']}\n"
-                bot_status = f"bot status: {response['bot_status']}\n"
+            Country_Code = response['country_code']
+            # Region = response['region']
+            City = response['city']
+            # ISP = response['ISP']
+            ASN = response['ASN']
+            Organization = response['organization']
+            latitude = response['latitude']
+            longitude = response['longitude']
+            fraud_score = f"fraud_score: {response['fraud_score']}\n"
+            proxy = f"proxy: {response['proxy']}\n"
+            vpn = f"vpn: {response['vpn']}\n"
+            tor = f"tor: {response['tor']}\n"
+            is_crawler = f"iscrawler {response['is_crawler']}\n"
+            active_vpn = f"active vpn: {response['active_vpn']}\n"
+            active_tor = f"active tor: {response['active_tor']}\n"
+            recent_abuse = f"recent abuse: {response['recent_abuse']}\n"
+            bot_status = f"bot status: {response['bot_status']}\n"
 
-                return_result.append([{'AS Number': f"AS{str(ASN)}",
-                                       'Entity Type': 'Autonomous System'},
-                                      {uid: {'Resolution': 'IPQualityScore AS Number', 'Notes': ''}}])
-                return_result.append([{'Organization Name': Organization,
-                                       'Entity Type': 'Organization'},
-                                      {uid: {'Resolution': 'IPQualityScore IP Organization', 'Notes': ''}}])
-                return_result.append([{'Country Name': pycountry.countries.get(alpha_2=Country_Code).name,
-                                       'Entity Type': 'Country'},
-                                      {uid: {'Resolution': 'IPQualityScore Scan', 'Notes': ''}}])
-                return_result.append([{'City Name': City,
-                                       'Entity Type': 'City'},
-                                      {uid: {'Resolution': 'IPQualityScore IP City Name', 'Notes': ''}}])
-                return_result.append([{'Label': str(primary_field) + " Location",
-                                       'Latitude': latitude,
-                                       'Longitude': longitude,
-                                       'Entity Type': 'GeoCoordinates'},
-                                      {uid: {'Resolution': 'IPQualityScore IP Geolocation', 'Notes': ''}}])
-                return_result.append([{'Phrase': response['request_id'],
-                                       'Notes': fraud_score + is_crawler + proxy + vpn + tor + active_vpn + active_tor +
-                                                recent_abuse + bot_status,
-                                       'Entity Type': 'Phrase'},
-                                      {uid: {'Resolution': 'IPQualityScore Scan ID', 'Notes': ''}}])
+            return_result.append([{'AS Number': f"AS{str(ASN)}",
+                                   'Entity Type': 'Autonomous System'},
+                                  {uid: {'Resolution': 'IPQualityScore AS Number', 'Notes': ''}}])
+            return_result.append([{'Organization Name': Organization,
+                                   'Entity Type': 'Organization'},
+                                  {uid: {'Resolution': 'IPQualityScore IP Organization', 'Notes': ''}}])
+            return_result.append([{'Country Name': pycountry.countries.get(alpha_2=Country_Code).name,
+                                   'Entity Type': 'Country'},
+                                  {uid: {'Resolution': 'IPQualityScore Scan', 'Notes': ''}}])
+            return_result.append([{'City Name': City,
+                                   'Entity Type': 'City'},
+                                  {uid: {'Resolution': 'IPQualityScore IP City Name', 'Notes': ''}}])
+            return_result.append([{'Label': f"{primary_field} Location",
+                                   'Latitude': latitude,
+                                   'Longitude': longitude,
+                                   'Entity Type': 'GeoCoordinates'},
+                                  {uid: {'Resolution': 'IPQualityScore IP Geolocation', 'Notes': ''}}])
+            return_result.append([{'Phrase': response['request_id'],
+                                   'Notes': fraud_score + is_crawler + proxy + vpn + tor + active_vpn + active_tor +
+                                            recent_abuse + bot_status,
+                                   'Entity Type': 'Phrase'},
+                                  {uid: {'Resolution': 'IPQualityScore Scan ID', 'Notes': ''}}])
         return return_result

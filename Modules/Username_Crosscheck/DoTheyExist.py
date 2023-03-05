@@ -64,12 +64,12 @@ class DoTheyExist:
 
                         page.locator(site['login_username_locator']).fill(primaryField)
 
-                        usernameSubmitLocator = site['username_submit_locator']
-                        if usernameSubmitLocator:
+                        if usernameSubmitLocator := site[
+                            'username_submit_locator'
+                        ]:
                             page.locator(usernameSubmitLocator).click()
 
-                        passwordLocator = site['password_locator']
-                        if passwordLocator:
+                        if passwordLocator := site['password_locator']:
                             page.locator(passwordLocator).fill('aaaaaa')
                         page.locator(site['login_submit_locator']).click()
 

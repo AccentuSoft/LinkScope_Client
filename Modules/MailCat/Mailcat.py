@@ -852,14 +852,11 @@ class Mailcat:
                         if chkKolab.status == 200:
 
                             kolabJSON = chkKolab.json()
-                            if kolabJSON["errors"]["login"] == kolabsuc:
-                                # print("[+] Success with {}@{}".format(target, kolabdomain))
+                            if (
+                                kolabJSON["errors"]["login"] != kolabsuc
+                                and kolabJSON["errors"]
+                            ):
                                 pass
-                            else:
-                                if kolabJSON["errors"]:
-                                    pass
-                                    # print(kolabJSON["errors"])
-
                     except Exception as e:
                         logger.error(e, exc_info=True)
 
@@ -1566,8 +1563,7 @@ class Mailcat:
 
         async def print_results(checker, stringToCheck: str, req_session_function, entityUID):
             originalString = stringToCheck
-            if stringToCheck.startswith('@'):
-                stringToCheck = stringToCheck[1:]
+            stringToCheck = stringToCheck.removeprefix('@')
             if '@' in stringToCheck:
                 stringToCheck = stringToCheck.split('@', 1)[0]  # The first part of an email address won't have a '@'.
 

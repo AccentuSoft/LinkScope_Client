@@ -15,7 +15,7 @@ class WebsiteFromPhrase:
         import re
         import tldextract
 
-        websiteRegex = re.compile(r"""^https?://(\S(?<!\.)){1,63}(\.(\S(?<!\.)){1,63})+$""")
+        websiteRegex = re.compile(r"""^https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)$""")
         wordChar = re.compile(r'\w')
 
         returnResults = []

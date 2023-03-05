@@ -29,7 +29,7 @@ class JSCodeExtractor:
         pubRegex = re.compile(r'\bca-pub-\d{1,16}\b', re.IGNORECASE)
         gtmRegex = re.compile(r'\bGTM-[A-Z\d]{1,7}\b')
         gRegex = re.compile(r'\bG-[A-Z\d]{1,15}\b', re.IGNORECASE)
-        qualtricsRegex = re.compile(r'\bQ_(?:Z|S)ID=\w*\b')
+        qualtricsRegex = re.compile(r'\bQ_[ZS]ID=\w*\b')
         pingdomRegex = re.compile(r'\bpa-[a-fA-F\d]{24}.js\b$')
         mPulseRegex = re.compile(r'go-mpulse.net/boomerang/[A-Z\d]{5}(?:-[A-Z\d]{5}){4}\b')
         contextWebRegex = re.compile(r'\.contextweb\.com.*token=.*')

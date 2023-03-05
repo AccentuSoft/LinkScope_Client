@@ -193,8 +193,7 @@ class TabbedPane(QtWidgets.QTabWidget):
         self.tabsNotesDict = {}
         self.previousTab = None
 
-        self.allBanners = {bannerID: bannerPath
-                           for bannerID, bannerPath in self.mainWindow.RESOURCEHANDLER.banners.items()}
+        self.allBanners = dict(self.mainWindow.RESOURCEHANDLER.banners.items())
 
         self.currentChanged.connect(self.currentTabChangedListener)
 
@@ -1167,7 +1166,7 @@ class CanvasView(QtWidgets.QGraphicsView):
 
     def setBanners(self) -> None:
         selectedEntities = [item for item in self.scene().selectedItems() if isinstance(item, Entity.BaseNode)]
-        if len(selectedEntities) < 1:
+        if not selectedEntities:
             self.tabbedPane.mainWindow.MESSAGEHANDLER.warning('Need to select at least one Entity to set its banner.',
                                                               popUp=True)
             return
@@ -1296,13 +1295,14 @@ class CanvasScene(QtWidgets.QGraphicsScene):
             for entity in entities:
                 try:
                     entityJson = self.parent().mainWindow.LENTDB.getEntity(entity.uid)
-                    bannerPathStr = self.parent().allBanners.get(entityJson.get('Canvas Banner', ''), '')
-                    if not bannerPathStr:
-                        entity.updateBanner(True, None)
-                    else:
+                    if bannerPathStr := self.parent().allBanners.get(
+                        entityJson.get('Canvas Banner', ''), ''
+                    ):
                         with open(bannerPathStr, 'rb') as bannerFile:
                             bannerByteArray = QtCore.QByteArray(bannerFile.read())
                         entity.updateBanner(False, bannerByteArray)
+                    else:
+                        entity.updateBanner(True, None)
                 except FileNotFoundError:
                     if bannerName not in notFoundBanners:
                         self.parent().mainWindow.MESSAGEHANDLER.error(f'Banner Icon not found in filesystem: '
