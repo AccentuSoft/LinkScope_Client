@@ -1950,7 +1950,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.URLMANAGER = URLManager.URLManager(self)
         self.dockbarThree = DockBarThree.DockBarThree(self)
         self.RESOURCEHANDLER = ResourceHandler.ResourceHandler(self)
-        self.LENTDB = EntityDB.EntitiesDB(self, self.MESSAGEHANDLER, self.RESOURCEHANDLER)
+        self.LENTDB = EntityDB.EntitiesDB(self)
         self.RESOLUTIONMANAGER = ResolutionManager.ResolutionManager(self)
         self.FCOM = FrontendCommunicationsHandler.CommunicationsHandler(self)
         self.LQLWIZARD = LQLQueryBuilder(self)

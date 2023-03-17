@@ -15,9 +15,7 @@ class EntitiesDB:
     links on a project-wide scale.
     """
 
-    def __init__(self, mainWindow, messageHandler, resourceHandler) -> None:
-        self.messageHandler = messageHandler
-        self.resourceHandler = resourceHandler
+    def __init__(self, mainWindow) -> None:
         self.mainWindow = mainWindow
         self.dbLock = Lock()
         self.database = None
@@ -33,17 +31,18 @@ class EntitiesDB:
             if self.database is not None:
                 self.save()
             databaseFile = Path(self.mainWindow.SETTINGS.value("Project/FilesDir")).joinpath("LocalEntitiesDB.lsdb")
-            self.messageHandler.debug(f'Opening Database at: {str(databaseFile)}')
+            self.mainWindow.MESSAGEHANDLER.debug(f'Opening Database at: {databaseFile}')
             try:
                 with open(databaseFile, "rb") as dbFile:
                     self.database = self.mainWindow.RESOURCEHANDLER.reconstructGraphFullFromFile(load(dbFile))
-                self.messageHandler.info('Loaded Local Entities Database.')
+                self.mainWindow.MESSAGEHANDLER.info('Loaded Local Entities Database.')
             except FileNotFoundError:
-                self.messageHandler.info('Creating new Local Entities Database.')
+                self.mainWindow.MESSAGEHANDLER.info('Creating new Local Entities Database.')
                 self.database = nx.DiGraph()
             except Exception as exc:
-                self.messageHandler.error(f'Cannot parse Database: {str(exc)}\nCreating new Local Entities Database.',
-                                          popUp=True)
+                self.mainWindow.MESSAGEHANDLER.error(
+                    f'Cannot parse Database: {exc}\nCreating new Local Entities Database.',
+                    popUp=True)
                 self.database = nx.DiGraph()
 
     def resetTimeline(self) -> None:
@@ -75,7 +74,7 @@ class EntitiesDB:
             with open(tmpSavePath, "wb") as dbFile:
                 dump(self.mainWindow.RESOURCEHANDLER.deconstructGraphForFileDump(self.database), dbFile)
             move(tmpSavePath, databaseFile)
-            self.messageHandler.info('Database Saved.')
+            self.mainWindow.MESSAGEHANDLER.info('Database Saved.')
 
     def addEntity(self, entJson: dict, fromServer: bool = False, updateTimeline: bool = True) -> Union[dict, None]:
         """
@@ -89,7 +88,7 @@ class EntitiesDB:
             if entJson.get('uid') is not None:
                 exists = self.getEntityNoLock(entJson.get('uid'))
 
-            entity = self.resourceHandler.getEntityJson(
+            entity = self.mainWindow.RESOURCEHANDLER.getEntityJson(
                 entJson.get('Entity Type'),
                 entJson)
 
@@ -124,7 +123,7 @@ class EntitiesDB:
                 if entJson.get('uid') is not None:
                     exists = self.getEntityNoLock(entJson.get('uid'))
 
-                entity = self.resourceHandler.getEntityJson(
+                entity = self.mainWindow.RESOURCEHANDLER.getEntityJson(
                     entJson.get('Entity Type'),
                     entJson)
 
@@ -155,13 +154,12 @@ class EntitiesDB:
         """
         with self.dbLock:
             exists = self.isLinkNoLock(linkJson['uid'])
-            link = self.resourceHandler.getLinkJson(linkJson)
+            link = self.mainWindow.RESOURCEHANDLER.getLinkJson(linkJson)
             if link is None:
                 # This can technically be caused by a race condition if the user
                 #   either tries really hard or gets really unlucky.
                 # Caused by deleting a node faster than the link can be created.
-                self.messageHandler.error("Attempted to add Link with "
-                                          "no uid to database.", popUp=True)
+                self.mainWindow.MESSAGEHANDLER.error("Attempted to add Link with no uid to database.", popUp=True)
                 return None
             else:
                 linkUID = link['uid']
@@ -203,7 +201,7 @@ class EntitiesDB:
             try:
                 returnValue = self.database.nodes[uid]
             except KeyError:
-                self.messageHandler.warning(f"Tried to get entity with nonexistent UID: {uid}")
+                self.mainWindow.MESSAGEHANDLER.warning(f"Tried to get entity with nonexistent UID: {uid}")
             finally:
                 return returnValue
 
@@ -215,8 +213,8 @@ class EntitiesDB:
             returnValue = None
             try:
                 returnValue = [self.database.nodes[node] for node in self.database.nodes()]
-            except KeyError:
-                self.messageHandler.error("Tried to get entity with nonexistent UID.")
+            except KeyError as keyError:
+                self.mainWindow.MESSAGEHANDLER.error(f"Tried to get entity with nonexistent UID. Error: {keyError}")
             finally:
                 return returnValue
 
@@ -230,7 +228,7 @@ class EntitiesDB:
             try:
                 returnValue = [self.database.edges[edge] for edge in self.database.edges()]
             except KeyError:
-                self.messageHandler.error("Tried to get link with nonexistent UID.")
+                self.mainWindow.MESSAGEHANDLER.error("Tried to get link with nonexistent UID.")
             finally:
                 return returnValue
 
@@ -258,8 +256,7 @@ class EntitiesDB:
             try:
                 returnValue = self.database.edges[uid]
             except KeyError:
-                self.messageHandler.error(
-                    "Tried to get link with nonexistent UID.")
+                self.mainWindow.MESSAGEHANDLER.error(f"Tried to get link with nonexistent UID: {uid}")
             finally:
                 return returnValue
 
@@ -310,7 +307,7 @@ class EntitiesDB:
         Checks if an entity with the specified primary attribute exists, and if it does, return it.
         """
         result = None
-        primaryField = self.resourceHandler.getPrimaryFieldForEntityType(entityType)
+        primaryField = self.mainWindow.RESOURCEHANDLER.getPrimaryFieldForEntityType(entityType)
         if primaryField is None:
             return result
         with self.dbLock:
