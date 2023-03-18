@@ -55,7 +55,7 @@ class ResolutionManager:
                                                                            'category': resolutionCategory,
                                                                            'resolution': resClass
                                                                            }
-                    self.mainWindow.MESSAGEHANDLER.info(f"Loaded Resolution: {resNameString}")
+                    self.mainWindow.MESSAGEHANDLER.debug(f"Loaded Resolution: {resNameString}")
                     resolutionsLoaded.append(f'{resolutionCategory}/{resNameString}')
             except Exception as e:
                 self.mainWindow.MESSAGEHANDLER.error(
