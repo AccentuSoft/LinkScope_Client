@@ -2462,6 +2462,17 @@
         "valid" : true
        },
        {
+        "name" : "Goodgame_Russia",
+        "uri_check" : "https://goodgame.ru/channel/{account}/",
+        "e_code" : 200,
+        "e_string" : "Онлайн-трансляция</title>",
+        "m_string" : "Такой страницы не существует",
+        "m_code" : 400,
+        "known" : ["ejysarmat", "gegeboyz"],
+        "cat" : "gaming",
+        "valid" : true
+       },
+       {
         "name" : "gpodder.net",
         "uri_check" : "https://gpodder.net/user/{account}/",
         "e_code" : 200,
@@ -4779,6 +4790,17 @@
         "valid" : true
        },
        {
+        "name" : "Pravda.me",
+        "uri_check" : "https://pravda.me/@{account}",
+        "e_code" : 200,
+        "e_string" : "Российская социальная сеть (by mastodon)</title>",
+        "m_string" : "<title>The page you are looking for isn&#39;t here.",
+        "m_code" : 404,
+        "known" : ["tass", "rt_russian"],
+        "cat" : "social",
+        "valid" : true
+       },
+       {
         "name" : "Producthunt",
         "uri_check" : "https://www.producthunt.com/@{account}",
         "e_code" : 200,
@@ -6727,6 +6749,17 @@
         "m_code" : 301,
         "known" : ["deae", "cheerfulsarcasm", "braydenskiresort"],
         "cat" : "social",
+        "valid" : true
+       },
+       {
+        "name" : "Wakatime",
+        "uri_check" : "https://wakatime.com/@{account}",
+        "e_code" : 200,
+        "e_string" : ") - WakaTime</title>",
+        "m_string" : "<title>404: Not Found",
+        "m_code" : 404,
+        "known" : ["jake", "alimirzayev"],
+        "cat" : "coding",
         "valid" : true
        },
        {
