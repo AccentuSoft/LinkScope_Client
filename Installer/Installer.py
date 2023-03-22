@@ -25,7 +25,7 @@ from PySide6 import QtCore, QtWidgets, QtGui
 python -m nuitka --follow-imports --onefile --noinclude-pytest-mode=nofollow --noinclude-setuptools-mode=nofollow ^
 --noinclude-custom-mode=setuptools:error --noinclude-IPython-mode=nofollow --enable-plugin=pyside6 ^
 --assume-yes-for-downloads --remove-output --disable-console --warn-unusual-code --show-modules ^
---windows-company-name="AccentuSoft" --windows-product-name="LinkScope Installer" --windows-product-version=2.0.0.0 ^
+--windows-company-name="AccentuSoft" --windows-product-name="LinkScope Installer" --windows-product-version=1.5.1.0 ^
 --include-data-files="Icon.ico=Icon.ico" --linux-icon="Icon.ico" --windows-icon-from-ico=".\Icon.ico" ^
 --windows-file-description="LinkScope Installer" ^
 Installer.py
