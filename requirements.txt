@@ -15,7 +15,7 @@ pydot
 networkx
 
 python-dateutil
-
+pyyaml
 tldextract
 ipwhois
 pycountry

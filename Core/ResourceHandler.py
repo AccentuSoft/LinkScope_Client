@@ -78,7 +78,7 @@ class ResourceHandler:
             'ISINID': re.compile(r"""^[a-zA-Z0-9]{2}-?[a-zA-Z0-9]{9}-?[a-zA-Z0-9]$"""),
             'SIC/NAICS': re.compile(r"""^[0-9]{4,6}$""")}
 
-        self.loadCoreEntities()
+        self.loadModuleEntities(self.programBaseDirPath / "Core" / "Entities")
 
     def getEntityCategories(self) -> list:
         return list(self.entityCategoryList)
@@ -216,19 +216,13 @@ class ResourceHandler:
                 continue
         return entityTypesAdded
 
-    def loadCoreEntities(self) -> None:
-        entDir = self.programBaseDirPath / "Core" / "Entities"
-        for entFile in listdir(entDir):
+    def loadModuleEntities(self, modulePath: Path) -> list:
+        allModuleEntitiesAdded = []
+        self.moduleAssetPaths.append(modulePath / "assets")
+        for entFile in listdir(modulePath):
             if entFile.endswith('.xml'):
-                self.addRecognisedEntityTypes(entDir / entFile)
-
-    def loadModuleEntities(self) -> None:
-        entDir = self.programBaseDirPath / "Modules"
-        for module in listdir(entDir):
-            for entFile in listdir(entDir / module):
-                if entFile.endswith('.xml'):
-                    self.addRecognisedEntityTypes(
-                        entDir / module / entFile)
+                allModuleEntitiesAdded += self.addRecognisedEntityTypes(modulePath / entFile)
+        return allModuleEntitiesAdded
 
     def getEntityJson(self, entityType: str, jsonData=None) -> Union[dict, None]:
         eJson = {'uid': str(uuid4())}

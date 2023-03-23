@@ -29,6 +29,7 @@ from PySide6 import QtWidgets, QtGui, QtCore, QtCharts
 
 from Core import MessageHandler, SettingsObject
 from Core import ResourceHandler
+from Core import ModuleManager
 from Core import ReportGeneration
 from Core import EntityDB
 from Core import ResolutionManager
@@ -95,6 +96,7 @@ class MainWindow(QtWidgets.QMainWindow):
         # Save the window settings
         self.SETTINGS.setGlobalValue("MainWindow/Geometry", self.saveGeometry().data())
         self.SETTINGS.setGlobalValue("MainWindow/WindowState", self.saveState().data())
+        self.SETTINGS.setGlobalValue("Program/Usage/First Time Start", False)
         if self.FCOM.isConnected():
             self.FCOM.close()
         self.SETTINGS.setValue("Project/Server/Project", "")
@@ -160,8 +162,7 @@ class MainWindow(QtWidgets.QMainWindow):
         saveAsDialog.setAcceptMode(QtWidgets.QFileDialog.AcceptMode.AcceptSave)
         saveAsDialog.setDirectory(str(Path.home()))
 
-        saveAsExec = saveAsDialog.exec()
-        if not saveAsExec:
+        if not saveAsDialog.exec():
             self.setStatus('Save As operation cancelled.')
             return
         fileName = saveAsDialog.selectedFiles()[0]
@@ -925,26 +926,17 @@ class MainWindow(QtWidgets.QMainWindow):
         Loads user-defined modules from the Modules folder in the installation directory.
         :return:
         """
-        self.RESOURCEHANDLER.loadModuleEntities()
-        modulesBasePath = Path(self.SETTINGS.value("Program/BaseDir")).joinpath("Modules")
-        for module in listdir(modulesBasePath):
-            self.RESOLUTIONMANAGER.loadResolutionsFromDir(modulesBasePath / module)
+        self.MODULEMANAGER.loadAllModules()
         self.setStatus('Loaded Modules.')
 
     def reloadModules(self) -> None:
         """
         Same as loadModules, except this one updates the GUI to show newly loaded entities and resolutions.
-        This is meant to be ran after the application started, in case the user wants to load a module without
+        This is meant to be run after the application started, in case the user wants to load a module without
         closing and reopening the application.
         :return:
         """
-        self.RESOURCEHANDLER.loadModuleEntities()
-        modulesBasePath = Path(self.SETTINGS.value("Program/BaseDir")).joinpath("Modules")
-        for module in listdir(modulesBasePath):
-            try:
-                self.RESOLUTIONMANAGER.loadResolutionsFromDir(modulesBasePath / module)
-            except TypeError:
-                self.RESOLUTIONMANAGER.loadResolutionsFromDir(modulesBasePath / module.decode('utf-8'))
+        self.MODULEMANAGER.loadAllModules()
         self.dockbarOne.existingEntitiesPalette.loadEntities()
         self.dockbarOne.resolutionsPalette.loadAllResolutions()
         self.dockbarOne.nodesPalette.loadEntities()
@@ -1955,6 +1947,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.RESOURCEHANDLER = ResourceHandler.ResourceHandler(self)
         self.LENTDB = EntityDB.EntitiesDB(self)
         self.RESOLUTIONMANAGER = ResolutionManager.ResolutionManager(self)
+        self.MODULEMANAGER = ModuleManager.ModulesManager(self)
         self.FCOM = FrontendCommunicationsHandler.CommunicationsHandler(self)
         self.LQLWIZARD = LQLQueryBuilder(self)
 

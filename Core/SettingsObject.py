@@ -58,6 +58,8 @@ class SettingsObject(dict):
                                      self.globalSettings.value("Program/Graphics/Link Text Color", "#000000"))
         self.globalSettings.setValue("Program/Graphics/Label Fade Scroll Distance",
                                      self.globalSettings.value("Program/Graphics/Label Fade Scroll Distance", "3"))
+        self.globalSettings.setValue("Program/Usage/First Time Start",
+                                     self.globalSettings.value("Program/Usage/First Time Start", True))
 
         self.setValue("Project/Name", "Untitled")
         self.setValue("Project/BaseDir", "")
