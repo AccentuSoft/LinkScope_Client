@@ -39,7 +39,7 @@ python -m nuitka --follow-imports --standalone --noinclude-pytest-mode=nofollow 
 --include-data-dir="Core\Entities=Core\Entities" ^
 --warn-unusual-code --show-modules --include-data-files="Icon.ico=Icon.ico" ^
 --windows-icon-from-ico=".\Icon.ico" --include-data-dir="magic=magic" --windows-company-name=AccentuSoft ^
---windows-product-name="LinkScope Client" --windows-product-version="1.5.1.0" ^
+--windows-product-name="LinkScope Client" --windows-product-version="1.6.0.0" ^
 --windows-file-description="LinkScope Client Software" ^
 --include-package-data=playwright ^
 --include-package-data=folium --include-package-data=branca ^
