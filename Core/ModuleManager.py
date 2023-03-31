@@ -7,8 +7,6 @@ import site
 import sys
 import venv
 import subprocess
-import importlib.util
-import contextlib
 import yaml
 from pathlib import Path
 
@@ -30,9 +28,9 @@ class ModulesManager:
         self.modulesPythonPath = self.modulesBaseDirectoryPath / 'bin' / 'python3'
         self.modules = {}
 
-        venvThread = InitialiseVenvThread(self)
-        venvThread.configureVenvOfMainThreadSignal.connect(self.configureVenv)
-        venvThread.start()
+        self.venvThread = InitialiseVenvThread(self)
+        self.venvThread.configureVenvOfMainThreadSignal.connect(self.configureVenv)
+        self.venvThread.start()
 
     def configureVenv(self, venvPath):
         binDir = os.path.dirname(venvPath / 'bin')
@@ -53,6 +51,9 @@ class ModulesManager:
 
         sys.real_prefix = sys.prefix
         sys.prefix = base
+
+        self.mainWindow.MESSAGEHANDLER.info("Loaded Modules environment.")
+        self.mainWindow.MESSAGEHANDLER.debug(f"OS Path: {os.environ['PATH']}")
 
     def installModule(self, uniqueModuleName: str, moduleFilePath: Path) -> bool:
         newModuleDirectoryPath = self.modulesDirectoryPath / uniqueModuleName
@@ -284,7 +285,6 @@ class InitialiseVenvThread(QtCore.QThread):
         if not (venvPath / 'bin').exists():
             venv.create(venvPath, symlinks=True, with_pip=True, upgrade_deps=True)
 
-        self.modulesManager.configureVenv(venvPath)
         self.configureVenvOfMainThreadSignal.emit(venvPath)
 
         # Install / upgrade playwright if not already installed, since it needs special treatment.
