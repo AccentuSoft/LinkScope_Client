@@ -1896,7 +1896,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.centralWidget().tabbedPane.createHomeTab()
 
         self.setStatus("Ready")
-        self.MESSAGEHANDLER.info('Project opened, ready to work.')
+        self.MESSAGEHANDLER.info(f"Project {self.SETTINGS.value('Project/Name', 'Untitled')} opened.")
 
     def __init__(self):
         super(MainWindow, self).__init__()
