@@ -130,8 +130,10 @@ class EntityDetails(QtWidgets.QWidget):
         self.summaryIcon = QtWidgets.QLabel("")
         self.summaryIcon.setSizePolicy(QtWidgets.QSizePolicy.Policy.Minimum, QtWidgets.QSizePolicy.Policy.Minimum)
         self.entityTypeLabel = QtWidgets.QLabel("")
-        self.entityUIDLabel = QtWidgets.QLabel("")
-        self.entityPrimaryLabel = QtWidgets.QLabel("")
+        self.entityUIDLabel = QtWidgets.QLineEdit("")
+        self.entityUIDLabel.setReadOnly(True)
+        self.entityPrimaryLabel = QtWidgets.QLineEdit("")
+        self.entityPrimaryLabel.setReadOnly(True)
         summaryLayout.addWidget(self.summaryIcon, 0, 0)
         summaryLayout.addWidget(self.entityTypeLabel, 0, 1, 1, 3)
         summaryLayout.addWidget(self.entityPrimaryLabel, 1, 1)
@@ -281,8 +283,11 @@ class EntityDetails(QtWidgets.QWidget):
                 self.detailsLayoutOneNode.addWidget(notesTextArea, rowCount, 1, 10, 1)
                 rowCount += 9
             else:
+                valueLabel = QtWidgets.QLineEdit(str(jsonDict[key]))
+                valueLabel.setReadOnly(True)
+
                 self.detailsLayoutOneNode.addWidget(QtWidgets.QLabel(key), rowCount, 0)
-                self.detailsLayoutOneNode.addWidget(QtWidgets.QLabel(str(jsonDict[key])), rowCount, 1)
+                self.detailsLayoutOneNode.addWidget(valueLabel, rowCount, 1)
             rowCount += 1
         filePath = jsonDict.get('File Path')
         if filePath is not None:
@@ -415,7 +420,8 @@ class SingleLinkItem(QtWidgets.QWidget):
         self.linkItemPic = QtWidgets.QLabel()
 
         self.linkItemPic.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
-        self.linkItemName = QtWidgets.QLabel()
+        self.linkItemName = QtWidgets.QLineEdit()
+        self.linkItemName.setReadOnly(True)
 
         self.linkItemName.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
         self.linkItemUid = ""
