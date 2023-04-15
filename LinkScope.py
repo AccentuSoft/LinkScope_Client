@@ -2632,10 +2632,12 @@ class ResolutionParametersSelector(QtWidgets.QDialog):
 
     def __init__(self, mainWindowObject, resolutionName, properties: dict, includeEntitySelector: list = None,
                  originTypes: list = None, resolutionDescription: str = None,
-                 windowTitle: str = 'Resolution Parameter Selector') -> None:
+                 windowTitle: str = None) -> None:
         super(ResolutionParametersSelector, self).__init__()
 
         self.setModal(True)
+        if windowTitle is None:
+            windowTitle = f'Resolution Parameter Selector: {resolutionName}'
         self.setWindowTitle(windowTitle)
         self.parametersList = []
         # Have two separate dicts for readability.
