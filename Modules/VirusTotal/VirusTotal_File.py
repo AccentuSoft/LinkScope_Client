@@ -18,7 +18,7 @@ class VirusTotal_File:
     def resolution(self, entityJsonList, parameters):
         import json
         import requests
-        import time
+        from time import sleep
         from pathlib import Path
         from datetime import datetime
         from vtapi3 import VirusTotalAPIFiles, VirusTotalAPIError
@@ -27,48 +27,42 @@ class VirusTotal_File:
         api_key = parameters['VirusTotal API Key'].strip()
         vt_files = VirusTotalAPIFiles(str(api_key))
         url = "https://www.virustotal.com/api/v3/analyses/"
+        headers = {
+            'x-apikey': api_key
+        }
         for entity in entityJsonList:
             uid = entity['uid']
             file_path = Path(parameters['Project Files Directory']) / entity['File Path']
-            if not (file_path.exists() and file_path.is_file()):
+            if not file_path.exists() or not file_path.is_file():
                 continue
             try:
                 results = vt_files.upload(str(file_path))
             except VirusTotalAPIError as err:
-                return "VirusTotal Error: " + str(err)
+                return f"VirusTotal Error: {str(err)}"
             else:
-                if vt_files.get_last_http_error() == vt_files.HTTP_OK:
-                    results = json.loads(results)
-                    results = json.dumps(results, sort_keys=False, indent=4)
-                    headers = {
-                        'x-apikey': api_key
-                    }
-                    results = json.loads(results)
-                    response = requests.get(url + str(results['data']['id']), headers=headers)
-                    response = response.json()
-                    harmless = response['data']['attributes']['stats']['harmless']
-                    suspicious = response['data']['attributes']['stats']['suspicious']
-                    malicious = response['data']['attributes']['stats']['malicious']
-                    undetected = response['data']['attributes']['stats']['undetected']
-                    while undetected == 0 and malicious == 0 and suspicious == 0 and harmless == 0:
-                        time.sleep(7)
-                        self.resolution(entityJsonList, parameters)
-                    return_result.append([{'Hash Value': response['meta']['file_info']['md5'],
-                                           'Hash Algorithm': "MD5",
-                                           'Notes': "Harmless:" + " " + str(
-                                               harmless) + "\n" +
-                                                    "Malicious:" + " " + str(
-                                               malicious) + "\n" +
-                                                    "Suspicious:" + " " + str(
-                                               suspicious) + "\n" +
-                                                    "Undetected:" + " " + str(
-                                               undetected) + "\n" +
-                                                    "Type Unsupported" + " " + str(
-                                               response['data']['attributes']['stats']['type-unsupported']),
-                                           'Date Created': datetime.utcfromtimestamp(
-                                               response['data']['attributes']['date']).strftime('%Y-%m-%dT%H:%M:%S'),
-                                           'Entity Type': 'Hash'},
-                                          {uid: {'Resolution': 'VirusTotal File Scan', 'Notes': ''}}])
-                else:
-                    return 'HTTP Error [' + str(vt_files.get_last_http_error()) + ']'
-            return return_result
+                if vt_files.get_last_http_error() != vt_files.HTTP_OK:
+                    return f'HTTP Error: {vt_files.get_last_http_error()}'
+                results = json.loads(results)
+                while True:
+                    response_req = requests.get(url + str(results['data']['id']), headers=headers)
+                    response = response_req.json()
+                    if response['data']['attributes']['status'] == 'completed':
+                        break
+                    sleep(5)
+                harmless = response['data']['attributes']['stats']['harmless']
+                suspicious = response['data']['attributes']['stats']['suspicious']
+                malicious = response['data']['attributes']['stats']['malicious']
+                undetected = response['data']['attributes']['stats']['undetected']
+                unsupported = response['data']['attributes']['stats']['type-unsupported']
+                return_result.append([{'Hash Value': response['meta']['file_info']['md5'],
+                                       'Hash Algorithm': "MD5",
+                                       'VT Malicious Votes': f"{malicious}",
+                                       'VT Suspicious Votes': f"{suspicious}",
+                                       'VT Harmless Votes': f"{harmless}",
+                                       'VT Undetected Votes': f"{undetected}",
+                                       'VT Unsupported Votes': f"{unsupported}",
+                                       'Date Created': datetime.utcfromtimestamp(
+                                           response['data']['attributes']['date']).strftime('%Y-%m-%dT%H:%M:%S'),
+                                       'Entity Type': 'Hash'},
+                                      {uid: {'Resolution': 'VirusTotal File Scan', 'Notes': ''}}])
+        return return_result

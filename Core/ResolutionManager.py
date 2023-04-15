@@ -70,7 +70,7 @@ class ResolutionManager:
     def getResolutionParameters(self, resolutionCategory, resolutionNameString):
         resolutionsList = self.resolutions.get(resolutionCategory)
         if resolutionsList is not None and resolutionNameString in resolutionsList:
-            return self.resolutions[resolutionCategory][resolutionNameString]['parameters']
+            return dict(self.resolutions[resolutionCategory][resolutionNameString]['parameters'])
         return None
 
     def getResolutionOriginTypes(self, resolutionCategoryNameString: str) -> Union[list, None]:

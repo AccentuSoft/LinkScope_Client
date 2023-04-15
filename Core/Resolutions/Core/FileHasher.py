@@ -7,17 +7,17 @@ class FileHasher:
     description = "Get the Hash of a file."
     originTypes = {"Image", "Document", "Spreadsheet", "Video", "Archive", "Disk"}
     resultTypes = {'Hash'}
-    parameters = {'hashing_algorithms': {'description': 'The type of hash/es that will be returned',
-                                         'type': 'MultiChoice',
-                                         'value': {'SHA1', 'SHA256', 'MD5'}
-                                         }}
+    parameters = {'Hashing Algorithm': {'description': 'Choose the type of hash(es) that you want to be returned:',
+                                        'type': 'MultiChoice',
+                                        'value': {'SHA1', 'SHA256', 'MD5'}
+                                        }}
 
     def resolution(self, entityJsonList, parameters):
         import hashlib
         from pathlib import Path
 
         return_result = []
-        hashing_algorithms = parameters['hashing_algorithms']
+        hashing_algorithms = parameters['Hashing Algorithm']
         for entity in entityJsonList:
             uid = entity['uid']
             file_path = Path(parameters['Project Files Directory']) / entity['File Path']

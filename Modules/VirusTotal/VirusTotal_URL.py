@@ -25,48 +25,43 @@ class VirusTotal_URL:
         api_key = parameters['VirusTotal API Key'].strip()
         vt_api_urls = VirusTotalAPIUrls(api_key)
         url = "https://www.virustotal.com/api/v3/analyses/"
-
-        def getVirusTotalResults(entityPrimaryField):
-            vtResult = vt_api_urls.upload(entityPrimaryField)
-            if vt_api_urls.get_last_http_error() == vt_api_urls.HTTP_OK:
-                results = json.loads(vtResult)
-                results = json.dumps(results, sort_keys=False)
-                headers = {
-                    'x-apikey': api_key
-                }
-                results = json.loads(results)
-                response = requests.get(url + str(results['data']['id']), headers=headers)
-                response = response.json()
-                queryID = response['meta']['url_info']['id']
-                harmless = response['data']['attributes']['stats']['harmless']
-                suspicious = response['data']['attributes']['stats']['suspicious']
-                malicious = response['data']['attributes']['stats']['malicious']
-                undetected = response['data']['attributes']['stats']['undetected']
-                return queryID, harmless, suspicious, malicious, undetected
-            else:
-                return "An error occurred"
+        headers = {
+            'x-apikey': api_key
+        }
 
         for entity in entityJsonList:
             uid = entity['uid']
-            primary_field = entity[list(entity)[1]].strip()
+            primary_field = entity['URL'].strip()
             try:
                 if not primary_field.startswith('http://') and not primary_field.startswith('https://'):
-                    primary_field = 'http://' + primary_field
-                result = getVirusTotalResults(primary_field)
-                while result is None or int(result[1]) + int(result[2]) + int(result[3]) + int(result[4]) == 0:
-                    time.sleep(5)
-                    result = getVirusTotalResults(primary_field)
+                    primary_field = f'http://{primary_field}'
 
-                return_result.append([{'Phrase': result[0],
-                                       'Notes': "Harmless:" + " " + str(result[1]) + " \n" +
-                                                "Malicious:" + " " + str(result[3]) + "\n" +
-                                                "Suspicious:" + " " + str(result[2]) + "\n" +
-                                                "Undetected:" + " " + str(result[4]),
-                                       'Entity Type': 'Phrase'},
-                                      {uid: {'Resolution': 'VirusTotal URL Scan', 'Notes': ''}}])
+                vtResult = vt_api_urls.upload(primary_field)
+                if vt_api_urls.get_last_http_error() == vt_api_urls.HTTP_OK:
+                    results = json.loads(vtResult)
 
-            except VirusTotalAPIError:
-                continue
+                    while True:
+                        response_req = requests.get(f"{url}{results['data']['id']}", headers=headers)
+                        if response_req.status_code != 200:
+                            return "Failed getting info from VirusTotal."
+                        response = response_req.json()
+                        if response['data']['status'] == 'completed':
+                            break
+                        time.sleep(5)
+
+                    analysis_stats = response['data']['attributes']['last_analysis_stats']
+                    return_result.append([{'Phrase': f"VirusTotal Scan Results for {primary_field}",
+                                           'VT Malicious Votes': analysis_stats['malicious'],
+                                           'VT Suspicious Votes': analysis_stats['suspicious'],
+                                           'VT Harmless Votes': analysis_stats['harmless'],
+                                           'VT Undetected Votes': analysis_stats['undetected'],
+                                           'VT Timeout Votes': analysis_stats['timeout'],
+                                           'Entity Type': 'Phrase'
+                                           },
+                                          {uid: {'Resolution': 'VirusTotal URL Scan', 'Notes': ''}}])
+
+            except VirusTotalAPIError as e:
+                return f"VirusTotal Error: {e}"
             finally:
                 time.sleep(0.25)
 
