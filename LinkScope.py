@@ -669,7 +669,7 @@ class MainWindow(QtWidgets.QMainWindow):
                     entityTypesOnCanvas[itemType][itemPrimaryFieldValue] = set()
                 entityTypesOnCanvas[itemType][itemPrimaryFieldValue].add(uid)
 
-        findPrompt = FindEntityOfTypeOnCanvasDialog(entityTypesOnCanvas, regex)
+        findPrompt = FindEntityOfTypeOnCanvasDialog(self, entityTypesOnCanvas, regex)
 
         if findPrompt.exec():
             findText = findPrompt.findInput.text()
@@ -3331,7 +3331,7 @@ class FindEntityOnCanvasDialog(QtWidgets.QDialog):
 
 class FindEntityOfTypeOnCanvasDialog(QtWidgets.QDialog):
 
-    def __init__(self, entityTypesDict: dict, regex: bool):
+    def __init__(self, mainWindowObject, entityTypesDict: dict, regex: bool):
         super(FindEntityOfTypeOnCanvasDialog, self).__init__()
         self.setModal(True)
         self.setMinimumWidth(400)
@@ -3380,7 +3380,11 @@ class FindEntityOfTypeOnCanvasDialog(QtWidgets.QDialog):
         findLayout.addWidget(confirmButton, 2, 1, 1, 1)
         findLayout.addWidget(cancelButton, 2, 0, 1, 1)
 
-        self.changeSelectedType()
+        try:
+            self.changeSelectedType()
+        except KeyError:
+            mainWindowObject.MESSAGEHANDLER.error('No Nodes present on current canvas.', popUp=True, exc_info=False)
+            return
 
     def changeSelectedType(self):
         self.findInput.setCompleter(self.autoCompleters[self.typeInput.currentText()])
