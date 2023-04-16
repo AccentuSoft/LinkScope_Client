@@ -1187,6 +1187,7 @@ class MainWindow(QtWidgets.QMainWindow):
         resolutionThread = ResolutionExecutorThread(
             resolutionName, resolutionInputEntities, resolutionParameterValues, self, resolutionUID)
         resolutionThread.sig.connect(self.resolutionSignalListener)
+        resolutionThread.sigStr.connect(self.resolutionSignalListener)
         resolutionThread.sigError.connect(self.resolutionErrorSignalListener)
         self.MESSAGEHANDLER.info(f'Running Resolution: {resolution}')
         self.setStatus(f"Running Resolution: {resolution}")
@@ -2593,7 +2594,8 @@ class NewOrOpenWidget(QtWidgets.QDialog):
 
 
 class ResolutionExecutorThread(QtCore.QThread):
-    sig = QtCore.Signal(str, dict, str)
+    sig = QtCore.Signal(str, list, str)
+    sigStr = QtCore.Signal(str, str, str)
     sigError = QtCore.Signal(str)
 
     def __init__(self, resolution: str, resolutionArgument: list, resolutionParameters: dict,
@@ -2624,7 +2626,10 @@ class ResolutionExecutorThread(QtCore.QThread):
 
         # If the resolution is ran on the server or there is a problem, don't emit signal.
         if ret is not None and self.return_results:
-            self.sig.emit(self.resolution, ret, self.uid)
+            if isinstance(ret, str):
+                self.sigStr.emit(self.resolution, ret, self.uid)
+            else:
+                self.sig.emit(self.resolution, ret, self.uid)
             self.done = True
 
 
