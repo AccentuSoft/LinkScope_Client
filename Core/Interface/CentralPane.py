@@ -1697,6 +1697,9 @@ class CanvasScene(QtWidgets.QGraphicsScene):
                 # Should never happen, but we will handle it if it does.
                 self.parent().mainWindow.MESSAGEHANDLER.warning(f'Entity without valid Date Created: {str(node)}')
                 entityDate = datetime.now().replace(microsecond=0, second=0)
+            if entityDate.tzinfo is None or entityDate.tzinfo.utcoffset(entityDate) is None:
+                # Make timezone-naive objects into timezone-aware, with the user's current timezone.
+                entityDate = entityDate.replace(tzinfo=datetime.now().astimezone().tzinfo)
             if entityDate not in nodesOnCanvas:
                 nodesOnCanvas[entityDate] = [node]
             else:
