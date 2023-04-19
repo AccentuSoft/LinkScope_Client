@@ -4163,9 +4163,12 @@ class QueryBuilderWizard(QtWidgets.QDialog):
         if self.queryNewOrHistory.currentIndex() == 0:
             sourceResults = []
             for sourceValue in self.sourceValues:
-                sourceResult = [sourceValue.layout().itemAt(0).widget().currentText(),
-                                sourceValue.layout().itemAt(1).widget().currentText(),
-                                False if sourceValue.layout().itemAt(2).widget().currentText() == 'MATCHES' else True]
+                sourceResult = [
+                    sourceValue.layout().itemAt(0).widget().currentText(),
+                    sourceValue.layout().itemAt(1).widget().currentText(),
+                    sourceValue.layout().itemAt(2).widget().currentText()
+                    != 'MATCHES',
+                ]
                 if sourceValue.layout().itemAt(3).widget().layout().currentIndex() == 0:
                     try:
                         sourceResult.append(
@@ -4187,9 +4190,8 @@ class QueryBuilderWizard(QtWidgets.QDialog):
 
             modificationResults = []
             for modificationValue in self.modificationValues:
-                modificationResult = []
                 specifierText = modificationValue.layout().itemAt(1).widget().currentText()
-                modificationResult.append(specifierText)
+                modificationResult = [specifierText]
                 if specifierText == 'MODIFY':
                     try:
                         modificationResult.append(
@@ -4207,9 +4209,10 @@ class QueryBuilderWizard(QtWidgets.QDialog):
 
             currentSelectStatement = self.selectStatementPicker.currentText()
             if currentSelectStatement == 'SELECT':
-                selectedFields = []
-                for item in self.selectStatementList.selectedItems():
-                    selectedFields.append(item.text())
+                selectedFields = [
+                    item.text()
+                    for item in self.selectStatementList.selectedItems()
+                ]
             else:
                 selectedFields = self.selectStatementTextbox.text()
             sourceStatement = self.sourceStatementPicker.currentText()
