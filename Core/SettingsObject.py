@@ -76,10 +76,11 @@ class SettingsObject(dict):
     def getGroupSettings(self, settingsGroup: str) -> dict:
         if not settingsGroup.endswith('/'):
             settingsGroup += '/'
-        settingsDict = {}
-        for setting in self.globalSettings.allKeys():
-            if setting.startswith(settingsGroup):
-                settingsDict[setting] = self.globalSettings.value(setting)
+        settingsDict = {
+            setting: self.globalSettings.value(setting)
+            for setting in self.globalSettings.allKeys()
+            if setting.startswith(settingsGroup)
+        }
         for setting in self:
             if setting.startswith(settingsGroup):
                 settingsDict[setting] = self[setting]
@@ -122,7 +123,7 @@ class SettingsObject(dict):
         self.globalSettings.sync()
         globalSettingsSavingError = self.globalSettings.status()
         if globalSettingsSavingError != self.globalSettings.Status.NoError:
-            raise Exception(f'Could not save global settings: {globalSettingsSavingError}')
+            raise ValueError(f'Could not save global settings: {globalSettingsSavingError}')
 
     def load(self, savedDict: dict) -> None:
         # No need to do anything with global settings.
