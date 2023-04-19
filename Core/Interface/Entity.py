@@ -298,10 +298,6 @@ class BaseConnector(QGraphicsItemGroup):
     def endItem(self) -> BaseNode:
         return self.myEndItem
 
-    def updatePosition(self) -> None:
-        self.line = QtCore.QLineF(self.mapFromItem(self.myStartItem, 0, 0), self.mapFromItem(self.myEndItem, 0, 0))
-        self.update()
-
     def boundingRect(self) -> QtCore.QRectF:
         extra = self.pen.width() + 20
         p1 = self.line.p1()

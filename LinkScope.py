@@ -124,6 +124,10 @@ class MainWindow(QtWidgets.QMainWindow):
         self.RESOLUTIONMANAGER.save()
         self.centralWidget().tabbedPane.save()
 
+    def resetMainWindowTitle(self):
+        self.setWindowTitle(f"LinkScope {self.SETTINGS.value('Program/Version', 'N/A')}"
+                            f" - {self.SETTINGS.value('Project/Name', 'Untitled')}")
+
     def saveProject(self) -> None:
         try:
             self.saveHelper()
@@ -208,7 +212,7 @@ class MainWindow(QtWidgets.QMainWindow):
             self.SETTINGS.setValue("Project/Name", oldName)
             return
 
-        self.setWindowTitle("LinkScope - " + self.SETTINGS.value('Project/Name', 'Untitled'))
+        self.resetMainWindowTitle()
         self.saveProject()
         self.setStatus(f'Project Saved As: {newProjectPath.name}')
 
@@ -319,13 +323,12 @@ class MainWindow(QtWidgets.QMainWindow):
                 read_graphml = nx.read_graphml(filePath)
                 read_graphml_nodes = {key: read_graphml.nodes[key] for key in read_graphml.nodes}
                 read_graphml_edges = {key: read_graphml.edges[key] for key in read_graphml.edges}
-                for node in read_graphml_nodes:
+                for nodeValue in read_graphml_nodes.values():
                     # Make sure that all the necessary values are assigned.
                     # This will throw an exception if the user imports an entity without a type.
-                    read_graphml_nodes[node] = self.RESOURCEHANDLER.getEntityJson(
-                        read_graphml_nodes[node]['Entity Type'], read_graphml_nodes[node])
-                    if read_graphml_nodes[node].get('Child UIDs'):
-                        read_graphml_nodes[node]['Child UIDs'] = literal_eval(read_graphml_nodes[node]['Child UIDs'])
+                    nodeValue = self.RESOURCEHANDLER.getEntityJson(nodeValue['Entity Type'], nodeValue)
+                    if nodeValue.get('Child UIDs'):
+                        nodeValue['Child UIDs'] = literal_eval(nodeValue['Child UIDs'])
                 for edge in read_graphml_edges:
                     read_graphml_edges[edge]['uid'] = literal_eval(read_graphml_edges[edge]['uid'])
                     # Make sure that all the necessary values are assigned.
@@ -386,7 +389,7 @@ class MainWindow(QtWidgets.QMainWindow):
         oldProjectFile = newBaseDir.joinpath(f'{oldName}.linkscope')
         oldProjectFile.unlink(missing_ok=True)
 
-        self.setWindowTitle("LinkScope - " + self.SETTINGS.value('Project/Name', 'Untitled'))
+        self.resetMainWindowTitle()
         self.saveProject()
         statusMessage = f'Project Renamed to: {newName}'
         self.setStatus(statusMessage)
@@ -1876,8 +1879,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setMenuBar(MenuBar.MenuBar(self))
 
         # Set the main window title and show it to the user.
-        self.setWindowTitle(f"LinkScope {self.SETTINGS.value('Program/Version', 'N/A')}"
-                            f" - {self.SETTINGS.value('Project/Name', 'Untitled')}")
+        self.resetMainWindowTitle()
         iconPath = Path(self.SETTINGS.value('Program/BaseDir')) / 'Icon.ico'
         appIcon = QtGui.QIcon(str(iconPath))
         self.setWindowIcon(appIcon)
@@ -3221,7 +3223,7 @@ class ProjectEditDialog(QtWidgets.QDialog):
 class SettingsEditTextBox(QtWidgets.QLineEdit):
 
     def __init__(self, contents: str, settingsKey: str):
-        super(SettingsEditTextBox, self).__init__(str(contents))
+        super(SettingsEditTextBox, self).__init__(contents)
         self.settingsKey = settingsKey
         self.keyDeleted = False
         self.setToolTip("Edit the contents to change the setting's value.")
@@ -3467,16 +3469,13 @@ class FindResolutionDialog(QtWidgets.QDialog):
         self.resultsWidget.clear()
         target = self.targetDropDown.currentText()
         validResolutions = []
-        if target != 'Any':
-            for category in self.resolutions:
-                for resolution in self.resolutions[category]:
-                    if target in self.resolutions[category][resolution]['originTypes']:
-                        validResolutions.append(category + '/' + resolution)
-        else:
-            for category in self.resolutions:
-                for resolution in self.resolutions[category]:
-                    validResolutions.append(category + '/' + resolution)
+        for category in self.resolutions:
+            for resolution in self.resolutions[category]:
+                if target == 'Any':
+                    validResolutions.append(f'{category}/{resolution}')
 
+                elif target in self.resolutions[category][resolution]['originTypes']:
+                    validResolutions.append(f'{category}/{resolution}')
         origin = self.originDropDown.currentText()
         if origin != 'Any':
             for category in self.resolutions:
@@ -4536,16 +4535,17 @@ class ConditionClauseWidget(QtWidgets.QFrame):
         else:
             returnValues.append(True)
         conditionValue = []
+        valueConditionLayout = self.layout().itemAt(3).widget().layout().itemAt(0).widget().layout()
 
         if specifierValue == 'Value Condition':
-            conditionValue.append(
-                self.layout().itemAt(3).widget().layout().itemAt(0).widget().layout().itemAt(0).widget().currentText())
-            conditionValue.append(
-                self.layout().itemAt(3).widget().layout().itemAt(0).widget().layout().itemAt(1).widget().text())
-            conditionValue.append(
-                self.layout().itemAt(3).widget().layout().itemAt(0).widget().layout().itemAt(2).widget().currentText())
-            conditionValue.append(
-                self.layout().itemAt(3).widget().layout().itemAt(0).widget().layout().itemAt(3).widget().text())
+            conditionValue.extend(
+                (
+                    valueConditionLayout.itemAt(0).widget().currentText(),
+                    valueConditionLayout.itemAt(1).widget().text(),
+                    valueConditionLayout.itemAt(2).widget().currentText(),
+                    valueConditionLayout.itemAt(3).widget().text(),
+                )
+            )
         else:
             conditionValue.append(
                 self.layout().itemAt(3).widget().layout().itemAt(1).widget().layout().itemAt(0).widget().currentText())

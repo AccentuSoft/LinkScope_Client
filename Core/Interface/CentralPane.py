@@ -761,7 +761,6 @@ class CanvasView(QtWidgets.QGraphicsView):
         self.setSizePolicy(QtWidgets.QSizePolicy(
             QtWidgets.QSizePolicy.Policy.Expanding, QtWidgets.QSizePolicy.Policy.Expanding))
 
-        self.dragOver = False
         self.synced = False
 
         self.menu = QtWidgets.QMenu()
@@ -863,7 +862,7 @@ class CanvasView(QtWidgets.QGraphicsView):
     def drawBackground(self, painter: QtGui.QPainter, rect: Union[QtCore.QRectF, QtCore.QRect]) -> None:
         super(CanvasView, self).drawBackground(painter, rect)
         # Ensure that all links will always be drawn.
-        [link.paint(painter, None, None) for link in list(self.scene().linksDict.values())]
+        [link.paint(painter, None, None) for link in self.scene().linksDict.values()]
 
     def centerViewportOnNode(self, uid: str) -> None:
         node = self.scene().getVisibleNodeForUID(uid)
@@ -877,7 +876,6 @@ class CanvasView(QtWidgets.QGraphicsView):
     def dragEnterEvent(self, event) -> None:
         if event.mimeData().hasText() or event.mimeData().hasImage():
             event.setAccepted(True)
-            self.dragOver = True
             self.update()
 
     def dragLeaveEvent(self, event) -> None:
@@ -885,7 +883,6 @@ class CanvasView(QtWidgets.QGraphicsView):
 
     def dropEvent(self, event) -> None:
         pos = self.mapToScene(event.pos())
-        self.dragOver = False
         mimeData = event.mimeData()
         jsonData = None
 

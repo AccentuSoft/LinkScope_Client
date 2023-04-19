@@ -6,7 +6,6 @@ from pathlib import Path
 from os import symlink
 from shutil import copy2
 from hashlib import sha3_512
-from binascii import hexlify
 from urllib.parse import urlparse
 
 from PySide6 import QtCore
@@ -58,24 +57,22 @@ class URLManager:
         fileType = magic.from_file(urlPathString, mime=True)
         fileTypeSplit1, fileTypeSplit2 = fileType.split('/', 1)
         # CSV files not considered - may have any dialect, hard to accommodate.
-        if urlPath.suffix in ('.ods', '.xls', '.xlsm', '.xlsx') and \
-                fileTypeSplit2 in ('vnd.oasis.opendocument.spreadsheet',
+        if urlPath.suffix in {'.ods', '.xls', '.xlsm', '.xlsx'} and \
+                fileTypeSplit2 in {'vnd.oasis.opendocument.spreadsheet',
                                    'vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-                                   'vnd.ms-excel',
-                                   'vnd.openxmlformats-officedocument.spreadsheetml.sheet'):
-            entityJson = {"Spreadsheet Name": urlName,
-                          "File Path": savePathString,
-                          "Entity Type": "Spreadsheet"}
+                                   'vnd.ms-excel'}:
+            return {"Spreadsheet Name": urlName,
+                    "File Path": savePathString,
+                    "Entity Type": "Spreadsheet"}
         # Only support zip files for archives (for now) 10/Jul/2021).
         elif zipfile.is_zipfile(urlPathString):
-            entityJson = {"Archive Name": urlName, "File Path": savePathString, "Entity Type": "Archive"}
+            return {"Archive Name": urlName, "File Path": savePathString, "Entity Type": "Archive"}
         elif fileTypeSplit1 == "video":
-            entityJson = {"Video Name": urlName, "File Path": savePathString, "Entity Type": "Video"}
+            return {"Video Name": urlName, "File Path": savePathString, "Entity Type": "Video"}
         elif fileTypeSplit1 == "image":
-            entityJson = {"Image Name": urlName, "File Path": savePathString, "Entity Type": "Image"}
+            return {"Image Name": urlName, "File Path": savePathString, "Entity Type": "Image"}
         else:
-            entityJson = {"Document Name": urlName, "File Path": savePathString, "Entity Type": "Document"}
-        return entityJson
+            return {"Document Name": urlName, "File Path": savePathString, "Entity Type": "Document"}
 
     def moveURLToProjectFilesHelperIfNeeded(self, urlPath: Path):
         valuePath = Path(urlPath).absolute()
@@ -92,7 +89,7 @@ class URLManager:
 
             projectFilesPath = Path(self.mainWindow.SETTINGS.value("Project/FilesDir"))
             # Create a unique path in Project Files
-            saveHash = hexlify(sha3_512(str(urlPath).encode()).digest()).decode()[:16]  # nosec
+            saveHash = sha3_512(str(urlPath).encode()).hexdigest()[:16]  # nosec
             savePath = projectFilesPath / f'{saveHash}|{urlPath.name}'
 
             if createSymlink:
