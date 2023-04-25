@@ -9,7 +9,7 @@ class GetCollectionsInfo:
     resultTypes = {'Phrase, Aleph ID'}
     parameters = {'Max Results': {'description': 'Please enter the maximum number of results to return.',
                                   'type': 'String',
-                                  'default': '1'},
+                                  'default': ''},
                   'Aleph Disclaimer': {'description': 'The content on Aleph is provided for general information only.\n'
                                                       'It is not intended to amount to advice on which you should place'
                                                       'sole and entire reliance.\n'
@@ -46,7 +46,7 @@ class GetCollectionsInfo:
         with FuturesSession(max_workers=15) as session:
             for entity in entityJsonList:
                 uidList.append(entity['uid'])
-                url = f"https://aleph.occrp.org/api/2/collections?offset=0&limit=300&page"
+                url = f"https://aleph.occrp.org/api/2/collections?offset=0&limit=300&q={entity['Phrase']}"
                 time.sleep(1)
                 futures.append(session.get(url, headers=headers))
         for future in as_completed(futures):

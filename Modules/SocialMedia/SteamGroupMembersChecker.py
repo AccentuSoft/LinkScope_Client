@@ -20,6 +20,7 @@ class SteamGroupMembersChecker:
         from PySide6.QtGui import QImage
         from json import loads
         import requests
+        import contextlib
 
         gamesMembersBaseURL = 'https://steamcommunity.com/games/'
 
@@ -75,7 +76,7 @@ class SteamGroupMembersChecker:
                     # Ignore non-steam group URLs.
                     continue
                 if groupURL.startswith('https://steamcommunity.com/groups/'):
-                    membersURL = groupURL + '/members'
+                    membersURL = f'{groupURL}/members'
                 else:
                     for _ in range(3):
                         try:
@@ -92,15 +93,12 @@ class SteamGroupMembersChecker:
                             page.goto(groupURL, wait_until="load", timeout=10000)
                         except Error:
                             continue
-                    try:
+                    with contextlib.suppress(Error):
                         # If we get a warning about age restriction, click the checkbox and view the actual page.
                         # Click text=Don't warn me again for
                         page.locator("text=Don't warn me again for").click()
                         # Click text=View Page
                         page.locator("text=View Page").click()
-                    except Error:
-                        pass
-
                     appPage = BeautifulSoup(page.content(), 'lxml')
                     appPageDataConfig = appPage.findChild('div', {'id': 'application_config'}).get('data-community')
                     appPageVanityID = loads(appPageDataConfig)["VANITY_ID"]
@@ -109,7 +107,7 @@ class SteamGroupMembersChecker:
                 pageCount = 1
                 urlsFound = []
                 while len(urlsFound) < maxResults:
-                    pageURL = membersURL + '/?p=' + str(pageCount)
+                    pageURL = f'{membersURL}/?p={str(pageCount)}'
 
                     pageResolved = False
                     for _ in range(3):

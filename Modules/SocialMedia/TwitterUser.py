@@ -130,7 +130,7 @@ class TwitterUser:
                                                'Entity Type': 'Website'},
                                               {selfItemIndex: {'Resolution': 'Picture in Tweet'}}])
             if tweetItem.coordinates:
-                placeName = 'Tweet Location ' + str(tweetItem.id)
+                placeName = f'Tweet Location: {str(tweetItem.id)}'
                 if tweetItem.place:
                     if tweetItem.place.fullName:
                         placeName = str(tweetItem.place.fullName)
@@ -166,25 +166,42 @@ class TwitterUser:
                     childImageBuffer.close()
                 except Exception:
                     childIconByteArrayFin = None
-                returnResults.append([{'Twitter Handle': '@' + tweetItem.inReplyToUser.username,
-                                       'User ID': str(tweetItem.inReplyToUser.id),
-                                       'User URL': tweetItem.inReplyToUser.url,
-                                       'Verified': str(tweetItem.inReplyToUser.verified),
-                                       'Display Name': str(tweetItem.inReplyToUser.displayname),
-                                       'Location': str(tweetItem.inReplyToUser.location),
-                                       'Description': tweetItem.inReplyToUser.description,
-                                       'Protected': str(tweetItem.inReplyToUser.protected),
-                                       'Followers': str(tweetItem.inReplyToUser.followersCount),
-                                       'Following': str(tweetItem.inReplyToUser.friendsCount),
-                                       'Statuses': str(tweetItem.inReplyToUser.statusesCount),
-                                       'Favourites': str(tweetItem.inReplyToUser.favouritesCount),
-                                       'Listed': str(tweetItem.inReplyToUser.listedCount),
-                                       'Media': str(tweetItem.inReplyToUser.mediaCount),
-                                       'Entity Type': 'Twitter User',
-                                       'Icon': childIconByteArrayFin,  # If None -> default twitter user pic
-                                       'Date Created': None if tweetItem.inReplyToUser.created is None else
-                                       tweetItem.inReplyToUser.created.isoformat()},
-                                      {selfItemIndex: {'Resolution': 'Replying to Twitter User'}}])
+                returnResults.append(
+                    [
+                        {
+                            'Twitter Handle': f'@{tweetItem.inReplyToUser.username}',
+                            'User ID': str(tweetItem.inReplyToUser.id),
+                            'User URL': tweetItem.inReplyToUser.url,
+                            'Verified': str(tweetItem.inReplyToUser.verified),
+                            'Display Name': str(
+                                tweetItem.inReplyToUser.displayname
+                            ),
+                            'Location': str(tweetItem.inReplyToUser.location),
+                            'Description': tweetItem.inReplyToUser.description,
+                            'Protected': str(tweetItem.inReplyToUser.protected),
+                            'Followers': str(
+                                tweetItem.inReplyToUser.followersCount
+                            ),
+                            'Following': str(tweetItem.inReplyToUser.friendsCount),
+                            'Statuses': str(tweetItem.inReplyToUser.statusesCount),
+                            'Favourites': str(
+                                tweetItem.inReplyToUser.favouritesCount
+                            ),
+                            'Listed': str(tweetItem.inReplyToUser.listedCount),
+                            'Media': str(tweetItem.inReplyToUser.mediaCount),
+                            'Entity Type': 'Twitter User',
+                            'Icon': childIconByteArrayFin,  # If None -> default twitter user pic
+                            'Date Created': None
+                            if tweetItem.inReplyToUser.created is None
+                            else tweetItem.inReplyToUser.created.isoformat(),
+                        },
+                        {
+                            selfItemIndex: {
+                                'Resolution': 'Replying to Twitter User'
+                            }
+                        },
+                    ]
+                )
 
             if tweetItem.quotedTweet:
                 parseTweet(tweetItem.quotedTweet, selfItemIndex)
@@ -225,24 +242,30 @@ class TwitterUser:
                         imageBuffer.close()
                     except Exception:
                         iconByteArrayFin = None
-                    returnResults.append([{'Twitter Handle': '@' + item.user.username,
-                                           'User ID': str(item.user.id),
-                                           'User URL': item.user.url,
-                                           'Verified': str(item.user.verified),
-                                           'Display Name': str(item.user.displayname),
-                                           'Location': str(item.user.location),
-                                           'Description': item.user.renderedDescription,
-                                           'Protected': str(item.user.protected),
-                                           'Followers': str(item.user.followersCount),
-                                           'Following': str(item.user.friendsCount),
-                                           'Statuses': str(item.user.statusesCount),
-                                           'Favourites': str(item.user.favouritesCount),
-                                           'Listed': str(item.user.listedCount),
-                                           'Media': str(item.user.mediaCount),
-                                           'Entity Type': 'Twitter User',
-                                           'Icon': iconByteArrayFin,  # If None -> default twitter user pic
-                                           'Date Created': item.user.created.isoformat()},
-                                          {uid: {'Resolution': 'Twitter User'}}])
+                    returnResults.append(
+                        [
+                            {
+                                'Twitter Handle': f'@{item.user.username}',
+                                'User ID': str(item.user.id),
+                                'User URL': item.user.url,
+                                'Verified': str(item.user.verified),
+                                'Display Name': str(item.user.displayname),
+                                'Location': str(item.user.location),
+                                'Description': item.user.renderedDescription,
+                                'Protected': str(item.user.protected),
+                                'Followers': str(item.user.followersCount),
+                                'Following': str(item.user.friendsCount),
+                                'Statuses': str(item.user.statusesCount),
+                                'Favourites': str(item.user.favouritesCount),
+                                'Listed': str(item.user.listedCount),
+                                'Media': str(item.user.mediaCount),
+                                'Entity Type': 'Twitter User',
+                                'Icon': iconByteArrayFin,  # If None -> default twitter user pic
+                                'Date Created': item.user.created.isoformat(),
+                            },
+                            {uid: {'Resolution': 'Twitter User'}},
+                        ]
+                    )
 
                 parseTweet(item, childIndex)
 

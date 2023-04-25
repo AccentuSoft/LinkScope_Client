@@ -6,12 +6,13 @@ class GetSimilarEntities:
     category = "Aleph OCCRP"
     description = "Find information about similar entities"
     originTypes = {'Phrase', 'Person', 'Politically Exposed Person'}
-    resultTypes = {'Phrase', 'Person', 'Address', 'Aleph ID'}
+    resultTypes = {'Phrase', 'Person', 'Address', 'Aleph ID', 'Company'}
     parameters = {'Aleph Disclaimer': {'description': 'The content on Aleph is provided for general information only.\n'
-                                                      'It is not intended to amount to advice on which you should place'
-                                                      'sole and entire reliance.\n'
-                                                      'We recommend that you conduct your own independent fact checking'
-                                                      'against the data and materials that you access on Aleph.\n'
+                                                      'It is not intended to amount to advice on which you should '
+                                                      'place sole and entire reliance.\n'
+                                                      'We recommend that you conduct your own independent fact '
+                                                      'checking against the data and materials that you '
+                                                      'access on Aleph.\n'
                                                       'Aleph API is not a replacement for traditional due diligence '
                                                       'checks and know-your-customer background checks.',
                                        'type': 'String',

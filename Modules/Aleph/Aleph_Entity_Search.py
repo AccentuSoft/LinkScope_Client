@@ -6,16 +6,18 @@ class Aleph_Entity_Search:
     category = "Aleph OCCRP"
     description = "Find information about a given search parameter"
     originTypes = {'Phrase', 'Person', 'Politically Exposed Person'}
-    resultTypes = {'Phrase'}
+    resultTypes = {'Phrase', 'Person', 'Company', 'Address', 'Country', 'Aleph ID', 'Aleph Collection ID',
+                   'Phone Number', 'Organization'}
     parameters = {'Max Results': {'description': 'The maximum number of results to return.',
                                   'type': 'String',
                                   'value': 'Enter the number of results you want returned',
                                   'default': '1'},
                   'Aleph Disclaimer': {'description': 'The content on Aleph is provided for general information only.\n'
-                                                      'It is not intended to amount to advice on which you should place'
-                                                      'sole and entire reliance.\n'
-                                                      'We recommend that you conduct your own independent fact checking'
-                                                      'against the data and materials that you access on Aleph.\n'
+                                                      'It is not intended to amount to advice on which you should '
+                                                      'place sole and entire reliance.\n'
+                                                      'We recommend that you conduct your own independent fact '
+                                                      'checking against the data and materials that you '
+                                                      'access on Aleph.\n'
                                                       'Aleph API is not a replacement for traditional due diligence '
                                                       'checks and know-your-customer background checks.',
                                        'type': 'String',
@@ -53,7 +55,7 @@ class Aleph_Entity_Search:
             for entity in entityJsonList:
                 uidList.append(entity['uid'])
                 primary_field = entity[list(entity)[1]].strip()
-                crafted_url = url + f"?q={primary_field}&filter:schemata=Thing&limit={max_results}"
+                crafted_url = f"{url}?q={primary_field}&filter:schemata=Thing&limit={max_results}"
                 time.sleep(1)
                 futures.append(session.get(crafted_url, headers=headers))
         for future in as_completed(futures):
@@ -62,17 +64,15 @@ class Aleph_Entity_Search:
                 response = future.result().json()
             except requests.exceptions.ConnectionError:
                 return "Please check your internet connection"
-            # print(response)
             for schema in response['results']:
                 index_of_child = len(return_result)
                 try:
                     if schema['schema'] == "Person":
-                        if schema['properties'].get('gender') is not None \
-                                and schema['properties'].get('gender')[0] == "F":
-                            gender = "Female"
-                        elif schema['properties'].get('gender') is not None \
-                                and schema['properties'].get('gender')[0] == "M":
-                            gender = "Male"
+                        if schema['properties'].get('gender') is not None:
+                            if schema['properties'].get('gender')[0] == "F":
+                                gender = "Female"
+                            elif schema['properties'].get('gender')[0] == "M":
+                                gender = "Male"
                         if schema['properties'].get('legalForm') is not None:
                             return_result.append(
                                 [{'Full Name': schema['properties']['name'][0],
@@ -268,6 +268,5 @@ class Aleph_Entity_Search:
                               'Entity Type': 'Aleph Collection ID'},
                              {index_of_child_of_child: {'Resolution': 'Aleph Entity Search', 'Notes': ''}}])
                 except (TypeError, KeyError):
-                    # print(repr(e))
                     continue
         return return_result

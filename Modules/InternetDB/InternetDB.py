@@ -29,7 +29,7 @@ class InternetDB:
         for entity in entityJsonList:
             primaryField = entity['IP Address']
             entityUID = entity['uid']
-            requestResult = requests.get("https://internetdb.shodan.io/" + primaryField).json()
+            requestResult = requests.get(f"https://internetdb.shodan.io/{primaryField}").json()
 
             if "detail" in requestResult:
                 returnResults.append([{'Phrase': requestResult['detail'],

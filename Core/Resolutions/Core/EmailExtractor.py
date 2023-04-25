@@ -96,9 +96,9 @@ class EmailExtractor:
                 for potentialEmail in potentialEmails:
                     with contextlib.suppress(EmailNotValidError):
                         valid = validate_email(potentialEmail, dns_resolver=resolver, check_deliverability=verifyDomain)
-                        if valid.email not in allEmails:
-                            allEmails.add(valid.email)
-                            returnResults.append([{'Email Address': valid.email,
+                        if valid.normalized not in allEmails:
+                            allEmails.add(valid.normalized)
+                            returnResults.append([{'Email Address': valid.normalized,
                                                    'Entity Type': 'Email Address'},
                                                   {currentUID: {'Resolution': 'Email Address Found',
                                                                 'Notes': ''}}])
@@ -119,9 +119,7 @@ class EmailExtractor:
         with sync_playwright() as p:
             browser = p.chromium.launch()
             context = browser.new_context(
-                viewport={'width': 1920, 'height': 1080},
-                user_agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) '
-                           'Chrome/101.0.4951.54 Safari/537.36'
+                viewport={'width': 1920, 'height': 1080}
             )
             for entity in entityJsonList:
                 uid = entity['uid']

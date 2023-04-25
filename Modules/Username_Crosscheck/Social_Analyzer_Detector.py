@@ -49,33 +49,33 @@ class Social_Analyzer_Detector:
                                              headers=headers)
                 if firstResponse.status_code >= 300:
                     return False
-                else:
-                    modifiedUsername = "".join(random.choices(  # nosec
-                        string.ascii_uppercase + string.digits, k=32))
-                    usernameRegex = re.compile(social_field, re.IGNORECASE)
-                    r = requests.get(original_url, timeout=30, verify=False, headers=headers)  # nosec
-                    originalContent = r.text
-                    if len(originalUsernameRegex.findall(originalContent)) == 0:
-                        # False Positive
-                        return False
-                    modified_url = original_url.replace(social_field, modifiedUsername)
-                    r = requests.get(modified_url, timeout=30, verify=False, headers=headers)  # nosec
-                    modifiedUsernameContent = r.text
-                    for regexMatch in commentsRegex.findall(originalContent):
-                        originalContent = originalContent.replace(regexMatch, '')
-                    for regexMatch in commentsRegex.findall(modifiedUsernameContent):
-                        modifiedUsernameContent = modifiedUsernameContent.replace(regexMatch, '')
-                    for regexMatch in usernameRegex.findall(originalContent):
-                        originalContent = originalContent.replace(regexMatch, modifiedUsername)
-                    if modifiedUsernameContent == originalContent:
-                        # False positive
-                        return False
-                    else:
-                        return [{'URL': original_url,
-                                 'Entity Type': 'Website'},
-                                {uid: {'Resolution': 'Social Analyzer Report', 'Notes': ''}}]
+                modifiedUsername = "".join(random.choices(  # nosec
+                    string.ascii_uppercase + string.digits, k=32))
+                usernameRegex = re.compile(social_field, re.IGNORECASE)
+                r = requests.get(original_url, timeout=30, verify=False, headers=headers)  # nosec
+                originalContent = r.text
+                if len(originalUsernameRegex.findall(originalContent)) == 0:
+                    # False Positive
+                    return False
+                modified_url = original_url.replace(social_field, modifiedUsername)
+                r = requests.get(modified_url, timeout=30, verify=False, headers=headers)  # nosec
+                modifiedUsernameContent = r.text
+                for regexMatch in commentsRegex.findall(originalContent):
+                    originalContent = originalContent.replace(regexMatch, '')
+                for regexMatch in commentsRegex.findall(modifiedUsernameContent):
+                    modifiedUsernameContent = modifiedUsernameContent.replace(regexMatch, '')
+                for regexMatch in usernameRegex.findall(originalContent):
+                    originalContent = originalContent.replace(regexMatch, modifiedUsername)
+                return (
+                    False
+                    if modifiedUsernameContent == originalContent  # False positive
+                    else [{'URL': original_url,
+                           'Entity Type': 'Website'},
+                          {uid: {'Resolution': 'Social Analyzer Report',
+                                 'Notes': ''}}]
+                )
             except (ConnectionError, RequestException) as error:
-                return "Connection error: " + str(error)
+                return f"Connection error: {str(error)}"
 
         return_result = []
         for entity in entityJsonList:

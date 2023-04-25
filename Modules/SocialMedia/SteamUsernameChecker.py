@@ -41,14 +41,12 @@ class SteamUsernameChecker:
             for entity in entityJsonList:
                 uid = entity['uid']
                 entityType = entity['Entity Type']
-                if entityType == 'Phrase':
+                if entityType in ['Person', 'Politically Exposed Person']:
+                    groupName = entity['Full Name']
+                elif entityType == 'Phrase':
                     groupName = entity['Phrase']
                 elif entityType == 'Social Media Handle':
                     groupName = entity['User Name']
-                elif entityType == 'Person':
-                    groupName = entity['Full Name']
-                elif entityType == 'Politically Exposed Person':
-                    groupName = entity['Full Name']
                 else:
                     continue
 
@@ -87,10 +85,10 @@ class SteamUsernameChecker:
                         else:
                             userID = userURL.split('https://steamcommunity.com/profiles/', 1)[1]
 
-                        if userURL == 'https://steamcommunity.com/profiles/76561198067124199':
-                            # Placeholder user by Steam.
-                            continue
-                        elif userURL in urlsFound:
+                        if (
+                            userURL == 'https://steamcommunity.com/profiles/76561198067124199'  # Steam Placeholder user
+                            or userURL in urlsFound
+                        ):
                             continue
                         else:
                             urlsFound.append(userURL)

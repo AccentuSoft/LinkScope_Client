@@ -45,7 +45,6 @@ class FileExtractor:
         import tldextract
         import requests
         from hashlib import md5
-        from binascii import hexlify
         from pathlib import Path
         from bs4 import BeautifulSoup
         from playwright.sync_api import sync_playwright, TimeoutError, Error
@@ -117,7 +116,7 @@ class FileExtractor:
                                                          'Notes': ''}}])
 
                             docProperName = link.split('/')[-1]
-                            docFileName = f'{hexlify(md5(link.encode()).digest()).decode()} | {docProperName}'
+                            docFileName = f'{md5(link.encode("UTF-8")).hexdigest()} | {docProperName}'
                             docFullPath = Path(parameters['Project Files Directory']) / docFileName
 
                             with contextlib.suppress(Exception):
@@ -156,7 +155,7 @@ class FileExtractor:
                                               {uid: {'Resolution': 'File URL',
                                                      'Notes': ''}}])
                         docProperName = link.split('/')[-1]
-                        docFileName = f'{hexlify(md5(link.encode()).digest()).decode()} | {docProperName}'
+                        docFileName = f'{md5(link.encode()).hexdigest()} | {docProperName}'
                         docFullPath = Path(parameters['Project Files Directory']) / docFileName
 
                         with contextlib.suppress(Exception):

@@ -17,6 +17,7 @@ class Twayback:
 
     def resolution(self, entityJsonList, parameters):
         import requests
+        import contextlib
         import bs4
         import re
         from requests_futures.sessions import FuturesSession
@@ -45,8 +46,15 @@ class Twayback:
                                      cdx_page_text.splitlines()}
 
             with FuturesSession(max_workers=10) as session:
-                for twitter_url in tweet_id_and_url_dict:
-                    futures.append(session.get(twitter_url, headers=headers, timeout=30, allow_redirects=False))
+                futures.extend(
+                    session.get(
+                        twitter_url,
+                        headers=headers,
+                        timeout=30,
+                        allow_redirects=False,
+                    )
+                    for twitter_url in tweet_id_and_url_dict
+                )
             missing_tweets = {}
 
             for future in as_completed(futures):
@@ -57,19 +65,20 @@ class Twayback:
                     split_fin = re.split(r'\D', split_once)[0]
                     missing_tweets[page_response.url] = split_fin
 
-            wayback_url_list = {}
-
-            for url, number in missing_tweets.items():
-                wayback_url_list[number] = f"https://web.archive.org/web/{number}/{url}"
-
+            wayback_url_list = {
+                number: f"https://web.archive.org/web/{number}/{url}"
+                for url, number in missing_tweets.items()
+            }
             deleted_tweets_futures_retry = []
 
             futures_list = []
             regex = re.compile('.*TweetTextSize TweetTextSize--jumbo.*')
 
             with FuturesSession(max_workers=10) as session:
-                for number, url in wayback_url_list.items():
-                    futures_list.append(session.get(url, headers=headers, timeout=30))
+                futures_list.extend(
+                    session.get(url, headers=headers, timeout=30)
+                    for url in wayback_url_list.values()
+                )
             for future in as_completed(futures_list):
                 result = None
                 try:
@@ -86,23 +95,17 @@ class Twayback:
                         deleted_tweets_futures_retry.append(result.url)
 
             # Second try, if things go wrong.
-            if len(deleted_tweets_futures_retry) > 0:
+            if deleted_tweets_futures_retry:
                 sleep(10)
                 futures_list = []
                 with FuturesSession(max_workers=10) as session:
-                    for url in deleted_tweets_futures_retry:
-                        futures_list.append(session.get(url))
+                    futures_list.extend(session.get(url) for url in deleted_tweets_futures_retry)
                 for future in as_completed(futures_list):
-                    try:
+                    with contextlib.suppress(AttributeError, ConnectionError):
                         result = future.result()
                         tweet = bs4.BeautifulSoup(result.content, "lxml").find("p", {"class": regex}).getText()
                         returnResults.append([{'URL': result.url,
                                                'Entity Type': 'Website',
                                                'Notes': tweet},
                                               {uid: {'Resolution': 'Deleted Tweet'}}])
-                    except AttributeError:
-                        pass
-                    except ConnectionError:
-                        pass
-
         return returnResults

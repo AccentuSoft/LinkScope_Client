@@ -83,18 +83,16 @@ class Whats_My_Name:
                                                  {uid: {'Resolution': 'Whats My Name Account Match',
                                                         'Notes': ''}}])
                                         break
+                            elif post_body := site.get('post_body'):
+                                futures[session.post(original_uri, data=post_body, headers=headers,
+                                                     timeout=10, allow_redirects=False)] = \
+                                    (uid, account_existence_code, account_existence_string,
+                                     account_missing_string, account_missing_code)
                             else:
-                                post_body = site.get('post_body')
-                                if post_body:
-                                    futures[session.post(original_uri, data=post_body, headers=headers,
-                                                         timeout=10, allow_redirects=False)] = \
-                                        (uid, account_existence_code, account_existence_string,
-                                         account_missing_string, account_missing_code)
-                                else:
-                                    futures[session.get(original_uri, headers=headers,
-                                                        timeout=10, allow_redirects=False)] = \
-                                        (uid, account_existence_code, account_existence_string,
-                                         account_missing_string, account_missing_code)
+                                futures[session.get(original_uri, headers=headers,
+                                                    timeout=10, allow_redirects=False)] = \
+                                    (uid, account_existence_code, account_existence_string,
+                                     account_missing_string, account_missing_code)
                 for future in as_completed(futures):
                     parent_uid = futures[future][0]
                     account_existence_code = futures[future][1]

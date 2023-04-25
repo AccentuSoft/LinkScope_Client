@@ -22,7 +22,6 @@ class RedditSearch:
     def resolution(self, entityJsonList, parameters):
         import requests
         import hashlib
-        from binascii import hexlify
         from requests_futures.sessions import FuturesSession
         from concurrent.futures import as_completed
 
@@ -67,7 +66,7 @@ class RedditSearch:
                 if resolution_name is None:
                     resolution_name = 'Link ID: ' + value.get('link_id', 'N/A')
                 else:
-                    resolution_name = 'https://reddit.com' + resolution_name
+                    resolution_name = f'https://reddit.com{resolution_name}'
 
                 if submission_endpoint in future.result().url:
                     return_result.append([{'User Name': value['author'],
@@ -81,8 +80,7 @@ class RedditSearch:
                                                             'Notes': ''}}])
 
                     comment_resolution = 'Reddit Comment Hash'
-                    comment = hashlib.md5(value.get('body', 'N/A').encode())  # nosec
-                    comment = hexlify(comment.digest()).decode()
+                    comment = hashlib.md5(value.get('body', 'N/A').encode()).hexdigest()  # nosec
                     return_result.append([{'Comment': comment,
                                            'Notes': value.get('body', 'N/A'),
                                            'Entity Type': 'Reddit Comment'},

@@ -16,11 +16,10 @@ class HIBPBreachToDomain:
 
         for entity in entityJsonList:
             domainMaybe = entity.get('Breach Domain')
-            if isinstance(domainMaybe, str):
-                if domainMaybe.strip() != '':
-                    returnResults.append([{'Domain Name': domainMaybe,
-                                           'Entity Type': 'Domain'},
-                                          {entity['uid']: {'Resolution': 'Data Breach to Domain',
-                                                           'Notes': ''}}])
+            if isinstance(domainMaybe, str) and domainMaybe.strip() != '':
+                returnResults.append([{'Domain Name': domainMaybe,
+                                       'Entity Type': 'Domain'},
+                                      {entity['uid']: {'Resolution': 'Data Breach to Domain',
+                                                       'Notes': ''}}])
 
         return returnResults

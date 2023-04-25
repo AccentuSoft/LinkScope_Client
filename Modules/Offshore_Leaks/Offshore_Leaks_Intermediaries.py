@@ -39,7 +39,7 @@ class Offshore_Leaks_Intermediaries:
             primary_field = entity[list(entity)[1]].strip()
             df_list = []
             for batch in range(0, nextHundred, 100):
-                crafted_url = url + f"search?cat=2&from={batch}&q={primary_field}&utf8=✓"
+                crafted_url = f"{url}search?cat=2&from={batch}&q={primary_field}&utf8=✓"
                 try:
                     r = requests.get(crafted_url)
                     df_list.append(pd.read_html(r.text)[0])
@@ -68,13 +68,12 @@ class Offshore_Leaks_Intermediaries:
                                           {index_of_child: {'Resolution': 'Offshore Leaks Leak', 'Notes': ''}}])
                 try:
                     countries = df_part['Linked to'][entry]
-                    if isinstance(countries, str):
-                        if "not identified" not in countries.lower():
-                            countries_list = countries.split(",")
-                            for country in countries_list:
-                                return_result.append([{'Country Name': country,
-                                                       'Entity Type': 'Country'},
-                                                      {index_of_child: {'Resolution': 'Linked to', 'Notes': ''}}])
+                    if isinstance(countries, str) and "not identified" not in countries.lower():
+                        countries_list = countries.split(",")
+                        for country in countries_list:
+                            return_result.append([{'Country Name': country,
+                                                   'Entity Type': 'Country'},
+                                                  {index_of_child: {'Resolution': 'Linked to', 'Notes': ''}}])
                 except AttributeError:
                     continue
         return return_result

@@ -43,8 +43,6 @@ class BinaryEdgeHost:
 
             for event in requestContent['events']:
                 for result in event['results']:
-                    originDetails = result['origin']
-                    targetDetails = result['target']
                     resultDetails = result['result']
                     if 'state' not in resultDetails['data']:
                         # Discard return result if it doesn't actually give us useful info about the state of the port.
@@ -52,8 +50,10 @@ class BinaryEdgeHost:
                         #   There seems to always be a result with the simple port info, so we will use that one.
                         continue
 
-                    returnResults.append([{'Port': targetDetails['ip'] + ':' + str(targetDetails['port']) + ':' +
-                                                   targetDetails['protocol'],
+                    originDetails = result['origin']
+                    targetDetails = result['target']
+                    returnResults.append([{'Port': f"{targetDetails['ip']}:{targetDetails['port']}:"
+                                                   f"{targetDetails['protocol']}",
                                            'State': resultDetails['data']['state']['state'],
                                            'Banner': resultDetails['data']['service'].get('banner', 'N/A'),
                                            'Product': resultDetails['data']['service'].get('product', 'Unknown'),

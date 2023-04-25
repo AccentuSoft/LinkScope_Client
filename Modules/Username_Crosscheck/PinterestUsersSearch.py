@@ -11,13 +11,14 @@ class PinterestUsersSearch:
     parameters = {}
 
     def resolution(self, entityJsonList, parameters):
+        import requests
+        import contextlib
         from playwright.sync_api import sync_playwright, Error
         from time import sleep
         from bs4 import BeautifulSoup
         from PySide6.QtCore import QByteArray, QBuffer, QIODevice, QSize
         from PySide6.QtGui import QImage
         from random import random
-        import requests
 
         baseURL = "https://www.pinterest.com/search/users/?q="
 
@@ -38,7 +39,7 @@ class PinterestUsersSearch:
                 uid = entity['uid']
                 primaryField = entity[list(entity)[1]]
 
-                try:
+                with contextlib.suppress(Error):
                     page.goto(baseURL + primaryField, wait_until="networkidle", timeout=60000)
                     # Wait until everything is 100% loaded, just in case.
                     sleep(10)
@@ -48,7 +49,7 @@ class PinterestUsersSearch:
 
                     for listElement in listElements:
                         username = listElement.find('a')['href'][1:-1]
-                        href = "https://www.pinterest.com/" + username + "/"
+                        href = f"https://www.pinterest.com/{username}/"
                         imgElement = listElement.find('img')
                         textStrings = listElement.findAll(text=True)
                         prettyName = textStrings[0]
@@ -77,9 +78,6 @@ class PinterestUsersSearch:
                                                'Icon': childIconByteArrayFin},
                                               {uid: {'Resolution': 'Account Found',
                                                      'Notes': ''}}])
-                except Error:
-                    pass
-
             # Wait a bit before moving on to the next query.
             sleep(2 + random())
 

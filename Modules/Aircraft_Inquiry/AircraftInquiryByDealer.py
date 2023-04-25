@@ -19,12 +19,11 @@ class AircraftInquiryByDealer:
         uidList = []
         return_result = []
 
-        submit_url = "https://registry.faa.gov/aircraftinquiry/Search/"
-        crafted_url = f"{submit_url}DealerResult"
+        submit_url = "https://registry.faa.gov/aircraftinquiry/Search/DealerResult"
         with FuturesSession(max_workers=15) as session:
             for entity in entityJsonList:
                 uidList.append(entity['uid'])
-                futures.append(session.post(crafted_url, data={"Dealertxt": entity['Company Name']}))
+                futures.append(session.post(submit_url, data={"Dealertxt": entity['Company Name']}))
             for future in as_completed(futures):
                 uid = uidList[futures.index(future)]
                 try:
@@ -32,8 +31,7 @@ class AircraftInquiryByDealer:
                 except requests.exceptions.ConnectionError:
                     return "Please check your internet connection"
                 except ValueError:
-                    return_result = []
-                    return return_result
+                    return "Error occurred when checking the data returned from the endpoint."
                 df = df_list[0]
                 for certificate_index in range(len(df["Certificate Number"])):
                     index_of_child = len(return_result)

@@ -36,7 +36,7 @@ class SteamUsernameAliasChecker:
             else:
                 continue
 
-            aliasURL = entityURL + '/ajaxaliases'
+            aliasURL = f'{entityURL}/ajaxaliases'
 
             aliases = requests.get(aliasURL).json()
             newHandleIndex = len(returnResults)

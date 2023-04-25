@@ -23,13 +23,12 @@ class AircraftInquiryByEngine:
         uidList = []
         return_result = []
 
-        submit_url = "https://registry.faa.gov/aircraftinquiry/Search/"
-        crafted_url = f"{submit_url}EngineReferenceResult"
+        submit_url = "https://registry.faa.gov/aircraftinquiry/Search/EngineReferenceResult"
         with FuturesSession(max_workers=15) as session:
             for entity in entityJsonList:
                 uidList.append(entity['uid'])
-                futures.append(session.post(crafted_url, data={"Modeltxt": entity['Phrase'],
-                                                               "MfrNametxt": Manufacturer}))
+                futures.append(session.post(submit_url, data={"Modeltxt": entity['Phrase'],
+                                                              "MfrNametxt": Manufacturer}))
         for future in as_completed(futures):
             uid = uidList[futures.index(future)]
             try:

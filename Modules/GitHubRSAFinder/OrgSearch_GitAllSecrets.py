@@ -8,11 +8,12 @@ class OrgSearch_GitAllSecrets:
     category = "Secrets & Leaks"
 
     # A string that describes this resolution.
-    description = "Returns Nodes of Relationship Info. Requires Docker to be installed."
+    description = "Searches Github Organization repositories for exposed secrets. Requires Docker to be installed."
 
     originTypes = {'GitHub Organisation'}
 
-    resultTypes = {}
+    resultTypes = {'GitHub Organisation', 'GitHub Secret', 'GitHub Repository', 'GitHub FilePath', 'Hash',
+                   'GitHub Branch'}
 
     parameters = {'Github Token': {'description': 'Github personal access token.\n'
                                                   'We need this because unauthenticated requests to the Github API '
@@ -39,7 +40,6 @@ class OrgSearch_GitAllSecrets:
             client = docker.from_env()
             with tempfile.TemporaryDirectory() as tempDir:
                 tempPath = Path(tempDir).absolute()
-                # print(tempPath, tempPath.exists())
                 client.containers.run('abhartiya/tools_gitallsecrets:latest',
                                       f'-token={parameters["Token"]} '
                                       f'-org={entity[list(entity)[1]]} -output=/home/out.txt',
@@ -59,9 +59,6 @@ class OrgSearch_GitAllSecrets:
             for line in repoSupervisor.splitlines():
                 if line.startswith('OrgorUser'):
                     orgOrUser.append(line.split(' '))
-
-            # print(hogSecret)
-            # print(jsonContents)
 
             data = pattern.findall(repoSupervisor)
             for value in data:
@@ -95,7 +92,6 @@ class OrgSearch_GitAllSecrets:
                                                    'Entity Type': 'Phrase'},
                                                   {index_of_child: {'Resolution': 'GitHub Secret',
                                                                     'Notes': ''}}])
-                            # print(ansi_escape.sub('', hogSecret[hogIndex]))
                             hogIndex += 1
                         elif 'Hash' in line:
                             returnResults.append([{'Hash Value': ansi_escape.sub('', line),

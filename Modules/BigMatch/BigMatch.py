@@ -52,10 +52,9 @@ class BigMatch:
                             return []
                         for link in soup.find_all('a'):
                             potentialLink = link.get('href', None)
-                            if potentialLink is not None:
-                                if 'github' in potentialLink:
-                                    return_result.append([{'URL': potentialLink, 'Entity Type': 'Website'},
-                                                          {uid: {'Resolution': 'BigMatch Github Link', 'Notes': ''}}])
+                            if potentialLink is not None and 'github' in potentialLink:
+                                return_result.append([{'URL': potentialLink, 'Entity Type': 'Website'},
+                                                      {uid: {'Resolution': 'BigMatch Github Link', 'Notes': ''}}])
 
                         break
                     except TimeoutError:
