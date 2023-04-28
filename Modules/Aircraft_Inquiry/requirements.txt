@@ -1,3 +1,0 @@
-requests
-pandas
-requests-futures

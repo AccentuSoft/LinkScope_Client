@@ -1,5 +1,0 @@
-requests
-bs4
-xmltodict
-playwright
-datetime

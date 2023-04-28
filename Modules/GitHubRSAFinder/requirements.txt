@@ -1,3 +1,0 @@
-docker
-bs4
-playwright

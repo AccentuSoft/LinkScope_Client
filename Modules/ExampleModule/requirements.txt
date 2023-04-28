@@ -1,1 +1,0 @@
-# Here all the python3 packages required for the module to function are listed.

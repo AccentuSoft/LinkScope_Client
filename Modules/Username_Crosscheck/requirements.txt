@@ -1,8 +1,0 @@
-social-analyzer
-requests-futures
-urllib3
-requests
-holehe
-httpx
-playwright
-bs4
