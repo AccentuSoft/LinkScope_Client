@@ -8,6 +8,7 @@ import sys
 import venv
 import subprocess
 import yaml
+import pygit2
 from pathlib import Path
 
 from PySide6 import QtWidgets, QtCore
@@ -47,7 +48,7 @@ class ModulesManager:
         for lib in packagesPath.split(os.pathsep):
             path = os.path.realpath(os.path.join(binDir, lib))
             site.addsitedir(path)
-        sys.path[:] = sys.path[prevLength:] + sys.path[0:prevLength]
+        sys.path[:] = sys.path[prevLength:] + sys.path[:prevLength]
 
         sys.real_prefix = sys.prefix
         sys.prefix = base
@@ -149,8 +150,9 @@ class ModulesManager:
                 moduleLoadFailuresCount += 1
                 if moduleLoadFailuresCount > 2:
                     self.mainWindow.MESSAGEHANDLER.critical(
-                        f'Failed loading too many Modules, aborting Module loading.',
-                        exc_info=False)
+                        'Failed loading too many Modules, aborting Module loading.',
+                        exc_info=False,
+                    )
                     return False
             self.mainWindow.MESSAGEHANDLER.info(f'Loaded module: {uniqueModuleName}')
         return True

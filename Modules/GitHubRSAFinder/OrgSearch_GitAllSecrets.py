@@ -32,11 +32,11 @@ class OrgSearch_GitAllSecrets:
 
         pattern = re.compile(r'\{(?:[^{}]|(?R))*\}')
         ansi_escape = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+        returnResults = []
+
         for entity in entityJsonList:
             uid = entity['uid']
             hogSecret = []
-            orgOrUser = []
-            returnResults = []
             client = docker.from_env()
             with tempfile.TemporaryDirectory() as tempDir:
                 tempPath = Path(tempDir).absolute()
@@ -50,39 +50,37 @@ class OrgSearch_GitAllSecrets:
                     with open(jsonFile, 'r') as jsonFileHandler:
                         jsonContents = jsonFileHandler.read()
                     with open(jsonFile, 'r') as file:
-                        for line in file:
-                            if "Commit" in line:
-                                hogSecret.append((next(file)))
-
+                        hogSecret.extend(next(file) for line in file if "Commit" in line)
             repoSupervisor = jsonContents.split('Tool: repo-supervisor')[1]
             truffleHog = jsonContents.split('Tool: repo-supervisor')[0]
-            for line in repoSupervisor.splitlines():
-                if line.startswith('OrgorUser'):
-                    orgOrUser.append(line.split(' '))
-
+            orgOrUser = [
+                line.split(' ')
+                for line in repoSupervisor.splitlines()
+                if line.startswith('OrgorUser')
+            ]
             data = pattern.findall(repoSupervisor)
             for value in data:
                 data.append(json.loads(value))
 
-            index = 0
-            for userOrg in orgOrUser:
+            for index, userOrg in enumerate(orgOrUser):
                 index_of_child = len(returnResults)
-                returnResults.append([{'Organisation Name': 'Org or User: ' + userOrg[1],
-                                       'Entity Type': 'GitHub Organisation'},
-                                      {uid: {'Resolution': 'Tool: repo-supervisor',
-                                             'Notes': ''}}])
+                returnResults.append(
+                    [{'Organisation Name': f'Org or User: {userOrg[1]}',
+                      'Entity Type': 'GitHub Organisation'},
+                     {uid: {'Resolution': 'Tool: repo-supervisor',
+                            'Notes': ''}}
+                     ]
+                )
 
                 child_of_child = len(returnResults)
                 returnResults.append([{'Repository Name': userOrg[3],
                                        'Entity Type': 'GitHub Repository'},
                                       {index_of_child: {'Resolution': 'Repository of Organisation',
                                                         'Notes': ''}}])
-                index += 1
-
-                hogIndex = 0
                 childOfChild = 0
                 if userOrg[3] in truffleHog and userOrg[1] in truffleHog:
                     userContent = truffleHog.split(f'OrgorUser: {userOrg[1]} RepoName: {userOrg[3]}')[1]
+                    hogIndex = 0
                     for line in userContent.splitlines():
                         line = line.strip()
                         if 'Reason' in line:
@@ -119,10 +117,12 @@ class OrgSearch_GitAllSecrets:
                                                   {child_of_child: {'Resolution': 'GitHub FilePath',
                                                                     'Notes': ''}}])
 
-                            for scrt in secrets:
-                                returnResults.append([{'Secret': scrt,
-                                                       'Entity Type': 'GitHub Secret'},
-                                                      {child_child: {'Resolution': 'GitHub Secret',
-                                                                     'Notes': ''}}])
-
-            return returnResults
+                            returnResults.extend(
+                                [{'Secret': scrt,
+                                  'Entity Type': 'GitHub Secret'},
+                                 {child_child: {'Resolution': 'GitHub Secret',
+                                                'Notes': ''}}
+                                 ]
+                                for scrt in secrets
+                            )
+        return returnResults

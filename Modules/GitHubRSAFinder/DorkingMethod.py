@@ -20,9 +20,9 @@ class DorkingMethod:
         from bs4 import BeautifulSoup
         from playwright.sync_api import sync_playwright, TimeoutError, Error
 
-        returnResults = []
         urls = set()
 
+        returnResults = []
         with sync_playwright() as p:
             browser = p.firefox.launch()
             context = browser.new_context(
@@ -34,14 +34,14 @@ class DorkingMethod:
                 uid = entity['uid']
                 search_term = entity[list(entity)[1]]
 
-                search_url = 'https://www.startpage.com/do/dsearch?query=' + \
-                             search_term + '"+site:github.com+-site:gist' \
-                                           '.github.com' \
-                                           '+-inurl:issues+-inurl:wiki' \
-                                           '+-filetype' \
-                                           ':markdown+-filetype:md' \
-                                           '+"-----BEGIN+RSA' \
-                                           '+PRIVATE+KEY-----" '
+                search_url = f'https://www.startpage.com/do/dsearch?query={search_term}' \
+                             f'+site:github.com' \
+                             f'+-site:gist.github.com' \
+                             f'+-inurl:issues' \
+                             f'+-inurl:wiki' \
+                             f'+-filetype:markdown' \
+                             f'+-filetype:md' \
+                             f'+"-----BEGIN+RSA+PRIVATE+KEY-----" '
 
                 pageResolved = False
                 for _ in range(3):

@@ -763,7 +763,7 @@ class InstallWizard(QtWidgets.QWizard):
         self.trayIcon.show()
 
         if len(sys.argv) < 5:
-            downloadURLBase = f"https://github.com/AccentuSoft/LinkScope_Client/releases/latest/download/"
+            downloadURLBase = "https://github.com/AccentuSoft/LinkScope_Client/releases/latest/download/"
 
             if self.currentOS == 'Windows':
                 try:
@@ -782,9 +782,13 @@ class InstallWizard(QtWidgets.QWizard):
                     self.executablePath = self.baseSoftwarePath / 'LinkScope.exe'
                     self.downloadURL = f"{downloadURLBase}LinkScope-Windows-x64.7z"
 
-                    newArgs = ['"' + str(self.desktopShortcutPath) + '"', str(self.graphvizExists),
-                               '"' + str(self.baseSoftwarePath) + '"', '"' + str(self.executablePath) + '"',
-                               '"' + self.downloadURL + '"']
+                    newArgs = [
+                        f'"{str(self.desktopShortcutPath)}"',
+                        str(self.graphvizExists),
+                        f'"{str(self.baseSoftwarePath)}"',
+                        f'"{str(self.executablePath)}"',
+                        f'"{self.downloadURL}"',
+                    ]
                     ctypes.windll.shell32.ShellExecuteW(None, "runas", sys.executable, " ".join(newArgs), None, 1)
                     sys.exit(0)
             elif self.currentOS == 'Linux':
@@ -964,7 +968,12 @@ class InstallWizard(QtWidgets.QWizard):
             # No need to check if this succeeds - if there are any issues with installation, we will throw
             #   an error on the install command.
             subprocess.run(['apt', 'update'])
-            command = subprocess.run(['apt', 'install', 'p7zip-full', 'libopengl0', 'graphviz', 'libmagic1', '-y'])
+            # https://doc.qt.io/qt-6/linux-requirements.html
+            # https://github.com/Nuitka/Nuitka/issues/2138
+            command = subprocess.run(['apt', 'install', 'p7zip-full', 'libopengl0', 'graphviz', 'libmagic1',
+                                      'libfontconfig1-dev', 'libfreetype6-dev', 'libx11-dev', 'libx11-xcb-dev',
+                                      'libxext-dev', 'libxfixes-dev', 'libxi-dev', 'libxrender-dev', 'libxkbcommon-dev',
+                                      'libxkbcommon-x11-dev', 'libatspi2.0-dev', "'^libxcb.*-dev'", '-y'])
             if command.returncode != 0:
                 raise ValueError('Installing new packages failed, cannot continue installation.')
 
