@@ -3804,11 +3804,15 @@ class QueryBuilderWizard(QtWidgets.QDialog):
         buttonsWidget.setLayout(buttonsWidgetLayout)
         exitButton = QtWidgets.QPushButton('Close')
         exitButton.clicked.connect(self.accept)
+        resetWizardButton = QtWidgets.QPushButton('Reset Wizard')
+        resetWizardButton.clicked.connect(self.updateValues)
         self.runButton = QtWidgets.QPushButton('Run Query')
-        self.runButton.clicked.connect(self.runButtonPressed)
+        self.runButton.clicked.connect(self.runQuery)
         buttonsWidgetLayout.addWidget(exitButton)
+        buttonsWidgetLayout.addWidget(resetWizardButton)
         buttonsWidgetLayout.addWidget(self.runButton)
         dialogLayout.addWidget(buttonsWidget)
+        self.runButton.setDefault(True)
 
         #### SELECT
         selectPane = QtWidgets.QWidget()
@@ -4094,14 +4098,6 @@ class QueryBuilderWizard(QtWidgets.QDialog):
             widgetToDel = self.modificationValues.pop()
             widgetToDel.deleteLater()
 
-    def runButtonPressed(self):
-        if self.runButton.text() == 'Run Query':
-            self.runButton.setText('Reset Query Wizard')
-            self.runQuery()
-        else:
-            self.updateValues()
-            self.runButton.setText('Run Query')
-
     def updateValues(self):
         self.mainWindowObject.LQLWIZARD.takeSnapshot()
 
@@ -4210,7 +4206,8 @@ class QueryBuilderWizard(QtWidgets.QDialog):
             sourceStatement = self.sourceStatementPicker.currentText()
             sourceListOrNone = None if sourceStatement == 'FROMDB' else sourceResults
 
-            resultsSet, modificationsSet = self.mainWindowObject.LQLWIZARD.parseQuery(currentSelectStatement,
+            resultsSet, modificationsSet = self.mainWindowObject.LQLWIZARD.parseQuery(self.mainWindowObject,
+                                                                                      currentSelectStatement,
                                                                                       selectedFields, sourceStatement,
                                                                                       sourceListOrNone,
                                                                                       conditionResults,
@@ -4219,6 +4216,7 @@ class QueryBuilderWizard(QtWidgets.QDialog):
             try:
                 selectedHistoryUID = self.historyTable.selectedItems()[0].text()
                 resultsSet, modificationsSet = self.mainWindowObject.LQLWIZARD.parseQuery(
+                    self.mainWindowObject,
                     *self.mainWindowObject.LQLWIZARD.QUERIES_HISTORY[selectedHistoryUID])
             except IndexError:
                 self.mainWindowObject.MESSAGEHANDLER.error('No Query selected from history.', popUp=True)
@@ -4247,6 +4245,7 @@ class QueryResultsViewer(QtWidgets.QDialog):
         self.setWindowTitle('Query Results')
         dialogLayout = QtWidgets.QGridLayout()
         self.setLayout(dialogLayout)
+        self.selectedUIDs = selectedUIDs
 
         self.resultsTabbedPane = QtWidgets.QTabWidget(self)
         dialogLayout.addWidget(self.resultsTabbedPane, 0, 0, 2, 2)
@@ -4375,9 +4374,16 @@ class QueryResultsViewer(QtWidgets.QDialog):
         closeButton.clicked.connect(self.accept)
         exportButton = QtWidgets.QPushButton('Export Table')
         exportButton.clicked.connect(self.exportData)
+        selectOnCurrentCanvasButton = QtWidgets.QPushButton('Select Result Entities on Current Canvas')
+        selectOnCurrentCanvasButton.clicked.connect(self.selectOnCurrentCanvas)
 
         dialogLayout.addWidget(closeButton, 3, 0, 1, 1)
         dialogLayout.addWidget(exportButton, 3, 1, 1, 1)
+        dialogLayout.addWidget(selectOnCurrentCanvasButton, 4, 0, 1, 2)
+
+    def selectOnCurrentCanvas(self):
+        self.mainWindowObject.centralWidget().tabbedPane.getCurrentScene().selectNodesFromList(self.selectedUIDs)
+        self.mainWindowObject.MESSAGEHANDLER.info('Query Result Entities Selected Successfully.', popUp=True)
 
     def exportData(self):
         exportDialog = QtWidgets.QFileDialog()
@@ -4462,7 +4468,9 @@ class ConditionClauseWidget(QtWidgets.QFrame):
 
         graphDropdownCondition = QtWidgets.QComboBox()
         graphDropdownCondition.addItems(['CHILDOF', 'DESCENDANTOF', 'PARENTOF', 'ANCESTOROF', 'CONNECTEDTO',
-                                         'NUMCHILDREN', 'NUMPARENTS', 'ISOLATED', 'ISROOT', 'ISLEAF'])
+                                         'NUMCHILDREN', 'NUMPARENTS', 'NUMANCESTORS', 'NUMDESCENDANTS',
+                                         'NUMIFIED_PARENTS_TOTAL', 'NUMIFIED_CHILDREN_TOTAL',
+                                         'ISOLATED', 'ISROOT', 'ISLEAF'])
         gcWidgetLayout.addWidget(graphDropdownCondition)
 
         gcSecondaryInput = QtWidgets.QWidget()
@@ -4487,7 +4495,7 @@ class ConditionClauseWidget(QtWidgets.QFrame):
 
         graphNumComparisonDropdown = QtWidgets.QComboBox()
         graphNumComparisonDropdown.addItems(['<', '<=', '>', '>=', '=='])
-        graphNumInput = QtWidgets.QSpinBox()
+        graphNumInput = QtWidgets.QDoubleSpinBox()
         graphNumInput.setMinimum(0)
         graphNumInput.setMaximum(1000000)  # Can be adjusted higher if need be.
         graphNumInput.setValue(0)
@@ -4514,7 +4522,7 @@ class ConditionClauseWidget(QtWidgets.QFrame):
     def determineSecondaryInput(self, conditionIndex: int):
         if conditionIndex < 5:
             self.gcSecondaryInputLayout.setCurrentIndex(0)
-        elif conditionIndex < 7:
+        elif conditionIndex < 11:
             self.gcSecondaryInputLayout.setCurrentIndex(1)
         else:
             self.gcSecondaryInputLayout.setCurrentIndex(2)

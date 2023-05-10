@@ -1924,6 +1924,12 @@ class CanvasScene(QtWidgets.QGraphicsScene):
         for node in self.nodesDict:
             self.nodesDict[node].setSelected(True)
 
+    def selectNodesFromList(self, nodesList: list):
+        self.clearSelection()
+        for node in nodesList:
+            if node in self.nodesDict:
+                self.nodesDict[node].setSelected(True)
+
     def selectChildNodes(self) -> None:
         items = [item.uid for item in self.selectedItems() if isinstance(item, Entity.BaseNode)]
         self.clearSelection()

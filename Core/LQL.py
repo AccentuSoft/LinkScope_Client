@@ -22,6 +22,7 @@ class LQLQueryBuilder:
     allCanvases = None
     canvasesEntitiesDict = None
     allEntityFields = None
+    allEntitiesInit = None
     allEntities = None
 
     def __init__(self, mainWindow):
@@ -36,12 +37,12 @@ class LQLQueryBuilder:
 
         self.allCanvases = self.getAllCanvasNames()
         self.canvasesEntitiesDict = self.getCanvasesEntitiesDict(self.allCanvases)
-        self.allEntityFields, self.allEntities = self.getAllEntitiesAndFields()
+        self.allEntityFields, self.allEntitiesInit = self.getAllEntitiesAndFields()
 
         # Re-define database entities to remove Group Entities
-        self.databaseEntities = set(self.allEntities.keys())
+        self.databaseEntities = set(self.allEntitiesInit.keys())
 
-    def getAllEntitiesAndFields(self) -> (set, list):
+    def getAllEntitiesAndFields(self) -> (set, dict):
         entitiesSnapshot = {entity: self.databaseSnapshot.nodes[entity] for entity in self.databaseSnapshot.nodes
                             if self.databaseSnapshot.nodes[entity].get('Entity Type') != 'EntityGroup'}
         entityFields = set()
@@ -118,8 +119,8 @@ class LQLQueryBuilder:
 
                 for matchingCanvas in matchingCanvases:
                     if sourceValue[0] == 'AND':
-                        resultEntitySet = self.canvasAndNot(resultEntitySet, self.canvasesEntitiesDict[matchingCanvas])\
-                            if sourceValue[2] is True else\
+                        resultEntitySet = self.canvasAndNot(resultEntitySet, self.canvasesEntitiesDict[matchingCanvas]) \
+                            if sourceValue[2] is True else \
                             self.canvasAnd(resultEntitySet, self.canvasesEntitiesDict[matchingCanvas])
 
                     elif sourceValue[2] is True:
@@ -139,7 +140,7 @@ class LQLQueryBuilder:
                 self.allEntities.pop(entity)
         return resultEntitySet
 
-    def parseConditions(self, conditionClauses: Union[None, list], entitiesPool) -> set:
+    def parseConditions(self, mainWindow, conditionClauses: Union[None, list], entitiesPool) -> set:
         """
         conditionClauses:
         [[("AND" | "OR" | None), ("Value Condition" | "Graph Condition"), (True | False), conditionValue], ...]
@@ -153,9 +154,13 @@ class LQLQueryBuilder:
                 "PARENTOF" <ENTITY> | "ANCESTOROF " <ENTITY> |
                 "NUMCHILDREN" (" < " | " <= " | " > " | " >= " | " == ") <DIGITS> |
                 "NUMPARENTS" (" < " | " <= " | " > " | " >= " | " == ") <DIGITS> |
+                "NUMANCESTORS" (" < " | " <= " | " > " | " >= " | " == ") <DIGITS> |
+                "NUMDESCENDANTS" (" < " | " <= " | " > " | " >= " | " == ") <DIGITS> |
+                "NUMIFIED_PARENTS_TOTAL" (" < " | " <= " | " > " | " >= " | " == ") <DIGITS> |
+                "NUMIFIED_CHILDREN_TOTAL" (" < " | " <= " | " > " | " >= " | " == ") <DIGITS> |
                 "CONNECTEDTO" <ENTITY> | "ISOLATED" | "ISROOT" | "ISLEAF")]
         """
-
+        self.mainWindow = mainWindow
         self.allEntities = {uid: self.allEntities[uid] for uid in self.allEntities if uid in entitiesPool}
         uidsToSelect = set()
 
@@ -272,21 +277,66 @@ class LQLQueryBuilder:
                 return True
         return False
 
-    def checkNumChildren(self, valueA: str, valueB: str, valueC: int):
+    def checkNumChildren(self, valueA: str, valueB: str, valueC: float):
         numChildren = len(list(self.databaseSnapshot.successors(valueA)))
         return (valueB == "<" and numChildren < valueC) or \
-               (valueB == "<=" and numChildren <= valueC) or \
-               (valueB == ">" and numChildren > valueC) or \
-               (valueB == ">=" and numChildren >= valueC) or \
-               (valueB == "==" and numChildren == valueC)
+            (valueB == "<=" and numChildren <= valueC) or \
+            (valueB == ">" and numChildren > valueC) or \
+            (valueB == ">=" and numChildren >= valueC) or \
+            (valueB == "==" and numChildren == valueC)
 
-    def checkNumParents(self, valueA: str, valueB: str, valueC: int):
+    def checkNumParents(self, valueA: str, valueB: str, valueC: float):
         numParents = len(list(self.databaseSnapshot.predecessors(valueA)))
         return (valueB == "<" and numParents < valueC) or \
-               (valueB == "<=" and numParents <= valueC) or \
-               (valueB == ">" and numParents > valueC) or \
-               (valueB == ">=" and numParents >= valueC) or \
-               (valueB == "==" and numParents == valueC)
+            (valueB == "<=" and numParents <= valueC) or \
+            (valueB == ">" and numParents > valueC) or \
+            (valueB == ">=" and numParents >= valueC) or \
+            (valueB == "==" and numParents == valueC)
+
+    def checkNumAncestors(self, valueA: str, valueB: str, valueC: float):
+        numAncestors = len(list(nx.ancestors(self.databaseSnapshot, valueA)))
+        return (valueB == "<" and numAncestors < valueC) or \
+            (valueB == "<=" and numAncestors <= valueC) or \
+            (valueB == ">" and numAncestors > valueC) or \
+            (valueB == ">=" and numAncestors >= valueC) or \
+            (valueB == "==" and numAncestors == valueC)
+
+    def checkNumDescendants(self, valueA: str, valueB: str, valueC: float):
+        numDescendants = len(list(nx.descendants(self.databaseSnapshot, valueA)))
+        return (valueB == "<" and numDescendants < valueC) or \
+            (valueB == "<=" and numDescendants <= valueC) or \
+            (valueB == ">" and numDescendants > valueC) or \
+            (valueB == ">=" and numDescendants >= valueC) or \
+            (valueB == "==" and numDescendants == valueC)
+
+    def checkNumifiedParentsTotal(self, valueA: str, valueB: str, valueC: float):
+        parents = self.databaseSnapshot.predecessors(valueA)
+        total = 0.0
+        for item in parents:
+            primaryField = self.mainWindow.RESOURCEHANDLER.getPrimaryFieldForEntityType(
+                self.databaseSnapshot.nodes[item]['Entity Type'])
+            with contextlib.suppress(Exception):
+                total += self.modifyNumify(self.databaseSnapshot.nodes[item][primaryField])
+
+        return (valueB == "<" and total < valueC) or \
+            (valueB == "<=" and total <= valueC) or \
+            (valueB == ">" and total > valueC) or \
+            (valueB == ">=" and total >= valueC) or \
+            (valueB == "==" and total == valueC)
+
+    def checkNumifiedChildrenTotal(self, valueA: str, valueB: str, valueC: float):
+        children = self.databaseSnapshot.successors(valueA)
+        total = 0.0
+        for item in children:
+            primaryField = self.mainWindow.RESOURCEHANDLER.getPrimaryFieldForEntityType(
+                self.databaseSnapshot.nodes[item]['Entity Type'])
+            with contextlib.suppress(Exception):
+                total += self.modifyNumify(self.databaseSnapshot.nodes[item][primaryField])
+        return (valueB == "<" and total < valueC) or \
+            (valueB == "<=" and total <= valueC) or \
+            (valueB == ">" and total > valueC) or \
+            (valueB == ">=" and total >= valueC) or \
+            (valueB == "==" and total == valueC)
 
     def checkConnectedTo(self, valueA: str, valueB: str):
         with contextlib.suppress(nx.NetworkXError):
@@ -332,11 +382,19 @@ class LQLQueryBuilder:
             returnVal = self.checkNumChildren(*args)
         elif checkType == "NUMPARENTS":
             returnVal = self.checkNumParents(*args)
+        elif checkType == "NUMANCESTORS":
+            returnVal = self.checkNumAncestors(*args)
+        elif checkType == "NUMDESCENDANTS":
+            returnVal = self.checkNumDescendants(*args)
+        elif checkType == "NUMIFIED_PARENTS_TOTAL":
+            returnVal = self.checkNumifiedParentsTotal(*args)
+        elif checkType == "NUMIFIED_CHILDREN_TOTAL":
+            returnVal = self.checkNumifiedChildrenTotal(*args)
         elif checkType == "PARENTOF":
             returnVal = self.checkParentOf(*args)
         return not returnVal if isNot else returnVal
 
-    def modifyNumify(self, valueA: str):
+    def modifyNumify(self, valueA: str) -> float:
         # Get the first number that shows up.
         tempString = valueA.replace(',', '.')  # Making sure that floats are expressed the right way.
         count = 0
@@ -358,7 +416,7 @@ class LQLQueryBuilder:
             floatValue = float(tempString[count:count + count2])
         except ValueError:
             floatValue = 0.0
-        return str(floatValue)
+        return floatValue
 
     def modifyUpperCase(self, valueA: str):
         return valueA.upper()
@@ -400,7 +458,7 @@ class LQLQueryBuilder:
                     elif modificationType == "LOWERCASE":
                         newFieldValue = self.modifyLowerCase(entityFieldValue)
                     else:
-                        newFieldValue = self.modifyNumify(entityFieldValue)
+                        newFieldValue = str(self.modifyNumify(entityFieldValue))
                         numifiedFields.add(modifyField)
                     if newFieldValue is not None:
                         modifiedUIDs.add(entity)
@@ -408,20 +466,22 @@ class LQLQueryBuilder:
 
         return modifiedUIDs, numifiedFields
 
-    def parseQuery(self, selectClause: str, selectValue: Union[str, list], sourceClause: str,
+    def parseQuery(self, mainWindow, selectClause: str, selectValue: Union[str, list], sourceClause: str,
                    sourceValues: Union[None, list], conditionClauses: Union[None, list],
-                   modifyQueries: Union[list, None] = None) -> Optional[tuple[Optional[tuple[set, Union[set[Any], set[Union[str, Any]]]]],
-                                                                              Optional[tuple[set[Any], set[Any]]]]]:
+                   modifyQueries: Union[list, None] = None) -> Optional[
+        tuple[Optional[tuple[set, Union[set[Any], set[Union[str, Any]]]]],
+        Optional[tuple[set[Any], set[Any]]]]]:
 
         if self.databaseSnapshot is None:
             return None
+        self.allEntities = dict(self.allEntitiesInit)
 
         returnValue = None
         modifications = None
         if fieldsToSelect := self.parseSelect(selectClause, selectValue):
             if entitiesToConsider := self.parseSource(sourceClause, sourceValues, fieldsToSelect):
                 if conditionClauses:
-                    entitiesToConsider = self.parseConditions(conditionClauses, entitiesToConsider)
+                    entitiesToConsider = self.parseConditions(mainWindow, conditionClauses, entitiesToConsider)
                 returnValue = (entitiesToConsider, fieldsToSelect)
                 if modifyQueries:
                     modifications = self.parseModify(returnValue, modifyQueries)
