@@ -203,6 +203,7 @@ class GroupNode(BaseNode):
         [self.addItemToGroup(uid) for uid in childNodeUIDs]  # Should be faster than just a for loop
         self.listProxyWidget = listProxyWidget
         self.listProxyWidget.setCacheMode(QGraphicsItemGroup.CacheMode.DeviceCoordinateCache)
+        self.listProxyWidget.setZValue(100)
 
     def addItemToGroup(self, uid: str) -> None:
         self.groupedNodesUid.add(uid)
