@@ -62,6 +62,11 @@ class SettingsObject(dict):
         self.globalSettings.setValue("Program/Usage/First Time Start",
                                      self.globalSettings.value("Program/Usage/First Time Start", True))
 
+        self.globalSettings.setValue("Program/Sources/Sources List",
+                                     self.globalSettings.value(
+                                         "Program/Sources/Sources List",
+                                         "{}"))
+
         self.setValue("Project/Name", "Untitled")
         self.setValue("Project/BaseDir", "")
         self.setValue("Project/FilesDir", "")

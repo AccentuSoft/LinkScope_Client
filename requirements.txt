@@ -13,6 +13,7 @@ python-magic
 
 pydot
 networkx
+pygit2
 
 python-dateutil
 pyyaml
