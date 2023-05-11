@@ -1893,6 +1893,12 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setStatus("Ready")
         self.MESSAGEHANDLER.info(f"Project {self.SETTINGS.value('Project/Name', 'Untitled')} opened.")
 
+        if self.SETTINGS.value("Program/Usage/First Time Start", 'true') == 'true':
+            FirstTimeUseDialog().exec()
+            #self.MODULEMANAGER.installSource({'URI': '', 'Remote': '', 'AuthType': None,
+            #                                  'AuthCreds': None, 'SchemaType': '', 'UUID': str(uuid4())})
+            self.SETTINGS.setValue("Program/Usage/First Time Start", 'false')
+
     def __init__(self):
         super(MainWindow, self).__init__()
         self.linkingNodes = False
@@ -4782,6 +4788,35 @@ class MacroCreatorDialog(QtWidgets.QDialog):
         currentItem = self.createList.takeItem(selectedItemIndex)
         self.createList.insertItem(selectedItemIndex + 1, currentItem)
         currentItem.setSelected(True)
+
+
+class FirstTimeUseDialog(QtWidgets.QDialog):
+
+    def __init__(self):
+        super().__init__()
+        layout = QtWidgets.QVBoxLayout()
+        self.setLayout(layout)
+        self.setWindowTitle('Welcome to LinkScope!')
+
+        firstTimeLabel = QtWidgets.QLabel(
+            '### Greetings and welcome to LinkScope!\n\n**If this is your first time using this software**, we recommend '
+            'going through [our introductory blog post](https://accentusoft.com/tutorials/first-steps-with-linkscope-client/) to '
+            'get a feel for how the software works, and what you can do with it. [Our YouTube Channel](https://www.youtube.com/channel/UC8h9Vde1OdezdC2cJ1nEUcw) '
+            'has a Playlist called "How To in Less than 30 Seconds" that shows you how to perform common and '
+            'not-so-common operations within LinkScope.\n\n**First things first**, we recommend you get started by installing '
+            'the Module Packs that you need via the **Modules** tab on the top menu bar, and selecting **View Modules Manager**.')
+        firstTimeLabel.setTextFormat(QtCore.Qt.TextFormat.MarkdownText)
+        firstTimeLabel.setTextInteractionFlags(QtCore.Qt.TextInteractionFlag.TextBrowserInteraction)
+        firstTimeLabel.setOpenExternalLinks(True)
+        firstTimeLabel.setWordWrap(True)
+        firstTimeLabel.setMinimumWidth(435)
+
+        confirmButton = QtWidgets.QPushButton('Confirm')
+        confirmButton.clicked.connect(self.accept)
+
+        layout.addWidget(firstTimeLabel)
+        layout.addWidget(confirmButton)
+        layout.setStretch(0, 100)
 
 
 class ExtractCyclesThread(QtCore.QThread):

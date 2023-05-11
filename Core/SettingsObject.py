@@ -60,7 +60,7 @@ class SettingsObject(dict):
                                      self.globalSettings.value("Program/Graphics/Label Fade Scroll Distance", "3"))
 
         self.globalSettings.setValue("Program/Usage/First Time Start",
-                                     self.globalSettings.value("Program/Usage/First Time Start", True))
+                                     self.globalSettings.value("Program/Usage/First Time Start", 'true'))
 
         self.globalSettings.setValue("Program/Sources/Sources List",
                                      self.globalSettings.value(
