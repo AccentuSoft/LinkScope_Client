@@ -358,6 +358,11 @@ class MenuBar(QtWidgets.QMenuBar):
                                             triggered=self.reloadModules)
         modulesMenu.addAction(reloadModulesAction)
 
+        viewModuleSourcesAction = QtGui.QAction("View Sources", self,
+                                                statusTip="Show the Module Sources Manager",
+                                                triggered=self.viewModuleSources)
+        modulesMenu.addAction(viewModuleSourcesAction)
+
         serverMenu = self.addMenu("&Server")
 
         connectAction = QtGui.QAction("Connect", self,
@@ -560,9 +565,7 @@ class MenuBar(QtWidgets.QMenuBar):
 
                         importEntityCSVDialog = ImportEntityFromCSVFile(self, csvDF)
                         if importEntityCSVDialog.exec_():
-                            attributeRows = [comboBox.currentText()
-                                             if comboBox.currentText() else
-                                             csvDF.columns[index]
+                            attributeRows = [comboBox.currentText() or csvDF.columns[index]
                                              for index, comboBox in
                                              enumerate(importEntityCSVDialog.fieldMappingComboBoxes)]
 
@@ -631,9 +634,7 @@ class MenuBar(QtWidgets.QMenuBar):
                                     entityOneType = importLinksCSVDialog.entityOneTypeChoiceDropdown.currentText()
                                     entityTwoType = importLinksCSVDialog.entityTwoTypeChoiceDropdown.currentText()
 
-                                    attributeRows = [comboBox.currentText()
-                                                     if comboBox.currentText()
-                                                     else fieldsRemainingDF.columns[index]
+                                    attributeRows = [comboBox.currentText() or fieldsRemainingDF.columns[index]
                                                      for index, comboBox
                                                      in enumerate(createLinkEntitiesDialog.fieldMappingComboBoxes)]
 
@@ -852,6 +853,9 @@ class MenuBar(QtWidgets.QMenuBar):
 
     def reloadModules(self) -> None:
         self.parent().reloadModules()
+
+    def viewModuleSources(self) -> None:
+        self.parent().MODULEMANAGER.showSourcesManager()
 
     def runningResolutions(self) -> None:
         self.parent().cleanUpLocalFinishedResolutions()
