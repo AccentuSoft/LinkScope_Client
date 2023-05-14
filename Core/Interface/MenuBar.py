@@ -272,7 +272,7 @@ class MenuBar(QtWidgets.QMenuBar):
                                                   self,
                                                   statusTip="Include the parent entities of the selected nodes "
                                                             "in the current selection.",
-                                                  triggered=self.selectParentNodes)
+                                                  triggered=self.selectExpandParentNodes)
         actionExpandSelectParents.setShortcut('Ctrl+Alt+P')
         nodeOperationsMenu.addAction(actionExpandSelectParents)
 
