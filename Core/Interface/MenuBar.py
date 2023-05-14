@@ -253,12 +253,28 @@ class MenuBar(QtWidgets.QMenuBar):
         actionSelectChildren.setShortcut('Ctrl+Shift+C')
         nodeOperationsMenu.addAction(actionSelectChildren)
 
+        actionExpandSelectChildren = QtGui.QAction('Include Child Nodes in Selection',
+                                                   self,
+                                                   statusTip="Include the child entities of the selected nodes "
+                                                             "in the current selection.",
+                                                   triggered=self.selectExpandChildNodes)
+        actionExpandSelectChildren.setShortcut('Ctrl+Alt+C')
+        nodeOperationsMenu.addAction(actionExpandSelectChildren)
+
         actionSelectParents = QtGui.QAction('Select Parent Nodes',
                                             self,
                                             statusTip="Select the parent entities of the selected nodes.",
                                             triggered=self.selectParentNodes)
         actionSelectParents.setShortcut('Ctrl+Shift+P')
         nodeOperationsMenu.addAction(actionSelectParents)
+
+        actionExpandSelectParents = QtGui.QAction('Include Parent Nodes in Selection',
+                                                  self,
+                                                  statusTip="Include the parent entities of the selected nodes "
+                                                            "in the current selection.",
+                                                  triggered=self.selectParentNodes)
+        actionExpandSelectParents.setShortcut('Ctrl+Alt+P')
+        nodeOperationsMenu.addAction(actionExpandSelectParents)
 
         nodeOperationsMenu.addSeparator()
 
@@ -978,8 +994,14 @@ class MenuBar(QtWidgets.QMenuBar):
     def selectChildNodes(self) -> None:
         self.parent().centralWidget().tabbedPane.getCurrentScene().selectChildNodes()
 
+    def selectExpandChildNodes(self) -> None:
+        self.parent().centralWidget().tabbedPane.getCurrentScene().selectChildNodes(clearSelection=False)
+
     def selectParentNodes(self) -> None:
         self.parent().centralWidget().tabbedPane.getCurrentScene().selectParentNodes()
+
+    def selectExpandParentNodes(self) -> None:
+        self.parent().centralWidget().tabbedPane.getCurrentScene().selectParentNodes(clearSelection=False)
 
     def viewMacrosWizard(self) -> None:
         self.parent().showMacrosDialog()

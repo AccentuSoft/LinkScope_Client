@@ -1930,9 +1930,10 @@ class CanvasScene(QtWidgets.QGraphicsScene):
             if node in self.nodesDict:
                 self.nodesDict[node].setSelected(True)
 
-    def selectChildNodes(self) -> None:
+    def selectChildNodes(self, clearSelection: bool = True) -> None:
         items = [item.uid for item in self.selectedItems() if isinstance(item, Entity.BaseNode)]
-        self.clearSelection()
+        if clearSelection:
+            self.clearSelection()
         for item in items:
             childLinks = self.parent().entityDB.getOutgoingLinks(item)
             for childLink in childLinks:
@@ -1940,9 +1941,10 @@ class CanvasScene(QtWidgets.QGraphicsScene):
                 with contextlib.suppress(KeyError):
                     self.nodesDict[childLink[1]].setSelected(True)
 
-    def selectParentNodes(self) -> None:
+    def selectParentNodes(self, clearSelection: bool = True) -> None:
         items = [item.uid for item in self.selectedItems() if isinstance(item, Entity.BaseNode)]
-        self.clearSelection()
+        if clearSelection:
+            self.clearSelection()
         for item in items:
             parentLinks = self.parent().entityDB.getIncomingLinks(item)
             for parentLink in parentLinks:
