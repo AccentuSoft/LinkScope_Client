@@ -65,7 +65,12 @@ class SettingsObject(dict):
         self.globalSettings.setValue("Program/Sources/Sources List",
                                      self.globalSettings.value(
                                          "Program/Sources/Sources List",
-                                         "{}"))
+                                         {}))
+
+        self.globalSettings.setValue("Program/Sources/Module Packs List",
+                                     self.globalSettings.value(
+                                         "Program/Sources/Module Packs List",
+                                         {}))
 
         self.setValue("Project/Name", "Untitled")
         self.setValue("Project/BaseDir", "")

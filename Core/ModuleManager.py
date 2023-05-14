@@ -13,8 +13,9 @@ from pathlib import Path
 from enum import Enum
 from urllib.parse import urlparse
 from uuid import uuid4
+from base64 import b64decode
 
-from PySide6 import QtWidgets, QtCore
+from PySide6 import QtWidgets, QtCore, QtSvg, QtGui
 
 
 class ModulesManager:
@@ -34,6 +35,8 @@ class ModulesManager:
         self.modulePacks = {}
         self.modules = {}
 
+        self.load()
+
         self.venvThread = InitialiseVenvThread(self)
         self.venvThread.configureVenvOfMainThreadSignal.connect(self.configureVenv)
         self.venvThread.start()
@@ -42,6 +45,10 @@ class ModulesManager:
         self.mainWindow.SETTINGS.setValue("Program/Sources/Sources List", self.sources)
         self.mainWindow.SETTINGS.setValue("Program/Sources/Module Packs List", self.modulePacks)
         return True
+
+    def load(self):
+        self.sources = self.mainWindow.SETTINGS.value("Program/Sources/Sources List")
+        self.modulePacks = self.mainWindow.SETTINGS.value("Program/Sources/Module Packs List")
 
     def loadYamlFile(self, filePath: Path):
         with open(filePath, 'r') as yamlFile:
@@ -208,16 +215,19 @@ class ModulesManager:
             return False
 
         if sourceUUID not in self.modulePacks:
-            self.modulePacks[sourceUUID] = []
+            self.modulePacks[sourceUUID] = {}
 
         for modulePack in modulePackFiles:
             modulePackPath = destinationPath / modulePack
             if not (packDetails := self.loadYamlFile(modulePackPath)):
                 continue
             packDetails['UUID'] = str(uuid4())
-            self.modulePacks[sourceUUID].append(packDetails)
+            self.modulePacks[sourceUUID][packDetails['UUID']] = packDetails
 
         return True
+
+    def showModuleManager(self):
+        ModulePacksListViewer(self).exec()
 
     def installModule(self, uniqueModuleName: str, moduleFilePath: Path) -> bool:
         newModuleDirectoryPath = self.modulesDirectoryPath / uniqueModuleName
@@ -345,9 +355,10 @@ class AddSourceDialog(QtWidgets.QDialog):
         addSourceLabel = QtWidgets.QLabel('Fill in the fields to add a new source.\n'
                                           'Sources must either be a folder on the local system, or a remote Git '
                                           'repository, accessible via the HTTP, SSH or GIT transports.\n'
-                                          'Examples:\nLocal URI:\n\t/home/user/source_folder\nRemote URI:\n\t'
-                                          'git://github.com/example/example.git')
+                                          'Local URI Example:\n/home/user/source_folder\n'
+                                          'Remote URI Example:\ngit://github.com/example/example.git')
         addSourceLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        addSourceLabel.setWordWrap(True)
         localOrRemoteSource = QtWidgets.QWidget()
         localOrRemoteSourceLayout = QtWidgets.QVBoxLayout()
         localOrRemoteSource.setLayout(localOrRemoteSourceLayout)
@@ -411,6 +422,7 @@ class AddSourceDialog(QtWidgets.QDialog):
 
         noAuthLabel = QtWidgets.QLabel('No Credentials')
         noAuthLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+
         usernameAndPasswordWidget = QtWidgets.QWidget()
         usernameAndPasswordWidgetLayout = QtWidgets.QFormLayout()
         usernameAndPasswordWidget.setLayout(usernameAndPasswordWidgetLayout)
@@ -540,19 +552,35 @@ class ModulePacksListViewer(QtWidgets.QDialog):
         super().__init__()
         self.modulesManager = parent
 
-        layout = QtWidgets.QVBoxLayout()
+        layout = QtWidgets.QGridLayout()
         self.setLayout(layout)
-        self.setWindowTitle('Installed Modules List')
+        self.setWindowTitle('Modules Manager')
 
-        installedModulesLabel = QtWidgets.QLabel("Installed Modules")
-        layout.addWidget(installedModulesLabel)
+        installedModulesLabel = QtWidgets.QLabel("Module Packs")
+        installedModulesLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
 
         self.modulePackList = QtWidgets.QListWidget()
-        addModulePackButton = QtWidgets.QPushButton('+')
-        removeModulePackButton = QtWidgets.QPushButton('-')
+        addModulePackButton = QtWidgets.QPushButton('Install Module')
+        removeModulePackButton = QtWidgets.QPushButton('Uninstall Module')
 
         closeButton = QtWidgets.QPushButton('Close')
         closeButton.clicked.connect(self.accept)
+
+        layout.addWidget(installedModulesLabel, 0, 0, 1, 2)
+        layout.addWidget(self.modulePackList, 1, 0, 3, 2)
+        layout.addWidget(removeModulePackButton, 4, 0, 1, 1)
+        layout.addWidget(addModulePackButton, 4, 1, 1, 1)
+        layout.addWidget(closeButton, 5, 0, 1, 2)
+
+        for source in self.modulesManager.modulePacks:
+            for module, moduleDetails in self.modulesManager.modulePacks[source].items():
+                newItemWidget = ModulePacksListItem(moduleDetails)
+                newItem = QtWidgets.QListWidgetItem()
+                newItem.setSizeHint(newItemWidget.sizeHint())
+                self.modulePackList.addItem(newItem)
+                self.modulePackList.setItemWidget(newItem, newItemWidget)
+                print('OK', source, moduleDetails)
+        self.setMinimumWidth(350)
 
     def removeModulePack(self) -> bool:
         itemsToRemove = self.modulePackList.selectedItems()
@@ -568,6 +596,46 @@ class ModulePacksListViewer(QtWidgets.QDialog):
             # TODO
             return True
         return False
+
+
+class ModulePacksListItem(QtWidgets.QWidget):
+
+    def __init__(self, modulePackDict: dict):
+        super().__init__()
+        layout = QtWidgets.QGridLayout()
+        self.setLayout(layout)
+        print('DICT', modulePackDict)
+
+        author = f"By: {modulePackDict['author']}"
+        label = modulePackDict['label']
+        modules = modulePackDict['modules']
+        description = modulePackDict['description']
+
+        svgRenderer = QtSvg.QSvgRenderer(QtCore.QByteArray(b64decode(modulePackDict['icon'])))
+        pixmap = QtGui.QPixmap(60, 60)
+        pixmap.fill(QtGui.QColor(0, 0, 0, 0))
+        painter = QtGui.QPainter(pixmap)
+        svgRenderer.render(painter)
+        painter.end()
+
+        sourceImage = QtWidgets.QLabel()
+        sourceImage.setPixmap(pixmap)
+        layout.addWidget(sourceImage, 0, 0, 4, 4)
+        labelLabel = QtWidgets.QLabel(label)
+        labelLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeft)
+        labelLabel.setFont(QtGui.QFont('Times-Bold', 13, QtGui.QFont.Weight.Bold))
+        layout.addWidget(labelLabel, 1, 4, 1, 1)
+        authorLabel = QtWidgets.QLabel(author)
+        authorLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignLeft)
+        authorLabel.setFont(QtGui.QFont('Times-Bold', 12, QtGui.QFont.Weight.Bold))
+        layout.addWidget(authorLabel, 2, 4, 1, 1)
+        descriptionLabel = QtWidgets.QLabel(description)
+        layout.addWidget(descriptionLabel, 4, 0, 1, 5)
+        layout.setColumnStretch(4, 10)
+        layout.setColumnStretch(3, 0)
+        layout.setColumnStretch(2, 0)
+        layout.setColumnStretch(1, 0)
+        layout.setColumnStretch(0, 0)
 
 
 class ModuleDetailsViewer(QtWidgets.QDialog):
@@ -653,13 +721,13 @@ class InitialiseVenvThread(QtCore.QThread):
         subprocess.run(cmdStr, shell=True)
 
 
-class AuthType(Enum):
+class AuthType(int, Enum):
     NONE = 0
     PASSWORD = 1
     KEY = 2
 
 
-class SchemaType(Enum):
+class SchemaType(int, Enum):
     LOCAL = 0
     HTTPS = 1
     SSH = 2

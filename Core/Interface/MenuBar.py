@@ -379,6 +379,11 @@ class MenuBar(QtWidgets.QMenuBar):
                                                 triggered=self.viewModuleSources)
         modulesMenu.addAction(viewModuleSourcesAction)
 
+        viewModuleManagerAction = QtGui.QAction("View Module Manager", self,
+                                                statusTip="Show the Modules Manager",
+                                                triggered=self.viewModuleManager)
+        modulesMenu.addAction(viewModuleManagerAction)
+
         serverMenu = self.addMenu("&Server")
 
         connectAction = QtGui.QAction("Connect", self,
@@ -872,6 +877,9 @@ class MenuBar(QtWidgets.QMenuBar):
 
     def viewModuleSources(self) -> None:
         self.parent().MODULEMANAGER.showSourcesManager()
+
+    def viewModuleManager(self) -> None:
+        self.parent().MODULEMANAGER.showModuleManager()
 
     def runningResolutions(self) -> None:
         self.parent().cleanUpLocalFinishedResolutions()

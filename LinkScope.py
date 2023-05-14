@@ -121,9 +121,10 @@ class MainWindow(QtWidgets.QMainWindow):
         NOTE: This function should only be called inside a try/catch.
         @return:
         """
-        self.SETTINGS.save()
         self.LENTDB.save()
         self.RESOLUTIONMANAGER.save()
+        self.MODULEMANAGER.save()
+        self.SETTINGS.save()
         self.centralWidget().tabbedPane.save()
 
     def resetMainWindowTitle(self):
@@ -4777,17 +4778,19 @@ class MacroCreatorDialog(QtWidgets.QDialog):
             self.createList.takeItem(self.createList.row(selectedItem))
 
     def shiftSelectedUp(self):
-        selectedItemIndex = self.createList.row(self.createList.selectedItems()[0])
-        if selectedItemIndex != 0:
-            currentItem = self.createList.takeItem(selectedItemIndex)
-            self.createList.insertItem(selectedItemIndex - 1, currentItem)
-            currentItem.setSelected(True)
+        with contextlib.suppress(IndexError):
+            selectedItemIndex = self.createList.row(self.createList.selectedItems()[0])
+            if selectedItemIndex != 0:
+                currentItem = self.createList.takeItem(selectedItemIndex)
+                self.createList.insertItem(selectedItemIndex - 1, currentItem)
+                currentItem.setSelected(True)
 
     def shiftSelectedDown(self):
-        selectedItemIndex = self.createList.row(self.createList.selectedItems()[0])
-        currentItem = self.createList.takeItem(selectedItemIndex)
-        self.createList.insertItem(selectedItemIndex + 1, currentItem)
-        currentItem.setSelected(True)
+        with contextlib.suppress(IndexError):
+            selectedItemIndex = self.createList.row(self.createList.selectedItems()[0])
+            currentItem = self.createList.takeItem(selectedItemIndex)
+            self.createList.insertItem(selectedItemIndex + 1, currentItem)
+            currentItem.setSelected(True)
 
 
 class FirstTimeUseDialog(QtWidgets.QDialog):
