@@ -149,12 +149,10 @@ class CommunicationsHandler(QtCore.QObject):
             self.sock.send(passMessage)
             messageReceived = decrypter.update(self.sock.recv(RECV_SIZE)) + decrypter.finalize()
             if messageReceived == b"Passphrase is OK":
-                self.threadInc = threading.Thread(target=self.scanIncoming)
-                self.threadInc.setDaemon(True)
+                self.threadInc = threading.Thread(target=self.scanIncoming, daemon=True)
                 self.threadInc.start()
 
-                self.threadInb = threading.Thread(target=self.scanInbox)
-                self.threadInb.setDaemon(True)
+                self.threadInb = threading.Thread(target=self.scanInbox, daemon=True)
                 self.threadInb.start()
 
                 return True
@@ -542,8 +540,8 @@ class CommunicationsHandler(QtCore.QObject):
         :param filePath:
         :return:
         """
-        sendHelperThread = threading.Thread(target=self.sendFileHelper, args=(project_name, file_name, filePath))
-        sendHelperThread.setDaemon(True)
+        sendHelperThread = threading.Thread(target=self.sendFileHelper, daemon=True,
+                                            args=(project_name, file_name, filePath))
         self.uploadingFiles[file_name] = sendHelperThread
         sendHelperThread.start()
 
