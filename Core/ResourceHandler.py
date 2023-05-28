@@ -27,6 +27,9 @@ def resizePictureFromBuffer(picBuffer: QByteArray, newSize: tuple) -> QByteArray
     """
     newSize: First is width, second is height.
     """
+    picBufferData = picBuffer.data()
+    if picBufferData.startswith(b'<svg ') or picBufferData.startswith(b'<?xml '):
+        return QByteArray(resizeSVG(picBufferData, newSize))
     originalImage = QtGui.QImage()
     originalImage.loadFromData(picBuffer)
     newImage = originalImage.scaled(newSize[0], newSize[1])
@@ -38,6 +41,17 @@ def resizePictureFromBuffer(picBuffer: QByteArray, newSize: tuple) -> QByteArray
     imageBuffer.close()
 
     return pictureByteArray
+
+def resizeSVG(byteString: bytes, resize: tuple):
+    bytesWidth = str(resize[0]).encode('UTF-8')
+    bytesHeight = str(resize[1]).encode('UTF-8')
+    widthRegex = re.compile(b' width="\d*" ')
+    for widthMatches in widthRegex.findall(byteString):
+        byteString = byteString.replace(widthMatches, b' ')
+    heightRegex = re.compile(b' height="\d*" ')
+    for heightMatches in heightRegex.findall(byteString):
+        byteString = byteString.replace(heightMatches, b' ')
+    return byteString.replace(b'<svg ', b'<svg height="%b" width="%b" ' % (bytesHeight, bytesWidth), 1)
 
 
 class ResourceHandler:
@@ -108,7 +122,7 @@ class ResourceHandler:
                 fileContents = newIconFile.read()
             if fileContents.startswith(b'<svg ') or fileContents.startswith(b'<?xml '):
                 if resize != (0, 0):
-                    fileContents = self.resizeSVG(fileContents, resize)
+                    fileContents = resizeSVG(fileContents, resize)
                 pictureByteArray = QByteArray(fileContents)
             else:
                 image = Image.open(str(filePath))
@@ -131,16 +145,8 @@ class ResourceHandler:
 
         return pictureByteArray
 
-    def resizeSVG(self, byteString: bytes, resize: tuple):
-        bytesWidth = str(resize[0]).encode('UTF-8')
-        bytesHeight = str(resize[1]).encode('UTF-8')
-        widthRegex = re.compile(b' width="\d*" ')
-        for widthMatches in widthRegex.findall(byteString):
-            byteString = byteString.replace(widthMatches, b' ')
-        heightRegex = re.compile(b' height="\d*" ')
-        for heightMatches in heightRegex.findall(byteString):
-            byteString = byteString.replace(heightMatches, b' ')
-        return byteString.replace(b'<svg ', b'<svg height="%b" width="%b" ' % (bytesHeight, bytesWidth), 1)
+    def loadModuleBanners(self, modulePath: Path):
+        pass  # TODO
 
     def getEntityCategories(self) -> list:
         return list(self.entityCategoryList)

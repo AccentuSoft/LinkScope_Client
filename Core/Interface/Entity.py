@@ -23,16 +23,17 @@ class BaseNode(QGraphicsItemGroup):
         super(BaseNode, self).__init__()
 
         self.setCacheMode(QGraphicsItemGroup.CacheMode.DeviceCoordinateCache)
+        resizedByteArray = resizePictureFromBuffer(pictureByteArray, (40, 40))
 
-        if pictureByteArray.data().startswith(b'<svg '):
+        if pictureByteArray.data().startswith(b'<svg ') or pictureByteArray.data().startswith(b'<?xml'):
             self.iconItem = QGraphicsSvgItem()
-            self.iconItem.renderer().load(resizePictureFromBuffer(pictureByteArray, (40, 40)))
+            self.iconItem.renderer().load(resizedByteArray)
             # Force recalculation of geometry, else this looks like 1 pixel.
             # https://stackoverflow.com/a/68182093
             self.iconItem.setElementId("")
         else:
             pixmapItem = QtGui.QPixmap()
-            pixmapItem.loadFromData(resizePictureFromBuffer(pictureByteArray, (40, 40)))
+            pixmapItem.loadFromData(resizedByteArray)
             self.iconItem = QGraphicsPixmapItem(pixmapItem)
 
         self.labelItem = QGraphicsTextItem('')
