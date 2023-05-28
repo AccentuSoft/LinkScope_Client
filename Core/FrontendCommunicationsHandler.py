@@ -362,9 +362,7 @@ class CommunicationsHandler(QtCore.QObject):
             with contextlib.suppress(KeyError):
                 dereferenced_entity = dict(entity)
                 resolution_entities_to_send.append(dereferenced_entity)
-                # Icon is not necessary for any resolution as of now: 2022/1/2.
-                # Cutting it out saves data.
-                dereferenced_entity['Icon'] = ''
+                dereferenced_entity['Icon'] = dereferenced_entity['Icon'].toBase64().data()
         message = {'Operation': 'Run Resolution',
                    'Arguments': {
                        'resolution_name': resolution_name,
@@ -380,6 +378,9 @@ class CommunicationsHandler(QtCore.QObject):
             self.receive_completed_resolution_string_result_signal.emit(resolution_name, resolution_result,
                                                                         resolution_uid)
         else:
+            for res_result in resolution_result:
+                if res_icon := res_result[0].get('Icon'):
+                    res_result[0]['Icon'] = QtCore.QByteArray(b64decode(res_icon))
             self.receive_completed_resolution_result_signal.emit(resolution_name, resolution_result,
                                                                  resolution_uid)
         self.remove_server_resolution_from_running_signal.emit(resolution_uid)
