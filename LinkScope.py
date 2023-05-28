@@ -52,6 +52,7 @@ class MainWindow(QtWidgets.QMainWindow):
     notifyUserSignalListener = QtCore.Signal(str, str, bool)
     statusBarSignalListener = QtCore.Signal(str)
     warningSignalListener = QtCore.Signal(str, bool)
+    errorSignalListener = QtCore.Signal(str, bool, bool)
     runningMacroResolutionFinishedSignalListener = QtCore.Signal(str, str, list)
 
     # Redefining the function to adjust its signature.
@@ -2022,6 +2023,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         # Allow threads to issue warnings.
         self.warningSignalListener.connect(self.MESSAGEHANDLER.warning)
+
+        # Allow threads to issue errors.
+        self.errorSignalListener.connect(self.MESSAGEHANDLER.error)
 
         # Connect resolution results to macro execution function
         self.runningMacroResolutionFinishedSignalListener.connect(self.resolutionFinishedMacrosListener)
