@@ -1657,7 +1657,7 @@ class CollectorsDialog(QtWidgets.QDialog):
         self.baseLayout.addWidget(closeButton)
 
     def startSelectedCollector(self, collectorToStartDict: dict):
-        newCollector = CollectorStartDialog(self.mainWindow.LENTDB, collectorToStartDict)
+        newCollector = CollectorStartDialog(self.mainWindow, collectorToStartDict)
 
         if newCollector.exec_():
             collector_name = collectorToStartDict['name']
@@ -1687,9 +1687,9 @@ class CollectorsDialog(QtWidgets.QDialog):
 
 class CollectorStartDialog(QtWidgets.QDialog):
 
-    def __init__(self, entityDB, collectorDict: dict):
+    def __init__(self, mainWindow, collectorDict: dict):
         super(CollectorStartDialog, self).__init__()
-        self.entityDB = entityDB
+        self.mainWindow = mainWindow
         self.setModal(True)
         self.setWindowTitle('Collector Wizard')
         self.parametersList = []
@@ -1724,7 +1724,7 @@ class CollectorStartDialog(QtWidgets.QDialog):
         self.entitySelector.header().setStretchLastSection(False)
         self.entitySelector.header().setSectionResizeMode(0, QtWidgets.QHeaderView.ResizeMode.Stretch)
         relevantEntityFields = [(entity['uid'], entity[list(entity)[1]], entity['Entity Type'], entity['Icon'])
-                                for entity in entityDB.getAllEntities()
+                                for entity in self.mainWindow.LENTDB.getAllEntities()
                                 if entity['Entity Type'] in originTypes or '*' in originTypes]
         for eligibleEntity in relevantEntityFields:
             newTreeWidgetItem = QtWidgets.QTreeWidgetItem(self.entitySelector)
@@ -1807,7 +1807,7 @@ class CollectorStartDialog(QtWidgets.QDialog):
 
     def accept(self) -> None:
         for item in self.entitySelector.selectedItems():
-            self.chosenItems.append(self.entityDB.getEntity(item.text(3)))
+            self.chosenItems.append(self.mainWindow.LENTDB.getEntity(item.text(3)))
         for resolutionParameterName, resolutionParameterInput in self.parametersList:
             value = resolutionParameterInput.getValue()
             if value == '':
