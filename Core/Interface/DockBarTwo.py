@@ -3,7 +3,7 @@
 from pathlib import Path
 import magic
 from PySide6 import QtWidgets, QtCore, QtGui
-from Core.ResourceHandler import MinSizeStackedLayout, RichNotesEditor
+from Core.ResourceHandler import MinSizeStackedLayout, RichNotesEditor, resizePictureFromBuffer
 from Core.GlobalVariables import hidden_fields_dockbars
 
 
@@ -318,9 +318,9 @@ class EntityDetails(QtWidgets.QWidget):
         second = uid[1]
         secondJson = self.entityDB.getEntity(second)
         firstPixmap = QtGui.QPixmap()
-        firstPixmap.loadFromData(firstJson.get('Icon'))
+        firstPixmap.loadFromData(resizePictureFromBuffer(firstJson.get('Icon'), (40, 40)))
         secondPixmap = QtGui.QPixmap()
-        secondPixmap.loadFromData(secondJson.get('Icon'))
+        secondPixmap.loadFromData(resizePictureFromBuffer(secondJson.get('Icon'), (40, 40)))
         self.linkParent.linkItemPic.setPixmap(firstPixmap)
         self.linkParent.linkItemName.setText(firstJson[list(firstJson)[1]])
         self.linkParent.linkItemUid = firstJson['uid']
@@ -335,7 +335,7 @@ class EntityDetails(QtWidgets.QWidget):
             uid = edge[0]
             edgeJson = self.entityDB.getEntity(uid)
             nodePixmap = QtGui.QPixmap()
-            nodePixmap.loadFromData(edgeJson.get('Icon'))
+            nodePixmap.loadFromData(resizePictureFromBuffer(edgeJson.get('Icon'), (40, 40)))
             ResolutionTreeWidgetEntity(self.relationshipsIncomingTable,
                                        nodePixmap,
                                        edgeJson[list(edgeJson)[1]],
@@ -345,7 +345,7 @@ class EntityDetails(QtWidgets.QWidget):
             uid = edge[1]
             edgeJson = self.entityDB.getEntity(uid)
             nodePixmap = QtGui.QPixmap()
-            nodePixmap.loadFromData(edgeJson.get('Icon'))
+            nodePixmap.loadFromData(resizePictureFromBuffer(edgeJson.get('Icon'), (40, 40)))
             ResolutionTreeWidgetEntity(self.relationshipsOutgoingTable,
                                        nodePixmap,
                                        edgeJson[list(edgeJson)[1]],
@@ -356,7 +356,7 @@ class EntityDetails(QtWidgets.QWidget):
         inc = len(self.entityDB.getIncomingLinks(nodeJson['uid']))
         out = len(self.entityDB.getOutgoingLinks(nodeJson['uid']))
         nodePixmap = QtGui.QPixmap()
-        nodePixmap.loadFromData(nodeJson.get('Icon'))
+        nodePixmap.loadFromData(resizePictureFromBuffer(nodeJson.get('Icon'), (40, 40)))
         ResolutionTreeWidgetEntity(self.nodesTable,
                                    nodePixmap,
                                    nodeJson[list(nodeJson)[1]],
@@ -381,7 +381,7 @@ class EntityDetails(QtWidgets.QWidget):
             self.entityPrimaryLabel.setText(jsonDict[list(jsonDict)[0]])
             self.entityTypeLabel.setText(jsonDict['Entity Type'])
             summaryPixmap = QtGui.QPixmap()
-            summaryPixmap.loadFromData(jsonDict.get('Icon'))
+            summaryPixmap.loadFromData(resizePictureFromBuffer(jsonDict.get('Icon'), (40, 40)))
             self.summaryIcon.setPixmap(summaryPixmap)
         else:
             self.entityUIDLabel.setText("--")

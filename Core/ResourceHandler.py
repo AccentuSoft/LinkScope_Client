@@ -3,7 +3,7 @@
 
 import contextlib
 import re
-from typing import Union
+from typing import Union, Optional
 from glob import glob
 
 import networkx as nx
@@ -17,8 +17,27 @@ from ast import literal_eval
 from base64 import b64decode
 from dateutil import parser
 
-from PySide6.QtCore import QByteArray, QSize, QUrl, Qt
+from PIL import Image
+from PIL.ImageQt import ImageQt
+from PySide6.QtCore import QByteArray, QBuffer, QIODevice, QSize, QUrl, Qt
 from PySide6 import QtWidgets, QtGui
+
+
+def resizePictureFromBuffer(picBuffer: QByteArray, newSize: tuple) -> QByteArray:
+    """
+    newSize: First is width, second is height.
+    """
+    originalImage = QtGui.QImage()
+    originalImage.loadFromData(picBuffer)
+    newImage = originalImage.scaled(newSize[0], newSize[1])
+
+    pictureByteArray = QByteArray()
+    imageBuffer = QBuffer(pictureByteArray)
+    imageBuffer.open(QIODevice.OpenModeFlag.WriteOnly)
+    newImage.save(imageBuffer, "PNG")
+    imageBuffer.close()
+
+    return pictureByteArray
 
 
 class ResourceHandler:
@@ -79,6 +98,49 @@ class ResourceHandler:
             'SIC/NAICS': re.compile(r"""^[0-9]{4,6}$""")}
 
         self.loadModuleEntities(self.programBaseDirPath / "Core" / "Entities")
+
+    def getPictureFromFile(self, filePath: Path, resize: tuple = (0, 0)) -> Optional[QByteArray]:
+        """
+        resize: tuple, first is width, second is height.
+        """
+        try:
+            with open(filePath, 'rb') as newIconFile:
+                fileContents = newIconFile.read()
+            if fileContents.startswith(b'<svg ') or fileContents.startswith(b'<?xml '):
+                if resize != (0, 0):
+                    fileContents = self.resizeSVG(fileContents, resize)
+                pictureByteArray = QByteArray(fileContents)
+            else:
+                image = Image.open(str(filePath))
+                if resize != (0, 0):
+                    thumbnail = ImageQt(image.resize(resize))
+                else:
+                    thumbnail = ImageQt(image)
+                pictureByteArray = QByteArray()
+                imageBuffer = QBuffer(pictureByteArray)
+
+                imageBuffer.open(QIODevice.OpenModeFlag.WriteOnly)
+
+                thumbnail.save(imageBuffer, "PNG")
+                imageBuffer.close()
+        except ValueError as ve:
+                # Image type is unsupported (for ImageQt)
+                # Supported types: 1, L, P, RGB, RGBA
+                self.mainWindow.MESSAGEHANDLER.warning(f'Invalid Image selected: {str(ve)}', popUp=True)
+                pictureByteArray = None
+
+        return pictureByteArray
+
+    def resizeSVG(self, byteString: bytes, resize: tuple):
+        bytesWidth = str(resize[0]).encode('UTF-8')
+        bytesHeight = str(resize[1]).encode('UTF-8')
+        widthRegex = re.compile(b' width="\d*" ')
+        for widthMatches in widthRegex.findall(byteString):
+            byteString = byteString.replace(widthMatches, b' ')
+        heightRegex = re.compile(b' height="\d*" ')
+        for heightMatches in heightRegex.findall(byteString):
+            byteString = byteString.replace(heightMatches, b' ')
+        return byteString.replace(b'<svg ', b'<svg height="%b" width="%b" ' % (bytesHeight, bytesWidth), 1)
 
     def getEntityCategories(self) -> list:
         return list(self.entityCategoryList)

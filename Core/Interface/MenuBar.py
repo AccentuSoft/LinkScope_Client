@@ -29,7 +29,7 @@ from PySide6 import QtWidgets, QtGui, QtCore
 from Core.GlobalVariables import user_agents
 from Core.Interface.Entity import BaseNode
 from Core.ResourceHandler import StringPropertyInput, FilePropertyInput, SingleChoicePropertyInput, \
-    MultiChoicePropertyInput
+    MultiChoicePropertyInput, resizePictureFromBuffer
 
 
 class MenuBar(QtWidgets.QMenuBar):
@@ -1729,7 +1729,8 @@ class CollectorStartDialog(QtWidgets.QDialog):
         for eligibleEntity in relevantEntityFields:
             newTreeWidgetItem = QtWidgets.QTreeWidgetItem(self.entitySelector)
             newTreeWidgetItemPixmap = QtGui.QPixmap()
-            newTreeWidgetItemPixmap.loadFromData(eligibleEntity[3])
+            resizedIcon = resizePictureFromBuffer(eligibleEntity[3], (40, 40))
+            newTreeWidgetItemPixmap.loadFromData(resizedIcon)
             newTreeWidgetItem.setText(0, eligibleEntity[1])
             newTreeWidgetItem.setText(1, eligibleEntity[2])
             newTreeWidgetItem.setIcon(2, newTreeWidgetItemPixmap)

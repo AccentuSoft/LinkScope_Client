@@ -10,6 +10,8 @@ from PySide6.QtWidgets import QGraphicsItem
 from PySide6.QtWidgets import QGraphicsItemGroup, QGraphicsSimpleTextItem, QGraphicsPixmapItem, QGraphicsTextItem
 from PySide6.QtSvgWidgets import QGraphicsSvgItem
 
+from Core.ResourceHandler import resizePictureFromBuffer
+
 ENTITY_TEXT_FONT = QtGui.QFont("Mono", 11, 700)
 LINK_TEXT_FONT = QtGui.QFont("Mono", 11, 700)
 
@@ -24,13 +26,13 @@ class BaseNode(QGraphicsItemGroup):
 
         if pictureByteArray.data().startswith(b'<svg '):
             self.iconItem = QGraphicsSvgItem()
-            self.iconItem.renderer().load(pictureByteArray)
+            self.iconItem.renderer().load(resizePictureFromBuffer(pictureByteArray, (40, 40)))
             # Force recalculation of geometry, else this looks like 1 pixel.
             # https://stackoverflow.com/a/68182093
             self.iconItem.setElementId("")
         else:
             pixmapItem = QtGui.QPixmap()
-            pixmapItem.loadFromData(pictureByteArray)
+            pixmapItem.loadFromData(resizePictureFromBuffer(pictureByteArray, (40, 40)))
             self.iconItem = QGraphicsPixmapItem(pixmapItem)
 
         self.labelItem = QGraphicsTextItem('')
@@ -180,7 +182,7 @@ class GroupNode(BaseNode):
             except IndexError:
                 primaryField = ''
             iconPixmap = QtGui.QPixmap()
-            iconPixmap.loadFromData(entityJson['Icon'])
+            iconPixmap.loadFromData(resizePictureFromBuffer(entityJson['Icon'], (40, 40)))
 
             GroupNodeListItem(icon=iconPixmap, text=primaryField, uid=uid,
                               listview=self.listWidget.itemList)

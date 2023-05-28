@@ -36,7 +36,7 @@ from Core import ResolutionManager
 from Core import URLManager
 from Core import FrontendCommunicationsHandler
 from Core.ResourceHandler import StringPropertyInput, FilePropertyInput, SingleChoicePropertyInput, \
-    MultiChoicePropertyInput
+    MultiChoicePropertyInput, resizePictureFromBuffer
 from Core.Interface import CentralPane
 from Core.Interface import DockBarOne, DockBarTwo, DockBarThree
 from Core.Interface import ToolBarOne
@@ -3559,7 +3559,7 @@ class MergeEntitiesDialog(QtWidgets.QDialog):
 
         pixmapLabel = QtWidgets.QLabel()
         entityPixmap = QtGui.QPixmap()
-        entityPixmap.loadFromData(entityJSON.get('Icon'))
+        entityPixmap.loadFromData(resizePictureFromBuffer(entityJSON.get('Icon'), (40, 40)))
         pixmapLabel.setPixmap(entityPixmap)
 
         pixmapLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
@@ -4140,7 +4140,8 @@ class QueryBuilderWizard(QtWidgets.QDialog):
         for entityUID in self.mainWindowObject.LQLWIZARD.databaseSnapshot.nodes:
             nodeDetails = self.mainWindowObject.LQLWIZARD.databaseSnapshot.nodes[entityUID]
             pixmapIcon = QtGui.QPixmap()
-            pixmapIcon.loadFromData(nodeDetails['Icon'])
+            resizedIcon = resizePictureFromBuffer(nodeDetails['Icon'], (40, 40))
+            pixmapIcon.loadFromData(resizedIcon)
             self.entityDropdownTriplets.append((nodeDetails[list(nodeDetails)[1]], entityUID, pixmapIcon))
 
         for _ in range(self.historyTable.rowCount()):
@@ -4491,7 +4492,8 @@ class ConditionClauseWidget(QtWidgets.QFrame):
             newItem = QtWidgets.QTreeWidgetItem()
             newItem.setText(0, entityDropdownTriplet[0])
             newItem.setText(1, entityDropdownTriplet[1])
-            newItem.setIcon(2, entityDropdownTriplet[2])
+            resizedIcon = resizePictureFromBuffer(entityDropdownTriplet[2], (40, 40))
+            newItem.setIcon(2, resizedIcon)
             graphEntitiesDropdown.addTopLevelItem(newItem)
 
         self.gcSecondaryInputLayout.addWidget(graphEntitiesDropdown)

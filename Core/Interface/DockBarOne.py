@@ -3,6 +3,8 @@ from json import dumps
 from Core.Interface.Entity import BaseNode
 from PySide6 import QtWidgets, QtCore, QtGui
 
+from Core.ResourceHandler import resizePictureFromBuffer
+
 
 class DockBarOne(QtWidgets.QDockWidget):
 
@@ -116,7 +118,8 @@ class EntityList(QtWidgets.QTreeWidget):
             topItem = self.entityTypes[entity['Entity Type']]
             primaryAttr = entity[list(entity)[1]]
             pixmapIcon = QtGui.QPixmap()
-            pixmapIcon.loadFromData(entity['Icon'])
+            resizedIcon = resizePictureFromBuffer(entity['Icon'], (40, 40))
+            pixmapIcon.loadFromData(resizedIcon)
             EntityWidget(topItem,
                          entity['uid'],
                          QtGui.QIcon(pixmapIcon),
@@ -142,7 +145,8 @@ class EntityList(QtWidgets.QTreeWidget):
                 child.setText(0, primaryAttr)
                 return
         pixmapIcon = QtGui.QPixmap()
-        pixmapIcon.loadFromData(entityJson['Icon'])
+        resizedIcon = resizePictureFromBuffer(entityJson['Icon'], (40, 40))
+        pixmapIcon.loadFromData(resizedIcon)
         EntityWidget(entityTypeItem,
                      entityJson['uid'],
                      QtGui.QIcon(pixmapIcon),

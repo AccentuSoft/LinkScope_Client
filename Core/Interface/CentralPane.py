@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 import contextlib
-import re
 import json
 import sys
 import threading
@@ -12,8 +11,6 @@ import folium
 import networkx as nx
 from shutil import move
 from msgpack import dump, load
-from PIL import Image
-from PIL.ImageQt import ImageQt
 from pathlib import Path
 from PySide6 import QtWidgets, QtGui, QtCore
 from PySide6.QtWidgets import QGraphicsPixmapItem
@@ -21,7 +18,7 @@ from PySide6.QtSvgWidgets import QGraphicsSvgItem
 from PySide6.QtWebEngineWidgets import QWebEngineView
 
 from Core.Interface import Entity
-from Core.ResourceHandler import RichNotesEditor
+from Core.ResourceHandler import RichNotesEditor, resizePictureFromBuffer
 from Core.GlobalVariables import hidden_fields
 
 
@@ -1887,6 +1884,7 @@ class CanvasScene(QtWidgets.QGraphicsScene):
             self.removeItem(item.iconItem)
 
             pictureByteArray = pEditor.objectJson['Icon']
+            pictureByteArray = resizePictureFromBuffer(pictureByteArray, (40, 40))
             if pictureByteArray.data().startswith(b'<svg '):
                 item.iconItem = QGraphicsSvgItem()
                 item.iconItem.renderer().load(pictureByteArray)
@@ -2166,10 +2164,11 @@ class PropertiesEditorIconField(QtWidgets.QLabel):
         super(PropertiesEditorIconField, self).__init__()
         self.pictureByteArray = pictureByteArray
         pixmapToSet = QtGui.QPixmap()
-        pixmapToSet.loadFromData(pictureByteArray)
+        pixmapToSet.loadFromData(resizePictureFromBuffer(pictureByteArray, (40, 40)))
         self.setPixmap(pixmapToSet)
         self.uid = uid
         self.canvas = canvas
+        self.mainWindow = self.canvas.parent().mainWindow
 
     def mousePressEvent(self, event: QtGui.QMouseEvent) -> None:
 
@@ -2177,39 +2176,13 @@ class PropertiesEditorIconField(QtWidgets.QLabel):
                                                                options=QtWidgets.QFileDialog.Option.DontUseNativeDialog,
                                                                filter="Image Files (*.png *.jpg *.bmp *.svg)")[0]
         if selectedPath != '':
-            try:
-                filePath = Path(selectedPath)
-
-                with open(filePath, 'rb') as newIconFile:
-                    fileContents = newIconFile.read()
-                if fileContents.startswith(b'<svg '):
-                    widthRegex = re.compile(b' width="\d*" ')
-                    for widthMatches in widthRegex.findall(fileContents):
-                        fileContents = fileContents.replace(widthMatches, b' ')
-                    heightRegex = re.compile(b' height="\d*" ')
-                    for heightMatches in heightRegex.findall(fileContents):
-                        fileContents = fileContents.replace(heightMatches, b' ')
-                    fileContents = fileContents.replace(b'<svg ', b'<svg height="40" width="40" ', 1)
-                    self.pictureByteArray = QtCore.QByteArray(fileContents)
-                else:
-                    image = Image.open(selectedPath)
-                    thumbSize = 40, 40
-                    thumbnail = ImageQt(image.resize(thumbSize))
-                    self.pictureByteArray = QtCore.QByteArray()
-                    imageBuffer = QtCore.QBuffer(self.pictureByteArray)
-
-                    imageBuffer.open(QtCore.QIODevice.OpenModeFlag.WriteOnly)
-
-                    thumbnail.save(imageBuffer, "PNG")
-                    imageBuffer.close()
-
+            filePath = Path(selectedPath)
+            newPic = self.mainWindow.RESOURCEHANDLER.getPictureFromFile(filePath)
+            if newPic is not None:
+                self.pictureByteArray = newPic
                 pixmapToSet = QtGui.QPixmap()
-                pixmapToSet.loadFromData(self.pictureByteArray)
+                pixmapToSet.loadFromData(resizePictureFromBuffer(newPic, (40, 40)))
                 self.setPixmap(pixmapToSet)
-            except ValueError as ve:
-                # Image type is unsupported (for ImageQt)
-                # Supported types: 1, L, P, RGB, RGBA
-                self.canvas.parent().mainWindow.MESSAGEHANDLER.warning(f'Invalid Image selected: {str(ve)}', popUp=True)
 
         super(PropertiesEditorIconField, self).mousePressEvent(event)
 
