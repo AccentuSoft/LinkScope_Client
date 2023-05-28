@@ -1401,10 +1401,6 @@ class MainWindow(QtWidgets.QMainWindow):
         self.RESOLUTIONMANAGER.loadResolutionsFromServer(resolutions)
         self.dockbarOne.resolutionsPalette.loadAllResolutions()
 
-    def executeRemoteResolution(self, resolution_name: str, resolution_entities: list, resolution_parameters: dict,
-                                resolution_uid: str):
-        self.FCOM.runRemoteResolution(resolution_name, resolution_entities, resolution_parameters, resolution_uid)
-
     def cleanServerResolutionListener(self, resolution_uid: str) -> None:
         for resolutionThread in list(self.resolutions):
             if resolutionThread[0].uid == resolution_uid and resolutionThread[1] is True:

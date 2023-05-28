@@ -142,8 +142,8 @@ class ResolutionManager:
             if resolutionName in self.resolutions.get(resolutionCategory):
                 if self.resolutions[resolutionCategory][resolutionName].get('resolution') == '':
                     # If resolution class does not exist locally, then assume it exists on the server.
-                    self.mainWindow.executeRemoteResolution(resolutionCategoryNameString, resolutionEntitiesInput,
-                                                            parameters, resolutionUID)
+                    self.mainWindow.FCOM.runRemoteResolution(
+                        resolutionCategoryNameString, resolutionEntitiesInput, parameters, resolutionUID)
                     # Returning a bool, so we know that the resolution is running on the server.
                     return True
                 resolutionClass = self.resolutions[resolutionCategory][resolutionName]['resolution']()
