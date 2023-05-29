@@ -27,7 +27,7 @@ from cryptography.hazmat.primitives.ciphers import Cipher, algorithms, modes
 from cryptography.exceptions import InvalidTag
 
 # Amount of data to place in each message
-MESSAGE_DATA_SIZE = 8192
+MESSAGE_DATA_SIZE = 8192 * 5
 
 # Needs to be a bit bigger than MESSAGE_DATA_SIZE
 RECV_SIZE = MESSAGE_DATA_SIZE + 1024
@@ -268,7 +268,7 @@ class CommunicationsHandler(QtCore.QObject):
                     # Socket closed.
                     break
                 receivedInfo = oldData + receivedInfo
-                messages = receivedInfo.split(b'\x03\x03\x03\x03\x03')
+                messages = receivedInfo.split(b'\x03\x03\x03\x03\x03\x03\x03\x03')
                 # Last message is either blank (i.e. '') or incomplete data, so we ignore it.
                 oldData = messages[-1]
                 messages = messages[:-1]
