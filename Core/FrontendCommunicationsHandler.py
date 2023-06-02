@@ -558,7 +558,7 @@ class CommunicationsHandler(QtCore.QObject):
         if not filePath.exists() or not filePath.is_file():
             return
         with open(filePath, 'rb') as fileHandler:
-            currThread = threading.currentThread()
+            currThread = threading.current_thread()
             while getattr(currThread, "continue_running", True):
                 filePart = fileHandler.read(512)
                 if not filePart:
