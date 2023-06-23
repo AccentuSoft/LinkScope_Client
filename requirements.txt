@@ -15,6 +15,12 @@ pydot
 networkx
 pygit2
 
+requests
+exif
+email-validator
+pypdf
+docx2python
+jellyfish
 python-dateutil
 pyyaml
 tldextract
@@ -35,40 +41,10 @@ odfpy
 openpyxl
 xlrd # For old Excel formats
 # Speeds up parsing of webpages by bs4
-cchardet
+faust-cchardet
 bs4
 # Redundant, but doesn't hurt.
 beautifulsoup4
 
 # Need to run 'playwright install'.
 playwright
-
-
-##### Extra Packages for resolutions
-requests
-shodan
-docx2python
-pypdf
-beautifulsoup4
-python-Wappalyzer
-vtapi3
-social-analyzer
-requests-futures
-tweepy
-jellyfish
-docker
-email-validator
-docx2python
-exif
-xmltodict
-urllib3
-holehe
-httpx
-snscrape
-pytz
-aiohttp[speedups]
-aiosmtplib
-requests-html
-aiohttp-socks
-dnspython
-name-that-hash
