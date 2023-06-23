@@ -29,20 +29,20 @@ class ModulesManager:
         self.baseAppStoragePath.mkdir(exist_ok=True, parents=True)
         self.modulesBaseDirectoryPath = self.baseAppStoragePath / "User Module Packs Storage"
         self.modulesBaseDirectoryPath.mkdir(exist_ok=True)
+        self.browsersBaseDirectoryPath = self.baseAppStoragePath / "Browsers"
+        self.browsersBaseDirectoryPath.mkdir(exist_ok=True)
         self.modulesRequirementsPath = self.modulesBaseDirectoryPath / "requirements.txt"
         self.modulesRequirementsPath.touch(mode=0o700, exist_ok=True)
         self.modulesRequirementsTempPath = self.modulesBaseDirectoryPath / "requirements.txt.tmp"
-        self.modulesRequirementsTrackingPath = self.modulesBaseDirectoryPath / "Module Requirements Tracking.yml"
-        self.modulesRequirementsTrackingPath.touch(mode=0o700, exist_ok=True)
         self.modulesPythonPath = self.modulesBaseDirectoryPath / 'bin' / 'python3'
         self.upgradeThread = None
         self.moduleReqsThread = None
+        self.uninstallThread = None
+        self.modulePacksListViewer = None
         self.upgradeLock = Lock()
-        self.sources = {}
-        self.modulePacks = {}
+        self.sources = self.mainWindow.SETTINGS.value("Program/Sources/Sources List")
+        self.modulePacks = self.mainWindow.SETTINGS.value("Program/Sources/Module Packs List")
         self.loadedModules = {}
-
-        self.load()
 
         self.venvThread = InitialiseVenvThread(self)
         self.venvThread.configureVenvOfMainThreadSignal.connect(self.configureVenv)
@@ -50,15 +50,12 @@ class ModulesManager:
 
     def afterUpgrade(self, upgradeStatus: bool):
         self.mainWindow.MESSAGEHANDLER.info(f"Upgrade status: {'Success' if upgradeStatus else 'Failed'}")
+        self.mainWindow.setStatus('Environment Updated.')
 
     def save(self) -> bool:
         self.mainWindow.SETTINGS.setValue("Program/Sources/Sources List", self.sources)
         self.mainWindow.SETTINGS.setValue("Program/Sources/Module Packs List", self.modulePacks)
         return True
-
-    def load(self):
-        self.sources = self.mainWindow.SETTINGS.value("Program/Sources/Sources List")
-        self.modulePacks = self.mainWindow.SETTINGS.value("Program/Sources/Module Packs List")
 
     def loadYamlFile(self, filePath: Path):
         with open(filePath, 'r') as yamlFile:
@@ -78,6 +75,7 @@ class ModulesManager:
         # prepend bin to PATH (this file is inside the bin directory)
         os.environ["PATH"] = os.pathsep.join([binDir] + os.environ.get("PATH", "").split(os.pathsep))
         os.environ["VIRTUAL_ENV"] = base  # virtual env is right above bin directory
+        os.environ["PLAYWRIGHT_BROWSERS_PATH"] = str(self.browsersBaseDirectoryPath)
 
         # add the virtual environments libraries to the host python import mechanism
         prevLength = len(sys.path)
@@ -239,6 +237,7 @@ class ModulesManager:
         else:
             try:
                 shutil.copytree(Path(sourceURI), destinationPath, dirs_exist_ok=True)
+                self.mainWindow.MESSAGEHANDLER.info('Copied source files.')
             except FileNotFoundError:
                 if showMessages:
                     self.mainWindow.MESSAGEHANDLER.error(f'Could not sync source {sourceURI}: Source folder not found.',
@@ -268,7 +267,9 @@ class ModulesManager:
         return True
 
     def showModuleManager(self):
-        ModulePacksListViewer(self).exec()
+        self.modulePacksListViewer = ModulePacksListViewer(self)
+        self.modulePacksListViewer.exec()
+        self.modulePacksListViewer = None
 
 
     def installModulePackInit(self, sourceUUID: str, modulePackUUID: str) -> None:
@@ -288,83 +289,48 @@ class ModulesManager:
         self.moduleReqsThread.installFinishedSignal.connect(self.installModulePackFin)
         self.moduleReqsThread.start()
 
-    def installModulePackFin(self, success: bool, modulePackLabel: str):
+    def installModulePackFin(self, success: bool, modulePackLabel: str, sourceUID: str, modulePackUID: str):
         self.upgradeLock.release()
         if success:
             self.mainWindow.MESSAGEHANDLER.info(f'Module Pack successfully installed: {modulePackLabel}')
+            with contextlib.suppress(AttributeError):
+                self.modulePacksListViewer.setInstallCompletedForModulePackWidget()
+            modulePackDetails = self.modulePacks[sourceUID][modulePackUID]
+            for module in modulePackDetails['modules']:
+                modulePath = self.modulesBaseDirectoryPath / sourceUID / module
+                if not self.loadModule(modulePath):
+                    self.mainWindow.MESSAGEHANDLER.warning(
+                        f'Failed loading module: {modulePackLabel}.',
+                        exc_info=False,
+                    )
+            self.mainWindow.reloadModules(onlyUpdateDockbar=True)
         else:
             self.mainWindow.MESSAGEHANDLER.info(f'Module Pack installation failed: {modulePackLabel}')
 
-    def removeModulePack(self, modulePackDict: dict) -> bool:
-        print('Rem', modulePackDict)
-        if not modulePackDict['Installed']:
-            return True
+    def removeModulePack(self, modulePackDict: dict) -> None:
+        self.upgradeLock.acquire()
 
-    def installModule(self, uniqueModuleName: str, moduleFilePath: Path) -> bool:
-        newModuleDirectoryPath = self.modulesDirectoryPath / uniqueModuleName
-        if newModuleDirectoryPath.exists():
-            self.mainWindow.MESSAGEHANDLER.error(f'Could not install Module {uniqueModuleName}: Module already exists.',
-                                                 popUp=True, exc_info=False)
-            return False
-        shutil.copytree(moduleFilePath, newModuleDirectoryPath, dirs_exist_ok=True)
+        self.uninstallThread = UninstallModuleThread(self, modulePackDict)
 
-        moduleRequirements = newModuleDirectoryPath / "requirements.txt"
-        moduleAssetsPath = newModuleDirectoryPath / "assets"
-        resolutionsPath = newModuleDirectoryPath / "Resolutions"
-        entitiesPath = newModuleDirectoryPath / "Entities"
-        moduleAssetsPath.mkdir(exist_ok=True)
-        resolutionsPath.mkdir(exist_ok=True)
-        entitiesPath.mkdir(exist_ok=True)
+        progress = QtWidgets.QProgressDialog(f'Uninstalling Module: {modulePackDict["label"]}...',
+                                             '', 0, 3, self.mainWindow)
 
-        moduleDetailsPath = newModuleDirectoryPath / "module.yml"
-        if not moduleDetailsPath.exists():
-            moduleDetailsPath = newModuleDirectoryPath / "module.yaml"
-            if not moduleDetailsPath.exists():
-                self.mainWindow.MESSAGEHANDLER.error(f'Could not install Module {uniqueModuleName}: '
-                                                     f'module.yml not found.')
-            shutil.rmtree(newModuleDirectoryPath)
-            return False
+        # Remove Cancel button from progress bar (user should not be able to stop canvas from loading).
+        progress.setMinimumDuration(0)
+        progress.setCancelButton(None)
+        progress.setWindowModality(QtCore.Qt.WindowModality.WindowModal)
+        self.uninstallThread.progressSignal.connect(progress.setValue)
+        self.uninstallThread.uninstallFinishedSignal.connect(self.uninstallModulePackFin)
+        self.uninstallThread.start()
 
-        if not (moduleDetails := self.loadYamlFile(moduleDetailsPath)):
-            shutil.rmtree(newModuleDirectoryPath)
-            return False
-
-        try:
-            author = moduleDetails['Author']
-            version = moduleDetails['Version']
-            moduleName = moduleDetails['Module Name']
-            notes = moduleDetails['Notes']
-        except Exception as exc:
-            self.mainWindow.MESSAGEHANDLER.error(f'Could not install Module {uniqueModuleName}. '
-                                                 f'Exception while loading module details: {exc}')
-            shutil.rmtree(newModuleDirectoryPath)
-            return False
-
-        if moduleRequirements.exists():
-            cmdStr = f"'{self.modulesPythonPath}' -m pip install -r '{moduleRequirements}'"
-            subprocess.run(cmdStr, shell=True)
-
-        self.mainWindow.MESSAGEHANDLER.info(f'Loaded module {moduleName} version {version} by {author}.')
-        self.mainWindow.MESSAGEHANDLER.debug(f'Module {moduleName} notes: {notes}')
-        return True
-
-    def uninstallModule(self, uniqueModuleName: str) -> bool:
-        newModuleDirectoryPath = self.modulesDirectoryPath / uniqueModuleName
-        if not newModuleDirectoryPath.exists():
-            self.mainWindow.MESSAGEHANDLER.error(f'Could not uninstall Module {uniqueModuleName}: '
-                                                 f'Module does not exist.')
-            self.modules.pop(uniqueModuleName)
-            return False
-        try:
-            shutil.rmtree(newModuleDirectoryPath)
-        except Exception as exc:
-            self.mainWindow.MESSAGEHANDLER.error(f'Could not uninstall Module {uniqueModuleName}: '
-                                                 f'Error occurred: {exc}.')
-            return False
-
-        # No need to uninstall anything from venv - more likely to cause issues than fix anything.
-        self.modules.pop(uniqueModuleName)
-        return True
+    def uninstallModulePackFin(self, success: bool, modulePackLabel: str):
+        self.upgradeLock.release()
+        if success:
+            self.mainWindow.MESSAGEHANDLER.info(f'Module Pack successfully uninstalled: {modulePackLabel}')
+            with contextlib.suppress(AttributeError):
+                self.modulePacksListViewer.setUninstallCompletedForModulePackWidget()
+        else:
+            self.mainWindow.MESSAGEHANDLER.info(f'Module Pack uninstallation failed: {modulePackLabel}')
 
 
 class SourcesManager(QtWidgets.QDialog):
@@ -652,13 +618,18 @@ class ModulePacksListViewer(QtWidgets.QDialog):
         layout.addWidget(addModulePackButton, 5, 1, 1, 1)
         layout.addWidget(closeButton, 6, 0, 1, 2)
 
+        # Sort module packs alphabetically.
+        allPacksDict = {}
         for source in self.modulesManager.modulePacks:
             for module, moduleDetails in self.modulesManager.modulePacks[source].items():
                 newItemWidget = ModulePacksListItem(self, moduleDetails)
                 newItem = QtWidgets.QListWidgetItem()
                 newItem.setSizeHint(newItemWidget.sizeHint())
-                self.modulePackList.addItem(newItem)
-                self.modulePackList.setItemWidget(newItem, newItemWidget)
+                allPacksDict[newItemWidget] = (moduleDetails['label'], newItem)
+        allPacksDict = dict(sorted(allPacksDict.items(), key=lambda item: item[1][0]))
+        for itemWidget, value in allPacksDict.items():
+            self.modulePackList.addItem(value[1])
+            self.modulePackList.setItemWidget(value[1], itemWidget)
         self.setMinimumWidth(350)
         layout.setRowStretch(3, 10)
 
@@ -670,6 +641,8 @@ class ModulePacksListViewer(QtWidgets.QDialog):
             return True
 
         self.modulesManager.removeModulePack(widgetOfItem.modulePackDict)
+        self.moduleWidgetBeingInstalled = widgetOfItem
+        widgetOfItem.installedLabel.setText("Uninstalling...")
 
     def addModulePackPrompt(self) -> None:
         try:
@@ -683,7 +656,7 @@ class ModulePacksListViewer(QtWidgets.QDialog):
                 f'Module "{widgetOfItem.modulePackDict["label"]}" is already Installed.', popUp=True, exc_info=False)
         elif AddModulePackDialog(self, widgetOfItem.modulePackDict, False).exec():
             self.moduleWidgetBeingInstalled = widgetOfItem
-            widgetOfItem.installedLabel.setText("Installed: Pending")  # TODO
+            widgetOfItem.installedLabel.setText("Installed: Pending")
 
     def installModulePack(self, sourceUUID: str, modulePackUUID: str) -> None:
         packDetails = self.modulesManager.modulePacks[sourceUUID][modulePackUUID]
@@ -695,6 +668,12 @@ class ModulePacksListViewer(QtWidgets.QDialog):
         if self.moduleWidgetBeingInstalled is not None:
             self.moduleWidgetBeingInstalled.installedLabel.setText("Installed: True")
             self.moduleWidgetBeingInstalled = None
+
+    def setUninstallCompletedForModulePackWidget(self):
+        if self.moduleWidgetBeingInstalled is not None:
+            self.moduleWidgetBeingInstalled.installedLabel.setText("Installed: False")
+            self.moduleWidgetBeingInstalled = None
+
 
 
 class ModulePacksListItem(QtWidgets.QWidget):
@@ -801,11 +780,6 @@ class InitialiseVenvThread(QtCore.QThread):
 
         self.configureVenvOfMainThreadSignal.emit(venvPath)
 
-        # Install / upgrade playwright & misc if not already installed, since they need special treatment.
-        cmdStr = f"'{self.modulesManager.modulesPythonPath}' -m pip install --upgrade wheel setuptools playwright && " \
-                 f"'{self.modulesManager.modulesPythonPath}' -m playwright install"
-        subprocess.run(cmdStr, shell=True)
-
 
 class UpgradeVenvThread(QtCore.QThread):
     upgradeVenvThreadSignal = QtCore.Signal(bool)
@@ -824,9 +798,16 @@ class UpgradeVenvThread(QtCore.QThread):
             reqsFile = self.modulesManager.modulesRequirementsTempPath
         else:
             reqsFile = self.modulesManager.modulesRequirementsPath
-        cmdStr = f"'{self.modulesManager.modulesPythonPath}' -m pip install --upgrade -r '{reqsFile}'"
         try:
+            cmdStr = f"'{self.modulesManager.modulesPythonPath}' --version"
             subprocess.check_output(cmdStr, shell=True)
+            cmdStr = f"'{self.modulesManager.modulesPythonPath}' -m pip install --upgrade -r '{reqsFile}'"
+            subprocess.check_output(cmdStr, shell=True)
+            # Install / upgrade playwright & misc if not already installed, since they need special treatment.
+            cmdStr = f"'{self.modulesManager.modulesPythonPath}' -m pip install --upgrade pip wheel setuptools playwright"
+            subprocess.run(cmdStr, shell=True)
+            cmdStr = f"'{self.modulesManager.modulesPythonPath}' -m playwright install"
+            subprocess.run(cmdStr, shell=True)
             self.upgradeVenvThreadSignal.emit(True)
         except subprocess.CalledProcessError:
             self.upgradeVenvThreadSignal.emit(False)
@@ -834,7 +815,7 @@ class UpgradeVenvThread(QtCore.QThread):
 
 class InstallRequirementsThread(QtCore.QThread):
     progressSignal = QtCore.Signal(int)
-    installFinishedSignal = QtCore.Signal(bool, str)
+    installFinishedSignal = QtCore.Signal(bool, str, str, str)
 
     def __init__(self, modulesManager: ModulesManager, sourceUUID: str, modulePackUUID: str):
         super().__init__()
@@ -848,14 +829,7 @@ class InstallRequirementsThread(QtCore.QThread):
 
         if packDetails['Installed']:
             self.progressSignal.emit(3)
-            self.installFinishedSignal.emit(False, modulePackLabel)
-            return
-
-
-        if (requirementsDetails :=
-        self.modulesManager.loadYamlFile(self.modulesManager.modulesRequirementsTrackingPath)) is None:
-            self.progressSignal.emit(3)
-            self.installFinishedSignal.emit(False, modulePackLabel)
+            self.installFinishedSignal.emit(False, modulePackLabel, "", "")
             return
 
         requirementsSet = set()
@@ -865,11 +839,8 @@ class InstallRequirementsThread(QtCore.QThread):
             with open(moduleRequirements, 'r') as file:
                 [requirementsSet.add(line) for line in file.read().splitlines() if not line.startswith('#')]
 
-        moduleRequirements = list(requirementsSet)
-        requirementsDetails[self.modulePackUUID] = moduleRequirements
-
-        for module, requirements in requirementsDetails.items():
-            [requirementsSet.add(line) for line in requirements]
+        with open(self.modulesManager.modulesRequirementsPath, 'r') as reqFile:
+            [requirementsSet.add(line) for line in reqFile.read().splitlines() if not line.startswith('#')]
 
         with open(self.modulesManager.modulesRequirementsTempPath, 'w') as file:
             [file.write(line + '\n') for line in requirementsSet]
@@ -881,9 +852,6 @@ class InstallRequirementsThread(QtCore.QThread):
                  f"'{self.modulesManager.modulesRequirementsTempPath}'"
         try:
             subprocess.check_output(cmdStr, shell=True)
-
-            with open(self.modulesManager.modulesRequirementsTrackingPath, 'w') as file:
-                yaml.dump(requirementsDetails, file, default_flow_style=False)
 
             shutil.move(self.modulesManager.modulesRequirementsTempPath, self.modulesManager.modulesRequirementsPath)
             success = True
@@ -897,9 +865,69 @@ class InstallRequirementsThread(QtCore.QThread):
 
         if success:
             self.modulesManager.modulePacks[self.sourceUUID][self.modulePackUUID]['Installed'] = True
-            self.installFinishedSignal.emit(True, modulePackLabel)
+            self.installFinishedSignal.emit(True, modulePackLabel, self.sourceUUID, self.modulePackUUID)
         else:
-            self.installFinishedSignal.emit(False, modulePackLabel)
+            self.installFinishedSignal.emit(False, modulePackLabel, "", "")
+
+
+class UninstallModuleThread(QtCore.QThread):
+    progressSignal = QtCore.Signal(int)
+    uninstallFinishedSignal = QtCore.Signal(bool, str)
+
+    def __init__(self, modulesManager: ModulesManager, modulePackDict: dict):
+        super().__init__()
+        self.modulesManager = modulesManager
+        self.modulePackDict = modulePackDict
+
+    def run(self) -> None:
+        modulePackLabel = self.modulePackDict['label']
+        modulePackSourceUUID = self.modulePackDict['Source UUID']
+        modulePackUUID = self.modulePackDict['UUID']
+
+        if not self.modulePackDict['Installed']:
+            self.progressSignal.emit(3)
+            self.uninstallFinishedSignal.emit(False, modulePackLabel)
+            return
+
+        newRequirementsSet = set()
+        for sourceDict in self.modulesManager.sources.values():
+            sourceUUID = sourceDict['UUID']
+            for modulePackDetails in self.modulesManager.modulePacks[sourceUUID].values():
+                if modulePackUUID == modulePackDetails['UUID'] and \
+                            modulePackSourceUUID == modulePackDetails['Source UUID']:
+                    pass
+                elif modulePackDetails['Installed']:
+                    for module in modulePackDetails['modules']:
+                        moduleReqsPath = self.modulesManager.modulesBaseDirectoryPath / sourceUUID / module / 'requirements.txt'
+                        with open(moduleReqsPath, 'r') as file:
+                            [newRequirementsSet.add(line) for line in file.read().splitlines()
+                             if not line.startswith('#')]
+
+        with open(self.modulesManager.modulesRequirementsPath, 'r') as reqsFile:
+            allRequirementsSet = {line for line in reqsFile.read().splitlines() if not line.startswith('#')}
+
+        with open(self.modulesManager.modulesRequirementsTempPath, 'w') as file:
+            [file.write(line + '\n') for line in newRequirementsSet]
+
+        if reqsDiff := allRequirementsSet.difference(newRequirementsSet):
+            cmdStr = f"'{self.modulesManager.modulesPythonPath}' -m pip uninstall {' '.join(reqsDiff)} -y"
+            try:
+                subprocess.check_output(cmdStr, shell=True)
+                shutil.move(self.modulesManager.modulesRequirementsTempPath,
+                            self.modulesManager.modulesRequirementsPath)
+            except subprocess.CalledProcessError as cpe:
+                self.modulesManager.mainWindow.errorSignalListener.emit(
+                    f'Error occurred while uninstalling Module Pack "{modulePackLabel}":\n{cpe}', True, False)
+                self.modulesManager.modulesRequirementsTempPath.unlink(missing_ok=True)
+                self.progressSignal.emit(3)
+                self.uninstallFinishedSignal.emit(True, modulePackLabel)
+                return
+
+        self.modulesManager.modulePacks[modulePackSourceUUID][modulePackUUID]['Installed'] = False
+
+        self.progressSignal.emit(3)
+        self.uninstallFinishedSignal.emit(True, modulePackLabel)
+
 
 class AuthType(int, Enum):
     NONE = 0

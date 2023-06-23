@@ -931,14 +931,15 @@ class MainWindow(QtWidgets.QMainWindow):
         self.MODULEMANAGER.loadAllModules()
         self.setStatus('Loaded Modules.')
 
-    def reloadModules(self) -> None:
+    def reloadModules(self, onlyUpdateDockbar:bool = False) -> None:
         """
         Same as loadModules, except this one updates the GUI to show newly loaded entities and resolutions.
         This is meant to be run after the application started, in case the user wants to load a module without
         closing and reopening the application.
         :return:
         """
-        self.MODULEMANAGER.loadAllModules()
+        if not onlyUpdateDockbar:
+            self.MODULEMANAGER.loadAllModules()
         self.dockbarOne.existingEntitiesPalette.loadEntities()
         self.dockbarOne.resolutionsPalette.loadAllResolutions()
         self.dockbarOne.nodesPalette.loadEntities()
@@ -1888,7 +1889,6 @@ class MainWindow(QtWidgets.QMainWindow):
         if len(self.centralWidget().tabbedPane.canvasTabs) == 0:
             self.centralWidget().tabbedPane.createHomeTab()
 
-        self.setStatus("Ready")
         self.MESSAGEHANDLER.info(f"Project {self.SETTINGS.value('Project/Name', 'Untitled')} opened.")
 
         if self.SETTINGS.value("Program/Usage/First Time Start", 'true') == 'true':
@@ -2334,8 +2334,8 @@ class EntityPage(QtWidgets.QWizardPage):
         else:
             if 'svg' not in str(self.defaultpic):
                 # Default picture is an SVG.
-                self.defaultpic = self.parent().RESOURCEHANDLER.getEntityDefaultPicture(
-                    self.parent().LENTDB.getEntity(self.entityUID)['Entity Type'])
+                self.defaultpic = self.reportWizard.parent().RESOURCEHANDLER.getEntityDefaultPicture(
+                    self.reportWizard.parent().LENTDB.getEntity(self.entityUID)['Entity Type'])
             contents = bytearray(self.defaultpic)
             widthRegex = re.compile(b' width="\d*" ')
             fileContents = ''

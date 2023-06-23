@@ -111,7 +111,7 @@ class ResourceHandler:
             'ISINID': re.compile(r"""^[a-zA-Z0-9]{2}-?[a-zA-Z0-9]{9}-?[a-zA-Z0-9]$"""),
             'SIC/NAICS': re.compile(r"""^[0-9]{4,6}$""")}
 
-        self.loadModuleEntities(self.programBaseDirPath / "Core" / "Entities")
+        self.loadModuleEntities(self.programBaseDirPath / "Core")
 
     def getPictureFromFile(self, filePath: Path, resize: tuple = (0, 0)) -> Optional[QByteArray]:
         """
@@ -146,7 +146,9 @@ class ResourceHandler:
         return pictureByteArray
 
     def loadModuleBanners(self, modulePath: Path):
-        pass  # TODO
+        assetsPath = modulePath / "Assets"
+        self.banners.update({f"{bannerPath.split('Banner_')[-1].split('.')[0]}": str(bannerPath)
+                             for bannerPath in glob(str(assetsPath / "Banner_*.svg"))})
 
     def getEntityCategories(self) -> list:
         return list(self.entityCategoryList)
@@ -285,12 +287,16 @@ class ResourceHandler:
         return entityTypesAdded
 
     def loadModuleEntities(self, modulePath: Path) -> list:
+        entitiesPath = modulePath / 'Entities'
         allModuleEntitiesAdded = []
-        self.moduleAssetPaths.append(modulePath / "assets")
-        for entFile in listdir(modulePath):
+        for entFile in listdir(entitiesPath):
             if entFile.endswith('.xml'):
-                allModuleEntitiesAdded += self.addRecognisedEntityTypes(modulePath / entFile)
+                allModuleEntitiesAdded += self.addRecognisedEntityTypes(entitiesPath / entFile)
         return allModuleEntitiesAdded
+
+    def loadModuleAssets(self, modulePath: Path):
+        self.moduleAssetPaths.append(modulePath / "Assets")
+        self.loadModuleBanners(modulePath)
 
     def getEntityJson(self, entityType: str, jsonData=None) -> Union[dict, None]:
         eJson = {'uid': str(uuid4())}
