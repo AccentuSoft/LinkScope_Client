@@ -27,7 +27,7 @@ class ExtractPDFMeta:
             uid = entity['uid']
             filePath = Path(parameters['Project Files Directory']) / entity['File Path']
 
-            if not (filePath.exists() and filePath.is_file()):
+            if not (filePath.is_file()):
                 continue
 
             if magic.from_file(str(filePath), mime=True) != 'application/pdf':
@@ -39,10 +39,7 @@ class ExtractPDFMeta:
                 number_of_pages = len(pdf.pages)
 
             for metadataKey in info:
-                if metadataKey.startswith('/'):
-                    attrValue = metadataKey[1:]
-                else:
-                    attrValue = metadataKey
+                attrValue = metadataKey[1:] if metadataKey.startswith('/') else metadataKey
                 if 'Date' in metadataKey:
                     try:
                         strDate = info[metadataKey].split(':', 1)[1]
@@ -73,9 +70,7 @@ class ExtractPDFMeta:
                 else:
                     # Clean some misshapen strings
                     value = str(info[metadataKey])
-                    if value.startswith('/'):
-                        value = value[1:]
-
+                    value = value.removeprefix('/')
                     returnResults.append([{'Phrase': f'{attrValue}: {value}',
                                            'Entity Type': 'Phrase'},
                                           {uid: {'Resolution': attrValue, 'Notes': ''}}])

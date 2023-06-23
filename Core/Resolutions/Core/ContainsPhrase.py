@@ -22,7 +22,8 @@ class ContainsPhrase:
                                            'value': ''},
                   'Case Sensitive': {'description': 'Do you want the phrase to be case sensitive?',
                                      'type': 'SingleChoice',
-                                     'value': {'Yes', 'No'}
+                                     'value': {'Yes', 'No'},
+                                     'default': 'Yes'
                                      }
                   }
 

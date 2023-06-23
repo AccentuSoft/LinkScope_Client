@@ -10,7 +10,7 @@ class ASNToCIDR:
     originTypes = {'Autonomous System'}
 
     # A set of entities that could be the result of this resolution.
-    resultTypes = {'Network'}
+    resultTypes = {'Network', 'Company', 'Organization', 'Phrase'}
 
     # A dictionary of properties for this resolution. The key is the property name,
     # the value is the property attributes. The type of input expected from the user is determined by the

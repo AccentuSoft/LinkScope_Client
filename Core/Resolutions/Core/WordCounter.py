@@ -9,7 +9,8 @@ class WordCounter:
     resultTypes = {'Phrase'}
     parameters = {'Primary field or Notes': {'description': 'Choose Either Primary field or Notes',
                                              'type': 'SingleChoice',
-                                             'value': {'Notes', 'Primary Field'}}}
+                                             'value': {'Notes', 'Primary Field'},
+                                             'default': 'Notes'}}
 
     def resolution(self, entityJsonList, parameters):
         import re

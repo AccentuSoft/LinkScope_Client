@@ -91,6 +91,9 @@ class EmailExtractor:
                 siteContent = re.sub(r'\s*(\[|\<|\()+\s*at\s*(\]|\>|\))+\s*', '@', siteContent)
                 siteContent = re.sub(r'\s*(\[|\<|\()+\s*dot\s*(\]|\>|\))+\s*', '.', siteContent)
                 siteContent = re.sub(r'\s*(\[|\<|\()+\s*\.\s*(\]|\>|\))+\s*', '.', siteContent)
+                siteContent = re.sub(r'\s*@\s*', '@', siteContent)
+                siteContent = re.sub(r'\s*\.', '.', siteContent)
+                siteContent = re.sub(r'\.\s*([^A-Z])', r'.\1', siteContent)
 
                 potentialEmails = emailRegex.findall(siteContent)
                 for potentialEmail in potentialEmails:
