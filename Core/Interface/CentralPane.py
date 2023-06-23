@@ -190,9 +190,10 @@ class TabbedPane(QtWidgets.QTabWidget):
         self.tabsNotesDict = {}
         self.previousTab = None
 
-        self.allBanners = dict(self.mainWindow.RESOURCEHANDLER.banners.items())
-
         self.currentChanged.connect(self.currentTabChangedListener)
+
+    def getAllBanners(self) -> dict:
+        return dict(self.mainWindow.RESOURCEHANDLER.banners)
 
     def getCanvasDBPath(self):
         return Path(self.mainWindow.SETTINGS.value("Project/BaseDir")) / "Project Files" / "CanvasTabs.lscanvas"
@@ -1164,7 +1165,7 @@ class CanvasView(QtWidgets.QGraphicsView):
             self.tabbedPane.mainWindow.MESSAGEHANDLER.warning('Need to select at least one Entity to set its banner.',
                                                               popUp=True)
             return
-        bannerDialog = BannerSelector(self.tabbedPane.allBanners)
+        bannerDialog = BannerSelector(self.tabbedPane.getAllBanners())
         if bannerDialog.exec():
             try:
                 # This following line will throw IndexError if no banner is selected.
@@ -1273,7 +1274,7 @@ class CanvasScene(QtWidgets.QGraphicsScene):
         """
         if bannerName:
             try:
-                bannerPathStr = self.parent().allBanners[bannerName]
+                bannerPathStr = self.parent().getAllBanners()[bannerName]
                 with open(bannerPathStr, 'rb') as bannerFile:
                     bannerByteArray = QtCore.QByteArray(bannerFile.read())
                 for entity in entities:
@@ -1289,7 +1290,7 @@ class CanvasScene(QtWidgets.QGraphicsScene):
             for entity in entities:
                 try:
                     entityJson = self.parent().mainWindow.LENTDB.getEntity(entity.uid)
-                    if bannerPathStr := self.parent().allBanners.get(
+                    if bannerPathStr := self.parent().getAllBanners().get(
                         entityJson.get('Canvas Banner', ''), ''
                     ):
                         with open(bannerPathStr, 'rb') as bannerFile:
