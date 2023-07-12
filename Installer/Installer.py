@@ -14,11 +14,9 @@ import py7zr
 from PySide6 import QtCore, QtWidgets, QtGui
 
 # Requirements:
-#   requests
-#   PySide6
-#   py7zr
+#   requests PySide6 py7zr wheel pip nuitka ordered-set zstandard
 #
-# Compile with (requires zstandard, benefits from orderedset):
+# Compile with:
 #
 # Windows:
 """
@@ -26,7 +24,7 @@ python -m nuitka --follow-imports --onefile --noinclude-pytest-mode=nofollow --n
 --noinclude-custom-mode=setuptools:error --noinclude-IPython-mode=nofollow --enable-plugin=pyside6 ^
 --assume-yes-for-downloads --remove-output --disable-console --warn-unusual-code --show-modules ^
 --windows-company-name="AccentuSoft" --windows-product-name="LinkScope Installer" --windows-product-version=1.6.0.0 ^
---include-data-files="Icon.ico=Icon.ico" --linux-icon="Icon.ico" --windows-icon-from-ico=".\Icon.ico" ^
+--include-data-files="Icon.ico=Icon.ico" --windows-icon-from-ico=".\Icon.ico" ^
 --windows-file-description="LinkScope Installer" ^
 Installer.py
 """
@@ -717,6 +715,101 @@ For more information on this, and how to apply and follow the GNU AGPL, see
 """
 
 
+def deleteVenvStuff() -> None:
+    baseAppStoragePath = Path(
+        QtCore.QStandardPaths.standardLocations(
+            QtCore.QStandardPaths.StandardLocation.AppDataLocation)[0])
+    shutil.rmtree(baseAppStoragePath)
+
+
+def installGraphviz() -> None:
+    if platform.system() == 'Linux':
+        installGraphvizLinuxHelper()
+    else:
+        installGraphvizWindowsHelper()
+
+
+def installGraphvizLinuxHelper():
+    subprocess.run(['apt', 'update'])
+    # https://doc.qt.io/qt-6/linux-requirements.html
+    # https://github.com/Nuitka/Nuitka/issues/2138
+    # No need to check if this succeeds - if there are any issues with installation, we will throw
+    #   an error on the install command.
+    command = subprocess.run(['apt', 'install', 'p7zip-full', 'libopengl0', 'graphviz', 'libmagic1',
+                              'libfontconfig1-dev', 'libfreetype6-dev', 'libatspi2.0-dev',
+                              'libcairo2-dev', 'python3-dev', 'pkg-config', '-y'])
+    if command.returncode != 0:
+        raise ValueError('Installing new packages failed, cannot continue installation.')
+
+
+def installGraphvizWindowsHelper():
+    graphVizPage = requests.get('https://graphviz.org/download/')
+    graphVizParts = graphVizPage.text.split('\n')
+    graphVizDownloadLink = next((chunk.split('"')[1] for chunk in graphVizParts
+                                 if '(64-bit) EXE installer' in chunk), "")
+
+    if not isinstance(graphVizDownloadLink, str) or graphVizDownloadLink == "":
+        raise ValueError('Cannot install GraphViz: Failed to locate the latest version of the GraphViz installer.')
+    graphVizInstallerFileHandler, graphVizInstallerTemp = tempfile.mkstemp()
+    tempPath = Path(graphVizInstallerTemp)
+
+    with os.fdopen(graphVizInstallerFileHandler, 'wb') as tempInstallerFile:
+        with requests.get(graphVizDownloadLink, stream=True) as fileStream:
+            for chunk in fileStream.iter_content(chunk_size=5 * 1024 * 1024):
+                tempInstallerFile.write(chunk)
+    tempPath.chmod(tempPath.stat().st_mode | 0o111)
+    subprocess.run([str(tempPath)])
+    tempPath.unlink(missing_ok=True)
+
+
+def installPythonLinuxHelper():
+    subprocess.run('echo "y" | add-apt-repository ppa:deadsnakes/ppa', shell=True)
+    subprocess.run('apt-get update && apt-get install python3.11 python3.11-venv -y', shell=True)
+    subprocess.run('wget -O - https://bootstrap.pypa.io/get-pip.py | python3.11', shell=True)
+
+
+def installPythonWindowsHelper():
+    win_downloads = requests.get('https://www.python.org/downloads/windows/')
+
+    if win_downloads.status_code != 200:
+        return False
+
+    latest_release_path = win_downloads.text.split(
+        'Latest Python 3 Release -', 1)[0].split('href="')[-1].split('"', 1)[0]
+
+    latest_release_full_path = f'https://www.python.org{latest_release_path}'
+
+    latest_release_page = requests.get(latest_release_full_path)
+
+    if latest_release_page.status_code != 200:
+        return False
+
+    latest_release_installer_path = latest_release_page.text.split(
+        'Windows installer (64-bit)', 1)[0].split('href="')[-1].split('"', 1)[0]
+
+    latest_release_binary = requests.get(latest_release_installer_path, allow_redirects=True)
+
+    if latest_release_binary.status_code != 200:
+        return False
+
+    with tempfile.TemporaryDirectory() as tmpdir:
+        tmpdir_path = Path(tmpdir)
+        installer_file_path = tmpdir_path / 'python.exe'
+        installer_file_path.touch(mode=0o777)
+        with open(installer_file_path, 'wb') as file:
+            file.write(latest_release_binary.content)
+        ctypes.windll.shell32.ShellExecuteW(None, "runas", installer_file_path, "/quiet", None, 1)
+
+
+def removeFileHelper(pathToRemove: Path):
+    if not pathToRemove.exists():
+        return
+    if pathToRemove.is_dir():
+        shutil.rmtree(pathToRemove)
+    else:
+        pathToRemove.unlink(missing_ok=True)
+
+
 class InstallWizard(QtWidgets.QWizard):
 
     # INSTALLER PATHS:
@@ -727,19 +820,10 @@ class InstallWizard(QtWidgets.QWizard):
     #   0 -> 1 -> 4 -> 2 -> 5 -> 6 -> -1
     # Install, Graphviz exists
     #   0 -> 1 -> 4 -> 5 -> 6 -> -1
-    # Update
-    #   0 -> 4 -> 2 -> 5 -> 6 -> -1
-    #          -> 5 -> 6 -> -1
-
     def nextId(self) -> int:
         if self.currentId() == 0:
-            if self.currentPage().uninstallRadio.isChecked():
-                return 3
-            elif self.currentPage().updateRadio.isChecked():
-                return 4
-            else:
-                # Default action is install.
-                return 1
+            # Default action is install.
+            return 3 if self.currentPage().uninstallRadio.isChecked() else 1
         if self.currentId() == 1:
             return 4
         if self.currentId() == 2:
@@ -894,33 +978,18 @@ class InstallWizard(QtWidgets.QWizard):
 
         self.show()
 
-    def removeFileHelper(self, pathToRemove: Path):
-        if not pathToRemove.exists():
-            return
-        pathToRemove.chmod(0o777)
-        if pathToRemove.is_dir():
-            for dirpath, dirnames, filenames in os.walk(pathToRemove):
-                Path(dirpath).chmod(0o777)
-                filenames.extend(dirnames)
-                for filename in filenames:
-                    filePath = Path(dirpath) / filename
-                    filePath.chmod(0o777)
-            shutil.rmtree(pathToRemove)
-        else:
-            pathToRemove.unlink(missing_ok=True)
-
     def createShortcut(self):
-        self.removeFileHelper(self.desktopShortcutPath)
+        removeFileHelper(self.desktopShortcutPath)
         if self.currentOS == 'Linux':
             QtCore.QFile.link(str(self.appPath), str(self.desktopShortcutPath))
         elif self.currentOS == 'Windows':
             QtCore.QFile.link(str(self.executablePath), str(self.desktopShortcutPath))
 
     def uninstall(self):
-        self.removeFileHelper(self.desktopShortcutPath)
+        removeFileHelper(self.desktopShortcutPath)
         if self.currentOS == 'Linux':
-            self.removeFileHelper(self.appPath)
-        self.removeFileHelper(self.baseSoftwarePath)
+            removeFileHelper(self.appPath)
+        removeFileHelper(self.baseSoftwarePath)
 
     def downloadClient(self):
         if not isinstance(self.downloadURL, str) or self.downloadURL == "":
@@ -938,63 +1007,39 @@ class InstallWizard(QtWidgets.QWizard):
 
         tempPath.unlink(missing_ok=True)
 
-    def downloadGraphviz(self):
-        graphVizPage = requests.get('https://graphviz.org/download/')
-        graphVizParts = graphVizPage.text.split('\n')
-        graphVizDownloadLink = next((chunk.split('"')[1] for chunk in graphVizParts
-                                     if '(64-bit) EXE installer' in chunk), "")
-
-        if not isinstance(graphVizDownloadLink, str) or graphVizDownloadLink == "":
-            raise ValueError('Cannot install GraphViz: Failed to locate the latest version of the GraphViz installer.')
-        graphVizInstallerTemp = tempfile.mkstemp()
-        tempPath = Path(graphVizInstallerTemp[1])
-
-        with os.fdopen(graphVizInstallerTemp[0], 'wb') as tempInstallerFile:
-            with requests.get(graphVizDownloadLink, stream=True) as fileStream:
-                for chunk in fileStream.iter_content(chunk_size=5 * 1024 * 1024):
-                    tempInstallerFile.write(chunk)
-        tempPath.chmod(tempPath.stat().st_mode | 0o111)
-        subprocess.run([str(tempPath)])
-        tempPath.unlink(missing_ok=True)
-
     def install(self):
         # Assumes we have superuser privileges.
-        if self.currentOS != 'Linux':
-            # Assume the user has installed / will install Graphviz.
-            # We don't actually need to do anything here. Maybe in the future, register application in registry?
-            return
-        # Redundant since we always try to update and install, but it's good coding practice.
-        if not self.graphvizExists:
-            # No need to check if this succeeds - if there are any issues with installation, we will throw
-            #   an error on the install command.
-            subprocess.run(['apt', 'update'])
-            # https://doc.qt.io/qt-6/linux-requirements.html
-            # https://github.com/Nuitka/Nuitka/issues/2138
-            command = subprocess.run(['apt', 'install', 'p7zip-full', 'libopengl0', 'graphviz', 'libmagic1',
-                                      'libfontconfig1-dev', 'libfreetype6-dev', 'libx11-dev', 'libx11-xcb-dev',
-                                      'libxext-dev', 'libxfixes-dev', 'libxi-dev', 'libxrender-dev', 'libxkbcommon-dev',
-                                      'libxkbcommon-x11-dev', 'libatspi2.0-dev', "'^libxcb.*-dev'", '-y'])
-            if command.returncode != 0:
-                raise ValueError('Installing new packages failed, cannot continue installation.')
+        # We do not install/configure anything on the virtual env, the first time boot will take longer, but
+        #   it's safer to do it like this since we don't know how the user's system is configured.
 
-        self.removeFileHelper(self.appPath)
-        with open(self.appPath, 'w') as desktopApplicationFile:
-            desktopApplicationFile.write(LINUX_DESKTOP_FILE_ENTRY)
-        # Mark desktop file as executable
-        self.appPath.chmod(self.appPath.stat().st_mode | 0o111)
+        if self.currentOS == 'Linux':
+            try:
+                if subprocess.run(["python3.11", "--version"],
+                                  stdout=subprocess.PIPE,
+                                  stderr=subprocess.PIPE,
+                                  text=True).returncode != 0:
+                    raise ValueError()
+            except Exception:
+                installPythonLinuxHelper()
+        elif not subprocess.check_output(['where', 'python']):
+            installPythonWindowsHelper()
+
+        if not self.graphvizExists or self.currentOS == 'Linux':
+            installGraphviz()
+
+        if self.currentOS == 'Linux':
+            removeFileHelper(self.appPath)
+            with open(self.appPath, 'w') as desktopApplicationFile:
+                desktopApplicationFile.write(LINUX_DESKTOP_FILE_ENTRY)
+            # Mark desktop file as executable
+            self.appPath.chmod(self.appPath.stat().st_mode | 0o111)
 
 
 class IntroInstallUninstallPage(QtWidgets.QWizardPage):
 
     def validatePage(self) -> bool:
-        if self.updateRadio.isChecked():
-            self.wizard().page(5).setTitle('Updating LinkScope Installation')
-            self.wizard().page(5).installProgressLabel.setText('Update Process: ')
-            self.wizard().page(5).updateSelected = True
-        else:
-            self.wizard().page(5).setTitle('Install LinkScope')
-            self.wizard().page(5).installProgressLabel.setText('Installation Process: ')
-            self.wizard().page(5).updateSelected = False
+        self.wizard().page(5).setTitle('Install LinkScope')
+        self.wizard().page(5).installProgressLabel.setText('Installation Process: ')
         return True
 
     def __init__(self):
@@ -1013,10 +1058,6 @@ class IntroInstallUninstallPage(QtWidgets.QWizardPage):
         self.installRadio.setToolTip('Install the LinkScope Client software.')
         self.installRadio.setChecked(True)
 
-        self.updateRadio = QtWidgets.QRadioButton('Update / Repair LinkScope')
-        self.updateRadio.setToolTip('Update the existing installation of LinkScope Client, or repair any issues with '
-                                    'the existing installation.')
-
         self.uninstallRadio = QtWidgets.QRadioButton('Uninstall LinkScope')
         self.uninstallRadio.setToolTip('Uninstall the LinkScope Client software.\nNote that on Linux, any packages '
                                        'that were installed during the installation of LinkScope will not be removed.\n'
@@ -1024,7 +1065,6 @@ class IntroInstallUninstallPage(QtWidgets.QWizardPage):
                                        'on them.')
 
         installUninstallLayout.addWidget(self.installRadio)
-        installUninstallLayout.addWidget(self.updateRadio)
         installUninstallLayout.addWidget(self.uninstallRadio)
 
 
@@ -1083,7 +1123,6 @@ class LinkScopeInstallLatestPage(QtWidgets.QWizardPage):
                                              'LinkScope. Click "Commit" to start the installation.')
 
         self.createShortcut = False
-        self.updateSelected = False
         self.processStarted = False
         self.installThread = None
 
@@ -1115,6 +1154,7 @@ class LinkScopeInstallLatestPage(QtWidgets.QWizardPage):
 class LinkScopeUninstallPage(QtWidgets.QWizardPage):
 
     def doStuff(self):
+        deleteVenvStuff()
         self.progressBar.setValue(3)
         try:
             self.wizard().uninstall()
@@ -1221,8 +1261,6 @@ class LicensePage(QtWidgets.QWizardPage):
         rejectLicense.setChecked(True)
 
         self.registerField('Accept Terms*', self.acceptLicense)
-        self.setMinimumWidth(550)
-        self.setMinimumHeight(600)
 
         licenseLayout.addWidget(licenseLabel)
         licenseLayout.addWidget(licenseText)
@@ -1256,22 +1294,15 @@ class InstallThread(QtCore.QThread):
 
     def run(self) -> None:
         try:
-            # We have already installed Graphviz on Linux at this point.
-            if not self.wizard.graphvizExists and self.wizard.currentOS == 'Windows':
-                self.progressSignal.emit(1)
-                self.wizard.downloadGraphviz()
             self.progressSignal.emit(2)
-            if self.installPage.updateSelected:
-                self.wizard.uninstall()
             self.wizard.install()
             self.installPage.downloadingLabel.setVisible(True)
             self.installPage.downloadingLabel.setHidden(False)
             self.progressSignal.emit(4)
             self.wizard.downloadClient()
             self.progressSignal.emit(8)
-            shortcutExists = self.wizard.desktopShortcutPath.exists()
             self.progressSignal.emit(9)
-            if self.installPage.createShortcut or (self.installPage.updateSelected and shortcutExists):
+            if self.installPage.createShortcut:
                 self.wizard.createShortcut()
             self.progressSignal.emit(10)
             self.doneSignal.emit(True)

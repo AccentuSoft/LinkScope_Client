@@ -16,12 +16,13 @@ for line in magicLines:
         break
 
 magicLines.insert(0, 'from pathlib import Path\n')
+magicLines.insert(0, 'import os\n')
 
-funcIndex = magicLines.index('def _lib_candidates():\n')
+funcIndex = magicLines.index("  elif sys.platform in ('win32', 'cygwin'):\n")
 
 # This patch is only done on Windows, so we can safely 'hardcode' the path to the dll, since we're the ones
 #   providing it.
-magicLines.insert(funcIndex + 1, ' ' * lineIndent + 'yield str(Path(__file__).parent / "libmagic-1.dll")\n')
+magicLines.insert(funcIndex + 1, ' ' * lineIndent * 2 + "yield find_library(str(Path(os.environ['ProgramFiles']) / 'LinkScope' / 'magic' / 'libmagic-1.dll'))\n")
 
 with open(magicLibPath, 'w') as magicLibFile:
     magicLibFile.writelines(magicLines)

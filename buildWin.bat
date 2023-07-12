@@ -4,11 +4,11 @@
 :: Then, put everything in the output folder (i.e. 'dist') in the magic folder.
 :: Make sure that the libmagic dll actually has the name 'libmagic-1.dll'.
 
-:: Copy the Modules, Resources, Core and magic directories, as well as Icon.ico, LinkScope.py, requirements.txt,
-::   PatchMagicWin.py to a new directory along with this file.
+:: Copy the Resources, Core and magic directories, as well as Icon.ico, LinkScope.py, requirements.txt,
+::   UpdaterUtil.py and PatchMagicWin.py to a new directory along with this file.
 :: Then, run the script.
 
-SET PYTHON_VER=3.10
+SET PYTHON_VER=3.11
 
 python -m venv buildEnv
 
@@ -23,19 +23,11 @@ python -m pip install --upgrade -r requirements.txt
 :: Patch magic library with our own binaries
 python PatchMagicWin.py
 
-:: Stop snscrape from messing with directories that will not exist in the final build.
-echo "" > "buildEnv\Lib\site-packages\snscrape\modules\__init__.py"
-
-SET PLAYWRIGHT_BROWSERS_PATH=0
-playwright install
-
-FOR /F "usebackq" %%L in (`python -c "from pathlib import Path;x=Path('buildEnv\Lib\site-packages\playwright\driver\package\.local-browsers');print(list(x.glob('firefox*/firefox'))[0].parent.name.split('-')[1])"`) DO SET FIREFOX_VER=%%L
-
-
 python -m nuitka --follow-imports --standalone --noinclude-pytest-mode=nofollow --noinclude-setuptools-mode=nofollow ^
 --noinclude-custom-mode=setuptools:error --noinclude-IPython-mode=nofollow --enable-plugin=pyside6 ^
---noinclude-unittest-mode=nofollow --enable-plugin=trio --assume-yes-for-downloads --remove-output --disable-console ^
---include-data-dir="Resources=Resources" --include-plugin-directory=Modules --include-package=Core ^
+--noinclude-unittest-mode=nofollow --assume-yes-for-downloads --remove-output --disable-console ^
+--nofollow-import-to=tkinter ^
+--include-data-dir="Resources=Resources" --include-package=Core ^
 --include-data-dir="Core\Entities=Core\Entities" ^
 --warn-unusual-code --show-modules --include-data-files="Icon.ico=Icon.ico" ^
 --windows-icon-from-ico=".\Icon.ico" --include-data-dir="magic=magic" --windows-company-name=AccentuSoft ^
@@ -43,21 +35,25 @@ python -m nuitka --follow-imports --standalone --noinclude-pytest-mode=nofollow 
 --windows-file-description="LinkScope Client Software" ^
 --include-package-data=playwright ^
 --include-package-data=folium --include-package-data=branca ^
---include-package=social-analyzer --include-package-data=langdetect --include-package-data=tld ^
---include-package=Wappalyzer --include-package-data=Wappalyzer ^
 --include-package=dns ^
---include-package=holehe.modules ^
---include-package=snscrape ^
---include-package=docker --include-package-data=docker ^
 --include-package-data=pycountry ^
 --include-package=jellyfish ^
 --include-package=ipwhois ^
---include-package=tweepy ^
 ".\LinkScope.py"
 
+python -m nuitka --onefile --noinclude-pytest-mode=nofollow ^
+--noinclude-setuptools-mode=nofollow --noinclude-custom-mode=setuptools:error --noinclude-IPython-mode=nofollow ^
+--noinclude-unittest-mode=nofollow --assume-yes-for-downloads --remove-output ^
+--nofollow-import-to=tkinter ^
+--warn-unusual-code ^
+--windows-company-name=AccentuSoft --windows-product-version="1.6.0.0" ^
+--windows-product-name="LinkScope Client Updater" --windows-file-description="LinkScope Client Updater" ^
+".\UpdaterUtil.py"
+
 :: We need the code, dll & etc files to be present.
-xcopy "buildEnv\Lib\site-packages\playwright\driver\package\.local-browsers\firefox-%FIREFOX_VER%\firefox" "LinkScope.dist\playwright\driver\package\.local-browsers\firefox-%FIREFOX_VER%" /S /E /Y
-xcopy Modules\ LinkScope.dist /S /E /Y
-xcopy Core\Resolutions LinkScope.dist\Core /S /E /Y
+xcopy Core\Resolutions LinkScope.dist\Core\Resolutions /S /E /Y
+xcopy magic LinkScope.dist\magic /S /E /Y
+move UpdaterUtil.exe LinkScope.dist\UpdaterUtil.exe
+move LinkScope.dist LinkScope
 
 call buildEnv\Scripts\deactivate.bat
