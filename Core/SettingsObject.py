@@ -28,6 +28,12 @@ class SettingsObject(dict):
                                      self.globalSettings.value("Program/TOR Profile Location", ""))
         self.globalSettings.setValue("Program/BaseDir",
                                      self.globalSettings.value("Program/BaseDir", "Unset"))
+        self.globalSettings.setValue("Program/Version Check Source",
+                                     self.globalSettings.value("Program/Version Check Source",
+                                                               "https://api.github.com/repos/AccentuSoft/LinkScope_Client/releases/latest"))
+        self.globalSettings.setValue("Program/Update Source",
+                                     self.globalSettings.value("Program/Update Source",
+                                                               "https://github.com/AccentuSoft/LinkScope_Client/releases/latest/download/"))
 
         # The value '20' equates to logging.INFO
         # It's not necessary to set this, but we will for
