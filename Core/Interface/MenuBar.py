@@ -61,6 +61,12 @@ class MenuBar(QtWidgets.QMenuBar):
                                      triggered=self.rename)
         fileMenu.addAction(renameAction)
 
+        openProjectFilesAction = QtGui.QAction("Browse Project Files",
+                                     self,
+                                     statusTip="Open the Project Files directory for this project.",
+                                     triggered=self.openProjectFilesDir)
+        fileMenu.addAction(openProjectFilesAction)
+
         importMenu = self.addMenu("Import")
 
         fromBrowserAction = QtGui.QAction("From Browser",
@@ -850,6 +856,9 @@ class MenuBar(QtWidgets.QMenuBar):
 
     def rename(self) -> None:
         self.parent().renameProjectPromptName()
+
+    def openProjectFilesDir(self) -> None:
+        self.parent().openDirectoryInNativeFileBrowser(self.parent().SETTINGS.value("Project/FilesDir"))
 
     def editSettings(self) -> None:
         self.parent().editSettings()

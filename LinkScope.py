@@ -348,6 +348,9 @@ class MainWindow(QtWidgets.QMainWindow):
         wizard = ReportWizard(self)
         wizard.show()
 
+    def openDirectoryInNativeFileBrowser(self, target_dir) -> None:
+        QtGui.QDesktopServices.openUrl(QtCore.QUrl.fromLocalFile(target_dir))
+
     def renameProjectPromptName(self) -> None:
         newName, confirm = QtWidgets.QInputDialog.getText(self,
                                                           'Rename Project',
