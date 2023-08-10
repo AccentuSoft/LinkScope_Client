@@ -1,5 +1,10 @@
 #!/usr/bin/env python3
 
+import tempfile
+import re
+from shutil import rmtree
+from svglib.svglib import svg2rlg
+from uuid import uuid4
 from datetime import datetime
 from pathlib import Path
 from reportlab.lib import colors
@@ -15,8 +20,370 @@ from reportlab.lib.enums import TA_LEFT, TA_CENTER, TA_JUSTIFY
 from reportlab.lib.styles import ParagraphStyle, getSampleStyleSheet
 from reportlab.lib.pagesizes import LETTER, inch
 from reportlab.graphics.shapes import Line, Drawing
+from PySide6 import QtWidgets
 
+from Core.Interface.Entity import BaseNode
 from Core.GlobalVariables import avoid_parsing_fields
+
+
+
+class ReportWizard(QtWidgets.QWizard):
+    def __init__(self, parent):
+        super(ReportWizard, self).__init__(parent=parent)
+        self.reportTempFolder = tempfile.mkdtemp()
+
+        self.primaryFieldsList = []
+
+        self.addPage(InitialConfigPage(self))
+        self.addPage(TitlePage(self))
+
+        self.addPage(SummaryPage(self))
+
+        self.selectedNodes = [entity for entity in
+                              self.parent().centralWidget().tabbedPane.getCurrentScene().selectedItems()
+                              if isinstance(entity, BaseNode)]
+        for selectedNode in self.selectedNodes:
+            # used in wizard
+            self.primaryField = selectedNode.labelItem.toPlainText()
+            self.uid = selectedNode.uid
+
+            # used in report generation
+            self.primaryFieldsList.append(self.primaryField)
+            self.addPage(EntityPage(self))
+
+        self.setWizardStyle(QtWidgets.QWizard.WizardStyle.ModernStyle)
+        self.setWindowTitle("Generate Report Wizard")
+
+        self.button(QtWidgets.QWizard.WizardButton.FinishButton).clicked.connect(self.onFinish)
+
+    def onFinish(self):
+        outgoingEntitiesForEachEntity = []
+        incomingEntitiesForEachEntity = []
+        outgoingEntityPrimaryFieldsForEachEntity = []
+        incomingEntityPrimaryFieldsForEachEntity = []
+
+        entityList = []
+        reportData = []
+        for pageID in self.pageIds():
+            pageObject = self.page(pageID)
+            reportData.append(pageObject.getData())
+
+        for selectedNode in self.selectedNodes:
+            uid = selectedNode.uid
+            entityList.append(self.parent().LENTDB.getEntity(uid))
+            outgoing = self.parent().LENTDB.getOutgoingLinks(uid)
+            incoming = self.parent().LENTDB.getIncomingLinks(uid)
+
+            outgoingEntities = []
+            incomingEntities = []
+            outgoingNames = []
+            incomingNames = []
+
+            for out in outgoing:
+                outLink = self.parent().LENTDB.getLink(out)
+                outgoingEntities.append(outLink)
+                outgoingEntityJson = self.parent().LENTDB.getEntity(outLink['uid'][1])
+                outgoingNames.append(outgoingEntityJson[list(outgoingEntityJson)[1]])
+
+            for inc in incoming:
+                inLink = self.parent().LENTDB.getLink(inc)
+                incomingEntities.append(inLink)
+                incomingEntityJson = self.parent().LENTDB.getEntity(inLink['uid'][0])
+
+                incomingNames.append(incomingEntityJson[list(incomingEntityJson)[1]])
+
+            outgoingEntityPrimaryFieldsForEachEntity.append(outgoingNames)
+            incomingEntityPrimaryFieldsForEachEntity.append(incomingNames)
+            outgoingEntitiesForEachEntity.append(outgoingEntities)
+            incomingEntitiesForEachEntity.append(incomingEntities)
+
+        path = Path(reportData[0].get('SavePath'))
+
+        canvasName = reportData[2].get('CanvasName')
+        viewPortBool = reportData[2].get('ViewPort')
+
+        canvasPicture = self.parent().getPictureOfCanvas(canvasName, viewPortBool, True)
+        canvasImagePath = Path(self.reportTempFolder) / 'canvas.png'
+        canvasPicture.save(str(canvasImagePath), "PNG")
+
+        # timelinePicture = self.parent().dockbarThree.timeWidget.takePictureOfView(False)
+        # timelineImagePath = Path(temp_dir.name) / 'timeline.png'
+        # timelinePicture.save(str(timelineImagePath), "PNG")
+
+        savePath = Path(reportData[0]['SavePath']).absolute()
+
+        try:
+            PDFReport(str(path), reportData, outgoingEntitiesForEachEntity,
+                      incomingEntitiesForEachEntity, entityList, canvasImagePath, None,  # <timelinePic
+                      self.primaryFieldsList, incomingEntityPrimaryFieldsForEachEntity,
+                      outgoingEntityPrimaryFieldsForEachEntity)
+
+            self.parent().MESSAGEHANDLER.debug(reportData)
+            self.parent().MESSAGEHANDLER.info(
+                f"Saved Report at: {str(savePath)}", popUp=True
+            )
+        except PermissionError:
+            self.parent().MESSAGEHANDLER.error(
+                f"Could not generate report. No permission to save at the chosen location: {str(savePath)}",
+                popUp=True,
+                exc_info=False,
+            )
+        except Exception as exc:
+            self.parent().MESSAGEHANDLER.error(
+                f"Could not generate report: {str(exc)}", popUp=True, exc_info=True
+            )
+        finally:
+            rmtree(self.reportTempFolder)
+
+
+class InitialConfigPage(QtWidgets.QWizardPage):
+    def __init__(self, parent=None):
+        super(InitialConfigPage, self).__init__(parent)
+        self.subtitleLabel = QtWidgets.QLabel("Path to save the report at: ")
+        self.savePathEdit = QtWidgets.QLineEdit()
+        self.setTitle("Initial Configuration Wizard")
+
+        pDirButton = QtWidgets.QPushButton("Save Report As...")
+        pDirButton.clicked.connect(self.editPath)
+
+        hLayout = QtWidgets.QVBoxLayout()
+        hLayout.addWidget(self.subtitleLabel)
+        hLayout.addWidget(self.savePathEdit)
+        hLayout.addWidget(pDirButton)
+
+        layout = QtWidgets.QVBoxLayout()
+        layout.addLayout(hLayout)
+        self.setLayout(layout)
+
+    def editPath(self):
+        selectedPath = QtWidgets.QFileDialog.getSaveFileName(self,
+                                                             "File Name to Save As",
+                                                             str(Path.home()),
+                                                             filter="PDF Files (*.pdf)",
+                                                             options=QtWidgets.QFileDialog.Option.DontUseNativeDialog)
+        selectedPath = selectedPath[0]
+        if selectedPath != '':
+            savePath = Path(selectedPath).absolute()
+            if savePath.suffix != '.pdf':
+                savePath = savePath.with_suffix(f"{savePath.suffix}.pdf")
+            self.savePathEdit.setText(str(savePath))
+
+    def getData(self):
+        return {'SavePath': self.savePathEdit.text()}
+
+
+class TitlePage(QtWidgets.QWizardPage):
+    def __init__(self, parent=None):
+        super(TitlePage, self).__init__(parent)
+        self.inputTitleEdit = QtWidgets.QLineEdit()
+        self.inputSubtitleEdit = QtWidgets.QLineEdit()
+        self.inputAuthorsEdit = QtWidgets.QLineEdit()
+        self.setTitle("Title Page Wizard")
+
+        titleLabel = QtWidgets.QLabel("Title: ")
+        subtitleLabel = QtWidgets.QLabel("Subtitle: ")
+        authorsLabel = QtWidgets.QLabel("Authors: ")
+
+        hLayout = QtWidgets.QVBoxLayout()
+        hLayout.addWidget(titleLabel)
+        hLayout.addWidget(self.inputTitleEdit)
+        hLayout.addWidget(subtitleLabel)
+        hLayout.addWidget(self.inputSubtitleEdit)
+        hLayout.addWidget(authorsLabel)
+        hLayout.addWidget(self.inputAuthorsEdit)
+
+        layout = QtWidgets.QVBoxLayout()
+        layout.addLayout(hLayout)
+        self.setLayout(layout)
+
+    def getData(self):
+        return {
+            'Title': self.inputTitleEdit.text(),
+            'Subtitle': self.inputSubtitleEdit.text(),
+            'Authors': self.inputAuthorsEdit.text(),
+        }
+
+
+class SummaryPage(QtWidgets.QWizardPage):
+    def __init__(self, parent):
+        super(SummaryPage, self).__init__(parent=parent.parent())
+        self.setTitle("Summary Page Wizard")
+        self.inputNotesEdit = QtWidgets.QPlainTextEdit()
+        self.canvasDropDownMenu = QtWidgets.QComboBox()
+        self.viewPortCheckBox = QtWidgets.QCheckBox('ViewPort Only')
+        self.viewPortCheckBox.setChecked(False)
+        self.canvasNames = list(self.parent().centralWidget().tabbedPane.canvasTabs.keys())
+
+        summaryLabel = QtWidgets.QLabel("Summary Notes: ")
+
+        canvasLabel = QtWidgets.QLabel("Select canvas to be displayed: ")
+        for canvasName in self.canvasNames:
+            self.canvasDropDownMenu.addItem(canvasName)
+
+        hLayout = QtWidgets.QVBoxLayout()
+        hLayout.addWidget(summaryLabel)
+        hLayout.addWidget(self.inputNotesEdit)
+        hLayout.addWidget(canvasLabel)
+        hLayout.addWidget(self.viewPortCheckBox)
+        hLayout.addWidget(self.canvasDropDownMenu)
+        layout = QtWidgets.QVBoxLayout()
+        layout.addLayout(hLayout)
+        self.setLayout(layout)
+
+    def getData(self):
+        return {
+            'SummaryNotes': self.inputNotesEdit.toPlainText(),
+            'CanvasName': self.canvasDropDownMenu.currentText(),
+            'ViewPort': self.viewPortCheckBox.isChecked(),
+        }
+
+
+class EntityPage(QtWidgets.QWizardPage):
+    def __init__(self, parent: ReportWizard):
+        super(EntityPage, self).__init__(parent=parent.parent())
+        self.reportWizard = parent
+
+        self.setTitle("Entity Page Wizard")
+        self.setMinimumSize(300, 700)
+
+        self.entityName = parent.primaryField
+        self.entityUID = parent.uid
+
+        self.inputNotesEdit = QtWidgets.QPlainTextEdit()
+        self.inputImageEdit = QtWidgets.QLineEdit()
+        self.inputImageEdit.setReadOnly(True)
+        self.addAppendixButton = QtWidgets.QPushButton("Add New Appendix Section")
+        self.removeAppendixButton = QtWidgets.QPushButton("Remove Last Appendix Section")
+
+        self.scrolllayout = QtWidgets.QVBoxLayout()
+        self.scrollwidget = QtWidgets.QWidget()
+
+        self.defaultpic = self.parent().LENTDB.getEntity(self.entityUID).get('Icon')
+
+        summaryLabel = QtWidgets.QLabel(f"Entity {self.entityName} Notes: ")
+
+        imageLabel = QtWidgets.QLabel("Image Path: ")
+        pDirButton = QtWidgets.QPushButton("Select Image...")
+        pDirButton.clicked.connect(self.editPath)
+        pDirButton.setDisabled(True)
+        self.imageCheckBox = QtWidgets.QCheckBox('Add Custom Entity Image')
+        self.imageCheckBox.setChecked(False)
+        self.imageCheckBox.toggled.connect(pDirButton.setEnabled)
+
+        self.addAppendixButton.clicked.connect(self.addSection)
+        self.removeAppendixButton.clicked.connect(self.removeSection)
+
+        self.scrollwidget.setLayout(self.scrolllayout)
+
+        scroll = QtWidgets.QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setWidget(self.scrollwidget)
+
+        hLayout = QtWidgets.QVBoxLayout()
+        hLayout.addWidget(summaryLabel)
+        hLayout.addWidget(self.inputNotesEdit)
+
+        hLayout.addWidget(self.imageCheckBox)
+        hLayout.addWidget(imageLabel)
+        hLayout.addWidget(self.inputImageEdit)
+        hLayout.addWidget(pDirButton)
+
+        hLayout.addItem(QtWidgets.QSpacerItem(10, 30))
+        hLayout.addWidget(self.addAppendixButton)
+        hLayout.addWidget(self.removeAppendixButton)
+
+        layout = QtWidgets.QVBoxLayout()
+        layout.addLayout(hLayout)
+        layout.addWidget(scroll)
+
+        self.setLayout(layout)
+
+    def editPath(self) -> None:
+        selectedPath = QtWidgets.QFileDialog().getOpenFileName(parent=self, caption='Select New Icon',
+                                                               dir=str(Path.home()),
+                                                               options=QtWidgets.QFileDialog.Option.DontUseNativeDialog,
+                                                               filter="Image Files (*.png *.jpg)")[0]
+        if selectedPath != '':
+            self.inputImageEdit.setText(str(Path(selectedPath).absolute()))
+
+    def addSection(self) -> None:
+        appendixWidget = AppendixWidget()
+        self.scrolllayout.addWidget(appendixWidget)
+
+    def removeSection(self) -> None:
+        if numChildren := self.scrolllayout.count():
+            appendixItem = self.scrolllayout.takeAt(numChildren - 1)
+            appendixItem.widget().deleteLater()
+
+    def getData(self):
+        appendixNotes = []
+        if self.inputImageEdit.text() != '' and self.imageCheckBox.isChecked():
+            data = {'EntityNotes': self.inputNotesEdit.toPlainText(), 'EntityImage': self.inputImageEdit.text()}
+        elif 'PNG' in str(self.defaultpic):
+            imagePath = Path(self.reportWizard.reportTempFolder) / f'{str(uuid4())}.png'
+            with open(imagePath, 'wb') as tempFile:
+                tempFile.write(bytearray(self.defaultpic.data()))
+
+            data = {'EntityNotes': self.inputNotesEdit.toPlainText(), 'EntityImage': str(imagePath)}
+        else:
+            if 'svg' not in str(self.defaultpic):
+                # Default picture is an SVG.
+                self.defaultpic = self.reportWizard.parent().RESOURCEHANDLER.getEntityDefaultPicture(
+                    self.reportWizard.parent().LENTDB.getEntity(self.entityUID)['Entity Type'])
+            contents = bytearray(self.defaultpic)
+            widthRegex = re.compile(b' width="\d*" ')
+            fileContents = ''
+            for widthMatches in widthRegex.findall(self.defaultpic):
+                fileContents = contents.replace(widthMatches, b' ')
+            heightRegex = re.compile(b' height="\d*" ')
+            for heightMatches in heightRegex.findall(self.defaultpic):
+                fileContents = contents.replace(heightMatches, b' ')
+            fileContents = fileContents.replace(b'<svg ', b'<svg height="150" width="150" ')
+
+            imagePath = Path(self.reportWizard.reportTempFolder) / f'{str(uuid4())}.svg'
+            with open(imagePath, 'wb') as tempFile:
+                tempFile.write(bytearray(fileContents))
+
+            image = svg2rlg(imagePath)
+            data = {'EntityNotes': self.inputNotesEdit.toPlainText(), 'EntityImage': image}
+
+        for index in range(self.scrolllayout.count()):
+            childWidget = self.scrolllayout.itemAt(index).widget()
+            appendixDict = {'AppendixEntityNotes': childWidget.inputAppendixNotesEdit.toPlainText(),
+                            'AppendixEntityImage': childWidget.inputAppendixImageEdit.text()}
+            appendixNotes.append(appendixDict)
+        return data, appendixNotes
+
+
+class AppendixWidget(QtWidgets.QWidget):
+
+    def __init__(self) -> None:
+        super(AppendixWidget, self).__init__()
+        appendixWidgetLayout = QtWidgets.QGridLayout()
+        appendixLabelNotes = QtWidgets.QLabel("Entity Notes: ")
+        self.inputAppendixNotesEdit = QtWidgets.QPlainTextEdit()
+        imageAppendixLabel = QtWidgets.QLabel("Image Path: ")
+        appendixButton = QtWidgets.QPushButton("Select Image...")
+        appendixButton.clicked.connect(self.editAppendixPath)
+        self.inputAppendixImageEdit = QtWidgets.QLineEdit()
+        self.inputAppendixImageEdit.setReadOnly(True)
+        appendixWidgetLayout.addWidget(appendixLabelNotes, 0, 0, 1, 1)
+        appendixWidgetLayout.addWidget(self.inputAppendixNotesEdit, 2, 0, 4, 1)
+        appendixWidgetLayout.addWidget(imageAppendixLabel, 7, 0, 1, 1)
+        appendixWidgetLayout.addWidget(self.inputAppendixImageEdit, 9, 0, 1, 1)
+        appendixWidgetLayout.addWidget(appendixButton, 11, 0, 1, 1)
+        self.setLayout(appendixWidgetLayout)
+        self.inputAppendixNotesEdit.setFixedHeight(100)
+
+    def editAppendixPath(self) -> None:
+        selectedPath = QtWidgets.QFileDialog().getOpenFileName(parent=self, caption='Select New Icon',
+                                                               dir=str(Path.home()),
+                                                               options=QtWidgets.QFileDialog.Option.DontUseNativeDialog,
+                                                               filter="Image Files (*.png *.jpg)")[0]
+
+        if selectedPath != '':
+            self.inputAppendixImageEdit.setText(str(Path(selectedPath).absolute()))
+
 
 
 class MyDocTemplate(BaseDocTemplate):
