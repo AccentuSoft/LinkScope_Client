@@ -67,6 +67,12 @@ class MenuBar(QtWidgets.QMenuBar):
                                      triggered=self.openProjectFilesDir)
         fileMenu.addAction(openProjectFilesAction)
 
+        checkForUpdateAction = QtGui.QAction("Check for Updates",
+                                     self,
+                                     statusTip="Check if there are any updates for LinkScope available.",
+                                     triggered=self.checkForUpdates)
+        fileMenu.addAction(checkForUpdateAction)
+
         importMenu = self.addMenu("Import")
 
         fromBrowserAction = QtGui.QAction("From Browser",
@@ -859,6 +865,9 @@ class MenuBar(QtWidgets.QMenuBar):
 
     def openProjectFilesDir(self) -> None:
         self.parent().openDirectoryInNativeFileBrowser(self.parent().SETTINGS.value("Project/FilesDir"))
+
+    def checkForUpdates(self) -> None:
+        self.parent().openUpdateWindow()
 
     def editSettings(self) -> None:
         self.parent().editSettings()

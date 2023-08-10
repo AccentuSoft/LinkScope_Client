@@ -29,6 +29,7 @@ from Core import EntityDB
 from Core import ResolutionManager
 from Core import URLManager
 from Core import FrontendCommunicationsHandler
+from Core.UpdateManager import UpdateManager, UpdaterWindow
 from Core.ResourceHandler import resizePictureFromBuffer
 from Core.Interface import CentralPane
 from Core.Interface import DockBarOne, DockBarTwo, DockBarThree
@@ -1848,6 +1849,10 @@ class MainWindow(QtWidgets.QMainWindow):
     def receiveChatMessage(self, message: str) -> None:
         self.dockbarThree.chatBox.receiveMessage(message)
 
+    def openUpdateWindow(self, updateOverride: bool = False) -> None:
+        updaterWindow = UpdaterWindow(self, self.UPDATEMANAGER, updateOverride)
+        updaterWindow.exec()
+
     def initializeLayout(self) -> None:
         # Have to show the window here, otherwise Seg Fault.
         self.show()
@@ -1892,6 +1897,9 @@ class MainWindow(QtWidgets.QMainWindow):
             #self.MODULEMANAGER.installSource({'URI': '', 'Remote': '', 'AuthType': None,
             #                                  'AuthCreds': None, 'SchemaType': '', 'UUID': str(uuid4())})
             self.SETTINGS.setValue("Program/Usage/First Time Start", 'false')
+
+        if self.UPDATEMANAGER.isUpdateAvailable():
+            self.openUpdateWindow(True)
 
     def __init__(self):
         super(MainWindow, self).__init__()
@@ -1942,6 +1950,7 @@ class MainWindow(QtWidgets.QMainWindow):
 
         self.MESSAGEHANDLER = MessageHandler.MessageHandler(self)
         self.MESSAGEHANDLER.info(f'Starting LinkScope Client, Version {self.SETTINGS.value("Program/Version", "N/A")}')
+        self.UPDATEMANAGER = UpdateManager(self)
         self.URLMANAGER = URLManager.URLManager(self)
         self.dockbarThree = DockBarThree.DockBarThree(self)
         self.RESOURCEHANDLER = ResourceHandler.ResourceHandler(self)

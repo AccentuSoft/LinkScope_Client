@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
 
+import contextlib
 import platform
-import tempfile
+import subprocess
 import requests
 import os
-import py7zr
 
 from pathlib import Path
+from PySide6 import QtCore, QtWidgets
 
 
 class UpdateManager:
 
     def __init__(self, mainWindow):
+        self.updateThread = None
         self.mainWindow = mainWindow
         self.system = platform.system()
         if self.system == 'Windows':
@@ -19,38 +21,104 @@ class UpdateManager:
         else:
             self.baseSoftwarePath = Path(os.path.abspath(os.sep)) / 'usr' / 'local' / 'sbin' / 'LinkScope'
 
-    def get_download_url(self):
+    def getDownloadURL(self):
         downloadURLBase = self.mainWindow.SETTINGS.value("Program/Update Source")
         if self.system == 'Windows':
             return f"{downloadURLBase}LinkScope-Windows-x64.7z"
         else:
             return f"{downloadURLBase}LinkScope-Ubuntu-x64.7z"
 
-    def get_latest_version(self):
-        version_req = requests.get(self.mainWindow.SETTINGS.value("Program/Version Check Source"),
-                                   headers={'User-Agent': 'LinkScope Update Checker'})
-        if version_req.status_code != 200:
-            return None
-        return version_req.json()['tag_name']
+    def getLatestVersion(self):
+        with contextlib.suppress(Exception):
+            version_req = requests.get(self.mainWindow.SETTINGS.value("Program/Version Check Source"),
+                                       headers={'User-Agent': 'LinkScope Update Checker'})
+            if version_req.status_code == 200:
+                return version_req.json()['tag_name']
+        return None
 
-    def is_update_available(self):
-        latest_version = self.get_latest_version()
+    def isUpdateAvailable(self):
+        latest_version = self.getLatestVersion()
         return (
             latest_version is not None
             and self.mainWindow.SETTINGS.value("Program/Version") < latest_version
         )
 
-    def do_update(self):
-        downloadUrl = self.get_download_url()
-        clientTempCompressedArchive = tempfile.mkstemp(suffix='.7z')
-        tempPath = Path(clientTempCompressedArchive[1])
+    def doUpdate(self) -> None:
+        if self.updateThread is not None:
+            self.mainWindow.MESSAGEHANDLER.error('Update already in progress.')
+            return
+        self.mainWindow.MESSAGEHANDLER.info('Starting update...')
+        self.updateThread = UpdaterThread(self, self.mainWindow)
+        self.updateThread.updateDoneSignal.connect(self.finalizeUpdate)
+        self.updateThread.start()
+        self.mainWindow.MESSAGEHANDLER.info('Update in progress')
 
-        with os.fdopen(clientTempCompressedArchive[0], 'wb') as tempArchive:
-            with requests.get(downloadUrl, stream=True) as fileStream:
-                for chunk in fileStream.iter_content(chunk_size=5 * 1024 * 1024):
-                    tempArchive.write(chunk)
+    def finalizeUpdate(self, success: bool) -> None:
+        if success:
+            latest_version = self.getLatestVersion()
+            self.mainWindow.SETTINGS.setValue("Program/Version", latest_version)
+            self.mainWindow.MESSAGEHANDLER.info('Updating done, please restart for the changes to take effect.')
+        else:
+            self.mainWindow.MESSAGEHANDLER.info('Updating failed.')
 
-        with py7zr.SevenZipFile(tempPath, 'r') as archive:
-            archive.extractall(path=self.baseSoftwarePath.parent)
 
-        tempPath.unlink(missing_ok=True)
+class UpdaterWindow(QtWidgets.QDialog):
+
+    def __init__(self, mainWindow, updateManager: UpdateManager, updateAvailableOverride: bool = False):
+        super().__init__()
+        self.mainWindow = mainWindow
+        self.updateManager = updateManager
+
+        self.setWindowTitle('Update Manager')
+
+        layout = QtWidgets.QGridLayout()
+        self.setLayout(layout)
+
+        doUpdateButton = QtWidgets.QPushButton('Update')
+        doUpdateButton.clicked.connect(self.initiateUpdate)
+        cancelButton = QtWidgets.QPushButton('Close')
+        cancelButton.clicked.connect(self.reject)
+
+        updateAvailableLabel = QtWidgets.QLabel()
+        updateAvailableLabel.setAlignment(QtCore.Qt.AlignmentFlag.AlignCenter)
+        if updateAvailableOverride or updateManager.isUpdateAvailable():
+            updateAvailableLabel.setText('An update for LinkScope is available.')
+        else:
+            updateAvailableLabel.setText('LinkScope is up to date.')
+            doUpdateButton.setDisabled(True)
+            doUpdateButton.setEnabled(False)
+
+        layout.addWidget(updateAvailableLabel, 1, 1, 1, 2)
+        layout.addWidget(cancelButton, 2, 1)
+        layout.addWidget(doUpdateButton, 2, 2)
+
+    def initiateUpdate(self) -> None:
+        self.updateManager.doUpdate()
+        self.accept()
+
+
+class UpdaterThread(QtCore.QThread):
+    updateDoneSignal = QtCore.Signal(bool)
+
+    def __init__(self, updateManager, mainWindow):
+        super().__init__()
+        self.mainWindow = mainWindow
+        self.updateManager = updateManager
+
+    def run(self) -> None:
+        downloadUrl = self.updateManager.getDownloadURL()
+        if self.updateManager.system == 'Windows':
+            subprocess.run(
+                ['runas',
+                 '/user:Administrator',
+                 Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) / "UpdaterUtil.exe",
+                 downloadUrl,
+                 self.updateManager.baseSoftwarePath.parent]
+            )
+        elif self.updateManager.system == 'Linux':
+            subprocess.run(
+                ['pkexec',
+                 Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) / "UpdaterUtil",
+                 downloadUrl,
+                 self.updateManager.baseSoftwarePath.parent]
+            )
