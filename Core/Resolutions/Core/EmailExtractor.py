@@ -37,10 +37,12 @@ class EmailExtractor:
     def resolution(self, entityJsonList, parameters):
         from playwright.sync_api import sync_playwright, TimeoutError, Error
         from bs4 import BeautifulSoup
+        from pathlib import Path
         import re
         import contextlib
         from email_validator import validate_email, caching_resolver, EmailNotValidError
 
+        playwrightPath = Path(parameters['Playwright Browsers Directory']) / 'chromium'
         returnResults = []
 
         # Source: https://emailregex.com/
@@ -120,7 +122,7 @@ class EmailExtractor:
                                                                 'Notes': ''}}])
 
         with sync_playwright() as p:
-            browser = p.chromium.launch()
+            browser = p.chromium.launch(executable_path=playwrightPath)
             context = browser.new_context(
                 viewport={'width': 1920, 'height': 1080}
             )

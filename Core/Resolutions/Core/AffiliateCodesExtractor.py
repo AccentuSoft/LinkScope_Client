@@ -44,10 +44,12 @@ class AffiliateCodesExtractor:
     def resolution(self, entityJsonList, parameters):
         from playwright.sync_api import sync_playwright, TimeoutError, Error
         from bs4 import BeautifulSoup
+        from pathlib import Path
         import urllib
         import tldextract
         import re
 
+        playwrightPath = Path(parameters['Playwright Browsers Directory']) / 'firefox'
         returnResults = []
         visitExternal = parameters['Visit External Links'] == 'Yes'
 
@@ -184,7 +186,7 @@ class AffiliateCodesExtractor:
                             GetAffiliateCodes(currentUID, newLink)
 
         with sync_playwright() as p:
-            browser = p.firefox.launch()
+            browser = p.firefox.launch(executable_path=playwrightPath)
             context = browser.new_context(
                 viewport={'width': 1920, 'height': 1080},
                 user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:94.0) Gecko/20100101 Firefox/94.0'

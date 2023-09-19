@@ -21,8 +21,10 @@ class GetWebsiteText:
         from bs4.element import Comment
         from playwright.sync_api import sync_playwright, TimeoutError, Error
         from urllib.parse import urlparse
+        from pathlib import Path
 
         returnResults = []
+        playwrightPath = Path(parameters['Playwright Browsers Directory']) / 'chromium'
 
         def tag_visible(element):
             if element.parent.name in ['style', 'script', 'head', 'title', 'meta', '[document]']:
@@ -36,7 +38,7 @@ class GetWebsiteText:
             return u" ".join(t.strip() for t in visible_texts if t.strip() != '')
 
         with sync_playwright() as p:
-            browser = p.chromium.launch()
+            browser = p.chromium.launch(executable_path=playwrightPath)
             context = browser.new_context(
                 viewport={'width': 1920, 'height': 1080},
                 user_agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) '

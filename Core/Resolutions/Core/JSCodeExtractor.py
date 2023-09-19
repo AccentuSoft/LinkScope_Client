@@ -19,9 +19,11 @@ class JSCodeExtractor:
     def resolution(self, entityJsonList, parameters):
         from playwright.sync_api import sync_playwright, Error
         from base64 import b64decode
+        from pathlib import Path
         import re
         import contextlib
 
+        playwrightPath = Path(parameters['Playwright Browsers Directory']) / 'firefox'
         returnResults = []
         requestUrlsParsed = set()
 
@@ -173,7 +175,7 @@ class JSCodeExtractor:
                                                  'Notes': ''}}])
 
         with sync_playwright() as p:
-            browser = p.firefox.launch()
+            browser = p.firefox.launch(executable_path=playwrightPath)
             context = browser.new_context(
                 viewport={'width': 1920, 'height': 1080},
                 user_agent='Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:99.0) Gecko/20100101 Firefox/99.0'

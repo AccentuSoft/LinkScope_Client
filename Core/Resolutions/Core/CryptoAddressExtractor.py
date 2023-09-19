@@ -24,8 +24,10 @@ class CryptoAddressExtractor:
     def resolution(self, entityJsonList, parameters):
         from playwright.sync_api import sync_playwright, TimeoutError, Error
         from bs4 import BeautifulSoup
+        from pathlib import Path
         import re
 
+        playwrightPath = Path(parameters['Playwright Browsers Directory']) / 'chromium'
         returnResults = []
 
         ethRegex = re.compile(r"\b0[xX][a-fA-F0-9]{40}\b")
@@ -239,7 +241,7 @@ class CryptoAddressExtractor:
                                                         'Notes': ''}}])
 
         with sync_playwright() as p:
-            browser = p.chromium.launch()
+            browser = p.chromium.launch(executable_path=playwrightPath)
             context = browser.new_context(
                 viewport={'width': 1920, 'height': 1080},
                 user_agent='Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) '

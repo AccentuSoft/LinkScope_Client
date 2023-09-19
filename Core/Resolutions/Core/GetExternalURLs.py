@@ -44,7 +44,9 @@ class GetExternalURLs:
         from urllib.parse import parse_qs
         from urllib.parse import unquote
         from base64 import b64decode
+        from pathlib import Path
 
+        playwrightPath = Path(parameters['Playwright Browsers Directory']) / 'chromium'
         onionRegex = re.compile(r"""^https?://\w{56}\.onion/?(\S(?<!\.))*(\.(\S(?<!\.))*)?$""")
         returnResult = []
 
@@ -66,7 +68,7 @@ class GetExternalURLs:
             return ''
 
         with sync_playwright() as p:
-            browser = p.chromium.launch()
+            browser = p.chromium.launch(executable_path=playwrightPath)
             context = browser.new_context(
                 viewport={'width': 1920, 'height': 1080}
             )

@@ -1178,6 +1178,7 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.setStatus(f'Resolution {resolution} aborted.')
                 return ""
         resolutionParameterValues['Project Files Directory'] = self.SETTINGS.value("Project/FilesDir")
+        resolutionParameterValues['Playwright Browsers Directory'] = self.MODULEMANAGER.browsersBaseDirectoryPath
         resolutionUID = preSpecifiedUID or str(uuid4())
         resolutionThread = ResolutionManager.ResolutionExecutorThread(
             resolutionName, resolutionInputEntities, resolutionParameterValues, self, resolutionUID)
