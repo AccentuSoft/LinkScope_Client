@@ -536,7 +536,7 @@ class MenuBar(QtWidgets.QMenuBar):
         newLinks = []
         fileDirectory = Path(importDialog.fileDirectoryLine.text())
         if importDialogAccept and fileDirectory != '':
-            if fileDirectory.exists() and fileDirectory.is_file():
+            if fileDirectory.is_file():
                 sceneToAddTo = None
 
                 try:
@@ -2207,8 +2207,8 @@ class ImportEntityFromCSVFile(QtWidgets.QDialog):
         if primaryFieldMapped:
             self.accept()
         else:
-            self.parent().parent().MESSAGEHANDLER.warning('Primary field (' + primaryField +
-                                                          ') needs to be mapped before proceeding.', popUp=True)
+            self.parent().parent().MESSAGEHANDLER.warning(
+                f'Primary field ({primaryField}) needs to be mapped before proceeding.', popUp=True)
 
 
 class ImportFromFileDialog(QtWidgets.QDialog):
@@ -2888,7 +2888,7 @@ class ImportBrowserTabsThread(QtCore.QThread):
                                 latestTimestamp = max([int(sessionFile.split("Session_", 1)[1])
                                                        for sessionFile in os.listdir(sessionFilePath)
                                                        if 'Session_' in sessionFile])
-                                sessionFilePath = sessionFilePath.joinpath("Session_" + str(latestTimestamp))
+                                sessionFilePath = sessionFilePath.joinpath(f"Session_{latestTimestamp}")
                                 chromeSessionFileContents = sessionFilePath.read_bytes()
                                 break
                             except (FileNotFoundError, IndexError):

@@ -573,14 +573,12 @@ class PDFReport:
                 outgoing_data.append([linkName, childNode, dateCreated, Paragraph(linkNotes)])
             outgoing_table = Table(data=outgoing_data, style=links_table_style, hAlign="CENTER",
                                    colWidths=[140, 140, 140, 140])
-            spacer = Spacer(10, 10)
-            self.elements.append(spacer)
         else:
             outgoing_data = [
                 ['No Outgoing Links']]
             outgoing_table = Table(data=outgoing_data, hAlign="CENTER")
-            spacer = Spacer(10, 10)
-            self.elements.append(spacer)
+        spacer = Spacer(10, 10)
+        self.elements.append(spacer)
 
         # parent UID
         if incomingLinks:
@@ -603,14 +601,12 @@ class PDFReport:
                 incoming_data.append([linkName, parentNode, dateCreated, Paragraph(linkNotes)])
             incoming_table = Table(data=incoming_data, style=links_table_style, hAlign="CENTER",
                                    colWidths=[140, 140, 140, 140])
-            spacer = Spacer(10, 10)
-            self.elements.append(spacer)
         else:
             incoming_data = [
                 ['No Incoming Links']]
             incoming_table = Table(data=incoming_data, hAlign="CENTER")
-            spacer = Spacer(10, 10)
-            self.elements.append(spacer)
+        spacer = Spacer(10, 10)
+        self.elements.append(spacer)
 
         tableParagraph = ParagraphStyle('Report', fontSize=9, justifyBreaks=1, alignment=TA_CENTER,
                                         justifyLastLine=0)
@@ -663,7 +659,7 @@ class PDFReport:
             pie.y = 65
             pie.data = [len(incomingLinks), len(outgoingLinks)]
             pie.sideLabels = 1
-            pie.labels = ['Incoming: ' + str(len(incomingLinks)), 'Outgoing: ' + str(len(outgoingLinks))]
+            pie.labels = [f'Incoming: {len(incomingLinks)}', f'Outgoing: {len(outgoingLinks)}']
             pie.slices.strokeWidth = 1
             if len(incomingLinks) > len(outgoingLinks):
                 pie.slices[0].popout = 5

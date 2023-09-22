@@ -929,7 +929,7 @@ class MainWindow(QtWidgets.QMainWindow):
         self.MODULEMANAGER.loadAllModules()
         self.setStatus('Loaded Modules.')
 
-    def reloadModules(self, onlyUpdateDockbar:bool = False) -> None:
+    def reloadModules(self, onlyUpdateDockbar: bool = False) -> None:
         """
         Same as loadModules, except this one updates the GUI to show newly loaded entities and resolutions.
         This is meant to be run after the application started, in case the user wants to load a module without

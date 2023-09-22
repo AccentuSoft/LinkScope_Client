@@ -9,12 +9,14 @@ with open(magicLibPath, 'r') as magicLibFile:
     magicLines = magicLibFile.readlines()
 
 # Find out what level of indentation is used, in case it changes in the future.
-lineIndent = None
-for line in magicLines:
-    if line.startswith(' '):
-        lineIndent = len(re.split(r'\S', line)[0])
-        break
-
+lineIndent = next(
+    (
+        len(re.split(r'\S', line)[0])
+        for line in magicLines
+        if line.startswith(' ')
+    ),
+    None,
+)
 magicLines.insert(0, 'from pathlib import Path\n')
 magicLines.insert(0, 'import os\n')
 

@@ -98,7 +98,6 @@ class ModulesManager:
         self.upgradeThread.upgradeVenvThreadSignal.connect(self.afterUpgrade)
         self.upgradeThread.start()
 
-
     def loadModule(self, modulePath: Path) -> bool:
         moduleDetailsPath = modulePath / "module.yml"
         if not moduleDetailsPath.exists():
@@ -270,7 +269,6 @@ class ModulesManager:
         self.modulePacksListViewer = ModulePacksListViewer(self)
         self.modulePacksListViewer.exec()
         self.modulePacksListViewer = None
-
 
     def installModulePackInit(self, sourceUUID: str, modulePackUUID: str) -> None:
         self.upgradeLock.acquire()
@@ -636,7 +634,7 @@ class ModulePacksListViewer(QtWidgets.QDialog):
     def removeModulePack(self) -> bool:
         try:
             itemToRemove = self.modulePackList.selectedItems()[0]
-            widgetOfItem : ModulePacksListItem = self.modulePackList.itemWidget(itemToRemove)
+            widgetOfItem: ModulePacksListItem = self.modulePackList.itemWidget(itemToRemove)
         except IndexError:
             return True
 
@@ -647,7 +645,7 @@ class ModulePacksListViewer(QtWidgets.QDialog):
     def addModulePackPrompt(self) -> None:
         try:
             itemToAdd = self.modulePackList.selectedItems()[0]
-            widgetOfItem : ModulePacksListItem = self.modulePackList.itemWidget(itemToAdd)
+            widgetOfItem: ModulePacksListItem = self.modulePackList.itemWidget(itemToAdd)
         except IndexError:
             return
 
@@ -673,7 +671,6 @@ class ModulePacksListViewer(QtWidgets.QDialog):
         if self.moduleWidgetBeingInstalled is not None:
             self.moduleWidgetBeingInstalled.installedLabel.setText("Installed: False")
             self.moduleWidgetBeingInstalled = None
-
 
 
 class ModulePacksListItem(QtWidgets.QWidget):
@@ -894,7 +891,7 @@ class UninstallModuleThread(QtCore.QThread):
             sourceUUID = sourceDict['UUID']
             for modulePackDetails in self.modulesManager.modulePacks[sourceUUID].values():
                 if modulePackUUID == modulePackDetails['UUID'] and \
-                            modulePackSourceUUID == modulePackDetails['Source UUID']:
+                        modulePackSourceUUID == modulePackDetails['Source UUID']:
                     pass
                 elif modulePackDetails['Installed']:
                     for module in modulePackDetails['modules']:

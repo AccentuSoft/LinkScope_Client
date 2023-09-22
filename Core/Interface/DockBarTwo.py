@@ -292,7 +292,7 @@ class EntityDetails(QtWidgets.QWidget):
         filePath = jsonDict.get('File Path')
         if filePath is not None:
             fullFilePath = Path(self.mainWindow.SETTINGS.value('Project/FilesDir')) / filePath
-            if fullFilePath.exists() and fullFilePath.is_file():
+            if fullFilePath.is_file():
                 magicType = magic.from_file(str(fullFilePath), mime=True)
                 if magicType.split('/')[0] == 'image':
                     previewImage = QtGui.QImage(fullFilePath)

@@ -21,7 +21,7 @@ class FileHasher:
         for entity in entityJsonList:
             uid = entity['uid']
             file_path = Path(parameters['Project Files Directory']) / entity['File Path']
-            if not (file_path.exists() and file_path.is_file()):
+            if not file_path.is_file():
                 continue
             block_size = 65536  # The size of each read from the file
             for hashing_algorithm in hashing_algorithms:
