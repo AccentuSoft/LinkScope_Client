@@ -1076,6 +1076,12 @@ class MainWindow(QtWidgets.QMainWindow):
             with contextlib.suppress(KeyError):
                 scene.linksDict[uid].updateLabel(label)
 
+    def getPlaywrightBrowserPath(self, browser: str = None) -> Path:
+        browserPath = self.MODULEMANAGER.browsersBaseDirectoryPath
+        if browser in {'firefox', 'chromium', 'webkit'}:
+            browserPath = browserPath / browser
+        return browserPath
+
     def populateEntitiesWidget(self, eJson: dict, add: bool) -> None:
         if add:
             self.dockbarOne.existingEntitiesPalette.addEntity(eJson)

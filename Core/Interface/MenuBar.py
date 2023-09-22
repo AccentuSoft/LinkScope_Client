@@ -2528,7 +2528,7 @@ class ScreenshotWebsiteThread(QtCore.QThread):
         newNodes = []
 
         with sync_playwright() as p:
-            browser = p.firefox.launch()
+            browser = p.firefox.launch(executable_path=self.mainWindow.getPlaywrightBrowserPath('firefox'))
 
             if platform.system() == 'Linux':
                 context = browser.new_context(
@@ -2621,7 +2621,7 @@ class SaveWebsiteThread(QtCore.QThread):
                         fileToWrite.write(response.body())
 
         with sync_playwright() as p:
-            browser = p.firefox.launch()
+            browser = p.firefox.launch(executable_path=self.mainWindow.getPlaywrightBrowserPath('firefox'))
 
             if platform.system() == 'Linux':
                 context = browser.new_context(
@@ -2699,7 +2699,7 @@ class ImportBrowserTabsThread(QtCore.QThread):
             if self.importDialog.firefoxChoice.isChecked():
                 recordSession = self.importDialog.firefoxSessionChoice.isChecked()
                 try:
-                    browser = p.firefox.launch()
+                    browser = p.firefox.launch(executable_path=self.mainWindow.getPlaywrightBrowserPath('firefox'))
 
                     if platform.system() == 'Linux':
                         context = browser.new_context(
@@ -2856,7 +2856,7 @@ class ImportBrowserTabsThread(QtCore.QThread):
                 self.progressSignal.emit(progressValue)
 
                 try:
-                    browser = p.chromium.launch()
+                    browser = p.chromium.launch(executable_path=self.mainWindow.getPlaywrightBrowserPath('chromium'))
 
                     # NOTE: Cookies are not obtained for chromium based browsers.
 

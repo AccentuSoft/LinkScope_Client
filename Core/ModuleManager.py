@@ -805,6 +805,7 @@ class UpgradeVenvThread(QtCore.QThread):
             subprocess.run(cmdStr, shell=True)
             cmdStr = f"'{self.modulesManager.modulesPythonPath}' -m playwright install"
             subprocess.run(cmdStr, shell=True)
+            collapse_browser_folders(self.modulesManager.browsersBaseDirectoryPath)
             self.upgradeVenvThreadSignal.emit(True)
         except subprocess.CalledProcessError:
             self.upgradeVenvThreadSignal.emit(False)
@@ -937,3 +938,19 @@ class SchemaType(int, Enum):
     HTTPS = 1
     SSH = 2
     GIT = 3
+
+
+def collapse_browser_folders(path_to_browsers: Path):
+    collapse_browser_folders_helper(path_to_browsers, 'firefox')
+    collapse_browser_folders_helper(path_to_browsers, 'chromium')
+    collapse_browser_folders_helper(path_to_browsers, 'webkit')
+
+
+def collapse_browser_folders_helper(path_to_browsers: Path, browser: str):
+    browser_dirs = [d for d in os.listdir(path_to_browsers) if d.startswith(f"{browser}-")]
+
+    latest_browser = sorted(browser_dirs)[-1]
+    latest_browser_path = path_to_browsers / latest_browser
+    latest_browser_path.rename(path_to_browsers / browser)
+    for other_browser_path in sorted(browser_dirs)[:-1]:
+        shutil.rmtree(path_to_browsers / other_browser_path, ignore_errors=True)
