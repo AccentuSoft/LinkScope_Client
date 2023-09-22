@@ -7,6 +7,7 @@ import requests
 import os
 
 from pathlib import Path
+from semver import compare
 from PySide6 import QtCore, QtWidgets
 
 
@@ -40,7 +41,7 @@ class UpdateManager:
         latest_version = self.getLatestVersion()
         return (
             latest_version is not None
-            and self.mainWindow.SETTINGS.value("Program/Version") < latest_version
+            and compare(self.mainWindow.SETTINGS.value("Program/Version").lstrip('v'), latest_version.lstrip('v')) < 0
         )
 
     def doUpdate(self) -> None:

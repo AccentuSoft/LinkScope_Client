@@ -37,6 +37,7 @@ pandas
 svglib
 lxml
 py7zr
+semver
 # For opening spreadsheets
 odfpy
 openpyxl

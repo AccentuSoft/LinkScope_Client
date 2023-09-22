@@ -854,7 +854,6 @@ class InstallRequirementsThread(QtCore.QThread):
             shutil.move(self.modulesManager.modulesRequirementsTempPath, self.modulesManager.modulesRequirementsPath)
             success = True
         except subprocess.CalledProcessError as cpe:
-            # TODO: test
             self.modulesManager.mainWindow.errorSignalListener.emit(
                 f'Error occurred while installing Module Pack "{modulePackLabel}":\n{cpe}', True, False)
             self.modulesManager.modulesRequirementsTempPath.unlink(missing_ok=True)
