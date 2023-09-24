@@ -32,7 +32,7 @@ class LongANStringExtractor:
         from pathlib import Path
         import re
 
-        playwrightPath = Path(parameters['Playwright Browsers Directory']) / 'chromium'
+        playwrightPath = Path(parameters['Playwright Chromium'])
         try:
             minLength = int(parameters['Minimum Length'])
             if minLength < 1:

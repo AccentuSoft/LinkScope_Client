@@ -49,7 +49,7 @@ class AffiliateCodesExtractor:
         import tldextract
         import re
 
-        playwrightPath = Path(parameters['Playwright Browsers Directory']) / 'firefox'
+        playwrightPath = Path(parameters['Playwright Firefox'])
         returnResults = []
         visitExternal = parameters['Visit External Links'] == 'Yes'
 

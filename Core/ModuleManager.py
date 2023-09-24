@@ -2,6 +2,7 @@
 
 import contextlib
 import os
+import re
 import shutil
 import site
 import sys
@@ -50,7 +51,8 @@ class ModulesManager:
 
     def afterUpgrade(self, upgradeStatus: bool):
         self.mainWindow.MESSAGEHANDLER.info(f"Upgrade status: {'Success' if upgradeStatus else 'Failed'}")
-        self.mainWindow.setStatus('Environment Updated.')
+        self.mainWindow.MESSAGEHANDLER.info('Modules Loaded.')
+        self.mainWindow.setStatus('Environment Updated, Modules Loaded.')
 
     def save(self) -> bool:
         self.mainWindow.SETTINGS.setValue("Program/Sources/Sources List", self.sources)
@@ -91,7 +93,7 @@ class ModulesManager:
 
         self.loadAllModules()
 
-        self.mainWindow.MESSAGEHANDLER.info("Configured Modules environment and loaded Modules.")
+        self.mainWindow.MESSAGEHANDLER.info("Configured Modules environment. Loading Modules...")
         self.mainWindow.MESSAGEHANDLER.debug(f"OS Path: {os.environ['PATH']}")
 
         self.upgradeThread = UpgradeVenvThread(self, useTempFile=False, fullUpgrade=True)
@@ -947,9 +949,14 @@ def collapse_browser_folders(path_to_browsers: Path):
 
 def collapse_browser_folders_helper(path_to_browsers: Path, browser: str):
     browser_dirs = [d for d in os.listdir(path_to_browsers) if d.startswith(f"{browser}-")]
+    versions = [
+        (d, int(re.search(r'-(\d+)$', d)[1]))
+        for d in browser_dirs
+        if re.search(r'-(\d+)$', d)
+    ]
 
-    latest_browser = sorted(browser_dirs)[-1]
-    latest_browser_path = path_to_browsers / latest_browser
-    latest_browser_path.rename(path_to_browsers / browser)
-    for other_browser_path in sorted(browser_dirs)[:-1]:
-        shutil.rmtree(path_to_browsers / other_browser_path, ignore_errors=True)
+    versions.sort(key=lambda x: x[1], reverse=True)
+    versions.pop(0)
+
+    for other_browser_path in versions:
+        shutil.rmtree(path_to_browsers / other_browser_path[0], ignore_errors=True)

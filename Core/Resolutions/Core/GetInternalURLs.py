@@ -22,7 +22,7 @@ class GetInternalURLs:
         from pathlib import Path
         import urllib.parse
 
-        playwrightPath = Path(parameters['Playwright Browsers Directory']) / 'chromium'
+        playwrightPath = Path(parameters['Playwright Chromium'])
         returnResult = []
         internalUrls = {}
 

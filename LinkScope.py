@@ -1078,8 +1078,18 @@ class MainWindow(QtWidgets.QMainWindow):
 
     def getPlaywrightBrowserPath(self, browser: str = None) -> Path:
         browserPath = self.MODULEMANAGER.browsersBaseDirectoryPath
-        if browser in {'firefox', 'chromium', 'webkit'}:
-            browserPath = browserPath / browser
+        if browser in {'firefox', 'chromium'}:
+            browserDir = next((b_dir for b_dir in browserPath.iterdir()
+                               if b_dir.name.startswith(browser) and b_dir.is_dir()),
+                              None)
+            if browserDir is not None:
+                browserPath = [subdirectory for subdirectory in browserDir.iterdir() if subdirectory.is_dir()][0]
+                if browser == 'firefox':
+                    browserPath /= 'firefox'
+                elif browser == 'chromium':
+                    browserPath /= 'chrome'
+            else:
+                self.MESSAGEHANDLER.critical('Cannot find installed playwright browsers.', exc_info=False)
         return browserPath
 
     def populateEntitiesWidget(self, eJson: dict, add: bool) -> None:
@@ -1184,7 +1194,8 @@ class MainWindow(QtWidgets.QMainWindow):
                 self.setStatus(f'Resolution {resolution} aborted.')
                 return ""
         resolutionParameterValues['Project Files Directory'] = self.SETTINGS.value("Project/FilesDir")
-        resolutionParameterValues['Playwright Browsers Directory'] = self.MODULEMANAGER.browsersBaseDirectoryPath
+        resolutionParameterValues['Playwright Firefox'] = self.getPlaywrightBrowserPath('firefox')
+        resolutionParameterValues['Playwright Chromium'] = self.getPlaywrightBrowserPath('chromium')
         resolutionUID = preSpecifiedUID or str(uuid4())
         resolutionThread = ResolutionManager.ResolutionExecutorThread(
             resolutionName, resolutionInputEntities, resolutionParameterValues, self, resolutionUID)

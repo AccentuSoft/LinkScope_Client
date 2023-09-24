@@ -23,7 +23,7 @@ class JSCodeExtractor:
         import re
         import contextlib
 
-        playwrightPath = Path(parameters['Playwright Browsers Directory']) / 'firefox'
+        playwrightPath = Path(parameters['Playwright Firefox'])
         returnResults = []
         requestUrlsParsed = set()
 

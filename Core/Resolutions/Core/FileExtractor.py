@@ -49,7 +49,7 @@ class FileExtractor:
         from bs4 import BeautifulSoup
         from playwright.sync_api import sync_playwright, TimeoutError, Error
 
-        playwrightPath = Path(parameters['Playwright Browsers Directory']) / 'firefox'
+        playwrightPath = Path(parameters['Playwright Firefox'])
 
         try:
             maxDepth = max(int(parameters['Max Depth']), 0)

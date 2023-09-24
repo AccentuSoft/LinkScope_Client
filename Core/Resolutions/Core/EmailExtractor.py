@@ -42,7 +42,7 @@ class EmailExtractor:
         import contextlib
         from email_validator import validate_email, caching_resolver, EmailNotValidError
 
-        playwrightPath = Path(parameters['Playwright Browsers Directory']) / 'chromium'
+        playwrightPath = Path(parameters['Playwright Chromium'])
         returnResults = []
 
         # Source: https://emailregex.com/

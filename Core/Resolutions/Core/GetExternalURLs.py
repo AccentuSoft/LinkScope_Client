@@ -46,7 +46,7 @@ class GetExternalURLs:
         from base64 import b64decode
         from pathlib import Path
 
-        playwrightPath = Path(parameters['Playwright Browsers Directory']) / 'chromium'
+        playwrightPath = Path(parameters['Playwright Chromium'])
         onionRegex = re.compile(r"""^https?://\w{56}\.onion/?(\S(?<!\.))*(\.(\S(?<!\.))*)?$""")
         returnResult = []
 

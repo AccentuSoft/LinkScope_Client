@@ -27,7 +27,7 @@ class CryptoAddressExtractor:
         from pathlib import Path
         import re
 
-        playwrightPath = Path(parameters['Playwright Browsers Directory']) / 'chromium'
+        playwrightPath = Path(parameters['Playwright Chromium'])
         returnResults = []
 
         ethRegex = re.compile(r"\b0[xX][a-fA-F0-9]{40}\b")

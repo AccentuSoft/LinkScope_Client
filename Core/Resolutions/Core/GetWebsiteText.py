@@ -24,7 +24,7 @@ class GetWebsiteText:
         from pathlib import Path
 
         returnResults = []
-        playwrightPath = Path(parameters['Playwright Browsers Directory']) / 'chromium'
+        playwrightPath = Path(parameters['Playwright Chromium'])
 
         def tag_visible(element):
             if element.parent.name in ['style', 'script', 'head', 'title', 'meta', '[document]']:
