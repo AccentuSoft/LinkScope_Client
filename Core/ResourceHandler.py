@@ -42,6 +42,7 @@ def resizePictureFromBuffer(picBuffer: QByteArray, newSize: tuple) -> QByteArray
 
     return pictureByteArray
 
+
 def resizeSVG(byteString: bytes, resize: tuple):
     bytesWidth = str(resize[0]).encode('UTF-8')
     bytesHeight = str(resize[1]).encode('UTF-8')
@@ -138,10 +139,10 @@ class ResourceHandler:
                 thumbnail.save(imageBuffer, "PNG")
                 imageBuffer.close()
         except ValueError as ve:
-                # Image type is unsupported (for ImageQt)
-                # Supported types: 1, L, P, RGB, RGBA
-                self.mainWindow.MESSAGEHANDLER.warning(f'Invalid Image selected: {str(ve)}', popUp=True)
-                pictureByteArray = None
+            # Image type is unsupported (for ImageQt)
+            # Supported types: 1, L, P, RGB, RGBA
+            self.mainWindow.MESSAGEHANDLER.warning(f'Invalid Image selected: {str(ve)}', popUp=True)
+            pictureByteArray = None
 
         return pictureByteArray
 
@@ -289,14 +290,17 @@ class ResourceHandler:
     def loadModuleEntities(self, modulePath: Path) -> list:
         entitiesPath = modulePath / 'Entities'
         allModuleEntitiesAdded = []
-        for entFile in listdir(entitiesPath):
-            if entFile.endswith('.xml'):
-                allModuleEntitiesAdded += self.addRecognisedEntityTypes(entitiesPath / entFile)
+        if entitiesPath.exists():
+            for entFile in listdir(entitiesPath):
+                if entFile.endswith('.xml'):
+                    allModuleEntitiesAdded += self.addRecognisedEntityTypes(entitiesPath / entFile)
         return allModuleEntitiesAdded
 
     def loadModuleAssets(self, modulePath: Path):
-        self.moduleAssetPaths.append(modulePath / "Assets")
-        self.loadModuleBanners(modulePath)
+        moduleAssetsPath = modulePath / "Assets"
+        if moduleAssetsPath.exists():
+            self.moduleAssetPaths.append(moduleAssetsPath)
+            self.loadModuleBanners(modulePath)
 
     def getEntityJson(self, entityType: str, jsonData=None) -> Union[dict, None]:
         eJson = {'uid': str(uuid4())}

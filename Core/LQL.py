@@ -719,8 +719,7 @@ class ConditionClauseWidget(QtWidgets.QFrame):
             newItem = QtWidgets.QTreeWidgetItem()
             newItem.setText(0, entityDropdownTriplet[0])
             newItem.setText(1, entityDropdownTriplet[1])
-            resizedIcon = resizePictureFromBuffer(entityDropdownTriplet[2], (40, 40))
-            newItem.setIcon(2, resizedIcon)
+            newItem.setIcon(2, entityDropdownTriplet[2])
             graphEntitiesDropdown.addTopLevelItem(newItem)
 
         self.gcSecondaryInputLayout.addWidget(graphEntitiesDropdown)

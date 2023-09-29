@@ -124,8 +124,9 @@ class ModulesManager:
 
         self.mainWindow.RESOURCEHANDLER.loadModuleAssets(modulePath)
         moduleEntities = self.mainWindow.RESOURCEHANDLER.loadModuleEntities(modulePath)
-        moduleResolutions = self.mainWindow.RESOLUTIONMANAGER.loadResolutionsFromDir(
-            modulePath / "Resolutions")
+        moduleResolutionsDir = modulePath / "Resolutions"
+        moduleResolutions = self.mainWindow.RESOLUTIONMANAGER.loadResolutionsFromDir(moduleResolutionsDir) \
+            if moduleResolutionsDir.exists() else []
         self.loadedModules[f"{modulePath.parent.name} | {moduleName}"] = \
             {'author': author, 'version': version, 'name': moduleName, 'description': description,
              'entities': moduleEntities, 'resolutions': moduleResolutions}
@@ -235,6 +236,15 @@ class ModulesManager:
                     self.mainWindow.MESSAGEHANDLER.error(f'Could not sync source {sourceURI}: {gitErr}',
                                                          popUp=True, exc_info=True)
                 return False
+            except ValueError:
+                # Force update the local repo.
+                repo = pygit2.Repository(destinationPath)
+                remote = repo.remotes['origin']
+                current_branch_name = repo.head.shorthand
+                remote.fetch()
+                remote_branch = repo.lookup_reference(f'refs/remotes/origin/{current_branch_name}')
+                repo.reset(remote_branch.target, pygit2.GIT_RESET_HARD)
+
         else:
             try:
                 shutil.copytree(Path(sourceURI), destinationPath, dirs_exist_ok=True)
@@ -836,8 +846,9 @@ class InstallRequirementsThread(QtCore.QThread):
         for module in packDetails['modules']:
             modulePath = self.modulesManager.modulesBaseDirectoryPath / self.sourceUUID / module
             moduleRequirements = modulePath / 'requirements.txt'
-            with open(moduleRequirements, 'r') as file:
-                [requirementsSet.add(line) for line in file.read().splitlines() if not line.startswith('#')]
+            if moduleRequirements.exists():
+                with open(moduleRequirements, 'r') as file:
+                    [requirementsSet.add(line) for line in file.read().splitlines() if not line.startswith('#')]
 
         with open(self.modulesManager.modulesRequirementsPath, 'r') as reqFile:
             [requirementsSet.add(line) for line in reqFile.read().splitlines() if not line.startswith('#')]

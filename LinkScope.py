@@ -1912,8 +1912,9 @@ class MainWindow(QtWidgets.QMainWindow):
 
         if self.SETTINGS.value("Program/Usage/First Time Start", 'true') == 'true':
             FirstTimeUseDialog().exec()
-            #self.MODULEMANAGER.installSource({'URI': '', 'Remote': '', 'AuthType': None,
-            #                                  'AuthCreds': None, 'SchemaType': '', 'UUID': str(uuid4())})
+            # Technically no need to give the full dict, but it doesn't hurt.
+            self.MODULEMANAGER.installSource({'URI': 'https://github.com/AccentuSoft/LinkScope-Module-Packs',
+                                              'Remote': True, 'Auth': None, 'SchemaType': 3, 'UUID': str(uuid4())})
             self.SETTINGS.setValue("Program/Usage/First Time Start", 'false')
 
         if self.UPDATEMANAGER.isUpdateAvailable():
