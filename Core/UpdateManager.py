@@ -4,7 +4,10 @@ import contextlib
 import platform
 import subprocess
 import requests
+import tempfile
+import shutil
 import os
+import ctypes
 
 from pathlib import Path
 from semver import compare
@@ -40,8 +43,9 @@ class UpdateManager:
     def isUpdateAvailable(self):
         latest_version = self.getLatestVersion()
         return (
-            latest_version is not None
-            and compare(self.mainWindow.SETTINGS.value("Program/Version").lstrip('v'), latest_version.lstrip('v')) < 0
+                latest_version is not None
+                and compare(self.mainWindow.SETTINGS.value("Program/Version").lstrip('v'),
+                            latest_version.lstrip('v')) < 0
         )
 
     def doUpdate(self) -> None:
@@ -54,11 +58,22 @@ class UpdateManager:
         self.updateThread.start()
         self.mainWindow.MESSAGEHANDLER.info('Update in progress')
 
-    def finalizeUpdate(self, success: bool) -> None:
-        if success:
+    def finalizeUpdate(self, updateTempPath: str) -> None:
+        if updateTempPath != '':
             latest_version = self.getLatestVersion()
             self.mainWindow.SETTINGS.setValue("Program/Version", latest_version)
             self.mainWindow.MESSAGEHANDLER.info('Updating done, please restart for the changes to take effect.')
+            self.mainWindow.MESSAGEHANDLER.info("The application will now save and close to apply the updates. "
+                                                "Please wait for a few minutes before reopening LinkScope.",
+                                                popUp=True)
+
+            uncompressNewVersion(
+                self.system,
+                self.mainWindow.SETTINGS.value("Program/BaseDir"),
+                str(self.baseSoftwarePath),
+                updateTempPath)
+            self.mainWindow.close()
+
         else:
             self.mainWindow.MESSAGEHANDLER.info('Updating failed.')
 
@@ -99,7 +114,7 @@ class UpdaterWindow(QtWidgets.QDialog):
 
 
 class UpdaterThread(QtCore.QThread):
-    updateDoneSignal = QtCore.Signal(bool)
+    updateDoneSignal = QtCore.Signal(str)
 
     def __init__(self, updateManager, mainWindow):
         super().__init__()
@@ -107,19 +122,72 @@ class UpdaterThread(QtCore.QThread):
         self.updateManager = updateManager
 
     def run(self) -> None:
-        downloadUrl = self.updateManager.getDownloadURL()
-        if self.updateManager.system == 'Windows':
-            subprocess.run(
-                ['runas',
-                 '/user:Administrator',
-                 Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) / "UpdaterUtil.exe",
-                 downloadUrl,
-                 self.updateManager.baseSoftwarePath.parent]
-            )
-        elif self.updateManager.system == 'Linux':
-            subprocess.run(
-                ['pkexec',
-                 Path(self.mainWindow.SETTINGS.value("Program/BaseDir")) / "UpdaterUtil",
-                 downloadUrl,
-                 self.updateManager.baseSoftwarePath.parent]
-            )
+        try:
+            downloadUrl = self.updateManager.getDownloadURL()
+            clientTempCompressedArchive = tempfile.mkstemp(suffix='.7z')
+            tempPath = clientTempCompressedArchive[1]
+
+            with os.fdopen(clientTempCompressedArchive[0], 'wb') as tempArchive:
+                with requests.get(downloadUrl, stream=True) as fileStream:
+                    for chunk in fileStream.iter_content(chunk_size=5 * 1024 * 1024):
+                        tempArchive.write(chunk)
+            self.updateDoneSignal.emit(tempPath)
+        except Exception:
+            self.updateDoneSignal.emit('')
+
+
+def uncompressNewVersion(system: str, baseDir: str, baseSoftwarePath: str, updateTempPath: str):
+    tempDir = tempfile.mkdtemp(prefix='LinkScope_Updater_TMP_')
+
+    if system == 'Windows':
+        updaterPath = Path(baseDir) / "UpdaterUtil.exe"
+
+        tempUpdaterPath = Path(tempDir) / updaterPath.name
+        shutil.copy(updaterPath, tempUpdaterPath)
+
+        # This is done so that Windows spawns the updater as a detached process.
+        ShellExecuteEx = ctypes.windll.shell32.ShellExecuteEx
+        SEE_MASK_NO_CONSOLE = 0x00008000
+
+        class SHELLEXECUTEINFO(ctypes.Structure):
+            _fields_ = [
+                ("cbSize", ctypes.c_ulong),
+                ("fMask", ctypes.c_ulong),
+                ("hwnd", ctypes.c_void_p),
+                ("lpVerb", ctypes.c_char_p),
+                ("lpFile", ctypes.c_char_p),
+                ("lpParameters", ctypes.c_char_p),
+                ("lpDirectory", ctypes.c_char_p),
+                ("nShow", ctypes.c_int),
+                ("hInstApp", ctypes.c_void_p),
+                ("lpIDList", ctypes.c_void_p),
+                ("lpClass", ctypes.c_char_p),
+                ("hkeyClass", ctypes.c_void_p),
+                ("dwHotKey", ctypes.c_ulong),
+                ("hIconOrMonitor", ctypes.c_void_p),
+                ("hProcess", ctypes.c_void_p),
+            ]
+
+        sei = SHELLEXECUTEINFO()
+        sei.cbSize = ctypes.sizeof(sei)
+        sei.fMask = SEE_MASK_NO_CONSOLE
+        sei.lpVerb = b"runas"
+        sei.lpFile = bytes(tempUpdaterPath)
+        sei.lpParameters = f'"{updateTempPath}" "{baseSoftwarePath}"'.encode('utf-8')
+        sei.nShow = 1
+
+        if not ShellExecuteEx(ctypes.byref(sei)):
+            raise ctypes.WinError()
+
+    elif system == 'Linux':
+        updaterPath = Path(baseDir) / "UpdaterUtil"
+
+        tempUpdaterPath = Path(tempDir) / updaterPath.name
+        shutil.copy(updaterPath, tempUpdaterPath)
+
+        subprocess.Popen(
+            f'pkexec "{tempUpdaterPath}" "{updateTempPath}" "{baseSoftwarePath}"',
+            start_new_session=True,
+            close_fds=True,
+            shell=True,
+        )

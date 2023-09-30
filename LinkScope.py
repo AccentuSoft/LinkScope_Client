@@ -2,6 +2,7 @@
 
 # Load modules
 import contextlib
+import platform
 import re
 import sys
 import time
@@ -1085,9 +1086,9 @@ class MainWindow(QtWidgets.QMainWindow):
             if browserDir is not None:
                 browserPath = [subdirectory for subdirectory in browserDir.iterdir() if subdirectory.is_dir()][0]
                 if browser == 'firefox':
-                    browserPath /= 'firefox'
+                    browserPath /= 'firefox.exe' if platform.system() == 'Windows' else 'firefox'
                 elif browser == 'chromium':
-                    browserPath /= 'chrome'
+                    browserPath /= 'chrome.exe' if platform.system() == 'Windows' else 'chrome'
             else:
                 self.MESSAGEHANDLER.critical('Cannot find installed playwright browsers.', exc_info=False)
         return browserPath

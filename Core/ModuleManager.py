@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
 import contextlib
+import platform
 import os
 import re
 import shutil
 import site
 import sys
-import venv
 import subprocess
 import yaml
 import pygit2
@@ -24,18 +24,18 @@ class ModulesManager:
 
     def __init__(self, mainWindow):
         self.mainWindow = mainWindow
+        self.system = platform.system()
         self.baseAppStoragePath = Path(
             QtCore.QStandardPaths.standardLocations(
                 QtCore.QStandardPaths.StandardLocation.AppDataLocation)[0])
         self.baseAppStoragePath.mkdir(exist_ok=True, parents=True)
         self.modulesBaseDirectoryPath = self.baseAppStoragePath / "User Module Packs Storage"
-        self.modulesBaseDirectoryPath.mkdir(exist_ok=True)
         self.browsersBaseDirectoryPath = self.baseAppStoragePath / "Browsers"
         self.browsersBaseDirectoryPath.mkdir(exist_ok=True)
         self.modulesRequirementsPath = self.modulesBaseDirectoryPath / "requirements.txt"
-        self.modulesRequirementsPath.touch(mode=0o700, exist_ok=True)
         self.modulesRequirementsTempPath = self.modulesBaseDirectoryPath / "requirements.txt.tmp"
-        self.modulesPythonPath = self.modulesBaseDirectoryPath / 'bin' / 'python3'
+        self.modulesPythonPath = self.modulesBaseDirectoryPath / 'bin' / 'python3.11' if self.system == "Linux" \
+            else self.modulesBaseDirectoryPath / 'Scripts' / 'python.exe'
         self.upgradeThread = None
         self.moduleReqsThread = None
         self.uninstallThread = None
@@ -50,7 +50,8 @@ class ModulesManager:
         self.venvThread.start()
 
     def afterUpgrade(self, upgradeStatus: bool):
-        self.mainWindow.MESSAGEHANDLER.info(f"Upgrade status: {'Success' if upgradeStatus else 'Failed'}")
+        self.mainWindow.MESSAGEHANDLER.info(f"Module environment upgrade status: "
+                                            f"{'Success' if upgradeStatus else 'Failed'}")
         self.mainWindow.MESSAGEHANDLER.info('Modules Loaded.')
         self.mainWindow.setStatus('Environment Updated, Modules Loaded.')
 
@@ -70,26 +71,42 @@ class ModulesManager:
         # {} == False
         return fileContents if fileContents is not None else {}
 
-    def configureVenv(self, venvPath):
-        binDir = os.path.dirname(venvPath / 'bin')
-        base = binDir[: -len("bin") - 1]  # strip away the bin part from the __file__, plus the path separator
+    def configureVenvLinux(self):
+        binDir = self.modulesBaseDirectoryPath / 'bin'
 
-        # prepend bin to PATH (this file is inside the bin directory)
-        os.environ["PATH"] = os.pathsep.join([binDir] + os.environ.get("PATH", "").split(os.pathsep))
-        os.environ["VIRTUAL_ENV"] = base  # virtual env is right above bin directory
+        # prepend bin to PATH
+        os.environ["PATH"] = f'{binDir}{os.pathsep}{os.environ.get("PATH", "")}'
+        os.environ["VIRTUAL_ENV"] = str(self.modulesBaseDirectoryPath)
+        os.environ["PLAYWRIGHT_BROWSERS_PATH"] = str(self.browsersBaseDirectoryPath)
+
+        packagesPath = str(list((self.modulesBaseDirectoryPath / 'lib').glob('python*'))[0] / 'site-packages')
+
+        sys.path.append(packagesPath)
+        site.addsitedir(packagesPath)
+
+        sys.prefix = str(self.modulesBaseDirectoryPath)
+
+    def configureVenvWindows(self):
+        binDir = self.modulesBaseDirectoryPath / 'Scripts'
+
+        # prepend Scripts to PATH
+        os.environ["PATH"] = f'{binDir}{os.pathsep}{os.environ.get("PATH", "")}'
+        os.environ["VIRTUAL_ENV"] = str(self.modulesBaseDirectoryPath)
         os.environ["PLAYWRIGHT_BROWSERS_PATH"] = str(self.browsersBaseDirectoryPath)
 
         # add the virtual environments libraries to the host python import mechanism
-        prevLength = len(sys.path)
-        packagesPath = str(list((venvPath / 'lib').glob('python*'))[0] / 'site-packages')
+        packagesPath = str(self.modulesBaseDirectoryPath / 'Lib' / 'site-packages')
 
-        for lib in packagesPath.split(os.pathsep):
-            path = os.path.realpath(os.path.join(binDir, lib))
-            site.addsitedir(path)
-        sys.path[:] = sys.path[prevLength:] + sys.path[:prevLength]
+        sys.path.append(packagesPath)
+        site.addsitedir(packagesPath)
 
-        sys.real_prefix = sys.prefix
-        sys.prefix = base
+        sys.prefix = str(self.modulesBaseDirectoryPath)
+
+    def configureVenv(self):
+        if self.system == "Linux":
+            self.configureVenvLinux()
+        else:
+            self.configureVenvWindows()
 
         self.loadAllModules()
 
@@ -776,18 +793,30 @@ class AddModulePackDialog(QtWidgets.QDialog):
 
 
 class InitialiseVenvThread(QtCore.QThread):
-    configureVenvOfMainThreadSignal = QtCore.Signal(Path)
+    configureVenvOfMainThreadSignal = QtCore.Signal()
 
     def __init__(self, modulesManager: ModulesManager) -> None:
         super().__init__()
         self.modulesManager = modulesManager
 
     def run(self) -> None:
-        venvPath = self.modulesManager.modulesBaseDirectoryPath
-        if not (venvPath / 'bin').exists():
-            venv.create(venvPath, symlinks=True, with_pip=True, upgrade_deps=True)
+        if self.modulesManager.system == "Linux":
+            localBinPath = str(Path.home() / '.local' / 'bin')
+            currentPath = os.environ.get("PATH", "")
+            if localBinPath not in currentPath.split(os.pathsep):
+                os.environ["PATH"] = currentPath + os.pathsep + localBinPath
 
-        self.configureVenvOfMainThreadSignal.emit(venvPath)
+        binPath = self.modulesManager.modulesBaseDirectoryPath / 'bin' \
+            if self.modulesManager.system == "Linux" \
+            else self.modulesManager.modulesBaseDirectoryPath / 'Scripts'
+        if not binPath.exists():
+            pythonExecutable = "python3.11" if self.modulesManager.system == "Linux" else "python.exe"
+            cmdStr = (f'{pythonExecutable} -m venv --symlinks --clear --upgrade-deps '
+                      f'"{self.modulesManager.modulesBaseDirectoryPath}"')
+            subprocess.run(cmdStr, shell=True)
+        self.modulesManager.modulesRequirementsPath.touch(mode=0o700, exist_ok=True)
+
+        self.configureVenvOfMainThreadSignal.emit()
 
 
 class UpgradeVenvThread(QtCore.QThread):
@@ -808,14 +837,14 @@ class UpgradeVenvThread(QtCore.QThread):
         else:
             reqsFile = self.modulesManager.modulesRequirementsPath
         try:
-            cmdStr = f"'{self.modulesManager.modulesPythonPath}' --version"
+            cmdStr = f'"{self.modulesManager.modulesPythonPath}" --version'
             subprocess.check_output(cmdStr, shell=True)
-            cmdStr = f"'{self.modulesManager.modulesPythonPath}' -m pip install --upgrade -r '{reqsFile}'"
+            cmdStr = f'"{self.modulesManager.modulesPythonPath}" -m pip install --upgrade -r "{reqsFile}"'
             subprocess.check_output(cmdStr, shell=True)
             # Install / upgrade playwright & misc if not already installed, since they need special treatment.
-            cmdStr = f"'{self.modulesManager.modulesPythonPath}' -m pip install --upgrade pip wheel setuptools playwright"
+            cmdStr = f'"{self.modulesManager.modulesPythonPath}" -m pip install --upgrade pip wheel setuptools playwright'
             subprocess.run(cmdStr, shell=True)
-            cmdStr = f"'{self.modulesManager.modulesPythonPath}' -m playwright install"
+            cmdStr = f'"{self.modulesManager.modulesPythonPath}" -m playwright install'
             subprocess.run(cmdStr, shell=True)
             collapse_browser_folders(self.modulesManager.browsersBaseDirectoryPath)
             self.upgradeVenvThreadSignal.emit(True)
@@ -859,8 +888,8 @@ class InstallRequirementsThread(QtCore.QThread):
         self.progressSignal.emit(1)
 
         success = False
-        cmdStr = f"'{self.modulesManager.modulesPythonPath}' -m pip install --upgrade -r " \
-                 f"'{self.modulesManager.modulesRequirementsTempPath}'"
+        cmdStr = f'"{self.modulesManager.modulesPythonPath}" -m pip install --upgrade -r ' \
+                 f'"{self.modulesManager.modulesRequirementsTempPath}"'
         try:
             subprocess.check_output(cmdStr, shell=True)
 
@@ -920,7 +949,7 @@ class UninstallModuleThread(QtCore.QThread):
             [file.write(line + '\n') for line in newRequirementsSet]
 
         if reqsDiff := allRequirementsSet.difference(newRequirementsSet):
-            cmdStr = f"'{self.modulesManager.modulesPythonPath}' -m pip uninstall {' '.join(reqsDiff)} -y"
+            cmdStr = f'"{self.modulesManager.modulesPythonPath}" -m pip uninstall {" ".join(reqsDiff)} -y'
             try:
                 subprocess.check_output(cmdStr, shell=True)
                 shutil.move(self.modulesManager.modulesRequirementsTempPath,

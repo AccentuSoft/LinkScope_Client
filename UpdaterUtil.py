@@ -1,27 +1,34 @@
 #!/usr/bin/env python3
-
 import sys
-import tempfile
-import os
-import requests
-import py7zr
+import time
 from pathlib import Path
 
-if len(sys.argv) != 3:
-    sys.exit(3)
+import py7zr
 
-downloadUrl = sys.argv[1]
-softwarePath = sys.argv[2]
 
-clientTempCompressedArchive = tempfile.mkstemp(suffix='.7z')
-tempPath = Path(clientTempCompressedArchive[1])
+def main():
+    if len(sys.argv) != 3:
+        sys.exit(3)
 
-with os.fdopen(clientTempCompressedArchive[0], 'wb') as tempArchive:
-    with requests.get(downloadUrl, stream=True) as fileStream:
-        for chunk in fileStream.iter_content(chunk_size=5 * 1024 * 1024):
-            tempArchive.write(chunk)
+    tempPath = Path(sys.argv[1])
+    softwarePath = Path(sys.argv[2])
 
-with py7zr.SevenZipFile(tempPath, 'r') as archive:
-    archive.extractall(path=softwarePath)
+    time.sleep(10)  # Wait for a few seconds for the main application to close.
 
-tempPath.unlink(missing_ok=True)
+    input("\nPlease make sure that all LinkScope Client processes are closed, "
+          "and then press Enter to begin the update.\n")
+    print("Updating...\n")
+
+    with py7zr.SevenZipFile(tempPath, 'r') as archive:
+        archive.extractall(path=softwarePath.parent)
+
+    tempPath.unlink(missing_ok=True)
+
+    input("Update complete. Press Enter to exit.")
+
+
+if __name__ == '__main__':
+    try:
+        main()
+    except Exception as e:
+        input(f"Update failed. Press Enter to exit. Reason: {repr(e)}")
