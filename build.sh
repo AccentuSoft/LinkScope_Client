@@ -21,7 +21,7 @@ python${PYTHON_VER} -m nuitka --follow-imports --standalone --noinclude-pytest-m
 --noinclude-setuptools-mode=nofollow --noinclude-custom-mode=setuptools:error --noinclude-IPython-mode=nofollow \
 --noinclude-unittest-mode=nofollow --enable-plugin=pyside6 --assume-yes-for-downloads --remove-output \
 --nofollow-import-to=tkinter \
---disable-console --include-data-dir="Resources=Resources" --include-package=Core \
+--include-data-dir="Resources=Resources" --include-package=Core \
 --include-data-dir="Core/Entities=Core/Entities" \
 --warn-unusual-code --show-modules --include-data-files="Icon.ico=Icon.ico" \
 --linux-icon="Icon.ico" \
