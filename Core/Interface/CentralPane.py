@@ -1477,11 +1477,11 @@ class CanvasScene(QtWidgets.QGraphicsScene):
             if groupItems is None:
                 newNode = Entity.BaseNode(picture, node, nodePrimaryAttribute, self.entityTextFont,
                                           self.entityTextBrush)
-                self.addNodeToScene(newNode)
+                self.addNodeToScene(newNode, positions[node][0], positions[node][1])
             else:
                 newNode = Entity.GroupNode(picture, node, nodePrimaryAttribute, self.entityTextFont,
                                            self.entityTextBrush)
-                self.addNodeToScene(newNode)
+                self.addNodeToScene(newNode, positions[node][0], positions[node][1])
 
                 newGroupList = newNode.listWidget
                 newGroupListGraphic = self.addWidget(newGroupList)
@@ -1489,8 +1489,6 @@ class CanvasScene(QtWidgets.QGraphicsScene):
                 newNode.formGroup(groupItems, newGroupListGraphic)
                 for item in groupItems:
                     self.sceneGraph.add_node(item, groupID=newNode.uid)
-
-            newNode.setPos(QtCore.QPointF(positions[node][0], positions[node][1]))
 
             progressValue += 1
             progress.setValue(progressValue)

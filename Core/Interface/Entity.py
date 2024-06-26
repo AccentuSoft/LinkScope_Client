@@ -318,8 +318,8 @@ class BaseConnector(QGraphicsItemGroup):
     def paint(self, painter: QtGui.QPainter, option: QtWidgets.QStyleOptionGraphicsItem,
               widget: Optional[QtWidgets.QWidget] = ...) -> None:
 
-        currentStartPos = self.myStartItem.pos()
-        currentEndPos = self.myEndItem.pos()
+        currentStartPos = self.myStartItem.pos() - self.pos()
+        currentEndPos = self.myEndItem.pos() - self.pos()
 
         self.myColor = self.colorSelected if self.isSelected() else self.colorDefault
 
