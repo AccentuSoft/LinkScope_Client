@@ -73,13 +73,12 @@ class ModulesManager:
 
     def configureVenvLinux(self):
         binDir = self.modulesBaseDirectoryPath / 'bin'
+        packagesPath = str(list((self.modulesBaseDirectoryPath / 'lib').glob('python*'))[0] / 'site-packages')
 
         # prepend bin to PATH
-        os.environ["PATH"] = f'{binDir}{os.pathsep}{os.environ.get("PATH", "")}'
+        os.environ["PATH"] = f'{packagesPath}{os.pathsep}{binDir}{os.pathsep}{os.environ.get("PATH", "")}'
         os.environ["VIRTUAL_ENV"] = str(self.modulesBaseDirectoryPath)
         os.environ["PLAYWRIGHT_BROWSERS_PATH"] = str(self.browsersBaseDirectoryPath)
-
-        packagesPath = str(list((self.modulesBaseDirectoryPath / 'lib').glob('python*'))[0] / 'site-packages')
 
         sys.path.append(packagesPath)
         site.addsitedir(packagesPath)
@@ -88,17 +87,16 @@ class ModulesManager:
 
     def configureVenvWindows(self):
         binDir = self.modulesBaseDirectoryPath / 'Scripts'
+        packagesPath = self.modulesBaseDirectoryPath / 'Lib' / 'site-packages'
 
         # prepend Scripts to PATH
-        os.environ["PATH"] = f'{binDir}{os.pathsep}{os.environ.get("PATH", "")}'
+        os.environ["PATH"] = f'{packagesPath}{os.pathsep}{binDir}{os.pathsep}{os.environ.get("PATH", "")}'
         os.environ["VIRTUAL_ENV"] = str(self.modulesBaseDirectoryPath)
         os.environ["PLAYWRIGHT_BROWSERS_PATH"] = str(self.browsersBaseDirectoryPath)
 
         # add the virtual environments libraries to the host python import mechanism
-        packagesPath = str(self.modulesBaseDirectoryPath / 'Lib' / 'site-packages')
-
-        sys.path.append(packagesPath)
-        site.addsitedir(packagesPath)
+        sys.path.append(str(packagesPath))
+        site.addsitedir(str(packagesPath))
 
         sys.prefix = str(self.modulesBaseDirectoryPath)
 

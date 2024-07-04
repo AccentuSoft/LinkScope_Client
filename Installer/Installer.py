@@ -7,6 +7,7 @@ import os
 import platform
 import subprocess
 import tempfile
+import stat
 from pathlib import Path
 
 import requests
@@ -22,8 +23,8 @@ from PySide6 import QtCore, QtWidgets, QtGui
 """
 python -m nuitka --follow-imports --onefile --noinclude-pytest-mode=nofollow --noinclude-setuptools-mode=nofollow ^
 --noinclude-custom-mode=setuptools:error --noinclude-IPython-mode=nofollow --enable-plugin=pyside6 ^
---assume-yes-for-downloads --remove-output --disable-console --warn-unusual-code --show-modules ^
---windows-company-name="AccentuSoft" --windows-product-name="LinkScope Installer" --windows-product-version=1.6.1.0 ^
+--assume-yes-for-downloads --remove-output --windows-console-mode=disable --warn-unusual-code --show-modules ^
+--windows-company-name="AccentuSoft" --windows-product-name="LinkScope Installer" --windows-product-version=1.6.2.0 ^
 --include-data-files="Icon.ico=Icon.ico" --windows-icon-from-ico=".\Icon.ico" ^
 --windows-file-description="LinkScope Installer" ^
 Installer.py
@@ -33,7 +34,7 @@ Installer.py
 """
 python -m nuitka --follow-imports --onefile --noinclude-pytest-mode=nofollow --noinclude-setuptools-mode=nofollow \
 --noinclude-custom-mode=setuptools:error --noinclude-IPython-mode=nofollow --enable-plugin=pyside6 \
---assume-yes-for-downloads --remove-output --disable-console --warn-unusual-code --show-modules \
+--assume-yes-for-downloads --remove-output --warn-unusual-code --show-modules \
 --include-data-files="Icon.ico=Icon.ico" --linux-icon="Icon.ico" \
 Installer.py
 """
@@ -715,10 +716,24 @@ For more information on this, and how to apply and follow the GNU AGPL, see
 """
 
 
+def recursiveMakeWriteableHelper(targetPath: Path):
+    for root, dirs, files in os.walk(targetPath):
+        for dir_name in dirs:
+            dir_path = os.path.join(root, dir_name)
+            os.chmod(dir_path, stat.S_IWRITE)
+            if not os.access(dir_path, os.W_OK):
+                os.chmod(dir_path, stat.S_IWRITE | stat.S_IREAD | stat.S_IEXEC)
+        for file_name in files:
+            file_path = os.path.join(root, file_name)
+            os.chmod(file_path, stat.S_IWRITE)
+            if not os.access(file_path, os.W_OK):
+                os.chmod(file_path, stat.S_IWRITE | stat.S_IREAD)
+
 def deleteVenvStuff() -> None:
     baseAppStoragePath = Path(
         QtCore.QStandardPaths.standardLocations(
             QtCore.QStandardPaths.StandardLocation.AppDataLocation)[0])
+    recursiveMakeWriteableHelper(baseAppStoragePath)
     shutil.rmtree(baseAppStoragePath)
 
 
@@ -805,8 +820,10 @@ def removeFileHelper(pathToRemove: Path):
     if not pathToRemove.exists():
         return
     if pathToRemove.is_dir():
+        recursiveMakeWriteableHelper(pathToRemove)
         shutil.rmtree(pathToRemove)
     else:
+        os.chmod(pathToRemove, stat.S_IWRITE)
         pathToRemove.unlink(missing_ok=True)
 
 
@@ -1154,9 +1171,9 @@ class LinkScopeInstallLatestPage(QtWidgets.QWizardPage):
 class LinkScopeUninstallPage(QtWidgets.QWizardPage):
 
     def doStuff(self):
-        deleteVenvStuff()
-        self.progressBar.setValue(3)
         try:
+            deleteVenvStuff()
+            self.progressBar.setValue(3)
             self.wizard().uninstall()
         except Exception as e:
             self.wizard().page(6).doneLabel.setText('Error occurred during uninstallation: ' +
@@ -1315,5 +1332,7 @@ class InstallThread(QtCore.QThread):
 
 if __name__ == '__main__':
     application = QtWidgets.QApplication(sys.argv)
+    application.setOrganizationName("AccentuSoft")
+    application.setApplicationName("LinkScope Client")
     installWizard = InstallWizard()
     sys.exit(application.exec())

@@ -23,7 +23,7 @@ class SettingsObject(dict):
     def __init__(self):
         super().__init__()
         self.globalSettings = QSettings()
-        self.globalSettings.setValue("Program/Version", "v1.6.1")
+        self.globalSettings.setValue("Program/Version", "v1.6.2")
         self.globalSettings.setValue("Program/TOR Profile Location",
                                      self.globalSettings.value("Program/TOR Profile Location", ""))
         self.globalSettings.setValue("Program/BaseDir",
