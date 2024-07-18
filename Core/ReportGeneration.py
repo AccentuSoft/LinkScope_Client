@@ -26,7 +26,6 @@ from Core.Interface.Entity import BaseNode
 from Core.GlobalVariables import avoid_parsing_fields
 
 
-
 class ReportWizard(QtWidgets.QWizard):
     def __init__(self, parent):
         super(ReportWizard, self).__init__(parent=parent)
@@ -332,17 +331,16 @@ class EntityPage(QtWidgets.QWizardPage):
                     self.reportWizard.parent().LENTDB.getEntity(self.entityUID)['Entity Type'])
             contents = bytearray(self.defaultpic)
             widthRegex = re.compile(b' width="\d*" ')
-            fileContents = ''
             for widthMatches in widthRegex.findall(self.defaultpic):
-                fileContents = contents.replace(widthMatches, b' ')
+                contents = contents.replace(widthMatches, b' ')
             heightRegex = re.compile(b' height="\d*" ')
             for heightMatches in heightRegex.findall(self.defaultpic):
-                fileContents = contents.replace(heightMatches, b' ')
-            fileContents = fileContents.replace(b'<svg ', b'<svg height="150" width="150" ')
+                contents = contents.replace(heightMatches, b' ')
+            contents = contents.replace(b'<svg ', b'<svg height="150" width="150" ')
 
             imagePath = Path(self.reportWizard.reportTempFolder) / f'{str(uuid4())}.svg'
             with open(imagePath, 'wb') as tempFile:
-                tempFile.write(bytearray(fileContents))
+                tempFile.write(contents)
 
             image = svg2rlg(imagePath)
             data = {'EntityNotes': self.inputNotesEdit.toPlainText(), 'EntityImage': image}
@@ -383,7 +381,6 @@ class AppendixWidget(QtWidgets.QWidget):
 
         if selectedPath != '':
             self.inputAppendixImageEdit.setText(str(Path(selectedPath).absolute()))
-
 
 
 class MyDocTemplate(BaseDocTemplate):
