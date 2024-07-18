@@ -118,7 +118,7 @@ class FileExtractor:
                                                          'Notes': ''}}])
 
                             docProperName = link.split('/')[-1]
-                            docFileName = f'{md5(link.encode("UTF-8")).hexdigest()} | {docProperName}'
+                            docFileName = f'{md5(link.encode("UTF-8")).hexdigest()}_{docProperName}'
                             docFullPath = Path(parameters['Project Files Directory']) / docFileName
 
                             with contextlib.suppress(Exception):
@@ -157,7 +157,7 @@ class FileExtractor:
                                               {uid: {'Resolution': 'File URL',
                                                      'Notes': ''}}])
                         docProperName = link.split('/')[-1]
-                        docFileName = f'{md5(link.encode()).hexdigest()} | {docProperName}'
+                        docFileName = f'{md5(link.encode()).hexdigest()}_{docProperName}'
                         docFullPath = Path(parameters['Project Files Directory']) / docFileName
 
                         with contextlib.suppress(Exception):

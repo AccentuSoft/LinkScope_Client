@@ -1189,7 +1189,7 @@ class MenuBar(QtWidgets.QMenuBar):
                 if itemJSONNotes != '':
                     itemPrimaryField = itemJSON[self.parent().RESOURCEHANDLER.getPrimaryFieldForEntityType(
                         itemJSON['Entity Type'])]
-                    fileName = itemPrimaryField + ' | ' + itemJSON.get('Date Last Edited', str(time.time_ns())) + '.txt'
+                    fileName = itemPrimaryField + '_' + itemJSON.get('Date Last Edited', str(time.time_ns())) + '.txt'
                     fileName = fileName.replace('/', '+')
                     fileName = fileName.replace('\\', '+')
                     with open(baseFilesPath / fileName, "w") as f:

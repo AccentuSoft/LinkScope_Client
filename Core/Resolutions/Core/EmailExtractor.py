@@ -114,9 +114,9 @@ class EmailExtractor:
                     with contextlib.suppress(EmailNotValidError):
                         valid = validate_email(newLink[7:], dns_resolver=resolver,
                                                check_deliverability=verifyDomain)
-                        if valid.email not in allEmails:
-                            allEmails.add(valid.email)
-                            returnResults.append([{'Email Address': valid.email,
+                        if valid.normalized not in allEmails:
+                            allEmails.add(valid.normalized)
+                            returnResults.append([{'Email Address': valid.normalized,
                                                    'Entity Type': 'Email Address'},
                                                   {currentUID: {'Resolution': 'Email Address Found',
                                                                 'Notes': ''}}])
