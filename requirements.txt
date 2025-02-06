@@ -1,5 +1,4 @@
 PySide6
-pyqtdarktheme
 
 
 # For python-magic, the following packages may be required:

@@ -10,7 +10,6 @@ import itertools
 import threading
 
 import networkx as nx
-import qdarktheme
 from ast import literal_eval
 from uuid import uuid4
 from shutil import move
@@ -3251,6 +3250,6 @@ if __name__ == '__main__':
     application = QtWidgets.QApplication(sys.argv)
     application.setOrganizationName("AccentuSoft")
     application.setApplicationName("LinkScope Client")
-    qdarktheme.setup_theme()
+    application.setStyle('fusion')
     mainWindow = MainWindow()
     sys.exit(application.exec())
