@@ -24,7 +24,7 @@ from PySide6 import QtCore, QtWidgets, QtGui
 python -m nuitka --follow-imports --onefile --noinclude-pytest-mode=nofollow --noinclude-setuptools-mode=nofollow ^
 --noinclude-custom-mode=setuptools:error --noinclude-IPython-mode=nofollow --enable-plugin=pyside6 ^
 --assume-yes-for-downloads --remove-output --windows-console-mode=disable --warn-unusual-code --show-modules ^
---windows-company-name="AccentuSoft" --windows-product-name="LinkScope Installer" --windows-product-version=1.6.4.0 ^
+--windows-company-name="AccentuSoft" --windows-product-name="LinkScope Installer" --windows-product-version=1.6.5.0 ^
 --include-data-files="Icon.ico=Icon.ico" --windows-icon-from-ico=".\Icon.ico" ^
 --windows-file-description="LinkScope Installer" ^
 Installer.py
@@ -779,8 +779,8 @@ def installGraphvizWindowsHelper():
 
 def installPythonLinuxHelper():
     subprocess.run('echo "y" | add-apt-repository ppa:deadsnakes/ppa', shell=True)
-    subprocess.run('apt-get update && apt-get install python3.11 python3.11-venv -y', shell=True)
-    subprocess.run('wget -O - https://bootstrap.pypa.io/get-pip.py | python3.11', shell=True)
+    subprocess.run('apt-get update && apt-get install python3.13 python3.13-venv -y', shell=True)
+    subprocess.run('wget -O - https://bootstrap.pypa.io/get-pip.py | python3.13', shell=True)
 
 
 def installPythonWindowsHelper():
@@ -790,7 +790,7 @@ def installPythonWindowsHelper():
         return False
 
     latest_release_path = win_downloads.text.split(
-        'Latest Python 3 Release -', 1)[0].split('href="')[-1].split('"', 1)[0]
+        'Python 3.13.', 1)[0].split('href="')[-1].split('"', 1)[0]
 
     latest_release_full_path = f'https://www.python.org{latest_release_path}'
 
@@ -1031,7 +1031,7 @@ class InstallWizard(QtWidgets.QWizard):
 
         if self.currentOS == 'Linux':
             try:
-                if subprocess.run(["python3.11", "--version"],
+                if subprocess.run(["python3.13", "--version"],
                                   stdout=subprocess.PIPE,
                                   stderr=subprocess.PIPE,
                                   text=True).returncode != 0:

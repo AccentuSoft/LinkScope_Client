@@ -34,7 +34,7 @@ class ModulesManager:
         self.browsersBaseDirectoryPath.mkdir(exist_ok=True)
         self.modulesRequirementsPath = self.modulesBaseDirectoryPath / "requirements.txt"
         self.modulesRequirementsTempPath = self.modulesBaseDirectoryPath / "requirements.txt.tmp"
-        self.modulesPythonPath = self.modulesBaseDirectoryPath / 'bin' / 'python3.11' if self.system == "Linux" \
+        self.modulesPythonPath = self.modulesBaseDirectoryPath / 'bin' / 'python3.13' if self.system == "Linux" \
             else self.modulesBaseDirectoryPath / 'Scripts' / 'python.exe'
         self.upgradeThread = None
         self.moduleReqsThread = None
@@ -808,7 +808,7 @@ class InitialiseVenvThread(QtCore.QThread):
             if self.modulesManager.system == "Linux" \
             else self.modulesManager.modulesBaseDirectoryPath / 'Scripts'
         if not binPath.exists():
-            pythonExecutable = "python3.11" if self.modulesManager.system == "Linux" else "python.exe"
+            pythonExecutable = "python3.13" if self.modulesManager.system == "Linux" else "python.exe"
             cmdStr = (f'{pythonExecutable} -m venv --symlinks --clear --upgrade-deps '
                       f'"{self.modulesManager.modulesBaseDirectoryPath}"')
             subprocess.run(cmdStr, shell=True)

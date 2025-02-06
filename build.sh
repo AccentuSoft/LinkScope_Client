@@ -4,7 +4,7 @@
 #   to a new directory along with this file.
 # Then, run the script.
 
-PYTHON_VER=3.11
+PYTHON_VER=3.13
 
 python${PYTHON_VER} -m venv buildEnv
 
@@ -25,7 +25,7 @@ python${PYTHON_VER} -m nuitka --follow-imports --standalone --noinclude-pytest-m
 --include-data-dir="Core/Entities=Core/Entities" \
 --warn-unusual-code --show-modules --include-data-files="Icon.ico=Icon.ico" \
 --linux-icon="Icon.ico" \
---include-package-data=playwright \
+--include-package-data=requests \
 --include-package-data=folium --include-package-data=branca \
 --include-package=dns \
 --include-package-data=pycountry \
